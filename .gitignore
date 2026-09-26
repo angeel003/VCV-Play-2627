@@ -1,0 +1,6 @@
+node_modules/
+.scripts_temporales_ia/
+obsoleto/
+datos_prueba/
+*.log
+.wrangler/
