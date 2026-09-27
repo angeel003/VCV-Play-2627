@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="VCV Play">
-<title>DEV - VCV Play</title>
+<meta name="apple-mobile-web-app-title" content="VCV Play 2627">
+<title>VCV Play 2627</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#160a19">
 <link rel="icon" type="image/png" href="files/images/logo_vcv_circle.png">
@@ -102,7 +102,7 @@
     .alert-warning { background: #fff8e1; color: #f57f17; border: 1px solid #ffecb3; }
     .alert-info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
 
-    #loginSection { display: flex; align-items: center; justify-content: center; padding: 40px 20px; flex-direction: column; }
+    #loginSection { display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top, 50px) + 40px) 20px 40px 20px; flex-direction: column; }
     .login-card { background: var(--vcv-blanco); padding: 40px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); width: 100%; max-width: 400px; text-align: center; margin-bottom: 40px; border-top: 5px solid var(--vcv-dorado); }
     
     .faq-container { width: 100%; max-width: 500px; text-align: left; background: var(--vcv-blanco); padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin: 0 auto; border-top: 5px solid var(--vcv-morado); }
@@ -419,7 +419,7 @@
     
     
     #appSection {
-        padding-top: 60px;
+        padding-top: calc(env(safe-area-inset-top, 50px) + 75px);
         padding-bottom: 80px;
         max-width: 500px;
         margin: 0 auto;
@@ -427,7 +427,7 @@
     }
 
     /* V2 TAILWIND-MIMIC HEADER CSS */
-    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding:  14px 18px; z-index: 1000; }
+    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding: 14px 18px; padding-top: calc(env(safe-area-inset-top, 50px) + 14px); z-index: 1000; }
     .header-container-v2 { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto; }
     .header-brand-v2 { display: flex; align-items: center; gap: 10px; }
     .header-logo-circle { width:  44px; height:  44px; border-radius: 50%; background: linear-gradient(to top right, #6a2c70, #d4af37); padding: 2px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
@@ -446,7 +446,7 @@
 
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
-    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
     .category-filter-strip::-webkit-scrollbar { display: none; }
     .cat-filter-btn { padding: 6px 14px; border-radius: 9999px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
     .cat-filter-btn:hover { border-color: var(--secondary-color); color: var(--text-main); }
@@ -470,7 +470,163 @@
         -moz-appearance: textfield;
     }
     
-    </style>
+    
+    /* V2 Container Reset */
+    #carteleraSection .form-container {
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+.podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    .podium-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30%;
+    }
+
+    .podium-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--bg-card-alt);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      position: relative;
+      margin-bottom: -10px;
+      z-index: 2;
+    }
+
+    .podium-slot.rank-1 .podium-avatar {
+      width: 66px;
+      height: 66px;
+      border: 3px solid var(--secondary-color);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+
+    .crown-icon {
+      position: absolute;
+      top: -16px;
+      color: var(--secondary-color);
+    }
+
+    .podium-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #381b42 0%, #200f25 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 6px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 16px;
+      text-align: center;
+    }
+
+    .podium-slot.rank-1 .podium-bar {
+      height: 120px;
+      border-color: rgba(212, 175, 55, 0.5);
+      background: linear-gradient(180deg, #4d235b 0%, #291032 100%);
+    }
+
+    .podium-slot.rank-2 .podium-bar { height: 95px; }
+    .podium-slot.rank-3 .podium-bar { height: 80px; }
+
+    .podium-bar .player-handle {
+      font-size: 0.75rem;
+      font-weight: 700;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .podium-bar .player-pts {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* TABLA CLASIFICACIÓN */
+    .ranking-table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .ranking-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s;
+    }
+
+    .ranking-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .ranking-list-item.is-current-user {
+      background: rgba(106, 44, 112, 0.35);
+      border-left: 4px solid var(--secondary-color);
+    }
+
+    .rank-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 22px;
+      text-align: center;
+    }
+
+    .rank-user-info .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .role-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-card-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .rank-pts {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* PESTAÑA: TOP SECRET */
+    
+  </style>
 
 
   <!-- NEW V2 STYLES PARA CARTELERA Y LOGIN (DARK MODE) -->
@@ -500,11 +656,7 @@
     .text-center.mt-4.mb-3 { display: none !important; }
 
     /* LOGIN STYLES */
-    #loginSection {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
+    #loginSection { display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top, 50px) + 40px) 20px 40px 20px;
       flex-direction: column;
       background: var(--bg-surface);
       min-height: 100vh;
@@ -907,7 +1059,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 64px;
+        height: auto;
         background: var(--bg-card);
         border-bottom: 1px solid var(--border-color);
         display: flex;
@@ -976,7 +1128,7 @@
         border: 2px solid var(--bg-card);
     }
     #appSection {
-        padding-top: 60px;
+        padding-top: calc(env(safe-area-inset-top, 50px) + 75px);
         padding-bottom: 80px;
         max-width: 500px;
         margin: 0 auto;
@@ -984,7 +1136,7 @@
     }
 
     /* V2 TAILWIND-MIMIC HEADER CSS */
-    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding:  14px 18px; z-index: 1000; }
+    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding: 14px 18px; padding-top: calc(env(safe-area-inset-top, 50px) + 14px); z-index: 1000; }
     .header-container-v2 { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto; }
     .header-brand-v2 { display: flex; align-items: center; gap: 10px; }
     .header-logo-circle { width:  44px; height:  44px; border-radius: 50%; background: linear-gradient(to top right, #6a2c70, #d4af37); padding: 2px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
@@ -1003,7 +1155,7 @@
 
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
-    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
     .category-filter-strip::-webkit-scrollbar { display: none; }
     .cat-filter-btn { padding: 6px 14px; border-radius: 9999px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
     .cat-filter-btn:hover { border-color: var(--secondary-color); color: var(--text-main); }
@@ -1017,7 +1169,163 @@
       box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
       transform: translateY(-2px);
     }
-</style>
+
+    /* V2 Container Reset */
+    #carteleraSection .form-container {
+        padding: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+.podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    .podium-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30%;
+    }
+
+    .podium-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--bg-card-alt);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      position: relative;
+      margin-bottom: -10px;
+      z-index: 2;
+    }
+
+    .podium-slot.rank-1 .podium-avatar {
+      width: 66px;
+      height: 66px;
+      border: 3px solid var(--secondary-color);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+
+    .crown-icon {
+      position: absolute;
+      top: -16px;
+      color: var(--secondary-color);
+    }
+
+    .podium-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #381b42 0%, #200f25 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 6px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 16px;
+      text-align: center;
+    }
+
+    .podium-slot.rank-1 .podium-bar {
+      height: 120px;
+      border-color: rgba(212, 175, 55, 0.5);
+      background: linear-gradient(180deg, #4d235b 0%, #291032 100%);
+    }
+
+    .podium-slot.rank-2 .podium-bar { height: 95px; }
+    .podium-slot.rank-3 .podium-bar { height: 80px; }
+
+    .podium-bar .player-handle {
+      font-size: 0.75rem;
+      font-weight: 700;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .podium-bar .player-pts {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* TABLA CLASIFICACIÓN */
+    .ranking-table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .ranking-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s;
+    }
+
+    .ranking-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .ranking-list-item.is-current-user {
+      background: rgba(106, 44, 112, 0.35);
+      border-left: 4px solid var(--secondary-color);
+    }
+
+    .rank-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 22px;
+      text-align: center;
+    }
+
+    .rank-user-info .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .role-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-card-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .rank-pts {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* PESTAÑA: TOP SECRET */
+    
+  </style>
 
 
 </head>
@@ -1069,13 +1377,13 @@
             <img src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
           </div>
           <h2 style="font-size: 1.5rem; font-weight: 900; color:var(--text-main); margin-bottom:4px; letter-spacing: -0.5px;">VCV Play <span style="color:var(--secondary-color);">2627</span></h2>
-          <p style="font-size: 0.85rem; font-weight:600; color: var(--text-muted); margin-top: 4px;">El juego oficial del club</p>
+          <p style="font-size: 0.85rem; font-weight:600; color: var(--text-muted); margin-top: 4px;">app no oficial del club</p>
         </div>
 
         <div>
           <div class="form-group text-left" style="margin-bottom:10px;">
             <label style="font-size:0.85rem; font-weight:600;">Usuario</label>
-            <input type="text" id="loginUsuario" class="form-control" placeholder="@tu_usuario" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
+            <input type="text" id="loginUsuario" class="form-control" placeholder="tu_usuario" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
           </div>
           <div class="form-group text-left" style="margin-bottom:10px;">
             <label style="font-size:0.85rem; font-weight:600;">Contraseña</label>
@@ -1098,7 +1406,22 @@
     <details class="vcv-faq-master" id="masterFaq" style="scroll-margin-top: calc(20px + env(safe-area-inset-top, 0px));">
         <summary>Preguntas Frecuentes y Gestión</summary>
         <div class="faq-content-v2">
-            
+            <div class="faq-inner-item" style="border-left: 4px solid var(--vcv-dorado); background: rgba(212, 175, 55, 0.05);">
+                <div class="faq-inner-title" style="color: var(--vcv-dorado); font-size: 1.05rem;">¿Todavía no tienes cuenta?</div>
+                <div style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main); margin-top: 5px;">
+                    <p style="margin-bottom: 10px;">Si quieres acceder a toda la información detallada, <b>resultados pasados</b>, <b>calendario completo de próximos partidos</b> de tus equipos favoritos y <b>jugar en la liga de pronósticos</b>, ¡tienes que registrarte!</p>
+                    <p style="margin-bottom: 5px;">Envíanos un correo a <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--vcv-dorado); font-weight: bold; text-decoration: underline;">adminfantasyvcv@gmail.com</a> con:</p>
+                    <ul style="padding-left: 20px; margin-bottom: 10px; font-weight: 500;">
+                        <li>Nombre de usuario deseado (ej: juan_vcv)</li>
+                        <li>Contraseña deseada</li>
+                        <li>Tu relación con el club (ej: jugador/entrenador, indicando de qué equipo y categoría) para añadir insignias a tu perfil.</li>
+                        <li>Qué equipos te gustaría seguir.</li>
+                        <li style="margin-top:8px; font-weight:normal; font-size:0.85rem;"><i>(Opcional)</i> <b>Liga Privada:</b> Puedes tener una clasificación privada con tus amigos. Escribe en el correo los nombres de usuario de todos los que os queréis unir y qué equipos puntuarán en vuestra clasificación.</li>
+                    </ul>
+                    <p style="font-size: 0.85rem; opacity: 0.8; font-style: italic;">Te crearemos la cuenta y te avisaremos enseguida para que puedas acceder al VCV Play.</p>
+                </div>
+            </div>
+
             <div class="faq-inner-item">
                 <div class="faq-inner-title">¿Qué es VCV Play?</div>
                 <div>Es la competición privada del club donde participamos prediciendo los resultados de nuestros equipos en cada jornada. ¡Demuestra quién sabe más de voleibol!</div>
@@ -1183,7 +1506,7 @@
                 <div id="perfilUsuarioTop"></div>
                 
                 
-                <hr>
+                <hr style="display:none;">
                 <div id="categoryFilterWrapper" class="category-filter-strip"></div>
                 <div id="contenedorPartidos"></div>
 
@@ -1196,16 +1519,9 @@
         </div>
     </section>
     <section id="clasificacionesSection">
-    <div style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
-        <i data-lucide="hammer" style="width: 48px; height: 48px; color: var(--vcv-dorado); margin-bottom: 16px;"></i>
-        <h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3>
-        <p>¡Estoy trabajando en implementar esto cuanto antes! 😊</p>
-    </div>
-<div style="display:none;">
-        <h2>🏆 Ranking</h2>
-<p style="color:#555; margin-bottom:20px; font-weight: 500; font-size: 0.95rem;">Clasificación actual de nuestras ligas privadas según los puntos conseguidos.</p>
-        <div id="tablasClasificacionContainer"></div>
-    </div></section>
+        <div id="rankingEnConstruccion" style="padding: 60px 20px; text-align: center; color: var(--text-muted); display: none;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hammer" style="color: var(--vcv-dorado); margin-bottom: 16px;"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L13.586 10.586"/><path d="m18 10.5-2.5-2.5"/><path d="M12 21 3 12"/><path d="m12 6.5 2.5 2.5"/><path d="m19 11.5-8-8c-1-1-3-1-4 0a3.18 3.18 0 0 0 0 4.5l8 8c1 1 3 1 4 0a3.18 3.18 0 0 0 0-4.5z"/></svg><h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3><p>¡Estoy trabajando en implementar esto cuanto antes! 🚀</p></div>
+            <div id="tablasClasificacionContainer"></div>
+    </section>
     <section id="enlacesRfevbSection" style=" padding-bottom:30px;">
 
 <div class="vcv-card-v2" id="adminPanelWrapper" style="display:none; margin-bottom: 20px;">
@@ -1250,7 +1566,7 @@
         <div class="faq-inner-item">
                 <div class="faq-inner-title">Gestionar mi contraseña</div>
                 <p style="font-size:0.8rem; margin-bottom:10px;">Puedes cambiar tu contraseña introduciendo tus datos actuales y la nueva contraseña.</p>
-                <input type="text" id="cpUsuario" class="form-control mb-2" placeholder="Tu usuario (@usuario)" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
+                <input type="text" id="cpUsuario" class="form-control mb-2" placeholder="Tu usuario" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
                 <input type="password" id="cpOldPwd" class="form-control mb-2" placeholder="Contraseña actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
                 <input type="password" id="cpNewPwd" class="form-control mb-2" placeholder="Nueva contraseña" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
                 <input type="password" id="cpNewPwd2" class="form-control mb-2" placeholder="Repite nueva contraseña" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
@@ -1260,7 +1576,7 @@
         <div class="faq-inner-item">
                 <div class="faq-inner-title">Cambiar mi usuario / nombre</div>
                 <p style="font-size:0.8rem; margin-bottom:10px;">Rellena este formulario para solicitar el cambio en la base de datos.</p>
-                <input type="text" id="rnUsuario" class="form-control mb-2" placeholder="Tu usuario actual (@usuario)" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
+                <input type="text" id="rnUsuario" class="form-control mb-2" placeholder="Tu usuario actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
                 <input type="password" id="rnPwd" class="form-control mb-2" placeholder="Tu contraseña actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
                 <hr style="border-color:var(--border-color);">
                 <input type="text" id="rnNewUser" class="form-control mb-2" placeholder="Nuevo @usuario (opcional)" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
@@ -1397,7 +1713,7 @@ const fetchSeguro = (url, options, retries = 1) => {
       sessionStorage.removeItem('vcv_slide_left');
   }
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbyw9L6Te3q2ibdRBaaAwaiPpEPWLbsNdb8JA9yO272DBHgxaZA2l3TLkH9ofAXlQiWfAg/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbypusqyphzLfam-6xra5BCVAFXqGxOA-RMjVuZOAJyp4OQ5CCR_xZs-dT5tIy4EcZIEKQ/exec";
 
 // --- PON AQUÍ TUS ENLACES DE GITHUB CUANDO LOS TENGAS ---
 const URL_BADGE_GENERIC = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg"; 
@@ -1612,10 +1928,12 @@ document.getElementById('btnChangePwd').addEventListener('click', function(e) {
     const btn = this;
 
     if(!usr || !oldP || !newP1 || !newP2) {
-        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Por favor, rellena todos los campos."; msgBox.style.display = "block"; return;
+        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Por favor, rellena todos los campos."; msgBox.style.display = "block";
+          updateProgressBar(); return;
     }
     if(newP1 !== newP2) {
-        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Las contraseñas nuevas no coinciden."; msgBox.style.display = "block"; return;
+        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Las contraseñas nuevas no coinciden."; msgBox.style.display = "block";
+          updateProgressBar(); return;
     }
 
     btn.disabled = true; 
@@ -1630,6 +1948,7 @@ document.getElementById('btnChangePwd').addEventListener('click', function(e) {
     .then(res => res.json())
     .then(data => {
         msgBox.style.display = "block";
+          updateProgressBar();
         if(data.status === "success") {
             msgBox.className = "alert-box alert-success"; msgBox.innerText = data.message;
             document.getElementById('cpOldPwd').value = ""; document.getElementById('cpNewPwd').value = ""; document.getElementById('cpNewPwd2').value = "";
@@ -1637,7 +1956,8 @@ document.getElementById('btnChangePwd').addEventListener('click', function(e) {
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block"; })
+    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+          updateProgressBar(); })
     .finally(() => { btn.innerText = "Actualizar Contraseña"; btn.disabled = false; });
 });
 
@@ -1652,10 +1972,12 @@ document.getElementById('btnReqName').addEventListener('click', function(e) {
     const btn = this;
 
     if(!usr || !pwd) {
-        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "El usuario y contraseña actuales son obligatorios."; msgBox.style.display = "block"; return;
+        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "El usuario y contraseña actuales son obligatorios."; msgBox.style.display = "block";
+          updateProgressBar(); return;
     }
     if(!newU && !newN) {
-        msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Debes rellenar al menos un dato nuevo para solicitar el cambio."; msgBox.style.display = "block"; return;
+        msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Debes rellenar al menos un dato nuevo para solicitar el cambio."; msgBox.style.display = "block";
+          updateProgressBar(); return;
     }
 
     btn.disabled = true; 
@@ -1670,6 +1992,7 @@ document.getElementById('btnReqName').addEventListener('click', function(e) {
     .then(res => res.json())
     .then(data => {
         msgBox.style.display = "block";
+          updateProgressBar();
         if(data.status === "success") {
             msgBox.className = "alert-box alert-success"; msgBox.innerText = data.message;
             document.getElementById('rnNewUser').value = ""; document.getElementById('rnNewName').value = "";
@@ -1677,7 +2000,8 @@ document.getElementById('btnReqName').addEventListener('click', function(e) {
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block"; })
+    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+          updateProgressBar(); })
     .finally(() => { btn.innerText = "Enviar Solicitud"; btn.disabled = false; });
 });
 
@@ -1746,7 +2070,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
                     <p style="font-size: 1.05rem; margin-bottom: 15px;">Si quieres acceder a toda la información detallada, <b>resultados pasados</b>, <b>calendario completo de próximos partidos</b> de tus equipos favoritos y <b>jugar en la liga de pronósticos</b>, ¡tienes que registrarte!</p>
                     <p style="font-size: 1rem; margin-bottom: 5px;">Envíanos un correo a <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--vcv-dorado); font-weight: bold; text-decoration: underline;">adminfantasyvcv@gmail.com</a> con:</p>
                     <ul style="padding-left: 25px; margin-bottom: 15px; font-weight: bold; font-size: 0.95rem;">
-                        <li>Nombre de usuario (ej: @juan_vcv)</li>
+                        <li>Nombre de usuario (ej: juan_vcv)</li>
                         <li>Contraseña deseada</li>
                         <li>Tu relación con el club (ej: jugador/entrenador, indicando de qué equipo y categoría) para añadir insignias a tu perfil.</li>
                         <li>Qué equipos te gustaría seguir.</li>
@@ -1842,7 +2166,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
                 <div class="p-3 mb-3 card-match" style="background: var(--vcv-blanco); border-radius: 8px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     ${categoryHtml}
                     <h5 style="margin-bottom: 5px; color:var(--vcv-morado); font-weight:bold; padding-right: 90px;">🏐 ${eq.equipo_local} vs ${eq.rival}${infoJornadaEq}</h5>
-                      ${eq.es_derby ? `<div style="margin-bottom:10px; background:#fff3cd; color:#856404; padding:5px 10px; border-radius:5px; font-weight:bold; font-size:0.85rem; border:1px solid #ffeeba;">⚔️ ¡DERBY LOCAL! Los puntos valen DOBLE en este partido.</div>` : ""}
+                      ${eq.es_derby ? `<div style="margin-bottom:10px; background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:6px 10px; border-radius:8px; font-size:0.85rem; font-weight:900; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 ¡DERBY! <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:20px; height:20px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ""}
                     ${infoLocFecha}
                     ${infoPabellon}
                     
@@ -1865,9 +2189,11 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
             if(typeof iniciarRelojes === 'function') iniciarRelojes();
         } else {
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error cargando modo invitado."; msgBox.style.display = "block";
+          updateProgressBar();
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block"; })
+    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+          updateProgressBar(); })
     .finally(() => { 
         btn.innerText = "👀 Entrar como invitado"; 
         btn.disabled = false; 
@@ -1881,7 +2207,8 @@ document.getElementById('btnLogin').addEventListener('click', function() {
     const msgBox = document.getElementById('loginMessage');
     const btn = this;
 
-    if(!usr || !pwd) { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Rellena usuario y contraseña."; msgBox.style.display = "block"; return; }
+    if(!usr || !pwd) { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Rellena usuario y contraseña."; msgBox.style.display = "block";
+          updateProgressBar(); return; }
     
     btn.disabled = true; 
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Accediendo...'; 
@@ -1918,11 +2245,27 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                 insigniasHTML += `</div>`;
             }
 
+            
+            let highestJornada = data.jornada || "Activa";
+            if (data.equipos && data.equipos.length > 0) {
+                let max = -1;
+                data.equipos.forEach(eq => {
+                    let j = parseInt(eq.jornada_eq);
+                    if (!isNaN(j) && j > max) {
+                        max = j;
+                    }
+                });
+                if (max > -1) {
+                    highestJornada = max;
+                }
+            }
+            
             let htmlPerfil = `
+    
             <div style="padding: 14px; border-radius: 16px; background: linear-gradient(to right, rgba(93, 23, 137, 0.4), var(--bg-card), var(--bg-card)); border: 1px solid var(--border-color); position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); margin-top: -12px; margin-bottom: 20px;">
               <div style="display: flex; align-items: center; justify-content: flex-start; font-size: 0.75rem; margin-bottom: 12px;">
                 <span style="display: inline-flex; align-items: center; font-weight: bold; padding: 3px 10px; border-radius: 9999px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
-                  <span style="width: 6px; height: 6px; border-radius: 9999px; background: #10b981; margin-right: 6px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></span> Jornada ${data.jornada || "Activa"}
+                  <span style="width: 6px; height: 6px; border-radius: 9999px; background: #10b981; margin-right: 6px; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></span> Jornada ${highestJornada}
                 </span>
               </div>
               
@@ -1934,17 +2277,12 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                   </p>
                   ${insigniasHTML}
                 </div>
-                <span style="font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap; margin-left:10px;">${porcentaje}% Listo</span>
+                <span id="user-progress-label" style="font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap; margin-left:10px;">${porcentaje}% Listo</span>
               </div>
 
               <div style="width: 100%; background: rgba(0, 0, 0, 0.15); border-radius: 9999px; height: 6px; margin-top: 14px; overflow: hidden;">
-                <style>
-                @keyframes fillProgress {
-                  from { width: 0%; }
-                  to { width: ${porcentaje}%; }
-                }
-                </style>
-                <div style="background: linear-gradient(to right, var(--vcv-morado), var(--vcv-dorado)); height: 100%; border-radius: 9999px; width: ${porcentaje}%; animation: fillProgress 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;"></div>
+                
+                <div id="user-progress-bar" style="background: #d4af37; background: linear-gradient(to right, #ffd700, #d4af37); min-height: 6px; display: block; transition: width 0.5s ease-in-out; height: 100%; border-radius: 9999px; width: ${porcentaje}%; "></div>
               </div>
             </div>`;
             document.getElementById('perfilUsuarioTop').innerHTML = htmlPerfil;
@@ -2140,11 +2478,14 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                             : `<button class="btn-streaming-v2 disabled" disabled><i data-lucide="play-square" style="width:14px;height:14px;"></i> Sin enlace</button>`;
 
                         htmlPartidos += `
-                        <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}">
-                            <div class="match-header-strip-v2">
-                                <span style="color: ${eq.es_derby ? 'var(--text-gold)' : 'var(--secondary-color)'}; font-weight: 800;">
-                                  ${eq.categoria.toUpperCase()} ${eq.es_derby ? '🏆 DERBY' : ''}
-                                </span>
+                        <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
+                            <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <span style="color: var(--secondary-color); font-weight: 800;">
+                                      ${eq.categoria.toUpperCase()}
+                                    </span>
+                                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                                </div>
                                 <div style="text-align: right;">
                                     <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
                                     ${infoPabellon}
@@ -2246,49 +2587,18 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             iniciarRelojes();
             if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
 
-            let clasifHtml = "";
-            if(data.ligas.length === 0) { 
-                clasifHtml = `<div class="alert-box alert-warning" style="display:block;">No estás asignado a ninguna liga privada todavía.</div>`; 
-            } else {
-                data.ligas.forEach(liga => {
-                    clasifHtml += `
-                    <details style="background:var(--vcv-blanco); border:1px solid #ddd; border-radius:8px; margin-bottom:15px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                        <summary style="padding:15px; font-weight:bold; color:var(--vcv-morado); font-size:1.1rem; cursor:pointer; outline:none;">
-                            🏆 Liga: ${liga}
-                        </summary>
-                        <div style="padding: 0 15px 15px 15px;">
-                            <div class="table-responsive">
-                                <table style="width:100%; border-collapse:collapse; border-radius:8px; overflow:hidden; margin-bottom:0;">
-                                    <thead style="background:var(--vcv-morado); color:var(--vcv-blanco);">
-                                        <tr>
-                                            <th style="padding:12px; text-align:left;">Posición y Jugador</th>
-                                            <th style="padding:12px; text-align:center;">Puntos</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>`;
-                    
-                    let ranking = data.clasificaciones[liga] || [];
-                    ranking.forEach((r, index) => {
-                        let pos = index + 1;
-                        let medalla = pos === 1 ? "🥇" : (pos === 2 ? "🥈" : (pos === 3 ? "🥉" : ""));
-                        let clase = pos === 1 ? "medal-1" : (pos === 2 ? "medal-2" : (pos === 3 ? "medal-3" : ""));
-                        
-                        let uBadges = data.insignias[r.jugador] || [];
-                        let badgesHtmlTable = "";
-                        uBadges.forEach(b => {
-                             let cssColorClass = getBadgeCSS(b.type);
-                             badgesHtmlTable += `<img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" title="${b.text}" onclick="showMobileTooltip(event, '${b.text}')">`;
-                        });
-
-                        let txtJugador = r.nombre_real !== r.jugador ? `${r.nombre_real} <span style="font-size:0.85rem; color:#666; font-weight:normal; font-family:sans-serif;">(@${r.jugador})</span>` : r.jugador;
-                        
-                        clasifHtml += `<tr class="${clase}"><td style="padding:14px; border-bottom:1px solid #ddd; line-height:1.4;"><strong>${pos}</strong> - ${txtJugador} ${badgesHtmlTable} ${medalla}</td><td style="padding:14px; border-bottom:1px solid #ddd; font-weight:bold; font-size:1.1rem; color:var(--vcv-dorado); text-align:center;">${r.puntos}</td></tr>`;
-                    });
-                    clasifHtml += `</tbody></table></div></div></details>`;
-                });
+            
+            if(data.ligas && data.ligas.length > 0) {
+                window.currentLiga = data.ligas[0];
             }
-            document.getElementById('tablasClasificacionContainer').innerHTML = clasifHtml;
+            window.renderRankingV2();
 
+
+            
+            if(!data.equipos_totales || data.equipos_totales.length === 0) {
+                let tsSec = document.getElementById('prediccionesTotalesSection');
+                if(tsSec) tsSec.remove();
+            }
             if(data.equipos_totales && data.equipos_totales.length > 0) {
                 
                 
@@ -2407,11 +2717,14 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             iniciarRelojTotales();
         } else if (data.status === "ok") {
             msgBox.className = "alert-box alert-warning"; msgBox.innerText = "El servidor se estaba despertando (Cold Start). Vuelve a pulsar Iniciar Sesión."; msgBox.style.display = "block";
+          updateProgressBar();
         } else {
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message || "Error desconocido devuelto por el servidor."; msgBox.style.display = "block";
+          updateProgressBar();
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block"; })
+    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+          updateProgressBar(); })
     .finally(() => { 
         btn.innerText = "Entrar"; 
         btn.disabled = false; 
@@ -2648,10 +2961,12 @@ document.getElementById('prediccionForm').addEventListener('submit', function(e)
     .then(res => res.json())
     .then(data => {
         msgBox.style.display = "block";
+          updateProgressBar();
         if (data.status === "success") { msgBox.className = "alert-box alert-success"; msgBox.innerText = "✅ " + data.message; } 
         else { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "❌ " + data.message; }
     })
-    .catch(() => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block"; })
+    .catch(() => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+          updateProgressBar(); })
     .finally(() => { btnSubmit.disabled = false; btnSubmit.innerText = "💾 Guardar Mis Predicciones"; });
 });
 
@@ -2678,7 +2993,8 @@ document.getElementById('btnHistory').addEventListener('click', function(e) {
     .then(data => {
         if(data.status === "success") {
             if (data.history.length === 0) {
-                msgBox.style.display = "block"; msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Aún no tienes predicciones ni resultados."; container.style.display = "none"; controls.style.display = "none";
+                msgBox.style.display = "block";
+          updateProgressBar(); msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Aún no tienes predicciones ni resultados."; container.style.display = "none"; controls.style.display = "none";
             } else {
                 globalHistorialData = data.history;
                 
@@ -3218,6 +3534,11 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 if(data.status === "success") {
                     btn.disabled = false;
                     btn.innerText = 'Modificar Predicción';
+                    if(window.appData) {
+                        window.appData.predicciones_usuario = window.appData.predicciones_usuario || {};
+                        window.appData.predicciones_usuario[idPart] = { sets: s, puntos: p, signo: sig };
+                    }
+                    if(typeof updateProgressBar === 'function') updateProgressBar();
                 } else {
                     alert('Error al guardar: ' + data.message);
                     card.classList.remove('collapsed');
@@ -3256,6 +3577,410 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         }
     })();
 
+    
+    
+    window.cambiarLiga = function(ligaName) {
+        window.currentLiga = ligaName;
+        window.renderRankingV2();
+    };
+
+    
+    window.openPlayerInfo = function(jugador) {
+        if(!window.appData || !window.appData.insignias) return;
+        let data = window.appData;
+        let uBadges = data.insignias[jugador] || [];
+        
+        let modal = document.getElementById('playerInfoModal');
+        let initialsEl = document.getElementById('playerInfoInitials');
+        let nameEl = document.getElementById('playerInfoName');
+        let roleEl = document.getElementById('playerInfoRole');
+        let badgesList = document.getElementById('playerInfoBadgesList');
+        
+        if(!modal) return;
+        
+        initialsEl.innerText = jugador.substring(0,2).toUpperCase();
+        nameEl.innerText = "@" + jugador;
+        
+        // Use nombre_real instead of role under the username
+        let nombreReal = jugador;
+        // Search in clasificaciones to find the real name
+        let ligaName = window.currentLiga || (data.ligas && data.ligas.length > 0 ? data.ligas[0] : null);
+        if (ligaName && data.clasificaciones && data.clasificaciones[ligaName]) {
+            let pObj = data.clasificaciones[ligaName].find(r => r.jugador === jugador);
+            if (pObj && pObj.nombre_real) nombreReal = pObj.nombre_real;
+        }
+        roleEl.innerText = (nombreReal !== jugador) ? nombreReal : ""; // Only show if different
+        if (nombreReal === jugador) {
+            roleEl.style.display = 'none';
+        } else {
+            roleEl.style.display = 'block';
+        }
+        
+        // --- CALCULO DE ESTADISTICAS HISTORICAS ---
+        
+        console.log("Stats_ligas available?", !!data.stats_ligas);
+        if(data.stats_ligas) console.log("Stats for user?", !!data.stats_ligas[jugador]);
+        
+        let htmlStats = "";
+        let mediaPuntos = "0";
+        let mediaPos = "-";
+        let maxPuntos = "0";
+        let desgloseHtml = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 6px 0;">Aún no hay puntos registrados.</div>`;
+        
+        if (ligaName && data.stats_ligas && data.stats_ligas[jugador]) {
+            let uStats = data.stats_ligas[jugador][ligaName];
+            if (uStats && uStats.porJornada) {
+                let jornadasJugadas = Object.keys(uStats.porJornada).map(Number).sort((a,b)=>a-b);
+                if (jornadasJugadas.length > 0) {
+                    desgloseHtml = "";
+                    let totalPuntos = 0;
+                    let maxPVal = 0;
+                    jornadasJugadas.forEach(j => {
+                        totalPuntos += uStats.porJornada[j];
+                        if (uStats.porJornada[j] > maxPVal) maxPVal = uStats.porJornada[j];
+                    });
+                    mediaPuntos = (totalPuntos / jornadasJugadas.length).toFixed(1);
+                    maxPuntos = maxPVal.toString();
+                    
+                    // Calcular posicion historica
+                    let posiciones = [];
+                    let maxJ = Math.max(...jornadasJugadas);
+                    for (let j = 1; j <= maxJ; j++) {
+                        let rnkJ = [];
+                        let hasDataThisJornada = false;
+                        for(let u in data.stats_ligas) {
+                            if(!data.stats_ligas[u][ligaName]) continue;
+                            let ptsUpToJ = 0;
+                            for(let x=1; x<=j; x++){ ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0); }
+                            if(u === jugador && (data.stats_ligas[u][ligaName].porJornada[j] !== undefined)) hasDataThisJornada = true;
+                            rnkJ.push({ u: u, pts: ptsUpToJ });
+                        }
+                        if (hasDataThisJornada) {
+                            rnkJ.sort((a,b) => b.pts - a.pts);
+                            let myObj = rnkJ.find(x => x.u === jugador);
+                            if(myObj) {
+                                let realRank = rnkJ.findIndex(x => x.pts === myObj.pts) + 1;
+                                posiciones.push(realRank);
+                            }
+                        }
+                    }
+                    
+                    if (posiciones.length > 0) {
+                        let sumPos = posiciones.reduce((a,b)=>a+b, 0);
+                        mediaPos = (sumPos / posiciones.length).toFixed(1) + "º";
+                    }
+                    
+                    jornadasJugadas.forEach(j => {
+                        let posStr = "-";
+                        let rnkJ = [];
+                        for(let u in data.stats_ligas) {
+                            if(!data.stats_ligas[u][ligaName]) continue;
+                            let ptsUpToJ = 0;
+                            for(let x=1; x<=j; x++){ ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0); }
+                            rnkJ.push({ u: u, pts: ptsUpToJ });
+                        }
+                        rnkJ.sort((a,b) => b.pts - a.pts);
+                        let pObj = rnkJ.find(x => x.u === jugador);
+                        if (pObj) {
+                            let realRank = rnkJ.findIndex(x => x.pts === pObj.pts) + 1;
+                            posStr = realRank + "º";
+                        }
+
+                        desgloseHtml += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.1);">
+                                <span style="font-size:0.8rem; font-weight:700;">Jornada ${j}</span>
+                                <div style="display:flex; gap:12px; align-items:center;">
+                                    <span style="font-size:0.75rem; color:var(--text-muted);">${posStr} global</span>
+                                    <span style="font-weight:800; color:var(--secondary-color); font-size:0.9rem;">+${uStats.porJornada[j]}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+        }
+        
+        htmlStats = `
+            <div style="display:flex; justify-content:space-around; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="text-align:center;">
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Media Pts</div>
+                    <div style="font-weight:900; color:var(--secondary-color); font-size:1.1rem; font-family:'Space Grotesk',sans-serif;">${mediaPuntos}</div>
+                </div>
+                <div style="text-align:center; border-left:1px solid rgba(255,255,255,0.1); border-right:1px solid rgba(255,255,255,0.1); padding:0 15px;">
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Media Pos</div>
+                    <div style="font-weight:900; color:#fff; font-size:1.1rem; font-family:'Space Grotesk',sans-serif;">${mediaPos}</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Récord</div>
+                    <div style="font-weight:900; color:#4caf50; font-size:1.1rem; font-family:'Space Grotesk',sans-serif;">${maxPuntos}</div>
+                </div>
+            </div>
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Desglose por Jornada</h4>
+                <div style="max-height: 150px; overflow-y: auto; padding-right: 5px; scrollbar-width: thin;">
+                    ${desgloseHtml}
+                </div>
+            </div>
+        `;
+
+        
+        // --- INSIGNIAS ---
+        let badgesHtml = "";
+        if(uBadges.length === 0) {
+            badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
+        } else {
+            uBadges.forEach(b => {
+                let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
+                badgesHtml += `
+                <div style="display:flex; align-items:center; gap: 12px;">
+                    <img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:24px; height:24px;">
+                    <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${b.text}</span>
+                </div>`;
+            });
+        }
+        badgesList.innerHTML = badgesHtml;
+        
+        // Insert stats before badges
+        let existingStats = document.getElementById('playerInfoStats');
+        if(existingStats) existingStats.remove();
+        
+        if (htmlStats !== "") {
+            let statsDiv = document.createElement('div');
+            statsDiv.id = 'playerInfoStats';
+            statsDiv.innerHTML = htmlStats;
+            roleEl.parentNode.insertBefore(statsDiv, roleEl.nextSibling);
+        }
+        
+        modal.style.display = 'flex';
+    };
+window.renderRankingV2 = function() {
+        const data = window.appData;
+        let loggedUser = (data && data.usuario) ? data.usuario : (typeof currentUser !== 'undefined' ? currentUser : '');
+        
+        let container = document.getElementById('tablasClasificacionContainer');
+        let enConstruccion = document.getElementById('rankingEnConstruccion');
+        
+        if (enConstruccion) enConstruccion.style.display = 'none';
+        if (container) container.style.display = 'block';
+        
+        if(!container) return;
+        if(!data || !data.ligas || data.ligas.length === 0) {
+            container.innerHTML = `<div class="alert-box alert-warning" style="display:block;">No estás asignado a ninguna liga privada todavía.</div>`;
+            return;
+        }
+
+        let ligaName = window.currentLiga || data.ligas[0];
+        let ranking = data.clasificaciones[ligaName] || [];
+        let totalJugadores = ranking.length;
+        
+        let maxJornada = 1;
+        let maxJornadaJugada = 0;
+        if (data.stats_ligas) {
+            for(let u in data.stats_ligas) {
+                if(!data.stats_ligas[u][ligaName]) continue;
+                if(data.stats_ligas[u][ligaName].porJornada) {
+                    for(let j in data.stats_ligas[u][ligaName].porJornada) {
+                        let jNum = parseInt(j);
+                        if(jNum > maxJornadaJugada) maxJornadaJugada = jNum;
+                    }
+                }
+            }
+        }
+        if (maxJornadaJugada > 0) maxJornada = maxJornadaJugada;
+        
+        // Calcular Ranking Previo para flechas de tendencia
+        let previousRanking = [];
+        if (maxJornada > 1 && data.stats_ligas) {
+            for(let u in data.stats_ligas) {
+                if(!data.stats_ligas[u][ligaName]) continue;
+                let ptsUpToPrev = 0;
+                for(let x=1; x<maxJornada; x++){ ptsUpToPrev += (data.stats_ligas[u][ligaName].porJornada[x] || 0); }
+                previousRanking.push({ jugador: u, pts: ptsUpToPrev });
+            }
+            previousRanking.sort((a,b) => b.pts - a.pts);
+            // Asignar realRank para empates
+            previousRanking.forEach(r => {
+                r.realRank = previousRanking.findIndex(x => x.pts === r.pts) + 1;
+            });
+        }
+        
+        // Asignar realRank al ranking actual
+        ranking.forEach(r => {
+            r.realRank = ranking.findIndex(x => x.puntos === r.puntos) + 1;
+        });
+        
+        const getTrendHtml = (jugador, currentArrayIdx) => {
+            if (maxJornadaJugada <= 1 || previousRanking.length === 0) {
+                return `<span style="color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
+            }
+            let prevUser = previousRanking.find(x => x.jugador === jugador);
+            let currUser = ranking[currentArrayIdx];
+            if (!prevUser || (prevUser.pts === 0 && currUser.puntos === 0)) {
+                return `<span style="color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
+            }
+            let diff = prevUser.realRank - currUser.realRank; 
+            if (diff > 0) {
+                return `<span style="color:var(--success); font-size:0.8rem; font-weight:800; display:flex; align-items:center; gap:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>${diff}</span>`;
+            } else if (diff < 0) {
+                return `<span style="color:#ff4757; font-size:0.8rem; font-weight:800; display:flex; align-items:center; gap:2px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>${Math.abs(diff)}</span>`;
+            } else {
+                return `<span style="color:var(--text-muted); font-size:0.8rem; font-weight:800; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
+            }
+        };
+
+        const buildBadgesInline = (jugador) => {
+            let uBadges = data.insignias[jugador] || [];
+            if(uBadges.length === 0) return "";
+            let html = "";
+            uBadges.forEach(b => {
+                let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
+                html += `<img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:16px; height:16px; margin-left:4px; display:inline-block; vertical-align:middle;">`;
+            });
+            return html;
+        };
+
+        // ---------- CAJA 1: Título, Botones y Podio ----------
+        let html = `<div class="vcv-card-v2" style="margin-bottom: 12px; margin-top: -12px; padding-bottom: 16px;">`;
+        html += `<div style="padding: 16px 16px 0 16px;">`;
+        
+        // Cabecera y Jornada
+        html += `<div class="card-title-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h2 style="font-size: 1.15rem; font-weight: 800; margin:0; color:var(--text-main); display:flex; align-items:center; gap:6px;">Clasificación de Ligas <svg onclick="document.getElementById('ayudaRankingModal').style.display='flex'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); cursor:pointer;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></h2>
+                    <span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.4px; background: rgba(106, 44, 112, 0.4); color: #e2a6ea; border: 1px solid rgba(144, 60, 152, 0.6);">Jornada ${maxJornada}</span>
+                 </div>`;
+
+        // Botones de Liga SIN EMOJI
+        html += `<div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
+        data.ligas.forEach(l => {
+            let activeClass = l === ligaName ? 'active' : '';
+            html += `<button class="cat-filter-btn ${activeClass}" onclick="cambiarLiga('${l}')">Liga ${l}</button>`;
+        });
+        html += `</div>`;
+
+        // PODIUM
+        if (ranking.length > 0) {
+            html += `<div class="podium-container">`;
+            const renderSlot = (rankIndex, slotClass) => {
+                if(rankIndex >= ranking.length) return `<div class="podium-slot ${slotClass}"></div>`;
+                let r = ranking[rankIndex];
+                let initials = r.jugador.substring(0,2).toUpperCase();
+                let isFirst = rankIndex === 0;
+                let rankNum = r.realRank;
+                
+                let avatarContent = isFirst ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown crown-icon" style="width: 22px; height: 22px;"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>${initials}` : initials;
+                let textColor = isFirst ? 'var(--secondary-color)' : (rankIndex === 1 ? '#ced6e0' : '#e58e26');
+                
+                return `
+                <div class="podium-slot ${slotClass}">
+                    <div class="podium-avatar">${avatarContent}</div>
+                    <div class="podium-bar">
+                        <div style="display:flex; align-items:center; margin-bottom: 2px;">
+                            <span style="font-weight: ${isFirst ? '900' : '800'}; font-size: ${isFirst ? '1rem' : '0.9rem'}; color: ${textColor};">${rankNum}º</span>
+                        </div>
+                        <span class="player-handle" style="cursor:pointer; font-size:0.75rem; word-break:break-all; max-width:100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; line-height:1.1;" onclick="openPlayerInfo('${r.jugador}')">@${r.jugador}</span>
+                        <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                            ${getTrendHtml(r.jugador, rankIndex)}
+                            <span class="player-pts" style="margin-top:0;">${r.puntos} pts</span>
+                        </div>
+                    </div>
+                </div>`;
+            };
+            html += renderSlot(1, 'rank-2');
+            html += renderSlot(0, 'rank-1');
+            html += renderSlot(2, 'rank-3');
+            html += `</div>`;
+        }
+        html += `</div></div>`; // Cierra CAJA 1
+
+        // ---------- CAJA 2: MI POSICION (Current user) SEPARADA ----------
+        let myIndex = ranking.findIndex(r => r.jugador === (data.usuario || loggedUser));
+        if (myIndex !== -1) {
+            let r = ranking[myIndex];
+            let pos = r.realRank;
+
+            html += `
+            <div class="vcv-card-v2" style="background: rgba(106, 44, 112, 0.4); border-color: var(--secondary-color); margin-bottom: 12px; padding:16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--secondary-color); color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
+                        <span style="font-weight: 900;">${pos}º</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="font-weight: 800; font-size: 0.95rem; margin-top:2px;">@${r.jugador} <span class="role-badge" style="background: var(--secondary-color); color: #140818; border:none; margin-left: 4px;">TÚ</span></div>
+                    </div>
+                </div>
+                <div style="text-align: right; display:flex; align-items:center; gap:8px;">
+                    ${getTrendHtml(r.jugador, myIndex)}
+                    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--secondary-color); margin-top:2px;">${r.puntos} pts</div>
+                </div>
+                </div>
+            </div>`;
+        }
+
+        // ---------- CAJA 3: TABLA COMPLETA ----------
+        if (ranking.length > 3) {
+            html += `
+            <div class="vcv-card-v2 ranking-table-card" style="margin-bottom: 20px; padding: 0;">
+                <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                <span>TABLA COMPLETA (${totalJugadores} JUGADORES)</span>
+                <span>PUNTOS</span>
+                </div>
+                <div id="ranking-list-body">`;
+            
+            for(let i=3; i<ranking.length; i++) {
+                let r = ranking[i];
+                let isMe = r.jugador === (data.usuario || loggedUser);
+                let meClass = isMe ? 'is-current-user' : '';
+                let badges = buildBadgesInline(r.jugador); 
+                // ROLE BADGE ELIMINADO AQUI COMO PIDIÓ EL USUARIO
+
+                html += `
+                <div class="ranking-list-item ${meClass}" style="cursor:pointer;" onclick="openPlayerInfo('${r.jugador}')">
+                    <div class="rank-left">
+                        <div style="display:flex; flex-direction:column; align-items:center; min-width:24px;">
+                            <span class="rank-num" style="margin:0;">${r.realRank}</span>
+                        </div>
+                        <div class="rank-user-info" style="margin-left:12px;">
+                            <div class="name">@${r.jugador} ${badges}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        ${getTrendHtml(r.jugador, i)}
+                        <span class="rank-pts">${r.puntos}</span>
+                    </div>
+                </div>`;
+            }
+            html += `</div></div>`; // Cierra CAJA 3
+        }
+
+        container.innerHTML = html;
+    };
+window.updateProgressBar = function() {
+        if(!window.appData) return;
+        let totalOpen = 0;
+        let predictedOpen = 0;
+        if(window.appData.equipos) {
+            window.appData.equipos.forEach(eq => {
+                if(eq.estado !== "CERRADO") {
+                    totalOpen++;
+                    let savedVal = (window.appData.predicciones_usuario && window.appData.predicciones_usuario[eq.id_partido]) ? window.appData.predicciones_usuario[eq.id_partido] : null;
+                    if(savedVal) predictedOpen++;
+                }
+            });
+        }
+        let porcentaje = totalOpen > 0 ? Math.round((predictedOpen / totalOpen) * 100) : 100;
+        let bar = document.getElementById('user-progress-bar');
+        let lbl = document.getElementById('user-progress-label');
+        if(bar) bar.style.width = porcentaje + '%';
+        if(lbl) lbl.innerText = porcentaje + '% Listo';
+    };
+    
+    // Alias for the scattered calls
+    function updateProgressBar() {
+        window.updateProgressBar();
+    }
+    
     // --- CATEGORY FILTER LOGIC ---
     window.updateCategoryFilter = function() {
         const contenedor = document.getElementById('contenedorPartidos');
@@ -3336,6 +4061,68 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 </script>
 
 
+
+
+
+
+<!-- MODAL INFO DERBY -->
+<div id="infoDerbyModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('infoDerbyModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:#ff4757;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Puntuación Doble</h3>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+            Al estar asignado a ambos equipos de este partido, se considera un <b>Derby</b> para ti.
+        </p>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
+            Los puntos que consigas en este partido valdrán el <b>DOBLE</b> en todas las clasificaciones donde aparezcan ambos equipos. ¡Aprovecha la oportunidad!
+        </p>
+    </div>
+</div>
+
+<!-- MODAL AYUDA RANKING -->
+<div id="ayudaRankingModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('ayudaRankingModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:var(--secondary-color);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">¿Sabías qué?</h3>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+            Si <b>pulsas sobre el nombre de cualquier jugador</b> en la clasificación, podrás ver su ficha detallada.
+        </p>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
+            En su ficha encontrarás sus <b>estadísticas históricas</b> (media de puntos, posición promedio, récord en una jornada) y el significado de todas las <b>insignias</b> que ha conseguido.
+        </p>
+    </div>
+</div>
+
+<!-- MODAL PERFIL JUGADOR -->
+<div id="playerInfoModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color); text-align: center;">
+        <button onclick="document.getElementById('playerInfoModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 1.5rem; font-weight: 900; color: #fff;" id="playerInfoInitials">
+            ...
+        </div>
+        <h3 id="playerInfoName" style="margin:0 0 4px; font-size:1.2rem; color:var(--text-main);">@username</h3>
+        <div id="playerInfoRole" style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 20px;">Rol</div>
+        
+        <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <h4 style="margin: 0 0 12px; font-size: 0.9rem; color: var(--vcv-dorado); text-transform: uppercase; letter-spacing: 0.5px;">Insignias Conseguidas</h4>
+            <div id="playerInfoBadgesList" style="display:flex; flex-direction:column; gap: 12px;">
+                <!-- Lista de insignias -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- MODAL NOTIFICACIONES -->
 <div id="notificacionesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
