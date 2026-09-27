@@ -2350,17 +2350,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             let isAdmin = false;
 
             // Calculate Rank from Global Leaderboard
-            let globalRankList = data.clasificaciones && data.clasificaciones["Global"] ? data.clasificaciones["Global"] : [];
-            let myRankIndex = globalRankList.findIndex(r => r.jugador === usr);
-            let myRank = myRankIndex !== -1 ? myRankIndex + 1 : 0;
-            let rankText = myRank > 0 ? "Top " + myRank : "-";
-            
-            let myPoints = myRankIndex !== -1 ? globalRankList[myRankIndex].puntos : 0;
-            
-            let rankEl = document.getElementById('h2-user-rank');
-            if(rankEl) rankEl.innerText = rankText;
-            let ptsEl = document.getElementById('h2-user-pts');
-            if(ptsEl) ptsEl.innerText = myPoints + " pts";
+            window.updateHeaderStats();
 
             
             misInsignias.forEach(b => {
