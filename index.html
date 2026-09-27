@@ -2535,13 +2535,28 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                             ? `<a href="${eq.streaming}" target="_blank" class="btn-streaming-v2 active" style="text-decoration:none;"><i data-lucide="play" style="width:14px;height:14px;"></i> Streaming</a>` 
                             : `<button class="btn-streaming-v2 disabled" disabled><i data-lucide="play-square" style="width:14px;height:14px;"></i> Sin enlace</button>`;
 
+                        
+                        let catFilename = eq.categoria + ".svg";
+                        let catLower = eq.categoria.toLowerCase();
+                        if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
+                        else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+                        else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+                        else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+                        else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+
+                        let catLogoHtml = `
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                      <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                                      <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                                      <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
+                                        ${eq.categoria.toUpperCase()}
+                                      </span>
+                                    </div>`;
                         htmlPartidos += `
                         <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
                             <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
                                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                    <span style="color: var(--secondary-color); font-weight: 800;">
-                                      ${eq.categoria.toUpperCase()}
-                                    </span>
+                                    ${catLogoHtml}
                                     ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                                 </div>
                                 <div style="text-align: right;">
