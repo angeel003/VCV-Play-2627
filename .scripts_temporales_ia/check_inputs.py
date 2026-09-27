@@ -1,6 +1,5 @@
-import sys
-with open('v2.html', 'r', encoding='utf-8') as f:
+with open('dev.html', 'r', encoding='utf-8') as f:
     text = f.read()
-idx = text.find('id="inputs_eq_${eq.id_partido}"')
-if idx != -1:
-    sys.stdout.buffer.write(text[idx:idx+1500].encode('utf-8'))
+
+start = text.find('class="inputs-eq"')
+print(text[start-100:start+2500])

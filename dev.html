@@ -1665,7 +1665,7 @@
         <h2>✅ Mis Predicciones</h2>
 <p style="color:#555; margin-bottom:20px; font-weight: 500; font-size: 0.95rem;">Historial completo de tus aciertos y puntos conseguidos en jornadas anteriores.</p>
         <button type="button" class="btn btn-primary mb-4" id="btnHistory" style="font-weight:bold; padding: 10px 25px;">
-            🔒 Cargar mi historial
+             Cargar mi historial
         </button>
         <div id="historyMessage" class="alert-box mx-auto" style="max-width:600px;"></div>
         
@@ -1705,26 +1705,19 @@
         </div>
     </div></section>
     <section id="prediccionesTotalesSection">
-        <details class="vcv-faq-master" style="margin-top:-12px; margin-bottom:20px; max-width:100%; border: 1px solid var(--border-color);">
+        <details class="vcv-faq-master" style="margin-top: 5px; margin-bottom: 20px; max-width: 100%; border: 1px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);">
             <summary style="padding:16px; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.3rem;">🔒</span>
-                    <span style="font-size:1.1rem; font-weight:900; color:var(--text-main); letter-spacing:0.5px;">TOP SECRET</span>
+                    <span style="font-size:1.3rem;"></span>
+                    <span style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); letter-spacing:0.5px;">👉 Predicción de Puntos Totales 26/27 👈</span>
                 </div>
                 <div id="relojTotales" style="font-size:0.95rem; font-weight:800; color:#ef4444; text-align:right;">Calculando...</div>
             </summary>
             <div class="faq-content-v2" style="padding:0 15px 15px 15px; border-top:1px solid rgba(255,255,255,0.05);">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0 15px 0; text-align:left;">
-                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada.
+                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada. <strong>Cada voto será completamente secreto.</strong>
                 </p>
-                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 10px 12px; margin-bottom: 15px; border-radius: 4px;">
-                    <div style="font-weight: 900; color: #ef4444; font-size: 0.85rem; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
-                        <span style="font-size: 1rem;">🤫</span> ALTO SECRETO
-                    </div>
-                    <div style="color: var(--text-main); font-size: 0.8rem; line-height: 1.4;">
-                        No todo el mundo puede ver esta sección. Si estás viéndola, considérate un afortunado... <strong>¡shhh!</strong>
-                    </div>
-                </div>
+                
                 <div id="contenedorPrediccionesTotales"></div>
             </div>
         </details>
@@ -2223,7 +2216,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
                     </div>`;
                 } else if (eq.estado === "CERRADO" || eq.visibilidad === "OCULTAR") {
                     esPasado = true;
-                    infoAdicional = `<div style="margin-top:10px;"><span style="background-color:#e2e3e5; color:#383d41; padding:6px 12px; border-radius:20px; font-weight:bold; font-size:0.85rem;">🔒 Partido finalizado</span></div>`;
+                    infoAdicional = `<div style="margin-top:10px;"><span style="background-color:#e2e3e5; color:#383d41; padding:6px 12px; border-radius:20px; font-weight:bold; font-size:0.85rem;"> Partido finalizado</span></div>`;
                 } else {
                     infoAdicional = `<div style="margin-top:10px;"><span style="background-color:#d4edda; color:#155724; padding:6px 12px; border-radius:20px; font-weight:bold; font-size:0.85rem;">🟢 Próximamente</span>${eq.timestamp ? `<div class="reloj-partido" data-ts="${eq.timestamp}" style="font-size:0.85rem; font-weight:bold; padding:4px 8px; background:#fff3cd; color:#856404; border-radius:4px; display:inline-block; margin-left:10px;">Calculando tiempo...</div>` : ""}</div>`;
                 }
@@ -2739,12 +2732,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                         
                         ${miCajonHTML}
 
-                        <details>
-                            <summary style="font-weight:700; font-size:0.85rem; color:var(--text-muted); cursor:pointer; outline:none;">👀 Ver predicciones del resto</summary>
-                            <div style="margin-top:10px; background:var(--bg-card-alt); padding:10px 15px; border-radius:12px; border:1px solid var(--border-color);">
-                                ${listaOtros}
-                            </div>
-                        </details>
+                        
                     </div>`;
                 });
                 
@@ -3094,7 +3082,7 @@ document.getElementById('btnHistory').addEventListener('click', function(e) {
         }
     })
     .finally(() => { 
-        btnHist.innerText = "🔒 Cargar mi historial"; 
+        btnHist.innerText = " Cargar mi historial"; 
         btnHist.disabled = false; 
     });
 });

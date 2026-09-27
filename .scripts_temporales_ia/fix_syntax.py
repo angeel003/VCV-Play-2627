@@ -1,11 +1,40 @@
 import re
 
-with open('v2.html', 'r', encoding='utf-8') as f:
+with open('dev.html', 'r', encoding='utf-8') as f:
     text = f.read()
 
-text = text.replace('// Observe DOM changes in contenedorPartidos\n    };', '')
+# Fix the syntax error in guardarResultadoAdmin
+bad_code = """    .catch(err => {
+        btn.disabled = false; btn.innerText = "Guardar Cambios";
+        mostrarToast("Error de conexión");
+    });
+})
+    .finally(() => { 
+        btn.disabled = false; 
+        btn.innerText = "💾 Guardar Todo"; 
+    });"""
 
-with open('v2.html', 'w', encoding='utf-8') as f:
+fixed_code = """    .catch(err => {
+        btn.disabled = false; btn.innerText = "Guardar Cambios";
+        mostrarToast("Error de conexión");
+    });"""
+
+if bad_code in text:
+    text = text.replace(bad_code, fixed_code)
+else:
+    # try another way
+    bad_code2 = """    .catch(err => {
+        btn.disabled = false; btn.innerText = "Guardar Cambios";
+        mostrarToast("Error de conexión");
+    });
+})
+    .finally(() => { 
+        btn.disabled = false; 
+        btn.innerText = "💾 Guardar Todo"; 
+    });
+}"""
+    if bad_code2 in text:
+        text = text.replace(bad_code2, fixed_code + "\n}")
+
+with open('dev.html', 'w', encoding='utf-8') as f:
     f.write(text)
-
-print("Syntax error fixed")

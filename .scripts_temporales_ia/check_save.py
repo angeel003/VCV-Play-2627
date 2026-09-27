@@ -1,6 +1,8 @@
-import sys
 with open('script-v2/Código.js', 'r', encoding='utf-8') as f:
-    text = f.read()
-idx = text.find('if (action === "save") {')
-if idx != -1:
-    sys.stdout.buffer.write(text[idx:idx+2500].encode('utf-8'))
+    lines = f.readlines()
+
+for i, line in enumerate(lines):
+    if 'action === "save"' in line or "action === 'save'" in line:
+        for j in range(i, min(i+40, len(lines))):
+            print(lines[j].strip())
+        break
