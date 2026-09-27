@@ -3579,6 +3579,29 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     
     
+    
+    window.updateHeaderStats = function() {
+        if (!window.appData || !window.appData.clasificaciones || !window.appData.ligas || window.appData.ligas.length === 0) return;
+        let loggedUser = window.appData.usuario || (typeof currentUser !== 'undefined' ? currentUser : '');
+        let ligaName = window.currentLiga || window.appData.ligas[0];
+        
+        let rankingList = window.appData.clasificaciones[ligaName] || [];
+        
+        // Ensure realRank is calculated for the selected league
+        rankingList.forEach(r => {
+            r.realRank = rankingList.findIndex(x => x.puntos === r.puntos) + 1;
+        });
+        
+        let myUser = rankingList.find(r => r.jugador === loggedUser);
+        let rankText = myUser ? `Top ${myUser.realRank}` : "Top -";
+        let myPoints = myUser ? myUser.puntos : 0;
+        
+        let rankEl = document.getElementById('h2-user-rank');
+        if(rankEl) rankEl.innerText = rankText;
+        let ptsEl = document.getElementById('h2-user-pts');
+        if(ptsEl) ptsEl.innerText = myPoints + " pts";
+    };
+
     window.cambiarLiga = function(ligaName) {
         window.currentLiga = ligaName;
         window.renderRankingV2();
