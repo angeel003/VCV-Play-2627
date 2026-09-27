@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fantasy-vcv-cache-v2';
+const CACHE_NAME = 'fantasy-vcv-cache-v3';
 
 // Al instalar, saltamos la espera para activar inmediatamente
 self.addEventListener('install', event => {
