@@ -459,7 +459,7 @@ function doPost(e) {
         var nuevoEstado = estadoActual;
         var nuevaVisibilidad = visibilidadActual;
 
-        if(rTimestamp && nowMs >= (rTimestamp - 15 * 60 * 1000)) { nuevoEstado = "CERRADO"; }
+        if(rTimestamp && nowMs >= (rTimestamp)) { nuevoEstado = "CERRADO"; }
         if(rTimestamp && nowMs >= (rTimestamp + 48 * 60 * 60 * 1000)) {
             nuevoEstado = "CERRADO"; nuevaVisibilidad = "OCULTAR";
         }
@@ -892,6 +892,23 @@ function doPost(e) {
 
     if (action === "save") {
         var pData = getSafeData(sheetPorras);
+        
+        // VALIDACIÓN DE SEGURIDAD
+        var matchDict = {};
+        for (var m = 0; m < partidos.length; m++) {
+            matchDict[partidos[m].id_partido] = partidos[m];
+        }
+        
+        for (var idPart in params.predicciones) {
+            var pMatch = matchDict[idPart];
+            if (pMatch && pMatch.estado === "CERRADO") {
+                return ContentService.createTextOutput(JSON.stringify({
+                    "status": "error", 
+                    "message": "⚠️ Seguridad: El partido " + idPart + " ya ha comenzado o está cerrado. Recarga la página."
+                })).setMimeType(ContentService.MimeType.JSON);
+            }
+        }
+
         for (var i = pData.length - 1; i >= 1; i--) { if (pData[i][1] == usuario && params.predicciones[pData[i][2].toString()]) { sheetPorras.deleteRow(i + 1); } }
         for (var idPart in params.predicciones) {
             var p = params.predicciones[idPart];

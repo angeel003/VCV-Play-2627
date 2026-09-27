@@ -1524,69 +1524,121 @@
     </section>
     <section id="enlacesRfevbSection" style=" padding-bottom:30px;">
 
-<div class="vcv-card-v2" id="adminPanelWrapper" style="display:none; margin-bottom: 20px;">
-    <div class="header-eq" style="background:var(--vcv-dorado); color:#000;">
-        <h3 style="color:#000;"><i data-lucide="settings" style="color:#000;"></i> Intranet Administrador</h3>
-    </div>
-    <div style="padding:15px;">
+<div class="vcv-card" id="adminPanelWrapper" style="display: none; margin-bottom:20px; border: 2px dashed #e67e22; background: rgba(230, 126, 34, 0.08); border-radius: 16px; padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-alert" aria-hidden="true" style="color: #e67e22; width: 22px; height: 22px;" class="lucide lucide-shield-alert"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #e67e22; margin:0;">Intranet Administrador</h3>
+          </div>
+          <span style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Panel de control enlazado directamente a tu Google Sheet de base de datos.
+        </p>
+
+        <!-- Botones de Control Servidor -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="btn" style="flex: 1; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Auto-Permisos
+          </button>
+          <button class="btn" style="flex: 1; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnForceSyncExcel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-ccw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg> Forzar Caché
+          </button>
+          <a href="https://docs.google.com/spreadsheets/" target="_blank" class="btn" style="flex: 1; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; text-decoration: none; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="table" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-table"><path d="M12 3v18"></path><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path></svg> Abrir Excel
+          </a>
+        </div>
+
+        <!-- Formulario Crear Nuevo Usuario -->
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+          <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">➕ Añadir Nuevo Usuario</h4>
+          <div class="form-group" style="margin-bottom:8px;">
+            <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label style="font-size: 0.75rem; color:var(--text-muted);">Inscribir a Ligas:</label>
+            <div id="adminLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
+            Crear Usuario en Sheets
+          </button>
+        </div>
+
+        <!-- Subida Rápida de Resultados y Links -->
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+          <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">🏐 Subir Resultados y Enlaces</h4>
+          <div id="adminListaPartidos"></div>
+        </div>
+      </div>
+
+
+        <div class="vcv-card-v2" style="margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="key" aria-hidden="true" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-key"><path d="m2 21 9.6-9.6"></path><path d="m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19"></path><circle cx="15.5" cy="7.5" r="5.5"></circle></svg>
+          Gestionar mi Contraseña
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Por tu seguridad, no utilices la misma contraseña que usas en otras webs o aplicaciones importantes.
+        </p>
+        <div class="form-group" style="margin-bottom: 12px; display: none;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Tu usuario</label>
+          <input type="text" id="cpUsuario" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Contraseña Actual</label>
+          <input type="password" id="cpOldPwd" class="form-control" placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Nueva Contraseña</label>
+          <input type="password" id="cpNewPwd" class="form-control" placeholder="Escribe tu nueva contraseña" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Repite Nueva Contraseña</label>
+          <input type="password" id="cpNewPwd2" class="form-control" placeholder="Vuelve a escribirla" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <button class="btn btn-primary" id="btnChangePwd" style="width: 100%; background: var(--vcv-morado); border: none; padding: 12px; border-radius: 8px; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" style="width: 16px; height: 16px;" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg> Actualizar Contraseña
+        </button>
+        <div id="msgChangePwd" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
+      </div>
+        <div class="vcv-card-v2" style="margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" aria-hidden="true" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Cambiar mi Usuario o Nombre
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.
+        </p>
         
-                        
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <button id="btnAdminSync" class="btn btn-warning" style="flex:1; font-weight:bold;">🔄 Auto-Permisos</button>
-                            <button id="btnForceSyncExcel" class="btn btn-info" style="flex:1; font-weight:bold; color:white;">🔄 Forzar Caché</button>
-                            <a href="https://docs.google.com/spreadsheets/" target="_blank" class="btn btn-light" style="flex:1; font-weight:bold; border: 1px solid #ccc;">🗂️ Abrir Excel</a>
-                        </div>
+        <div class="form-group" style="margin-bottom: 12px; display:none;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Tu usuario actual</label>
+          <input type="text" id="rnUsuario" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Confirma tu contraseña actual</label>
+          <input type="password" id="rnPwd" class="form-control" placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <hr style="border-color:var(--border-color); margin: 15px 0;">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Nuevo @usuario <span style="font-size:0.7rem;">(opcional)</span></label>
+          <input type="text" id="rnNewUser" class="form-control" placeholder="Ej: angelvcv" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Nuevo Nombre Real <span style="font-size:0.7rem;">(opcional)</span></label>
+          <input type="text" id="rnNewName" class="form-control" placeholder="Ej: Ángel VCV" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
 
-                        <!-- NUEVA SECCIÓN DE CREAR USUARIOS -->
-                        <h5 style="color:var(--vcv-blanco); border-bottom: 1px solid #555; padding-bottom: 5px; margin-top: 15px; margin-bottom: 15px;">➕ Añadir Nuevo Usuario</h5>
-                        <div style="background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <input type="text" id="addUsrName" class="form-control form-control-sm mb-2" placeholder="Usuario nuevo (@nombre)">
-                            <input type="password" id="addUsrPwd" class="form-control form-control-sm mb-2" placeholder="Contraseña">
-                            <div style="margin-bottom: 10px; text-align: left; font-size: 0.9rem;">
-                                <strong>Añadir a Ligas:</strong>
-                                <div id="adminLigasCheckboxes" style="display: flex; flex-direction: column; gap: 3px; max-height: 100px; overflow-y: auto; background: white; padding: 5px; border-radius: 4px; border: 1px solid #ccc; margin-top: 5px;">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                            <button class="btn btn-sm btn-success btn-block" style="font-weight:bold;" onclick="crearUsuarioAdmin(event)">➕ Crear Usuario</button>
-                        </div>
-                        
-                        <h5 style="color:var(--vcv-blanco); border-bottom: 1px solid #555; padding-bottom: 5px; margin-bottom: 15px;">🏐 Subir Resultados Rápidos</h5>
-                        <div id="adminListaPartidos"></div>
-                        
-                    
-    </div>
-</div>
-
-<div class="vcv-card-v2" style="margin-bottom: 20px;">
-    <div class="header-eq">
-        <h3><i data-lucide="user-cog"></i> Gestión de Cuenta</h3>
-    </div>
-    <div style="padding:15px; display:flex; flex-direction:column; gap:15px;">
-        <div class="faq-inner-item">
-                <div class="faq-inner-title">Gestionar mi contraseña</div>
-                <p style="font-size:0.8rem; margin-bottom:10px;">Puedes cambiar tu contraseña introduciendo tus datos actuales y la nueva contraseña.</p>
-                <input type="text" id="cpUsuario" class="form-control mb-2" placeholder="Tu usuario" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <input type="password" id="cpOldPwd" class="form-control mb-2" placeholder="Contraseña actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <input type="password" id="cpNewPwd" class="form-control mb-2" placeholder="Nueva contraseña" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <input type="password" id="cpNewPwd2" class="form-control mb-2" placeholder="Repite nueva contraseña" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <button class="btn btn-primary btn-sm btn-block mt-2" id="btnChangePwd" style="font-weight:bold; background:var(--primary-color); border:none;">Actualizar Contraseña</button>
-                <div id="msgChangePwd" class="alert-box mt-2" style="padding:10px; display:none;"></div>
-            </div>
-        <div class="faq-inner-item">
-                <div class="faq-inner-title">Cambiar mi usuario / nombre</div>
-                <p style="font-size:0.8rem; margin-bottom:10px;">Rellena este formulario para solicitar el cambio en la base de datos.</p>
-                <input type="text" id="rnUsuario" class="form-control mb-2" placeholder="Tu usuario actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <input type="password" id="rnPwd" class="form-control mb-2" placeholder="Tu contraseña actual" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <hr style="border-color:var(--border-color);">
-                <input type="text" id="rnNewUser" class="form-control mb-2" placeholder="Nuevo @usuario (opcional)" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <input type="text" id="rnNewName" class="form-control mb-2" placeholder="Nuevo Nombre Real (opcional)" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
-                <button class="btn btn-primary btn-sm btn-block mt-2" id="btnReqName" style="font-weight:bold; background:var(--primary-color); border:none;">Enviar Solicitud</button>
-                <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none;"></div>
-            </div>
-    </div>
-</div>
-
+        <button class="btn btn-primary" id="btnReqName" style="width: 100%; background: var(--vcv-morado); border: none; padding: 12px; border-radius: 8px; color: white; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="save" aria-hidden="true" style="width: 16px; height: 16px;" class="lucide lucide-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Enviar Solicitud
+        </button>
+        <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
+      </div>
     <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <div class="header-eq">
             <h3><i data-lucide="external-link"></i> Enlaces Oficiales</h3>
@@ -1796,26 +1848,42 @@ function renderAdminPanel(equipos) {
         if (now - ts < 48 * 60 * 60 * 1000) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
+            
             html += `
-            <div class="admin-match-box">
-                <div style="font-weight:bold; margin-bottom:8px; color: #e65100;">${adminLocal} vs ${adminVisit} <span style="color:#666; font-size:0.8rem; font-weight:normal;">(${eq.id_partido})</span></div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; gap:10px;">
-                          <input type="text" id="adm_sets_${eq.id_partido}" class="form-control form-control-sm" placeholder="${now >= ts ? 'Sets (3-1)' : 'Bloqueado (No ha empezado)'}" value="${eq.oficial_sets || ''}" ${now >= ts ? '' : 'disabled'}>
-                          <input type="text" id="adm_parc_${eq.id_partido}" class="form-control form-control-sm" placeholder="${now >= ts ? 'Parc (25-20...)' : 'Bloqueado'}" value="${eq.oficial_parciales || ''}" ${now >= ts ? '' : 'disabled'}>
-                      </div>
-                    <input type="text" id="adm_stream_${eq.id_partido}" class="form-control form-control-sm" placeholder="Link Streaming YouTube/Twitch" value="${eq.streaming || ''}">
-                    
+            <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem;">
+                    ${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit}
                 </div>
-                <button class="btn btn-sm btn-dark mt-2" style="font-weight:bold;" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">💾 Guardar Todo</button>
+                
+                <!-- SECCIÓN RESULTADOS -->
+                <div style="margin-bottom: 8px; border-left: 2px solid var(--vcv-morado); padding-left: 8px;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Resultado Final</label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;" ${now >= ts ? '' : 'disabled'}>
+                        <span style="color: var(--text-muted);">-</span>
+                        <input type="number" id="adm_sets_vis_${eq.id_partido}" class="form-control" placeholder="Sets Visitante" value="${eq.oficial_sets ? (eq.oficial_sets.split('-')[1] || '') : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;" ${now >= ts ? '' : 'disabled'}>
+                    </div>
+                    <input type="text" id="adm_parc_${eq.id_partido}" class="form-control" placeholder="${now >= ts ? 'Parciales (ej: 25-20, 25-22...)' : 'Bloqueado (No ha empezado)'}" value="${eq.oficial_parciales || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-top: 6px;" ${now >= ts ? '' : 'disabled'}>
+                </div>
+
+                <!-- SECCIÓN STREAMING -->
+                <div style="margin-bottom: 8px; border-left: 2px solid #e67e22; padding-left: 8px;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Link Streaming Oficial</label>
+                    <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                </div>
+
+                <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
+                    Guardar Cambios
+                </button>
             </div>`;
         }
     });
-    if (html === "") html = "<div style='color:white; font-size:0.9rem;'>No hay partidos disponibles o han pasado más de 48h.</div>";
+    if (html === "") html = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:10px;'>No hay partidos disponibles o han pasado más de 48h.</div>";
     document.getElementById('adminListaPartidos').innerHTML = html;
 }
 
-document.getElementById('btnAdminSync').addEventListener('click', function(e) {
+const btnAdminSyncEl = document.getElementById('btnAdminSync');
+if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     e.preventDefault();
     const btn = this;
     btn.disabled = true; btn.innerText = "⏳ Sincronizando...";
@@ -1838,15 +1906,17 @@ window.guardarResultadoAdmin = function(e, idPart) {
     const btn = e.currentTarget || e.target;
     
     // Leer valores, protegiendo si no existen los nuevos inputs
-    const elSets = document.getElementById(`adm_sets_${idPart}`);
+    const elSetsLoc = document.getElementById(`adm_sets_loc_${idPart}`);
+    const elSetsVis = document.getElementById(`adm_sets_vis_${idPart}`);
     const elParc = document.getElementById(`adm_parc_${idPart}`);
     const elStream = document.getElementById(`adm_stream_${idPart}`);
     
-    
-    const sets = elSets ? elSets.value.trim() : "";
+    let sets = "";
+    if (elSetsLoc && elSetsVis && elSetsLoc.value.trim() !== "" && elSetsVis.value.trim() !== "") {
+        sets = `${elSetsLoc.value.trim()}-${elSetsVis.value.trim()}`;
+    }
     const parc = elParc ? elParc.value.trim() : "";
     const stream = elStream ? elStream.value.trim() : "";
-    
     
     btn.disabled = true; btn.innerText = "Subiendo...";
     
@@ -1857,19 +1927,17 @@ window.guardarResultadoAdmin = function(e, idPart) {
     })
     .then(res => res.json())
     .then(d => {
+        btn.disabled = false; btn.innerText = "Guardar Cambios";
         if(d.status === "success") { 
-            mostrarToast("✅ Resultado subido al Excel"); 
+            mostrarToast("Guardado correctamente"); 
+            cargarPartidos(); 
         } else { 
-            alert("Error al guardar: " + (d.message || JSON.stringify(d))); 
+            mostrarToast(d.message || "Error al guardar"); 
         }
     })
     .catch(err => {
-        console.error("Error al guardar:", err);
-        alert("�Guardado en Excel con �xito! (El servidor tard� mucho en confirmarlo, recarga la p�gina si lo necesitas).");
-    })
-    .finally(() => { 
-        btn.disabled = false; 
-        btn.innerText = "💾 Guardar Todo"; 
+        btn.disabled = false; btn.innerText = "Guardar Cambios";
+        mostrarToast("Error de conexión");
     });
 }
 window.crearUsuarioAdmin = function(e) {
@@ -2504,13 +2572,21 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                             
                             
 
-                            ${eq.estado === "CERRADO" ? `<div style="text-align:center; margin-top:15px; padding:15px; background:var(--bg-card-alt); border-radius:12px; border:1px solid var(--border-color);"><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">RESULTADO OFICIAL</div><div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main);">${eq.oficial_sets || 'Sin resultado'}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${eq.oficial_parciales || ''}</div></div>` : `
+                            ${eq.estado === "CERRADO" ? `<div style="text-align:center; margin-top:15px; padding:15px; background:var(--bg-card-alt); border-radius:12px; border:1px solid var(--border-color);"><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">RESULTADO OFICIAL</div><div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main);">${eq.oficial_sets || 'Sin resultado'}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${eq.oficial_parciales || ''}</div></div>` : ``}
+
+                            <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
+                                <div id="summary-text-${eq.id_partido}">
+                                ${isPredicted ? `<div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); text-align: left;"><i data-lucide="check-circle" style="width: 16px; height: 16px; color: var(--success); flex-shrink: 0;"></i><span>Guardada: <strong style="color: var(--text-main); font-weight:800;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
+                                </div>
+                            </div>
+
+                            ${eq.estado !== "CERRADO" ? `
                             <!-- HIDDEN INPUTS -->
                             <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
                             <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
                             <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
 
-                            <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted && eq.estado !== 'CERRADO' ? 'display:none;' : 'display:block;'}">
+                            <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
                                 <div class="sets-grid-label-v2">
                                   <span>Resultado</span>
                                   
@@ -2550,16 +2626,9 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                                 </div>
                             </div>
                             
-                            <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted && eq.estado !== 'CERRADO' ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
-                                <div id="summary-text-${eq.id_partido}">
-                                ${isPredicted ? `<div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); text-align: left;"><i data-lucide="check-circle" style="width: 16px; height: 16px; color: var(--success); flex-shrink: 0;"></i><span>Guardada: <strong style="color: var(--text-main); font-weight:800;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
-                                </div>
-                            </div>
-
-                            
-                            <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
+                            <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s; ${eq.estado === 'CERRADO' ? 'display:none;' : ''}">
                                 ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
-                            </button>`}
+                            </button>` : ``}
                             
                             ${destacadoHtml}
                         </div>`;
@@ -3155,7 +3224,8 @@ function renderizarHistorial() {
             });
         }
     
-document.getElementById('btnForceSyncExcel').addEventListener('click', function(e) {
+const btnForceSyncExcelEl = document.getElementById('btnForceSyncExcel');
+if(btnForceSyncExcelEl) btnForceSyncExcelEl.addEventListener('click', function(e) {
     e.preventDefault();
     const btn = this;
     const originalText = btn.innerHTML;
