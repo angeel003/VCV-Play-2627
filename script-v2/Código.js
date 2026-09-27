@@ -471,6 +471,8 @@ function doPost(e) {
         var oRes = resultadosMap[idPart];
         var catTorneo = ajustesData[i][9] ? ajustesData[i][9].toString().trim() : "";
         var pabellonLocalizacion = ajustesData[i][10] ? ajustesData[i][10].toString().trim() : "";
+        var abrevF = ajustesData[i][11] ? ajustesData[i][11].toString().trim() : "";
+        var abrevR = ajustesData[i][12] ? ajustesData[i][12].toString().trim() : "";
 
         partidos.push({
             id_partido: idPart, ronda_global: ajustesData[i][1] ? ajustesData[i][1].toString().trim() : "0",
@@ -478,7 +480,8 @@ function doPost(e) {
             timestamp: rTimestamp, ubicacion: ajustesData[i][6] ? ajustesData[i][6].toString().trim().toUpperCase() : "",
             estado: nuevoEstado, visibilidad: nuevaVisibilidad,
             oficial_sets: oRes ? oRes.sets : "", oficial_parciales: oRes ? oRes.parciales : "",
-            categoria: catTorneo, pabellon: pabellonLocalizacion
+            categoria: catTorneo, pabellon: pabellonLocalizacion,
+            abrev_local: abrevF, abrev_rival: abrevR
         });
     }
 
