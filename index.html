@@ -97,10 +97,10 @@
        6. ALERTAS Y MENSAJES
        --------------------------------------------------- */
     .alert-box { display: none; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; margin-bottom: 20px; }
-    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-    .alert-danger { background: #fde8e8; color: var(--vcv-rojo); border: 1px solid #f8caca; }
-    .alert-warning { background: #fff8e1; color: #f57f17; border: 1px solid #ffecb3; }
-    .alert-info { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+    .alert-success { background: rgba(46, 204, 113, 0.15); color: var(--success); border: 1px solid rgba(46, 204, 113, 0.3); }
+    .alert-danger { background: rgba(231, 76, 60, 0.15); color: var(--danger); border: 1px solid rgba(231, 76, 60, 0.3); }
+    .alert-warning { background: rgba(243, 156, 18, 0.15); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.3); }
+    .alert-info { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
 
     #loginSection { display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top, 50px) + 40px) 20px 40px 20px; flex-direction: column; }
     .login-card { background: var(--vcv-blanco); padding: 40px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); width: 100%; max-width: 400px; text-align: center; margin-bottom: 40px; border-top: 5px solid var(--vcv-dorado); }
@@ -1586,7 +1586,7 @@
         <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
           Por tu seguridad, no utilices la misma contraseña que usas en otras webs o aplicaciones importantes.
         </p>
-        <div class="form-group" style="margin-bottom: 12px; display: none;">
+        <div class="form-group" style="margin-bottom: 12px; ">
           <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Tu usuario</label>
           <input type="text" id="cpUsuario" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
         </div>
@@ -1616,7 +1616,7 @@
           Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.
         </p>
         
-        <div class="form-group" style="margin-bottom: 12px; display:none;">
+        <div class="form-group" style="margin-bottom: 12px;">
           <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Tu usuario actual</label>
           <input type="text" id="rnUsuario" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
         </div>
