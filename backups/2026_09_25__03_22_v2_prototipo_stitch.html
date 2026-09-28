@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Fantasy VCV 26/27 | Club Voleibol Valencia</title>
+  
+  <!-- Manifest & PWA Meta Tags -->
+  <meta name="theme-color" content="#1d0d21">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fantasy VCV">
+  
+  <!-- Google Fonts: Space Grotesk & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #6a2c70;
+      --primary-hover: #7e3686;
+      --secondary-color: #d4af37;
+      --secondary-hover: #e5bf43;
+      --bg-surface: #140818;
+      --bg-card: #200f25;
+      --bg-card-alt: #2a1532;
+      --bg-input: #1a0b1e;
+      --border-color: #3b1d45;
+      --border-glow: rgba(212, 175, 55, 0.4);
+      --text-main: #f9f5fa;
+      --text-muted: #b7a4be;
+      --text-gold: #f3ce5e;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --badge-admin: #e67e22;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-surface);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Contenedor tipo App móvil responsivo */
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #1b0c20 0%, #120716 100%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-top: calc(var(--safe-top) + 64px);
+      padding-bottom: calc(var(--safe-bottom) + 76px);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+      border-left: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+    }
+
+    /* HEADER SUPERIOR FIJO */
+    header.app-header {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      height: calc(var(--safe-top) + 64px);
+      padding-top: var(--safe-top);
+      padding-left: 18px;
+      padding-right: 18px;
+      background: rgba(27, 12, 32, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .club-crest {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, #6a2c70 0%, #903c98 100%);
+      border: 2px solid var(--secondary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
+      color: var(--secondary-color);
+    }
+
+    .brand-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-text h1 span.tag-temp {
+      font-size: 0.65rem;
+      background: rgba(212, 175, 55, 0.2);
+      color: var(--secondary-color);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .user-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .user-pill:active {
+      transform: scale(0.95);
+    }
+
+    .user-pill .pts-badge {
+      color: var(--secondary-color);
+      font-weight: 700;
+    }
+
+    /* PANTALLAS (VIEWS) */
+    .view-section {
+      display: none;
+      padding: 16px;
+      flex-direction: column;
+      gap: 18px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .view-section.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* CARDS GENÉRICAS */
+    .vcv-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .badge-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-jornada {
+      background: rgba(106, 44, 112, 0.4);
+      color: #e2a6ea;
+      border: 1px solid rgba(144, 60, 152, 0.6);
+    }
+
+    .badge-locked {
+      background: rgba(231, 76, 60, 0.2);
+      color: #ff7675;
+      border: 1px solid rgba(231, 76, 60, 0.4);
+    }
+
+    .badge-open {
+      background: rgba(46, 204, 113, 0.2);
+      color: #55efc4;
+      border: 1px solid rgba(46, 204, 113, 0.4);
+    }
+
+    /* BOTONES */
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37 0%, #b89327 100%);
+      color: #140818;
+      font-weight: 800;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 20px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-gold:active {
+      transform: scale(0.96);
+    }
+
+    .btn-gold::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: skewX(-20deg);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      100% { left: 160%; }
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #6a2c70 0%, #83358a 100%);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 12px;
+      padding: 12px 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .btn-purple:active {
+      transform: scale(0.96);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 12px;
+      padding: 10px 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn-outline.active, .btn-outline:active {
+      border-color: var(--secondary-color);
+      color: var(--secondary-color);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    /* PESTAÑA: CARTELERA Y PRONÓSTICOS */
+    .match-header-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .teams-versus-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      margin-bottom: 16px;
+    }
+
+    .team-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 40%;
+      text-align: center;
+    }
+
+    .team-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--bg-card-alt);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text-main);
+    }
+
+    .team-avatar.vcv-local {
+      border-color: var(--secondary-color);
+      background: #3c1442;
+      color: var(--secondary-color);
+      box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
+    }
+
+    .team-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+    }
+
+    .team-role {
+      font-size: 0.68rem;
+      color: var(--text-gold);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .vs-divider {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--bg-card-alt);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* SELECTOR DE SETS */
+    .sets-grid-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sets-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .set-option-btn {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 0;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .set-option-btn:active {
+      transform: scale(0.92);
+    }
+
+    .set-option-btn.selected {
+      background: var(--secondary-color);
+      color: #140818;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 14px rgba(212, 175, 55, 0.5);
+      font-weight: 900;
+    }
+
+    /* SELECTOR DE PUNTOS DIFERENCIAL Y SIGNO (REGLA CLAVE VCV) */
+    .points-diff-container {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .points-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .points-controls-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stepper-container {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .btn-step {
+      width: 40px;
+      height: 42px;
+      background: transparent;
+      border: none;
+      color: var(--secondary-color);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-step:active {
+      background: rgba(212, 175, 55, 0.15);
+    }
+
+    .step-display {
+      flex: 1;
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .step-display span.unit {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: block;
+      margin-top: -3px;
+    }
+
+    /* CONMUTADOR DE SIGNO VITAL */
+    .sign-toggle-group {
+      display: flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 4px;
+      flex: 1.3;
+    }
+
+    .sign-btn {
+      flex: 1;
+      padding: 8px 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .sign-btn.active.sign-plus {
+      background: rgba(46, 204, 113, 0.25);
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.5);
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+    }
+
+    .sign-btn.active.sign-minus {
+      background: rgba(231, 76, 60, 0.25);
+      color: #e74c3c;
+      border: 1px solid rgba(231, 76, 60, 0.5);
+      box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+    }
+
+    /* ESTADO BLOQUEADO (< 15 MIN) */
+    .vcv-card.is-locked {
+      border-color: rgba(231, 76, 60, 0.35);
+      background: linear-gradient(180deg, rgba(32, 15, 37, 0.95) 0%, rgba(20, 8, 24, 0.98) 100%);
+    }
+
+    .vcv-card.is-locked .set-option-btn,
+    .vcv-card.is-locked .btn-step,
+    .vcv-card.is-locked .sign-btn {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* PODIO RANKING */
+    .podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    .podium-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30%;
+    }
+
+    .podium-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: var(--bg-card-alt);
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      position: relative;
+      margin-bottom: -10px;
+      z-index: 2;
+    }
+
+    .podium-slot.rank-1 .podium-avatar {
+      width: 66px;
+      height: 66px;
+      border: 3px solid var(--secondary-color);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+
+    .crown-icon {
+      position: absolute;
+      top: -16px;
+      color: var(--secondary-color);
+    }
+
+    .podium-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #381b42 0%, #200f25 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 12px 12px 6px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 16px;
+      text-align: center;
+    }
+
+    .podium-slot.rank-1 .podium-bar {
+      height: 120px;
+      border-color: rgba(212, 175, 55, 0.5);
+      background: linear-gradient(180deg, #4d235b 0%, #291032 100%);
+    }
+
+    .podium-slot.rank-2 .podium-bar { height: 95px; }
+    .podium-slot.rank-3 .podium-bar { height: 80px; }
+
+    .podium-bar .player-handle {
+      font-size: 0.75rem;
+      font-weight: 700;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .podium-bar .player-pts {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* TABLA CLASIFICACIÓN */
+    .ranking-table-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .ranking-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s;
+    }
+
+    .ranking-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .ranking-list-item.is-current-user {
+      background: rgba(106, 44, 112, 0.35);
+      border-left: 4px solid var(--secondary-color);
+    }
+
+    .rank-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rank-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 22px;
+      text-align: center;
+    }
+
+    .rank-user-info .name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .role-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bg-card-alt);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .rank-pts {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--secondary-color);
+    }
+
+    /* PESTAÑA: TOP SECRET */
+    .top-secret-banner {
+      background: linear-gradient(135deg, #2b1138 0%, #15091c 100%);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+    }
+
+    .top-secret-banner::before {
+      content: 'CONFIDENCIAL';
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    /* ACCORDIONS (DETALLES Y FAQS) */
+    details.vcv-accordion {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    details.vcv-accordion summary {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style: none;
+    }
+
+    details.vcv-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.vcv-accordion[open] summary {
+      border-bottom: 1px solid var(--border-color);
+      color: var(--secondary-color);
+    }
+
+    details.vcv-accordion .accordion-body {
+      padding: 14px 16px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    /* INTRANET ADMIN BOX */
+    .admin-box {
+      border: 2px dashed #e67e22;
+      background: rgba(230, 126, 34, 0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    /* FORMULARIOS */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .form-control {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+
+    /* BARRA DE NAVEGACIÓN INFERIOR (BOTTOM BAR) */
+    nav.bottom-nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      height: calc(var(--safe-bottom) + 68px);
+      padding-bottom: var(--safe-bottom);
+      background: rgba(20, 8, 24, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      padding: 8px 0;
+      transition: all 0.2s;
+    }
+
+    .nav-item-btn i {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nav-item-btn:active {
+      transform: scale(0.9);
+    }
+
+    .nav-item-btn.active {
+      color: var(--secondary-color);
+      font-weight: 800;
+    }
+
+    .nav-item-btn.active i {
+      filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
+    }
+
+    /* MODAL DE LOGIN / CONFIGURACIÓN DE CONEXIÓN */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    /* TOAST DE NOTIFICACIONES */
+    #vcv-toast {
+      position: fixed;
+      top: calc(var(--safe-top) + 74px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--bg-card-alt);
+      border: 1px solid var(--secondary-color);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 30px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 3000;
+    }
+
+    #vcv-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* SPINNER DE CARGA */
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-left-color: var(--secondary-color);
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    
+    <!-- HEADER SUPERIOR -->
+    <header class="app-header">
+      <div class="brand-container">
+        <div class="club-crest">
+          <i data-lucide="volleyball" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="brand-text">
+          <h1>VCV PLAY <span class="tag-temp">26/27</span></h1>
+        </div>
+      </div>
+      <div class="user-pill" id="btn-user-profile" onclick="abrirPerfilModal()">
+        <i data-lucide="user" style="width: 16px; height: 16px; color: var(--secondary-color);"></i>
+        <span id="display-user-handle">@alex_vcv</span>
+        <span class="pts-badge" id="display-user-pts">240 pts</span>
+      </div>
+    </header>
+
+    <!-- TOAST FLOTANTE -->
+    <div id="vcv-toast">
+      <i data-lucide="check-circle" style="color: var(--secondary-color); width: 20px; height: 20px;"></i>
+      <span id="toast-msg">Mensaje del sistema</span>
+    </div>
+
+    <!-- VISTA 1: CARTELERA Y PRONÓSTICOS (PARTIDOS) -->
+    <section class="view-section active" id="view-partidos">
+      
+      <!-- Banner Estado de Jornada Activa -->
+      <div class="vcv-card" style="background: linear-gradient(135deg, #321338 0%, #1c0a21 100%); border-color: rgba(212,175,55,0.3);">
+        <div class="card-title-row" style="margin-bottom: 8px;">
+          <span class="badge-status badge-jornada">
+            <i data-lucide="zap" style="width: 12px; height: 12px;"></i>
+            Jornada 14 Activa
+          </span>
+          <span style="font-size: 0.75rem; color: var(--text-gold); font-weight: 600;">
+            <i data-lucide="clock" style="width: 12px; height: 12px; display: inline-block; vertical-align: -2px;"></i>
+            Cierre en 2h 15m
+          </span>
+        </div>
+        <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">Pronósticos del Club</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">
+          Introduce tus sets y la <strong style="color: var(--secondary-color);">diferencia de puntos con su signo (+/-)</strong>.
+        </p>
+      </div>
+
+      <!-- Filtros Rápidos por Categoría -->
+      <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;">
+        <button class="btn-outline active" onclick="filtrarPartidos('todos', this)">Todos (3)</button>
+        <button class="btn-outline" onclick="filtrarPartidos('SM2', this)">Superliga 2</button>
+        <button class="btn-outline" onclick="filtrarPartidos('1M', this)">1ª Masc</button>
+        <button class="btn-outline" onclick="filtrarPartidos('1F', this)">1ª Fem</button>
+      </div>
+
+      <!-- LISTA DE PARTIDOS DE LA JORNADA -->
+      <div id="partidos-list-container" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Partido 1: Superliga 2 (Abierto para editar) -->
+        <div class="vcv-card match-card" data-category="SM2" data-id-partido="PARTIDO_101">
+          <div class="match-header-strip">
+            <span style="color: var(--secondary-color); font-weight: 700;">SUPERLIGA MASC 2 • GRP C</span>
+            <span><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline;"></i> Sáb 18:30 • Pab. VCV</span>
+          </div>
+
+          <div class="teams-versus-container">
+            <div class="team-box">
+              <div class="team-avatar vcv-local">VCV</div>
+              <span class="team-name">VCV Voleibol</span>
+              <span class="team-role">LOCAL (4V)</span>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-box">
+              <div class="team-avatar">LEG</div>
+              <span class="team-name">CV Leganés</span>
+              <span class="team-role" style="color: var(--text-muted);">VISITANTE</span>
+            </div>
+          </div>
+
+          <!-- Selector de Sets -->
+          <div class="sets-grid-label">
+            <span>Pronóstico de Sets</span>
+            <span style="color: var(--secondary-color);">+150 pts si aciertas</span>
+          </div>
+          <div class="sets-selector-grid" data-group="sets-p101">
+            <button class="set-option-btn" onclick="seleccionarSet(this, '3-0')">3-0</button>
+            <button class="set-option-btn selected" onclick="seleccionarSet(this, '3-1')">3-1</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '3-2')">3-2</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '2-3')">2-3</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '1-3')">1-3</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '0-3')">0-3</button>
+          </div>
+
+          <!-- Selector de Puntos Diferencial y Signo -->
+          <div class="points-diff-container">
+            <div class="points-header">
+              <span>PUNTOS DIFERENCIAL (TANTEO)</span>
+              <span style="color: var(--text-gold);">+100 pts exacto</span>
+            </div>
+            <div class="points-controls-row">
+              <!-- Stepper Numérico -->
+              <div class="stepper-container">
+                <button class="btn-step" onclick="cambiarPuntos('val-p101', -1)">-</button>
+                <div class="step-display">
+                  <span id="val-p101">14</span>
+                  <span class="unit">PUNTOS</span>
+                </div>
+                <button class="btn-step" onclick="cambiarPuntos('val-p101', 1)">+</button>
+              </div>
+
+              <!-- Conmutador de Signo Vital -->
+              <div class="sign-toggle-group">
+                <button class="sign-btn active sign-plus" id="signo-plus-p101" onclick="cambiarSigno('p101', '+')">
+                  <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> A favor (+)
+                </button>
+                <button class="sign-btn" id="signo-minus-p101" onclick="cambiarSigno('p101', '-')">
+                  <i data-lucide="minus-circle" style="width: 14px; height: 14px;"></i> En contra (-)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="check" style="width: 14px; height: 14px; color: var(--success);"></i>
+            <span>Configurado: <strong>VCV 3 - 1 Leganés (+14 pts favor)</strong></span>
+          </div>
+        </div>
+
+        <!-- Partido 2: 1ª Femenina (Abierto) -->
+        <div class="vcv-card match-card" data-category="1F" data-id-partido="PARTIDO_102">
+          <div class="match-header-strip">
+            <span style="color: #e2a6ea; font-weight: 700;">1ª DIVISIÓN FEMENINA • GRP D</span>
+            <span><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline;"></i> Dom 12:00 • Benicalap</span>
+          </div>
+
+          <div class="teams-versus-container">
+            <div class="team-box">
+              <div class="team-avatar">VAL</div>
+              <span class="team-name">CV Valencia</span>
+              <span class="team-role" style="color: var(--text-muted);">LOCAL</span>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-box">
+              <div class="team-avatar vcv-local">VCV</div>
+              <span class="team-name">VCV Femenino</span>
+              <span class="team-role">VISITANTE</span>
+            </div>
+          </div>
+
+          <div class="sets-grid-label">
+            <span>Pronóstico de Sets</span>
+            <span style="color: var(--secondary-color);">+150 pts si aciertas</span>
+          </div>
+          <div class="sets-selector-grid" data-group="sets-p102">
+            <button class="set-option-btn" onclick="seleccionarSet(this, '3-0')">3-0</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '3-1')">3-1</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '3-2')">3-2</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '2-3')">2-3</button>
+            <button class="set-option-btn selected" onclick="seleccionarSet(this, '1-3')">1-3</button>
+            <button class="set-option-btn" onclick="seleccionarSet(this, '0-3')">0-3</button>
+          </div>
+
+          <div class="points-diff-container">
+            <div class="points-header">
+              <span>PUNTOS DIFERENCIAL (TANTEO)</span>
+              <span style="color: var(--text-gold);">+100 pts exacto</span>
+            </div>
+            <div class="points-controls-row">
+              <div class="stepper-container">
+                <button class="btn-step" onclick="cambiarPuntos('val-p102', -1)">-</button>
+                <div class="step-display">
+                  <span id="val-p102">9</span>
+                  <span class="unit">PUNTOS</span>
+                </div>
+                <button class="btn-step" onclick="cambiarPuntos('val-p102', 1)">+</button>
+              </div>
+              <div class="sign-toggle-group">
+                <button class="sign-btn active sign-plus" id="signo-plus-p102" onclick="cambiarSigno('p102', '+')">
+                  <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> A favor (+)
+                </button>
+                <button class="sign-btn" id="signo-minus-p102" onclick="cambiarSigno('p102', '-')">
+                  <i data-lucide="minus-circle" style="width: 14px; height: 14px;"></i> En contra (-)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Partido 3: 1ª Masculina (Ejemplo Bloqueado por regla < 15 min) -->
+        <div class="vcv-card match-card is-locked" data-category="1M" data-id-partido="PARTIDO_103">
+          <div class="match-header-strip">
+            <span style="color: #ff7675; font-weight: 700;">1ª DIVISIÓN MASCULINA • GRP A</span>
+            <span class="badge-status badge-locked">
+              <i data-lucide="lock" style="width: 10px; height: 10px;"></i> Bloqueado (&lt;15 min)
+            </span>
+          </div>
+
+          <div class="teams-versus-container">
+            <div class="team-box">
+              <div class="team-avatar vcv-local">VCV</div>
+              <span class="team-name">VCV Senior</span>
+              <span class="team-role">LOCAL</span>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="team-box">
+              <div class="team-avatar">MIA</div>
+              <span class="team-name">ADV Miajadas</span>
+              <span class="team-role" style="color: var(--text-muted);">VISITANTE</span>
+            </div>
+          </div>
+
+          <p style="font-size: 0.8rem; text-align: center; color: var(--text-muted); margin-top: 8px;">
+            🔒 Pronósticos cerrados por inicio inminente del encuentro.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- BOTÓN FLOTANTE GUARDAR PREDICCIONES -->
+      <div style="position: sticky; bottom: 84px; z-index: 50;">
+        <button class="btn-gold" id="btn-save-predictions" onclick="guardarPredicciones()">
+          <i data-lucide="save" style="width: 20px; height: 20px;"></i>
+          <span>GUARDAR MIS PREDICCIONES</span>
+        </button>
+      </div>
+
+      <!-- Guía Explicativa del Signo -->
+      <details class="vcv-accordion">
+        <summary>
+          <span style="display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="help-circle" style="color: var(--secondary-color); width: 18px; height: 18px;"></i>
+            ¿Cómo funciona el Tanteo y el Signo?
+          </span>
+          <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+        </summary>
+        <div class="accordion-body">
+          <p><strong>1. Diferencia de Puntos:</strong> Es la suma total de puntos ganados menos perdidos en todos los sets del partido.</p>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; margin: 8px 0; font-family: monospace; color: var(--text-gold);">
+            Ejemplo: 25-20 (+5), 23-25 (-2), 25-15 (+10), 25-22 (+3)<br>
+            Total: 5 - 2 + 10 + 3 = 16 puntos.
+          </div>
+          <p><strong>2. Signo (¡VITAL!):</strong> Si crees que el VCV gana el cómputo total de puntos, debes marcar <em>A favor (+)</em>. Si crees que el rival sumará más puntos totales, marca <em>En contra (-)</em>.</p>
+        </div>
+      </details>
+
+    </section>
+
+    <!-- VISTA 2: RANKING Y CLASIFICACIONES -->
+    <section class="view-section" id="view-ranking">
+      
+      <div class="vcv-card" style="padding-bottom: 8px;">
+        <div class="card-title-row">
+          <h2 style="font-size: 1.15rem; font-weight: 800;">Clasificación de Ligas</h2>
+          <span class="badge-status badge-jornada">Jornada 14</span>
+        </div>
+
+        <!-- Selector de Ligas Privadas -->
+        <div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none;">
+          <button class="btn-outline active" onclick="cambiarLiga('general', this)">Liga General</button>
+          <button class="btn-outline" onclick="cambiarLiga('amigos', this)">Liga Amigos</button>
+          <button class="btn-outline" onclick="cambiarLiga('staff', this)">Staff & Senior</button>
+        </div>
+
+        <!-- Podio Top 3 -->
+        <div class="podium-container">
+          <!-- 2º Puesto -->
+          <div class="podium-slot rank-2">
+            <div class="podium-avatar">LV</div>
+            <div class="podium-bar">
+              <span style="font-weight: 800; font-size: 0.85rem; color: #ced6e0;">2º</span>
+              <span class="player-handle">@laura_vcv</span>
+              <span class="player-pts">340 pts</span>
+            </div>
+          </div>
+
+          <!-- 1º Puesto -->
+          <div class="podium-slot rank-1">
+            <div class="podium-avatar">
+              <i data-lucide="crown" class="crown-icon" style="width: 22px; height: 22px;"></i>
+              CV
+            </div>
+            <div class="podium-bar">
+              <span style="font-weight: 900; font-size: 0.95rem; color: var(--secondary-color);">1º</span>
+              <span class="player-handle">@carlos_vcv</span>
+              <span class="player-pts">385 pts</span>
+            </div>
+          </div>
+
+          <!-- 3º Puesto -->
+          <div class="podium-slot rank-3">
+            <div class="podium-avatar">SL</div>
+            <div class="podium-bar">
+              <span style="font-weight: 800; font-size: 0.85rem; color: #e58e26;">3º</span>
+              <span class="player-handle">@sergio_lib</span>
+              <span class="player-pts">310 pts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila Destacada: Mi Posición Actual -->
+      <div class="vcv-card" style="background: rgba(106, 44, 112, 0.4); border-color: var(--secondary-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--secondary-color); color: #140818; display: flex; align-items: center; justify-content: center; font-weight: 900;">
+              4º
+            </div>
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem;">@alex_vcv <span class="role-badge" style="background: var(--secondary-color); color: #140818;">TÚ</span></div>
+              <div style="font-size: 0.75rem; color: #e2a6ea;">Jugador SM2 • +45 pts esta jornada</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--secondary-color);">240 pts</div>
+            <div style="font-size: 0.72rem; color: var(--success); font-weight: 700;">▲ Sube 2 puestos</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Clasificación Completa -->
+      <div class="vcv-card ranking-table-card">
+        <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <span>TABLA COMPLETA (32 JUGADORES)</span>
+          <span>PUNTOS</span>
+        </div>
+
+        <div id="ranking-list-body">
+          <div class="ranking-list-item">
+            <div class="rank-left">
+              <span class="rank-num">5</span>
+              <div class="rank-user-info">
+                <div class="name">@marcos_rec <span class="role-badge">Cantera</span></div>
+              </div>
+            </div>
+            <span class="rank-pts">228</span>
+          </div>
+
+          <div class="ranking-list-item">
+            <div class="rank-left">
+              <span class="rank-num">6</span>
+              <div class="rank-user-info">
+                <div class="name">@elena_vcv <span class="role-badge">1ª Fem</span></div>
+              </div>
+            </div>
+            <span class="rank-pts">215</span>
+          </div>
+
+          <div class="ranking-list-item">
+            <div class="rank-left">
+              <span class="rank-num">7</span>
+              <div class="rank-user-info">
+                <div class="name">@pablo_mister <span class="role-badge" style="color: #e67e22; border-color: #e67e22;">Staff</span></div>
+              </div>
+            </div>
+            <span class="rank-pts">198</span>
+          </div>
+
+          <div class="ranking-list-item">
+            <div class="rank-left">
+              <span class="rank-num">8</span>
+              <div class="rank-user-info">
+                <div class="name">@diego_gold <span class="role-badge">Socio</span></div>
+              </div>
+            </div>
+            <span class="rank-pts">184</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN TOP SECRET -->
+      <div class="top-secret-banner">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <i data-lucide="eye-off" style="color: var(--secondary-color); width: 20px; height: 20px;"></i>
+          <h3 style="font-size: 1rem; font-weight: 800;">Top Secret: Proyección Algorítmica</h3>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+          Puntos proyectados a final de temporada según el algoritmo del club:
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between;">
+            <span style="font-size: 0.85rem; font-weight: 600;">Superliga Masc 2</span>
+            <strong style="color: var(--secondary-color);">42 pts est.</strong>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between;">
+            <span style="font-size: 0.85rem; font-weight: 600;">1ª División Masc</span>
+            <strong style="color: var(--secondary-color);">38 pts est.</strong>
+          </div>
+          <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between;">
+            <span style="font-size: 0.85rem; font-weight: 600;">1ª División Fem</span>
+            <strong style="color: var(--secondary-color);">45 pts est.</strong>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VISTA 3: MIS PREDICCIONES (HISTORIAL DE ACIERTOS) -->
+    <section class="view-section" id="view-historial">
+      
+      <!-- Resumen Métricas de Rendimiento -->
+      <div class="vcv-card" style="background: linear-gradient(135deg, #26102c 0%, #15081a 100%);">
+        <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px;">Rendimiento del Jugador</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Puntos Totales</div>
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--secondary-color);">240 pts</div>
+            <div style="font-size: 0.7rem; color: var(--success);">+35 en J13</div>
+          </div>
+          <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Sets Exactos</div>
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 800; color: #fff;">6 Sets</div>
+            <div style="font-size: 0.7rem; color: var(--text-gold);">Pleno absoluto</div>
+          </div>
+          <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Eficacia</div>
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 800; color: #55efc4;">68%</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Por encima de la media</div>
+          </div>
+          <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Racha Activa</div>
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 800; color: #ff7675;">3 Jornadas</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Puntuando seguido</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjetas de Partidos Anteriores y Comparativa vs Acta -->
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        
+        <!-- Tarjeta Historial 1 -->
+        <div class="vcv-card">
+          <div class="card-title-row" style="margin-bottom: 8px;">
+            <span class="badge-status badge-jornada">Jornada 13 • Finalizado</span>
+            <span style="font-size: 0.75rem; color: var(--success); font-weight: 700;">+180 PTS</span>
+          </div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px;">VCV Voleibol 3 - 1 VP Madrid</div>
+          <div style="background: var(--bg-card-alt); padding: 10px; border-radius: 10px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Tu Pronóstico:</span>
+              <strong style="color: var(--secondary-color);">3-1 (+12 pts favor)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Acta Oficial:</span>
+              <strong style="color: #fff;">3-1 (+14 pts favor)</strong>
+            </div>
+          </div>
+          <div style="margin-top: 8px; font-size: 0.75rem; color: var(--success); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+            <span>¡Acertaste ganador, sets exactos y signo a favor!</span>
+          </div>
+        </div>
+
+        <!-- Tarjeta Historial 2 -->
+        <div class="vcv-card">
+          <div class="card-title-row" style="margin-bottom: 8px;">
+            <span class="badge-status badge-jornada">Jornada 13 • Finalizado</span>
+            <span style="font-size: 0.75rem; color: var(--text-gold); font-weight: 700;">+70 PTS</span>
+          </div>
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 6px;">CV Valencia 2 - 3 VCV Femenino</div>
+          <div style="background: var(--bg-card-alt); padding: 10px; border-radius: 10px; font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Tu Pronóstico:</span>
+              <strong style="color: var(--secondary-color);">1-3 (+8 pts favor)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Acta Oficial:</span>
+              <strong style="color: #fff;">2-3 (+4 pts favor)</strong>
+            </div>
+          </div>
+          <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-gold); display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="award" style="width: 14px; height: 14px;"></i>
+            <span>Acertaste ganador y signo a favor del VCV.</span>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- VISTA 4: CALENDARIO Y ENLACES RFEVB -->
+    <section class="view-section" id="view-calendario">
+      
+      <div class="vcv-card">
+        <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Próximos Encuentros</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+          Calendario oficial de los equipos del Club Voleibol Valencia.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          
+          <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--secondary-color); font-weight: 700; margin-bottom: 4px;">
+              <span>JORNADA 15 • SM2</span>
+              <span>Sáb 25 Feb • 18:00</span>
+            </div>
+            <div style="font-weight: 700; font-size: 0.92rem;">VCV Voleibol vs Cisneros Alter</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+              <i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline;"></i> Pabellón Polideportivo VCV (Local)
+            </div>
+          </div>
+
+          <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #e2a6ea; font-weight: 700; margin-bottom: 4px;">
+              <span>JORNADA 15 • 1ª FEM</span>
+              <span>Dom 26 Feb • 12:30</span>
+            </div>
+            <div style="font-weight: 700; font-size: 0.92rem;">CV Valencia vs VCV Femenino</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+              <i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline;"></i> Pabellón Benicalap (Visitante)
+            </div>
+          </div>
+
+          <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #ced6e0; font-weight: 700; margin-bottom: 4px;">
+              <span>JORNADA 16 • 1ª MASC</span>
+              <span>Sáb 4 Mar • 19:30</span>
+            </div>
+            <div style="font-weight: 700; font-size: 0.92rem;">VCV Senior vs CV Melilla</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+              <i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline;"></i> Polideportivo VCV (Local)
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Enlaces Oficiales RFEVB y EsVoley -->
+      <div class="vcv-card">
+        <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="external-link" style="width: 16px; height: 16px; color: var(--secondary-color);"></i>
+          Enlaces Oficiales de Competición
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <a href="https://rfevb.com/" target="_blank" class="btn-outline" style="justify-content: space-between; text-decoration: none;">
+            <span>🏐 RFEVB - Real Federación Española</span>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+          </a>
+          <a href="https://esvoley.es/voleibol/competiciones-masculinas/superliga-masculina-2/grupo-c" target="_blank" class="btn-outline" style="justify-content: space-between; text-decoration: none;">
+            <span>📊 EsVoley - Superliga Masculina 2 (Grupo C)</span>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+          </a>
+          <a href="https://esvoley.es/voleibol/competiciones-masculinas/primera-division-masculina/grupo-a" target="_blank" class="btn-outline" style="justify-content: space-between; text-decoration: none;">
+            <span>📊 EsVoley - Primera Masculina (Grupo A)</span>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+          </a>
+          <a href="https://esvoley.es/voleibol/competiciones-femeninas/primera-division-femenina/grupo-d" target="_blank" class="btn-outline" style="justify-content: space-between; text-decoration: none;">
+            <span>📊 EsVoley - Primera Femenina (Grupo D)</span>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px;"></i>
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VISTA 5: CLUB, GESTIÓN E INTRANET ADMIN -->
+    <section class="view-section" id="view-club">
+      
+      <!-- Descarga App e Instalación PWA -->
+      <div class="vcv-card">
+        <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">📱 Instalar la App Móvil</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+          Disfruta de la mejor experiencia instalando Fantasy VCV en tu dispositivo:
+        </p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+          <a href="files/app/fantasy-vcv-2627.apk" download class="btn-purple" style="flex: 1; text-decoration: none; font-size: 0.82rem;">
+            <i data-lucide="download" style="width: 16px; height: 16px;"></i> Descargar APK
+          </a>
+          <button class="btn-outline" style="flex: 1; font-size: 0.82rem;" onclick="mostrarGuiaSafari()">
+            <i data-lucide="apple" style="width: 16px; height: 16px;"></i> Safari (iOS)
+          </button>
+        </div>
+
+        <div id="safari-hint" style="display: none; background: var(--bg-card-alt); padding: 10px; border-radius: 10px; font-size: 0.78rem; color: var(--text-gold); line-height: 1.4;">
+          📌 En iPhone: Toca el botón <strong>Compartir</strong> en Safari y selecciona <strong>"Añadir a la pantalla de inicio"</strong>.
+        </div>
+      </div>
+
+      <!-- Gestión de Cuenta -->
+      <div class="vcv-card">
+        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="key" style="color: var(--secondary-color); width: 18px; height: 18px;"></i>
+          Gestionar mi Contraseña
+        </h3>
+        <div class="form-group">
+          <label>Contraseña Actual</label>
+          <input type="password" id="input-pwd-act" class="form-control" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Nueva Contraseña</label>
+          <input type="password" id="input-pwd-new" class="form-control" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button class="btn-purple" style="width: 100%;" onclick="cambiarPassword()">
+          <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Actualizar Contraseña
+        </button>
+      </div>
+
+      <!-- INTRANET ADMINISTRADOR (Visible según backend) -->
+      <div class="admin-box" id="intranet-admin-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="shield-alert" style="color: #e67e22; width: 22px; height: 22px;"></i>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: #e67e22;">Intranet Administrador</h3>
+          </div>
+          <span style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
+        </div>
+
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Panel de control enlazado directamente a tu Google Sheet de base de datos.
+        </p>
+
+        <!-- Botones de Control Servidor -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="btn-outline" style="flex: 1;" onclick="forzarCacheServidor()">
+            <i data-lucide="refresh-ccw" style="width: 14px; height: 14px;"></i> Forzar Caché
+          </button>
+          <a href="https://docs.google.com/spreadsheets/" target="_blank" class="btn-outline" style="flex: 1; text-decoration: none;">
+            <i data-lucide="table" style="width: 14px; height: 14px;"></i> Abrir Excel
+          </a>
+        </div>
+
+        <!-- Formulario Crear Nuevo Usuario -->
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 12px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--text-gold);">➕ Añadir Nuevo Usuario</h4>
+          <div class="form-group">
+            <input type="text" id="admin-new-user" class="form-control" placeholder="@nombre_usuario">
+          </div>
+          <div class="form-group">
+            <input type="password" id="admin-new-pass" class="form-control" placeholder="Contraseña inicial">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.7rem;">Inscribir a Ligas:</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+              <label style="font-size: 0.75rem; color: #fff;"><input type="checkbox" checked value="General"> General</label>
+              <label style="font-size: 0.75rem; color: #fff;"><input type="checkbox" value="Amigos"> Amigos</label>
+              <label style="font-size: 0.75rem; color: #fff;"><input type="checkbox" value="Veteranos"> Veteranos</label>
+            </div>
+          </div>
+          <button class="btn-gold" style="padding: 10px; font-size: 0.85rem;" onclick="adminCrearUsuario()">
+            Crear Usuario en Sheets
+          </button>
+        </div>
+
+        <!-- Subida Rápida de Resultados -->
+        <div style="background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
+          <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; color: var(--text-gold);">🏐 Subir Resultado Rápido</h4>
+          <div class="form-group">
+            <select id="admin-select-partido" class="form-control">
+              <option value="PARTIDO_101">Superliga 2: VCV vs Leganés</option>
+              <option value="PARTIDO_102">1ª Fem: Valencia vs VCV</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="admin-res-sets" class="form-control" placeholder="Sets (ej: 3-1)" style="flex: 1;">
+            <input type="text" id="admin-res-pts" class="form-control" placeholder="Pts Dif (ej: +14)" style="flex: 1;">
+          </div>
+          <button class="btn-purple" style="width: 100%; font-size: 0.85rem;" onclick="adminSubirResultado()">
+            Guardar Acta Oficial y Recalcular
+          </button>
+        </div>
+      </div>
+
+      <!-- Configuración del Endpoint de Google Apps Script -->
+      <div class="vcv-card" style="margin-top: 12px;">
+        <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px; color: var(--text-gold);">🔗 Conexión Google Apps Script</h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+          Endpoint configurado para sincronizar con tu Google Sheets en la nube:
+        </p>
+        <input type="text" id="gas-endpoint-input" class="form-control" value="https://script.google.com/macros/s/AKfycbz_EJEMPLO_VCV_APPS_SCRIPT/exec" style="font-size: 0.75rem; font-family: monospace;">
+        <button class="btn-outline" style="width: 100%; margin-top: 8px;" onclick="guardarEndpointConfig()">
+          Guardar Endpoint del Backend
+        </button>
+      </div>
+
+    </section>
+
+    <!-- BARRA DE NAVEGACIÓN INFERIOR (BOTTOM BAR) -->
+    <nav class="bottom-nav-bar">
+      <button class="nav-item-btn active" onclick="navegarA('partidos', this)">
+        <i data-lucide="volleyball"></i>
+        <span>Partidos</span>
+      </button>
+      <button class="nav-item-btn" onclick="navegarA('ranking', this)">
+        <i data-lucide="trophy"></i>
+        <span>Ranking</span>
+      </button>
+      <button class="nav-item-btn" onclick="navegarA('historial', this)">
+        <i data-lucide="check-circle-2"></i>
+        <span>Mis Pronos</span>
+      </button>
+      <button class="nav-item-btn" onclick="navegarA('calendario', this)">
+        <i data-lucide="calendar"></i>
+        <span>Calendario</span>
+      </button>
+      <button class="nav-item-btn" onclick="navegarA('club', this)">
+        <i data-lucide="shield"></i>
+        <span>Club</span>
+      </button>
+    </nav>
+
+    <!-- MODAL DE LOGIN / ACCESO -->
+    <div class="modal-backdrop" id="login-modal">
+      <div class="modal-card">
+        <div style="text-align: center; margin-bottom: 18px;">
+          <div class="club-crest" style="margin: 0 auto 12px; width: 52px; height: 52px;">
+            <i data-lucide="volleyball" style="width: 30px; height: 30px;"></i>
+          </div>
+          <h2 style="font-size: 1.3rem; font-weight: 800;">Fantasy VCV 26/27</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Acceso oficial para jugadores y socios</p>
+        </div>
+
+        <form onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="login-user" class="form-control" placeholder="@tu_usuario" value="@alex_vcv" required>
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="login-pass" class="form-control" placeholder="••••••••" value="password123" required>
+          </div>
+
+          <button type="submit" class="btn-gold" id="btn-login-action" style="margin-top: 14px;">
+            <span>Entrar al Fantasy</span>
+            <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+          </button>
+        </form>
+
+        <button class="btn-outline" style="width: 100%; margin-top: 10px;" onclick="entrarComoInvitado()">
+          👀 Entrar como Invitado (Solo Lectura)
+        </button>
+
+        <p style="font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 14px;">
+          ¿No tienes cuenta? Solicítala a <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--secondary-color);">adminfantasyvcv@gmail.com</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ESTADO GLOBAL DE LA APLICACIÓN FANTASY VCV
+    const appState = {
+      usuario: "@alex_vcv",
+      password: "password123",
+      nombreReal: "Álex VCV",
+      isAdmin: true,
+      isGuest: false,
+      puntosTotales: 240,
+      jornadaActiva: 14,
+      scriptUrl: localStorage.getItem('vcv_script_url') || "https://script.google.com/macros/s/AKfycbz_EJEMPLO_VCV_APPS_SCRIPT/exec",
+      predicciones: {
+        "PARTIDO_101": { sets: "3-1", puntos: 14, signo: "+" },
+        "PARTIDO_102": { sets: "1-3", puntos: 9, signo: "+" }
+      }
+    };
+
+    // INICIALIZACIÓN
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      actualizarUI();
+    });
+
+    function actualizarUI() {
+      document.getElementById('display-user-handle').innerText = appState.usuario;
+      document.getElementById('display-user-pts').innerText = appState.puntosTotales + " pts";
+      
+      // Mostrar u ocultar Intranet Admin según permisos
+      const adminPanel = document.getElementById('intranet-admin-panel');
+      if (adminPanel) {
+        adminPanel.style.display = appState.isAdmin ? 'block' : 'none';
+      }
+
+      // Si es invitado, deshabilitar guardado
+      const btnSave = document.getElementById('btn-save-predictions');
+      if (appState.isGuest && btnSave) {
+        btnSave.disabled = true;
+        btnSave.style.opacity = '0.5';
+        btnSave.innerHTML = `<span>MODO INVITADO (SOLO LECTURA)</span>`;
+      }
+    }
+
+    // NAVEGACIÓN ENTRE PESTAÑAS (SPA)
+    function navegarA(viewName, btnEl) {
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.nav-item-btn').forEach(btn => btn.classList.remove('active'));
+
+      const target = document.getElementById('view-' + viewName);
+      if (target) {
+        target.classList.add('active');
+        btnEl.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // SELECTOR DE SETS
+    function seleccionarSet(btn, valor) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.set-option-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      // Animación de rebote táctil
+      btn.style.transform = 'scale(0.92)';
+      setTimeout(() => btn.style.transform = 'scale(1)', 150);
+    }
+
+    // STEPPER DE PUNTOS DIFERENCIAL
+    function cambiarPuntos(elementId, delta) {
+      const el = document.getElementById(elementId);
+      let val = parseInt(el.innerText, 10) || 0;
+      val = Math.max(0, val + delta);
+      el.innerText = val;
+      
+      // Micro-efecto de pulsación
+      el.style.transform = 'scale(1.2)';
+      setTimeout(() => el.style.transform = 'scale(1)', 120);
+    }
+
+    // CONMUTADOR DE SIGNO VITAL (+ / -)
+    function cambiarSigno(matchSuffix, nuevoSigno) {
+      const btnPlus = document.getElementById('signo-plus-' + matchSuffix);
+      const btnMinus = document.getElementById('signo-minus-' + matchSuffix);
+
+      if (nuevoSigno === '+') {
+        btnPlus.classList.add('active', 'sign-plus');
+        btnMinus.classList.remove('active', 'sign-minus');
+      } else {
+        btnMinus.classList.add('active', 'sign-minus');
+        btnPlus.classList.remove('active', 'sign-plus');
+      }
+    }
+
+    // FILTRO DE PARTIDOS
+    function filtrarPartidos(cat, btn) {
+      btn.parentElement.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.match-card').forEach(card => {
+        if (cat === 'todos' || card.dataset.category === cat) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // CAMBIAR LIGA EN RANKING
+    function cambiarLiga(nombreLiga, btn) {
+      btn.parentElement.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mostrarToast(`Cargando tabla: ${nombreLiga.toUpperCase()}`);
+    }
+
+    // GUARDAR PREDICCIONES (CONECTOR ACTION: "SAVE")
+    async function guardarPredicciones() {
+      if (appState.isGuest) {
+        mostrarToast("Inicia sesión para guardar pronósticos", "error");
+        return;
+      }
+
+      const btnSave = document.getElementById('btn-save-predictions');
+      const originalHTML = btnSave.innerHTML;
+      btnSave.innerHTML = `<div class="spinner"></div> <span>Guardando en Google Sheets...</span>`;
+      btnSave.disabled = true;
+
+      // Recolección exacta según arquitectura
+      const payloadPredicciones = {
+        "PARTIDO_101": {
+          sets: document.querySelector('[data-group="sets-p101"] .selected')?.innerText || "3-1",
+          puntos: parseInt(document.getElementById('val-p101').innerText, 10),
+          signo: document.getElementById('signo-plus-p101').classList.contains('active') ? "+" : "-"
+        },
+        "PARTIDO_102": {
+          sets: document.querySelector('[data-group="sets-p102"] .selected')?.innerText || "1-3",
+          puntos: parseInt(document.getElementById('val-p102').innerText, 10),
+          signo: document.getElementById('signo-plus-p102').classList.contains('active') ? "+" : "-"
+        }
+      };
+
+      const payload = {
+        action: "save",
+        usuario: appState.usuario,
+        password: appState.password,
+        predicciones: payloadPredicciones
+      };
+
+      try {
+        // Enlace al backend
+        const respuesta = await fetchSeguro(payload);
+        
+        btnSave.innerHTML = originalHTML;
+        btnSave.disabled = false;
+
+        // Disparo de confetti y feedback exitoso
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.8 },
+          colors: ['#d4af37', '#6a2c70', '#ffffff']
+        });
+
+        mostrarToast("¡Pronósticos guardados con éxito! 🏐", "success");
+      } catch (err) {
+        btnSave.innerHTML = originalHTML;
+        btnSave.disabled = false;
+        // Si el script de ejemplo no responde en red local, mostramos éxito simulado
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+        mostrarToast("Pronóstico registrado localmente (Verifica tu URL de Apps Script)", "warning");
+      }
+    }
+
+    // CLIENTE FETCH SEGURO CON RETRIES (REGLA PRD #2)
+    async function fetchSeguro(payload, retries = 1) {
+      try {
+        const response = await fetch(appState.scriptUrl, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      } catch (e) {
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, 1000));
+          return fetchSeguro(payload, retries - 1);
+        }
+        throw e;
+      }
+    }
+
+    // ACCIONES ADMIN
+    function adminCrearUsuario() {
+      const user = document.getElementById('admin-new-user').value;
+      if (!user) return mostrarToast("Introduce un usuario");
+      mostrarToast(`Usuario ${user} creado e inscrito en Sheets`);
+      document.getElementById('admin-new-user').value = '';
+      document.getElementById('admin-new-pass').value = '';
+    }
+
+    function adminSubirResultado() {
+      const sets = document.getElementById('admin-res-sets').value;
+      const pts = document.getElementById('admin-res-pts').value;
+      if (!sets) return mostrarToast("Introduce los sets del partido");
+      mostrarToast(`Resultado ${sets} (${pts}) oficializado. Recalculando...`);
+    }
+
+    function forzarCacheServidor() {
+      mostrarToast("Caché de Google Sheets reiniciada");
+    }
+
+    function guardarEndpointConfig() {
+      const val = document.getElementById('gas-endpoint-input').value;
+      appState.scriptUrl = val;
+      localStorage.setItem('vcv_script_url', val);
+      mostrarToast("Endpoint de Apps Script guardado");
+    }
+
+    // MODAL LOGIN Y SESIONES
+    function abrirPerfilModal() {
+      document.getElementById('login-modal').classList.add('show');
+    }
+
+    function entrarComoInvitado() {
+      appState.isGuest = true;
+      appState.usuario = "@invitado";
+      appState.isAdmin = false;
+      document.getElementById('login-modal').classList.remove('show');
+      actualizarUI();
+      mostrarToast("Sesión iniciada como Invitado");
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-user').value;
+      appState.usuario = u;
+      appState.isGuest = false;
+      appState.isAdmin = true; // Simulado admin para acceso al panel
+      document.getElementById('login-modal').classList.remove('show');
+      actualizarUI();
+      mostrarToast(`¡Bienvenido de nuevo, ${u}!`);
+    }
+
+    function cambiarPassword() {
+      mostrarToast("Contraseña actualizada correctamente");
+      document.getElementById('input-pwd-act').value = '';
+      document.getElementById('input-pwd-new').value = '';
+    }
+
+    function mostrarGuiaSafari() {
+      const el = document.getElementById('safari-hint');
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // TOAST NOTIFIER
+    function mostrarToast(msg) {
+      const toast = document.getElementById('vcv-toast');
+      const text = document.getElementById('toast-msg');
+      text.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

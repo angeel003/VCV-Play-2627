@@ -1,8 +1,0 @@
-<div style="background: var(--bg-card); padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 0.8rem; border: 1px dashed var(--border-color); color: var(--text-muted);">
-                <b>Ejemplo de reparto (Si el premio fuesen 5 pts y el límite 5 de error):</b><br>
-                • Alejarte 1 punto exacto: +4 pts<br>
-                • Alejarte 2 puntos exactos: +3 pts<br>
-                • Alejarte 3 puntos exactos: +2 pts<br>
-                • Alejarte 4 puntos exactos: +1 pt<br>
-                • Alejarte 5 o más puntos: 0 pts
-            </div></p>

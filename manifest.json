@@ -1,7 +1,7 @@
 {
   "name": "VCV Play 2627",
   "short_name": "VCV Play 2627",
-  "start_url": "./index.html?v=v3",
+  "start_url": "./index.html?v=v2.2",
   "display": "standalone",
   "background_color": "#190c1f",
   "theme_color": "#160a19",
