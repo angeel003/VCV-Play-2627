@@ -234,7 +234,7 @@ export async function onRequestPost(context) {
             const uPred = porrasMap[p.id_partido] || null;
             const ligasEq = [];
             for (const lName in ligasMap) {
-                if (ligasMap[lName].includes(p.equipo_local)) ligasEq.push(lName);
+                if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) ligasEq.push(lName);
             }
 
             matchdaysMap[rg].push({
@@ -341,7 +341,7 @@ export async function onRequestPost(context) {
                 pCopy.permitido = true;
                 
                 // VISIBILIDAD AUTOMATICA 7 DIAS ANTES
-                if (pCopy.timestamp && (pCopy.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000)) {
+                if (!pCopy.timestamp || (pCopy.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000)) {
                     pCopy.visibilidad = "OCULTAR";
                 } else if (pCopy.visibilidad !== "OCULTAR") {
                     pCopy.visibilidad = "MOSTRAR";
@@ -456,7 +456,7 @@ export async function onRequestPost(context) {
                 }
 
                 for (const lName in ligasMap) {
-                    if (ligasMap[lName].includes(p.equipo_local)) {
+                    if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
                         userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
                     }
                 }
