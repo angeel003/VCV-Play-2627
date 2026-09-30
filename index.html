@@ -3366,8 +3366,7 @@ window.initCalendar = function() {
     
     let futuros = window.appData.todos_partidos.filter(p => {
         let esFuturo = p.estado !== "FINALIZADO" && p.estado !== "CERRADO";
-        let localPermitido = misEquipos.includes(p.equipo_local);
-        return esFuturo && localPermitido;
+        return esFuturo;
     });
     
     futuros.sort((a, b) => {
