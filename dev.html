@@ -2036,6 +2036,39 @@ function getCategoryHTML(catName) {
 }
 
 // LÓGICA DE CAMBIO DE CONTRASEÑA
+
+const formSaveEmailEl = document.getElementById('formSaveEmail');
+if(formSaveEmailEl) {
+    formSaveEmailEl.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        const email = document.getElementById('txtEmail').value.trim();
+        if(!email) return;
+        
+        btn.disabled = true; btn.innerText = "Guardando...";
+        
+        fetchSeguro(scriptURL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'save_email', usuario: currentUser, password: currentPassword, email: email }), 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        })
+        .then(res => res.json())
+        .then(d => {
+            if(d.status === "success") { 
+                mostrarToast(d.message); 
+                document.getElementById('currentEmailDisplay').style.display = 'block';
+                document.getElementById('currentEmailText').innerText = email;
+                document.getElementById('txtEmail').value = "";
+            } else { 
+                alert("Error: " + (d.message || JSON.stringify(d))); 
+            }
+        })
+        .catch(err => alert("Error de conexión: " + err))
+        .finally(() => { btn.disabled = false; btn.innerText = "Guardar Correo"; });
+    });
+}
+
+
 document.getElementById('btnChangePwd').addEventListener('click', function(e) {
     e.preventDefault();
     const usr = document.getElementById('cpUsuario').value.trim();
