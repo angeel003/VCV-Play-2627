@@ -115,36 +115,39 @@ function doGet(e) {
   function getSafeData(sheet) {
     if (!sheet) return [];
     var sheetName = sheet.getName();
-    
+
+    // 1. Mirar primero en la memoria RAM (Caché). Si ya está en memoria, devolver inmediatamente sin tocar la hoja
+    var cache = CacheService.getScriptCache();
+    var cacheKey = "vcv_sheet_" + sheetName;
+
+    if (sheetName !== "Porras") {
+        var cached = cache.get(cacheKey);
+        if (cached) {
+            try { return JSON.parse(cached); } catch(e) {}
+        }
+    }
+
+    // 2. Solo si NO está en caché (o es Porras), consultamos a Google Sheets
     var lr = sheet.getLastRow();
     var lc = sheet.getLastColumn();
-    
-    // Bypass cache for highly mutable sheets to prevent race conditions on login
+
     if (sheetName === "Porras") {
         if (lr > 0 && lc > 0) return sheet.getRange(1, 1, lr, lc).getValues();
         return [];
     }
 
-    var cache = CacheService.getScriptCache();
-    var cacheKey = "vcv_sheet_" + sheetName;
-    
-    var cached = cache.get(cacheKey);
-    if (cached) {
-        try { return JSON.parse(cached); } catch(e) {}
-    }
-    
     var data = [];
     if (lr > 0 && lc > 0) {
         data = sheet.getRange(1, 1, lr, lc).getValues();
     }
-    
+
     if (data.length > 0) {
         try {
             var str = JSON.stringify(data);
             if (str.length < 90000) { cache.put(cacheKey, str, 21600); } 
         } catch(e) {}
     }
-    
+
     return data;
 }
 
@@ -718,14 +721,16 @@ function doPost(e) {
             }
         }
 
+        var mapPartidosRapido = {};
+        for(var pm=0; pm<partidos.length; pm++) mapPartidosRapido[partidos[pm].id_partido] = partidos[pm];
+
         for(var pUser in porrasMap) {
             if(!puntosPorUsuarioYLiga[pUser]) continue;
             for(var pIdPart in porrasMap[pUser]) {
                 var uPred = porrasMap[pUser][pIdPart];
                 var oRes = resultadosMap[pIdPart];
                 if(!oRes || !oRes.sets || !oRes.parciales || !uPred.sets) continue;
-                var partidoInfo = null;
-                for(var p=0; p<partidos.length; p++) { if(partidos[p].id_partido === pIdPart) { partidoInfo = partidos[p]; break; } }
+                var partidoInfo = mapPartidosRapido[pIdPart];
                 if(!partidoInfo) continue;
 
                 var oLocalWin = parseInt(oRes.sets.split("-")[0]) > parseInt(oRes.sets.split("-")[1]);
