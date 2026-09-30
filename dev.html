@@ -1641,21 +1641,7 @@
         </button>
         <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
       </div>
-    <div class="vcv-card-v2" style="margin-bottom: 20px;">
-        <div class="header-eq">
-            <h3><i data-lucide="external-link"></i> Enlaces Oficiales</h3>
-        </div>
-        <div style="padding:15px;">
-            
-        <div style="max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px;">
-            <a href="https://rfevb.com/" target="_blank" class="btn btn-outline-primary" style="font-weight: bold; padding: 12px; border-radius: 8px;">🔗 RFEVB - Real Federación Española de Voleibol</a>
-            <a href="https://esvoley.es/voleibol/competiciones-masculinas/superliga-masculina-2/grupo-c" target="_blank" class="btn btn-outline-primary" style="font-weight: bold; padding: 12px; border-radius: 8px;">🔗 EsVoley - Superliga Masculina 2 (Grupo C)</a>
-            <a href="https://esvoley.es/voleibol/competiciones-masculinas/primera-division-masculina/grupo-a" target="_blank" class="btn btn-outline-primary" style="font-weight: bold; padding: 12px; border-radius: 8px;">🔗 EsVoley - Primera Masculina (Grupo A)</a>
-            <a href="https://esvoley.es/voleibol/competiciones-femeninas/primera-division-femenina/grupo-d" target="_blank" class="btn btn-outline-primary" style="font-weight: bold; padding: 12px; border-radius: 8px;">🔗 EsVoley - Primera Femenina (Grupo D)</a>
-        </div>
     
-        </div>
-    </div>
     </section>
     <section id="historialSection">
     <div style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
@@ -1681,31 +1667,73 @@
         <div id="historyListContainer" style="max-width:700px; margin: 0 auto; text-align:left;"></div>
     </div></section>
     <section id="calendarioSection">
-    <div style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
-        <i data-lucide="hammer" style="width: 48px; height: 48px; color: var(--vcv-dorado); margin-bottom: 16px;"></i>
-        <h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3>
-        <p>¡Estoy trabajando en implementar esto cuanto antes! 😊</p>
-    </div>
-<div style="display:none;">
-        <h2>📅 Próximos encuentros</h2>
-<p style="color:#555; margin-bottom:20px; font-weight: 500; font-size: 0.95rem;">Calendario con todos los horarios y fechas de los partidos futuros programados.</p>
-        <div class="form-container" style="max-width: 500px; margin: 0 auto; text-align: left;">
-            <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                <select id="calendarTeamSelect" class="form-control" style="flex:2; font-weight:bold; min-width:200px; border:2px solid var(--vcv-dorado);">
-                    <option value="">-- Selecciona un Equipo --</option>
-                </select>
-                <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1; min-width:150px; border:2px solid #ccc;">
-            </div>
-            
-            <div id="calendarResults" style="display:flex; flex-direction:column; gap:12px; max-height:500px; overflow-y:auto; padding-right:5px;">
-                <!-- Calendario dinámico -->
-            </div>
-            
-            <p style="color:#888; font-size:0.8rem; margin-top:25px; font-style:italic; text-align:center; padding: 10px; border-top: 1px dashed #ccc;">
-                Si alguien ve que hay alguna errata o sabe de algún cambio en algún horario de partido, notifique al correo <a href="mailto:adminfantasyvcv@gmail.com" style="color:#1565c0;">adminfantasyvcv@gmail.com</a> lo antes posible por favor, por el bien de todos.
-            </p>
+    <div class="vcv-card-v2" style="margin-bottom: 20px;">
+        <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main);">Calendario de Partidos</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+            Consulta los próximos partidos que quedan por jugar.
+        </p>
+
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <select id="calendarTeamSelect" class="form-control" style="flex:2; font-weight:bold; min-width:200px; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+                <option value="">-- Todos los equipos --</option>
+            </select>
+            <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1; min-width:150px; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
         </div>
-    </div></section>
+        
+        <div style="text-align: right; margin-top: -10px; margin-bottom: 25px;">
+            <button onclick="document.getElementById('enlacesOficialesBlock').scrollIntoView({behavior: 'smooth', block: 'start'});" style="background: transparent; border: none; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline;">
+                <i data-lucide="arrow-down-to-line" style="width: 12px; height: 12px;"></i>
+                Ir a los enlaces de la federación
+            </button>
+        </div>
+<!-- Countdown Proximo Partido -->
+        <div id="nextMatchHighlighted" style="margin-bottom: 30px;"></div>
+        <!-- Lista -->
+        <div id="calendarResults" style="display:block;"></div>
+    </div>
+
+      
+      <!-- Enlaces Oficiales RFEVB y EsVoley (V2 Design) -->
+      <div id="enlacesOficialesBlock" class="vcv-card-v2" style="margin-top: 25px; margin-bottom: 20px;">
+        <h3 style="font-size: 1.05rem; font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color:var(--text-main);">
+          <i data-lucide="external-link" style="width: 18px; height: 18px; color: var(--secondary-color);"></i>
+          Enlaces Oficiales de Competición
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="https://rfevb.com/" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🌐</span>
+                <span>RFEVB - Real Federación Española</span>
+            </div>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+          </a>
+          
+          <a href="https://esvoley.es/voleibol/competiciones-masculinas/superliga-masculina-2/grupo-c" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🏐</span>
+                <span>EsVoley - Superliga Masculina 2</span>
+            </div>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+          </a>
+          
+          <a href="https://esvoley.es/voleibol/competiciones-masculinas/primera-division-masculina/grupo-a" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🏐</span>
+                <span>EsVoley - Primera Masculina</span>
+            </div>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+          </a>
+          
+          <a href="https://esvoley.es/voleibol/competiciones-femeninas/primera-division-femenina/grupo-d" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:1.2rem;">🏐</span>
+                <span>EsVoley - Primera Femenina</span>
+            </div>
+            <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+          </a>
+        </div>
+      </div>
+</section>
     <section id="prediccionesTotalesSection" style="padding-top: 0; padding-bottom: 20px;">
         <details class="vcv-faq-master" style="margin-top: 0px; margin-bottom: 20px; max-width: 100%; border: 1px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);">
             <summary style="padding:16px; display:flex; justify-content:space-between; align-items:center;">
@@ -2686,28 +2714,23 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                     }
                     let porrasEq = data.predicciones_totales[eq] || [];
                     
-                    let agrupados = {};
+                    // Nadie podrá ver la puntuación del resto nunca
+                    misPts = "";
                     porrasEq.forEach(porra => {
                         if (porra.usuario === usr) misPts = porra.puntos;
-                        if (!agrupados[porra.puntos]) agrupados[porra.puntos] = [];
-                        agrupados[porra.puntos].push(porra.nombre);
                     });
                     
-                    let sortedPts = Object.keys(agrupados).map(Number).sort((a, b) => b - a);
-                    sortedPts.forEach(pts => {
-                        let nombresStr = agrupados[pts].map(n => `👤 ${n}`).join(', ');
-                        listaOtros += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border-color); gap:12px;">
-                            <div style="font-weight:900; color:var(--secondary-color); font-size:1.1rem; white-space:nowrap;">${pts} pts</div>
-                            <div style="color:var(--text-muted); font-size:0.75rem; line-height:1.4; text-align:right;">${nombresStr}</div>
-                        </div>`;
-                    });
-
-                    if (listaOtros === "") { listaOtros = "<div style='color:var(--text-muted); font-size:0.85rem; padding:10px 0;'>Nadie ha hecho su predicción todavía.</div>"; }
-
                     let miCajonHTML = "";
                     if (isClosed) {
-                        miCajonHTML = ""; // El usuario pidió que al cerrarse solo quede el desplegable
+                        let txtPts = misPts !== "" ? `${misPts} pts` : "Sin predicción";
+                        miCajonHTML = `
+                        <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase;">Tu predicción final:</label>
+                            <div style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); display:flex; align-items:center; gap:6px;">
+                                <i data-lucide="lock" style="width:14px; height:14px;"></i>
+                                ${txtPts}
+                            </div>
+                        </div>`;
                     } else {
                         miCajonHTML = `
                         <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
@@ -2721,7 +2744,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                             </div>
                         </div>`;
                     }
-
+                    
                     htmlTot += `
                     <div class="vcv-card-v2" style="margin-bottom:10px; padding: 12px; border-left:4px solid var(--vcv-dorado);">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
@@ -2734,7 +2757,6 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                         
                         ${miCajonHTML}
 
-                        
                     </div>`;
                 });
                 
@@ -3269,25 +3291,40 @@ if(btnForceSyncExcelEl) btnForceSyncExcelEl.addEventListener('click', function(e
 window.initCalendar = function() {
     if(!window.appData || !window.appData.todos_partidos) return;
     
-    let todos = window.appData.todos_partidos;
+    let misEquipos = window.appData.mis_equipos_siguiendo || [];
+    let ahora = Date.now();
     
-    // Sort by timestamp
-    todos.sort((a, b) => {
+    let futuros = window.appData.todos_partidos.filter(p => {
+        let esFuturo = (p.timestamp && p.timestamp > ahora) || (!p.oficial_sets);
+        let meToca = misEquipos.includes(p.equipo_local) || misEquipos.includes(p.rival);
+        return esFuturo && meToca;
+    });
+    
+    futuros.sort((a, b) => {
         let tsA = a.timestamp || Infinity; 
         let tsB = b.timestamp || Infinity;
         return tsA - tsB; 
     });
+    
+    window.appData.calendario_procesado = futuros;
 
     let catSelect = document.getElementById('calendarTeamSelect');
-    let uniqueCats = window.appData.mis_equipos_siguiendo || [];
+    if(!catSelect) return;
     
-    let currentOptions = '<option value="">-- Ver Todos los Equipos --</option>';
+    let equiposSet = new Set();
+    futuros.forEach(p => {
+        if(misEquipos.includes(p.equipo_local)) equiposSet.add(p.equipo_local);
+        if(misEquipos.includes(p.rival)) equiposSet.add(p.rival);
+    });
+    let uniqueCats = Array.from(equiposSet).sort();
+    
+    let currentOptions = '<option value="">-- Todos mis equipos --</option>';
     uniqueCats.forEach(cat => {
         currentOptions += `<option value="${cat}">${cat}</option>`;
     });
     catSelect.innerHTML = currentOptions;
     
-    let savedCat = localStorage.getItem('pref_calendario_' + currentUser);
+    let savedCat = localStorage.getItem('pref_calendario');
     if (savedCat && uniqueCats.includes(savedCat)) {
         catSelect.value = savedCat;
     }
@@ -3295,65 +3332,181 @@ window.initCalendar = function() {
     window.renderCalendar();
 };
 
+function renderMatchCardHtml(eq) {
+    let dt = new Date(eq.timestamp);
+    let fechaFormateada = isNaN(dt) ? "Por confirmar" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+    
+    let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
+    let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
+    
+    let abrevLocalRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_local : eq.abrev_rival;
+    let abrevVisitRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_rival : eq.abrev_local;
+    
+    let localAbrev = (abrevLocalRaw || localTeamName.substring(0,3)).toUpperCase();
+    let visitAbrev = (abrevVisitRaw || visitTeamName.substring(0,3)).toUpperCase();
+
+    let localLogo = `<span style="font-weight:900; font-size: 1.2rem;">${localAbrev}</span>`;
+    let visitLogo = `<span style="font-weight:900; font-size: 1.2rem;">${visitAbrev}</span>`;
+    
+    let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; font-size:0.75rem; color:var(--text-muted);"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${eq.pabellon}</div>` : '';
+
+    let btnStreaming = eq.streaming 
+        ? `<a href="${eq.streaming}" target="_blank" class="btn-streaming-v2 active" style="text-decoration:none;"><i data-lucide="play" style="width:14px;height:14px;"></i> Streaming</a>` 
+        : `<button class="btn-streaming-v2 disabled" disabled style="background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:0.7rem; font-weight:bold; cursor:not-allowed;"><i data-lucide="play-square" style="width:12px;height:12px;"></i> Sin enlace</button>`;
+
+    let catFilename = eq.categoria + ".svg";
+    let catLower = eq.categoria.toLowerCase();
+    if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
+    else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+    else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+    else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+    else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+
+    let catLogoHtml = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+            <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+            <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
+            ${eq.categoria.toUpperCase()}
+            </span>
+        </div>`;
+        
+    let borderColor = eq.es_derby ? 'border-color: var(--secondary-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);' : '';
+    
+    let localRoleHtml = `<span class="team-role-v2" style="color: var(--success); font-weight:800; display:flex; align-items:center; gap:4px;">🏠 LOCAL</span>`;
+    let visitRoleHtml = `<span class="team-role-v2" style="color: var(--text-muted); font-weight:800; display:flex; align-items:center; gap:4px;">✈️ VISITANTE</span>`;
+    
+    return `
+    <div class="vcv-card-v2" style="margin-bottom:20px; ${borderColor}">
+        <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                ${catLogoHtml}
+                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">⚡ DERBY</div>` : ''}
+            </div>
+            <div style="text-align: right; color:var(--text-muted); font-size:0.85rem; font-weight:600;">
+                <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
+                ${infoPabellon}
+            </div>
+        </div>
+
+        <div class="teams-versus-container-v2" style="margin-top: 15px;">
+            <div class="team-box-v2">
+                <div class="team-avatar-v2">${localLogo}</div>
+                <span class="team-name-v2">${localTeamName}</span>
+                ${localRoleHtml}
+            </div>
+            <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+                <div style="font-size:0.75rem; color:var(--vcv-dorado); font-weight:900; text-transform:uppercase; letter-spacing:1px; white-space:nowrap; margin-bottom:-4px;">J. ${eq.jornada_eq || '-'}</div>
+                <div>VS</div>
+                ${btnStreaming}
+            </div>
+            <div class="team-box-v2">
+                <div class="team-avatar-v2">${visitLogo}</div>
+                <span class="team-name-v2">${visitTeamName}</span>
+                ${visitRoleHtml}
+            </div>
+        </div>
+    </div>`;
+}
+
 window.renderCalendar = function() {
-    if(!window.appData || !window.appData.todos_partidos) return;
+    if(!window.appData || !window.appData.calendario_procesado) return;
     
-    let cat = document.getElementById('calendarTeamSelect').value;
-    let search = document.getElementById('calendarSearchInput').value.toLowerCase().trim();
+    let futuros = window.appData.calendario_procesado;
+    let catEl = document.getElementById('calendarTeamSelect');
+    let searchEl = document.getElementById('calendarSearchInput');
+    if(!catEl || !searchEl) return;
     
-    localStorage.setItem('pref_calendario_' + currentUser, cat);
+    let cat = catEl.value;
+    let search = searchEl.value.toLowerCase().trim();
     
-    let filtered = window.appData.todos_partidos.filter(p => {
+    localStorage.setItem('pref_calendario', cat);
+    
+    let filtered = futuros.filter(p => {
         let matchCat = (!cat || p.equipo_local === cat || p.rival === cat);
         let matchSearch = (!search || p.rival.toLowerCase().includes(search) || p.equipo_local.toLowerCase().includes(search));
         return matchCat && matchSearch;
     });
+    
+    let ahora = Date.now();
+    let partidos24h = filtered.filter(p => {
+        if (!p.timestamp) return false;
+        let ts = parseInt(p.timestamp);
+        let horasFaltan = (ts - ahora) / (1000 * 60 * 60);
+        return horasFaltan > -12 && horasFaltan <= 24; // Estrictamente proximas 24h
+    });
+    
+    let ids24h = new Set(partidos24h.map(p => p.id_partido));
+    
+    let topHtml = "";
+    if (partidos24h.length > 0) {
+        topHtml = `
+        <div style="background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(106,44,112,0.1)); border: 2px solid var(--vcv-dorado); border-radius: 12px; padding: 16px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
+            <div style="text-align:center; color:var(--vcv-dorado); font-size:0.9rem; font-weight:900; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:6px;">
+                <i data-lucide="flame" style="width:18px; height:18px;"></i> PRÓXIMAS 24 HORAS
+            </div>
+        `;
+        
+        partidos24h.forEach(pm => {
+            topHtml += `
+                <div style="margin-bottom: 20px;">
+                    
+                    ${renderMatchCardHtml(pm)}
+                    <div style="text-align: center; margin-top: 10px;">
+                        <div class="reloj-partido" data-ts="${pm.timestamp}" data-eq="${pm.id_partido}" style="display:inline-block; font-size:1.1rem; padding:8px 16px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:bold; letter-spacing:1px;"></div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        topHtml += `</div>`;
+    }
+    document.getElementById('nextMatchHighlighted').innerHTML = topHtml;
 
     let html_res = "";
     if (filtered.length === 0) {
-        html_res = `<div style="text-align:center; padding:30px; color:#888; font-weight:bold;">No se han encontrado partidos con estos filtros.</div>`;
+        html_res = `<div style="text-align:center; padding:30px; color:var(--text-muted); font-weight:bold;">No hay partidos programados.</div>`;
     } else {
-        filtered.forEach(p => {
-            let fechaStr = "Fecha por confirmar";
-            if (p.timestamp) {
-                let d = new Date(p.timestamp);
-                let dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-                let mes = (d.getMonth() + 1).toString().padStart(2, '0');
-                let dia = d.getDate().toString().padStart(2, '0');
-                let h = d.getHours().toString().padStart(2, '0');
-                let m = d.getMinutes().toString().padStart(2, '0');
-                fechaStr = `${dias[d.getDay()]} ${dia}/${mes} - ${h}:${m}`;
+        let lastDateLabel = null;
+        
+        filtered.forEach(eq => {
+            if (ids24h.has(eq.id_partido)) return;
+            
+            let dateLabel = "Fecha por confirmar";
+            if (eq.timestamp) {
+                let d = new Date(eq.timestamp);
+                dateLabel = d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                // Capitalizar primera letra
+                dateLabel = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
             }
             
-            let esPasado = p.oficial_sets && p.oficial_sets.trim() !== "";
-            let estadoHtml = esPasado 
-                ? `<span style="background:var(--vcv-dorado); color:#fff; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">Finalizado: ${p.oficial_sets}</span>`
-                : `<span style="background:#e9ecef; color:#555; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">Próximamente</span>`;
-                
-            let titulo = p.ubicacion === 'LOCAL' ? `<b>${p.equipo_local}</b> vs ${p.rival}` : `${p.rival} vs <b>${p.equipo_local}</b>`;
-            let pabellonStr = p.pabellon ? `<div style="font-size:0.8rem; color:#777; margin-top:5px;">📍 ${p.pabellon}</div>` : '';
-            let streamStr = p.streaming ? `<div style="margin-top:5px;"><a href="${p.streaming}" target="_blank" class="btn btn-sm" style="background:#ff0000; color:white; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:4px;">▶ Ver Streaming</a></div>` : '';
-
-            html_res += `<div style="background:white; padding:15px; border-radius:10px; border-left:5px solid ${esPasado ? 'var(--vcv-dorado)' : 'var(--vcv-morado)'}; box-shadow:0 2px 5px rgba(0,0,0,0.06); transition: transform 0.2s;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span style="font-size:0.85rem; font-weight:bold; color:var(--vcv-morado);">${fechaStr}</span>
-                    ${estadoHtml}
-                </div>
-                <div style="font-size:1.05rem; color:#222; margin-bottom:2px;">
-                    ${titulo}
-                </div>
-                <div style="font-size:0.8rem; font-weight:bold; color:#1565c0; margin-bottom:2px;">🏆 ${p.categoria} - Jornada ${p.jornada_eq}</div>
-                ${pabellonStr}
-                ${streamStr}
-            </div>`;
+            if (dateLabel !== lastDateLabel) {
+                html_res += `
+                <div style="display:flex; align-items:center; gap:10px; margin: 30px 0 15px 0;">
+                    <div style="flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--border-color));"></div>
+                    <div style="color: var(--vcv-dorado); font-size: 0.85rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
+                        ${dateLabel}
+                    </div>
+                    <div style="flex:1; height:1px; background:linear-gradient(270deg, transparent, var(--border-color));"></div>
+                </div>`;
+                lastDateLabel = dateLabel;
+            }
+            
+            html_res += renderMatchCardHtml(eq);
         });
     }
     
     document.getElementById('calendarResults').innerHTML = html_res;
+    if (window.lucide) window.lucide.createIcons();
+    if (typeof iniciarRelojes === 'function') iniciarRelojes();
 };
 
 document.getElementById('calendarTeamSelect').addEventListener('change', window.renderCalendar);
 document.getElementById('calendarSearchInput').addEventListener('input', window.renderCalendar);
+
+
+
+
 
 </script>
 
@@ -4145,6 +4298,12 @@ window.updateProgressBar = function() {
         }
 
         
+
+
+// ---------------------------------------------------
+// LOGICA DE CALENDARIO
+// ---------------------------------------------------
+
 
 </script>
 

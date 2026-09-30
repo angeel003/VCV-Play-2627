@@ -833,7 +833,7 @@ function doPost(e) {
             } 
         }
 
-        // ASOCIAR STREAMING A CADA PARTIDO
+                // ASOCIAR STREAMING A CADA PARTIDO
         for (var c = 0; c < cartelera.length; c++) {
             var cp = cartelera[c];
             var oRes = resultadosMap[cp.id_partido];
