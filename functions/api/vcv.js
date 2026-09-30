@@ -540,14 +540,35 @@ export async function onRequestPost(context) {
         await db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(new_u, new_p, new_n || new_u).run();
         await db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u).run();
         await db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u).run();
-        await db.prepare('INSERT INTO "Ligas_Equipos" ("Jugador") VALUES (?)').bind(new_u).run();
 
-        // Ligas
+        // Ligas and Auto-Assign Permissions
         if (ligas_seleccionadas && ligas_seleccionadas.length > 0) {
             try {
                 await db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(new_u).run();
                 for (const l of ligas_seleccionadas) {
                     await db.prepare(`UPDATE "Ligas" SET "${l}" = 'X' WHERE "Jugador" = ?`).bind(new_u).run();
+                }
+
+                // Auto-assign permissions based on selected leagues
+                const { results: allLigasEquipos } = await db.prepare('SELECT * FROM "Ligas_Equipos"').all();
+                const equiposToPermit = new Set();
+                
+                for (const row of allLigasEquipos || []) {
+                    const lName = row.Liga;
+                    if (ligas_seleccionadas.includes(lName)) {
+                        for (const col of Object.keys(row)) {
+                            if (col !== "Liga" && row[col] && row[col].toString().toUpperCase() === "X") {
+                                equiposToPermit.add(col);
+                            }
+                        }
+                    }
+                }
+                
+                for (const team of equiposToPermit) {
+                    try {
+                        await db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(new_u).run();
+                        await db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(new_u).run();
+                    } catch(e) {}
                 }
             } catch(e) {}
         } else {
@@ -566,14 +587,9 @@ export async function onRequestPost(context) {
         // Update Resultados_Oficiales
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "Oficial Sets" = ?, "Oficial Parciales" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', id_partido).run();
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', streaming || '', id_partido).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Oficial Sets", "Oficial Parciales") VALUES (?, ?, ?)').bind(id_partido, sets || '', parciales || '').run();
-        }
-
-        // Update Streaming in Ajustes
-        if (streaming !== undefined) {
-            await db.prepare('UPDATE "Ajustes" SET "streaming" = ? WHERE "id_partido" = ?').bind(streaming, id_partido).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '').run();
         }
         
         // Invalidate cache
