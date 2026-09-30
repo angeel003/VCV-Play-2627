@@ -4,3 +4,6 @@ obsoleto/
 datos_prueba/
 *.log
 .wrangler/
+*.csv
+*.sql
+temp_*
