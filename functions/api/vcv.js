@@ -341,7 +341,9 @@ export async function onRequestPost(context) {
                 pCopy.permitido = true;
                 
                 // VISIBILIDAD AUTOMATICA 7 DIAS ANTES
-                if (pCopy.visibilidad !== "OCULTAR" && pCopy.timestamp && (pCopy.timestamp - Date.now() <= 7 * 24 * 60 * 60 * 1000)) {
+                if (pCopy.timestamp && (pCopy.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000)) {
+                    pCopy.visibilidad = "OCULTAR";
+                } else if (pCopy.visibilidad !== "OCULTAR") {
                     pCopy.visibilidad = "MOSTRAR";
                 }
                 if (esLoc && esRiv) pCopy.es_derby = true;
