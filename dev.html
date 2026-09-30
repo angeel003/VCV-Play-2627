@@ -3364,9 +3364,8 @@ window.initCalendar = function() {
     let ahora = Date.now();
     
     let futuros = window.appData.todos_partidos.filter(p => {
-        let esFuturo = (p.timestamp && p.timestamp > ahora) || (!p.oficial_sets);
-        let meToca = misEquipos.includes(p.equipo_local) || misEquipos.includes(p.rival);
-        return esFuturo && meToca;
+        let esFuturo = p.estado !== "FINALIZADO" && p.estado !== "CERRADO";
+        return esFuturo;
     });
     
     futuros.sort((a, b) => {
@@ -3382,12 +3381,12 @@ window.initCalendar = function() {
     
     let equiposSet = new Set();
     futuros.forEach(p => {
-        if(misEquipos.includes(p.equipo_local)) equiposSet.add(p.equipo_local);
-        if(misEquipos.includes(p.rival)) equiposSet.add(p.rival);
+        equiposSet.add(p.equipo_local);
+        equiposSet.add(p.rival);
     });
     let uniqueCats = Array.from(equiposSet).sort();
     
-    let currentOptions = '<option value="">-- Todos mis equipos --</option>';
+    let currentOptions = '<option value="">-- Todos los equipos --</option>';
     uniqueCats.forEach(cat => {
         currentOptions += `<option value="${cat}">${cat}</option>`;
     });
