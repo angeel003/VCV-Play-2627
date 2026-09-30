@@ -1789,11 +1789,9 @@ const fetchSeguro = (url, options, retries = 1) => {
   }
 
 // Nueva API ultrarrápida conectada a Cloudflare D1
-const scriptURL = window.location.hostname.includes('pages.dev') 
+const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com')) 
     ? '/api/vcv' 
-    : (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
-        ? 'https://dev.vcv-play-2627.pages.dev/api/vcv' 
-        : '/api/vcv');
+    : 'https://vcv-play-2627.pages.dev/api/vcv';
 
 // Pre-calentar el servidor de Google en segundo plano mientras el usuario escribe sus credenciales
 try {
