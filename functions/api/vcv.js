@@ -314,7 +314,8 @@ export async function onRequestPost(context) {
             const esRiv = misPermisos[p.rival] === true;
 
             if (esLoc || esRiv) {
-                const pCopy = { ...p };\n                pCopy.permitido = true;
+                const pCopy = { ...p };
+                pCopy.permitido = true;
                 if (esLoc && esRiv) pCopy.es_derby = true;
                 if (!idsEnCartelera[p.id_partido]) {
                     cartelera.push(pCopy);
