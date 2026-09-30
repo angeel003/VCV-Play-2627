@@ -114,28 +114,40 @@ function doGet(e) {
 
   function getSafeData(sheet) {
     if (!sheet) return [];
-    var cache = CacheService.getScriptCache();
     var sheetName = sheet.getName();
+
+    // 1. Mirar primero en la memoria RAM (Caché). Si ya está en memoria, devolver inmediatamente sin tocar la hoja
+    var cache = CacheService.getScriptCache();
     var cacheKey = "vcv_sheet_" + sheetName;
-    
-    var cached = cache.get(cacheKey);
-    if (cached) {
-        try { return JSON.parse(cached); } catch(e) {}
+
+    if (sheetName !== "Porras") {
+        var cached = cache.get(cacheKey);
+        if (cached) {
+            try { return JSON.parse(cached); } catch(e) {}
+        }
     }
-    
+
+    // 2. Solo si NO está en caché (o es Porras), consultamos a Google Sheets
     var lr = sheet.getLastRow();
     var lc = sheet.getLastColumn();
+
+    if (sheetName === "Porras") {
+        if (lr > 0 && lc > 0) return sheet.getRange(1, 1, lr, lc).getValues();
+        return [];
+    }
+
     var data = [];
     if (lr > 0 && lc > 0) {
         data = sheet.getRange(1, 1, lr, lc).getValues();
     }
-    
+
     if (data.length > 0) {
         try {
             var str = JSON.stringify(data);
-            if (str.length < 90000) { cache.put(cacheKey, str, 21600); } // 15 second cache
+            if (str.length < 90000) { cache.put(cacheKey, str, 21600); } 
         } catch(e) {}
     }
+
     return data;
 }
 
@@ -450,7 +462,7 @@ function doPost(e) {
         var nuevoEstado = estadoActual;
         var nuevaVisibilidad = visibilidadActual;
 
-        if(rTimestamp && nowMs >= (rTimestamp - 15 * 60 * 1000)) { nuevoEstado = "CERRADO"; }
+        if(rTimestamp && nowMs >= (rTimestamp)) { nuevoEstado = "CERRADO"; }
         if(rTimestamp && nowMs >= (rTimestamp + 48 * 60 * 60 * 1000)) {
             nuevoEstado = "CERRADO"; nuevaVisibilidad = "OCULTAR";
         }
@@ -462,6 +474,8 @@ function doPost(e) {
         var oRes = resultadosMap[idPart];
         var catTorneo = ajustesData[i][9] ? ajustesData[i][9].toString().trim() : "";
         var pabellonLocalizacion = ajustesData[i][10] ? ajustesData[i][10].toString().trim() : "";
+        var abrevF = ajustesData[i][11] ? ajustesData[i][11].toString().trim() : "";
+        var abrevR = ajustesData[i][12] ? ajustesData[i][12].toString().trim() : "";
 
         partidos.push({
             id_partido: idPart, ronda_global: ajustesData[i][1] ? ajustesData[i][1].toString().trim() : "0",
@@ -469,7 +483,8 @@ function doPost(e) {
             timestamp: rTimestamp, ubicacion: ajustesData[i][6] ? ajustesData[i][6].toString().trim().toUpperCase() : "",
             estado: nuevoEstado, visibilidad: nuevaVisibilidad,
             oficial_sets: oRes ? oRes.sets : "", oficial_parciales: oRes ? oRes.parciales : "",
-            categoria: catTorneo, pabellon: pabellonLocalizacion
+            categoria: catTorneo, pabellon: pabellonLocalizacion,
+            abrev_local: abrevF, abrev_rival: abrevR
         });
     }
 
@@ -682,9 +697,17 @@ function doPost(e) {
         }
 
         var puntosPorUsuarioYLiga = {};
+        var statsPorUsuarioYLiga = {};
         for(var i=1; i<dataLigas.length; i++){
             var u = dataLigas[i][0];
-            if(u) { puntosPorUsuarioYLiga[u] = {}; for(var l=0; l<misLigas.length; l++){ puntosPorUsuarioYLiga[u][misLigas[l]] = 0; } }
+            if(u) { 
+                puntosPorUsuarioYLiga[u] = {}; 
+                statsPorUsuarioYLiga[u] = {};
+                for(var l=0; l<misLigas.length; l++){ 
+                    puntosPorUsuarioYLiga[u][misLigas[l]] = 0; 
+                    statsPorUsuarioYLiga[u][misLigas[l]] = { porJornada: {} };
+                } 
+            }
         }
 
         var permisosGlobalesMap = {};
@@ -698,14 +721,16 @@ function doPost(e) {
             }
         }
 
+        var mapPartidosRapido = {};
+        for(var pm=0; pm<partidos.length; pm++) mapPartidosRapido[partidos[pm].id_partido] = partidos[pm];
+
         for(var pUser in porrasMap) {
             if(!puntosPorUsuarioYLiga[pUser]) continue;
             for(var pIdPart in porrasMap[pUser]) {
                 var uPred = porrasMap[pUser][pIdPart];
                 var oRes = resultadosMap[pIdPart];
                 if(!oRes || !oRes.sets || !oRes.parciales || !uPred.sets) continue;
-                var partidoInfo = null;
-                for(var p=0; p<partidos.length; p++) { if(partidos[p].id_partido === pIdPart) { partidoInfo = partidos[p]; break; } }
+                var partidoInfo = mapPartidosRapido[pIdPart];
                 if(!partidoInfo) continue;
 
                 var oLocalWin = parseInt(oRes.sets.split("-")[0]) > parseInt(oRes.sets.split("-")[1]);
@@ -744,7 +769,14 @@ function doPost(e) {
                 for(var l=0; l<misLigas.length; l++){
                     var nombreLiga = misLigas[l];
                     var equiposEnEstaLiga = ligasMap[nombreLiga] || [];
-                    if(equiposEnEstaLiga.indexOf(partidoInfo.equipo_local) !== -1) { puntosPorUsuarioYLiga[pUser][nombreLiga] += ptsGanados; }
+                    if(equiposEnEstaLiga.indexOf(partidoInfo.equipo_local) !== -1) { 
+                        puntosPorUsuarioYLiga[pUser][nombreLiga] += ptsGanados; 
+                        var jEq = partidoInfo.jornada_eq || 1;
+                        if (!statsPorUsuarioYLiga[pUser][nombreLiga].porJornada[jEq]) {
+                            statsPorUsuarioYLiga[pUser][nombreLiga].porJornada[jEq] = 0;
+                        }
+                        statsPorUsuarioYLiga[pUser][nombreLiga].porJornada[jEq] += ptsGanados;
+                    }
                 }
             }
         }
@@ -806,7 +838,7 @@ function doPost(e) {
             } 
         }
 
-        // ASOCIAR STREAMING A CADA PARTIDO
+                // ASOCIAR STREAMING A CADA PARTIDO
         for (var c = 0; c < cartelera.length; c++) {
             var cp = cartelera[c];
             var oRes = resultadosMap[cp.id_partido];
@@ -830,10 +862,12 @@ function doPost(e) {
         return ContentService.createTextOutput(JSON.stringify({ 
             "status": "success", 
             "jornada": rondaAbierta, 
-            "equipos": cartelera, "todos_partidos": todosPartidos, 
+            "equipos": cartelera, "todos_partidos": todosPartidos,
+        "predicciones_usuario": porrasMap[usuario] || {}, 
             "ligas": misLigas,
             "todas_las_ligas": headersLigas.slice(1), 
             "clasificaciones": clasificacionesFormateadas,
+            "stats_ligas": statsPorUsuarioYLiga,
             "nombre_real": miNombreReal,
             "insignias": insigniasMap,
             "mis_equipos_siguiendo": misEquiposSiguiendo,
@@ -844,15 +878,49 @@ function doPost(e) {
         })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    if (action === "get_mis_predicciones") {
+        var pData = getSafeData(sheetPorras);
+        var pMap = {};
+        var userLower = usuario.toLowerCase();
+        for(var i=1; i<pData.length; i++) {
+            var pUser = pData[i][1] ? pData[i][1].toString().trim().toLowerCase() : "";
+            var pIdPart = pData[i][2] ? pData[i][2].toString().trim() : "";
+            if(pUser === userLower) {
+                pMap[pIdPart] = { sets: parseSheetText(pData[i][3]), puntos: pData[i][4], signo: pData[i][5] };
+            }
+        }
+        return ContentService.createTextOutput(JSON.stringify({
+            "status": "success",
+            "predicciones": pMap
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     if (action === "save") {
         var pData = getSafeData(sheetPorras);
+        
+        // VALIDACIÓN DE SEGURIDAD
+        var matchDict = {};
+        for (var m = 0; m < partidos.length; m++) {
+            matchDict[partidos[m].id_partido] = partidos[m];
+        }
+        
+        for (var idPart in params.predicciones) {
+            var pMatch = matchDict[idPart];
+            if (pMatch && pMatch.estado === "CERRADO") {
+                return ContentService.createTextOutput(JSON.stringify({
+                    "status": "error", 
+                    "message": "⚠️ Seguridad: El partido " + idPart + " ya ha comenzado o está cerrado. Recarga la página."
+                })).setMimeType(ContentService.MimeType.JSON);
+            }
+        }
+
         for (var i = pData.length - 1; i >= 1; i--) { if (pData[i][1] == usuario && params.predicciones[pData[i][2].toString()]) { sheetPorras.deleteRow(i + 1); } }
         for (var idPart in params.predicciones) {
             var p = params.predicciones[idPart];
             if (p.sets) { sheetPorras.appendRow([new Date(), usuario, idPart, p.sets, p.puntos, p.signo]); }
         }
         clearAllCache();
-        clearAllCache(); return ContentService.createTextOutput(JSON.stringify({"status": "success", "message": "¡Predicciones guardadas!"})).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({"status": "success"})).setMimeType(ContentService.MimeType.JSON);
     }
 
     if (action === "load") {
@@ -938,7 +1006,12 @@ function doPost(e) {
         return ContentService.createTextOutput(JSON.stringify({"status": "success", "history": miHistorial})).setMimeType(ContentService.MimeType.JSON);
     }
 
-  } catch (error) { return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": error.message})).setMimeType(ContentService.MimeType.JSON); }
+  } catch (error) { 
+      var errStr = "";
+      try { errStr = error.message || error.toString(); } catch(e) { errStr = "Error parseando la excepción"; }
+      if (!errStr || errStr === "undefined") errStr = "Excepción nativa sin mensaje (posible cuota excedida).";
+      return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": errStr, "raw_error": JSON.stringify(error)})).setMimeType(ContentService.MimeType.JSON); 
+  }
 }
 
 function onEdit(e) {
@@ -1130,3 +1203,4 @@ function onEdit(e) {
     }
   }
 }
+ 

@@ -460,6 +460,7 @@ export async function onRequestPost(context) {
             clasificaciones: clasificacionesFormateadas,
             stats_ligas: {},
             nombre_real: userRow["Nombre Real"] || userRow.Usuario,
+            correo: userRow["Correo"] || "",
             insignias: insigniasMap,
             mis_equipos_siguiendo: Object.keys(misPermisos),
             equipos_totales: misEquiposTotales,
@@ -534,6 +535,24 @@ export async function onRequestPost(context) {
         }
 
         return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
+    }
+
+    
+    // SAVE EMAIL
+    if (action === 'save_email') {
+        const { email } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        
+        try {
+            await db.prepare('UPDATE "Usuarios" SET "Correo" = ? WHERE "Usuario" = ?').bind(email, usuario).run();
+            return jsonResponse({ status: 'success', message: 'Correo guardado con éxito.' });
+        } catch(e) {
+            if (e.message && e.message.includes('no such column')) {
+                return jsonResponse({ status: 'error', message: 'Error interno: La columna Correo aún no existe en la BD de Cloudflare. Por favor avisa al administrador.' }, 500);
+            }
+            return jsonResponse({ status: 'error', message: 'Error al guardar el correo.' }, 500);
+        }
     }
 
     return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
