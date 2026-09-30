@@ -1365,7 +1365,7 @@
 <div id="toastNotification">✅ Datos actualizados</div>
 
 <header style="display:none !important;">
-    <button id="btnLogout" title="Volver atrás">❮</button>
+    <button id="btnLogout" title="Volver atrás">&#10094;</button>
     <div class="header-content">
         <h1 style="margin-bottom: 0px; line-height:1.2;">VCV Play 26/27</h1>
     </div>
@@ -1789,7 +1789,7 @@ const fetchSeguro = (url, options, retries = 1) => {
   }
 
 // Nueva API ultrarrápida conectada a Cloudflare D1
-const scriptURL = window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') 
+const scriptURL = window.location.hostname.includes('pages.dev') 
     ? '/api/vcv' 
     : (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
         ? 'https://dev.vcv-play-2627.pages.dev/api/vcv' 
@@ -4394,7 +4394,7 @@ window.updateProgressBar = function() {
 <!-- MODAL NOTIFICACIONES -->
 <div id="notificacionesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
     <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('notificacionesModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">×</button>
+        <button onclick="document.getElementById('notificacionesModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
         
         <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
             <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones
@@ -4412,7 +4412,7 @@ window.updateProgressBar = function() {
 <!-- MODAL GUIA -->
 <div id="guiaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
     <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('guiaModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">×</button>
+        <button onclick="document.getElementById('guiaModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
         <h3 style="margin-top:0; margin-bottom:15px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
             <i data-lucide="info" style="width:20px; height:20px;"></i> Sistema de Puntos
         </h3>
