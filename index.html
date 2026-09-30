@@ -3382,8 +3382,7 @@ window.initCalendar = function() {
     
     let equiposSet = new Set();
     futuros.forEach(p => {
-        equiposSet.add(p.equipo_local);
-        equiposSet.add(p.rival);
+        if (p.equipo_local) equiposSet.add(p.equipo_local);
     });
     let uniqueCats = Array.from(equiposSet).sort();
     
