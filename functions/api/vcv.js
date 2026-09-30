@@ -181,7 +181,7 @@ export async function onRequestPost(context) {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
 
-        const deadline = new Date("2026-10-03T00:00:00").getTime();
+        const deadline = new Date("2026-10-09T23:59:59").getTime();
         if (Date.now() >= deadline) {
             return jsonResponse({ status: "error", message: "El plazo para enviar predicciones totales ha cerrado." });
         }

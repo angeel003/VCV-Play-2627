@@ -2764,7 +2764,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             if(data.equipos_totales && data.equipos_totales.length > 0) {
                 
                 
-                let isClosed = new Date().getTime() >= new Date("2026-10-03T00:00:00").getTime();
+                let isClosed = new Date().getTime() >= new Date("2026-10-09T23:59:59").getTime();
                 
                 let htmlTot = ``;
                 
@@ -2982,7 +2982,7 @@ function iniciarRelojes() {
 
 function iniciarRelojTotales() {
     if(intervalTotalesCountdown) clearInterval(intervalTotalesCountdown);
-    const deadline = new Date("2026-10-03T00:00:00").getTime();
+    const deadline = new Date("2026-10-09T23:59:59").getTime();
     intervalTotalesCountdown = setInterval(() => {
         const el = document.getElementById('relojTotales');
         if(!el) return;

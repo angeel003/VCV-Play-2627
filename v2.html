@@ -2120,7 +2120,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             if(data.equipos_totales && data.equipos_totales.length > 0) {
                 
                 
-                let isClosed = new Date().getTime() >= new Date("2026-10-03T00:00:00").getTime();
+                let isClosed = new Date().getTime() >= new Date("2026-10-09T23:59:59").getTime();
                 
                 let htmlTot = `
                 <div id="relojTotales" style="font-size:1.1rem; font-weight:bold; padding:10px; background:#e3f2fd; color:#1565c0; border-radius:8px; text-align:center; margin-bottom:20px;">
@@ -2307,7 +2307,7 @@ function iniciarRelojes() {
 
 function iniciarRelojTotales() {
     if(intervalTotalesCountdown) clearInterval(intervalTotalesCountdown);
-    const deadline = new Date("2026-10-03T00:00:00").getTime();
+    const deadline = new Date("2026-10-09T23:59:59").getTime();
     intervalTotalesCountdown = setInterval(() => {
         const el = document.getElementById('relojTotales');
         if(!el) return;
