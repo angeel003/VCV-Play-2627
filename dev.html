@@ -1896,7 +1896,9 @@ function renderAdminPanel(equipos) {
     let now = new Date().getTime();
     equipos.forEach(eq => {
         let ts = eq.timestamp || Infinity;
-        if (now - ts < 48 * 60 * 60 * 1000) {
+        let isAvailable = eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR";
+        let endedRecently = (eq.estado === "FINALIZADO" || eq.estado === "BLOQUEADO") && (now - (eq.timestamp_bloqueo || ts)) < 48 * 60 * 60 * 1000;
+        if (isAvailable || endedRecently) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
             
@@ -4270,7 +4272,7 @@ window.updateProgressBar = function() {
         let predictedOpen = 0;
         if(window.appData.equipos) {
             window.appData.equipos.forEach(eq => {
-                if(eq.estado !== "CERRADO") {
+                if(eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR") {
                     totalOpen++;
                     let savedVal = (window.appData.predicciones_usuario && window.appData.predicciones_usuario[eq.id_partido]) ? window.appData.predicciones_usuario[eq.id_partido] : null;
                     if(savedVal) predictedOpen++;

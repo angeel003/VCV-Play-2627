@@ -316,6 +316,11 @@ export async function onRequestPost(context) {
             if (esLoc || esRiv) {
                 const pCopy = { ...p };
                 pCopy.permitido = true;
+                
+                // VISIBILIDAD AUTOMATICA 7 DIAS ANTES
+                if (pCopy.visibilidad !== "OCULTAR" && pCopy.timestamp && (pCopy.timestamp - Date.now() <= 7 * 24 * 60 * 60 * 1000)) {
+                    pCopy.visibilidad = "MOSTRAR";
+                }
                 if (esLoc && esRiv) pCopy.es_derby = true;
                 if (!idsEnCartelera[p.id_partido]) {
                     cartelera.push(pCopy);
