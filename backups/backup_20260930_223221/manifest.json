@@ -1,0 +1,29 @@
+{
+  "name": "VCV Play 2627",
+  "short_name": "VCV Play 2627",
+  "start_url": "./index.html?v=v2.2",
+  "display": "standalone",
+  "background_color": "#190c1f",
+  "theme_color": "#160a19",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "files/images/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "files/images/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "files/images/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
