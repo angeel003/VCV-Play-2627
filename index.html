@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+﻿ï»¿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1765,7 +1765,7 @@ const fetchSeguro = (url, options, retries = 1) => {
       sessionStorage.removeItem('vcv_slide_left');
   }
 
-const scriptURL = "https://script.google.com/macros/s/AKfycbypusqyphzLfam-6xra5BCVAFXqGxOA-RMjVuZOAJyp4OQ5CCR_xZs-dT5tIy4EcZIEKQ/exec";
+const scriptURL = window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv';
 
 // --- PON AQUÃ TUS ENLACES DE GITHUB CUANDO LOS TENGAS ---
 const URL_BADGE_GENERIC = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg"; 
@@ -4254,3 +4254,4 @@ window.updateProgressBar = function() {
 </body>
 
 </html>
+
