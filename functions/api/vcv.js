@@ -459,8 +459,14 @@ export async function onRequestPost(context) {
         }
 
         // Ronda abierta (jornada activa de Ajustes)
-        const primerAbierto = partidos.find(p => p.estado === "ABIERTO");
-        const rondaAbierta = primerAbierto ? primerAbierto.ronda_global : "1";
+        let maxRonda = 1;
+        for (const p of cartelera) {
+            if (p.visibilidad === "MOSTRAR") {
+                let r = parseInt(p.ronda_global);
+                if (!isNaN(r) && r > maxRonda) maxRonda = r;
+            }
+        }
+        const rondaAbierta = maxRonda.toString();
 
         return jsonResponse({
             status: "success",

@@ -4272,10 +4272,15 @@ window.updateProgressBar = function() {
         let predictedOpen = 0;
         if(window.appData.equipos) {
             window.appData.equipos.forEach(eq => {
-                if(eq.visibilidad === "MOSTRAR" && eq.permitido) {
+                if(eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR" && eq.permitido) {
                     totalOpen++;
                     let savedVal = (window.appData.predicciones_usuario && window.appData.predicciones_usuario[eq.id_partido]) ? window.appData.predicciones_usuario[eq.id_partido] : null;
-                    if(savedVal) predictedOpen++;
+                    let hasSaved = (savedVal && savedVal.sets);
+                    
+                    let elSet = document.getElementById(`e${eq.id_partido}_sets`);
+                    let hasInput = elSet && elSet.value.trim() !== "";
+                    
+                    if(hasSaved || hasInput) predictedOpen++;
                 }
             });
         }
