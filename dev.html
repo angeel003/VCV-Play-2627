@@ -1539,20 +1539,6 @@
           Panel de control enlazado directamente a tu Google Sheet de base de datos.
         </p>
 
-
-        <div style="background: var(--bg-general); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h3 style="font-size:1rem; margin-top:0; color:var(--vcv-morado); display:flex; align-items:center; gap:6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            Recuperación de Cuenta (Opcional)
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
-          <div id="currentEmailDisplay" style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-main); display:none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
-          <form id="formSaveEmail">
-            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo" required style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--vcv-morado); color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(44,62,80,0.2);">Guardar Correo</button>
-          </form>
-        </div>
-
         <!-- Botones de Control Servidor -->
         <div style="display: flex; gap: 8px; margin-bottom: 16px;">
           <button class="btn" style="flex: 1; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
@@ -1623,6 +1609,21 @@
         </button>
         <div id="msgChangePwd" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
       </div>
+
+
+
+        <div style="background: var(--bg-general); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <h3 style="font-size:1rem; margin-top:0; color:var(--vcv-morado); display:flex; align-items:center; gap:6px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Recuperación de Cuenta (Opcional)
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
+          <div id="currentEmailDisplay" style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-main); display:none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
+          <form id="formSaveEmail">
+            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo" required style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--vcv-morado); color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(44,62,80,0.2);">Guardar Correo</button>
+          </form>
+        </div>
         <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="user" aria-hidden="true" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
