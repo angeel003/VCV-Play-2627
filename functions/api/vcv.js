@@ -506,6 +506,7 @@ export async function onRequestPost(context) {
             predicciones_usuario: prediccionesUsuario,
             ligas: misLigas,
             todas_las_ligas: todasLasLigas,
+            ligas_equipos: ligasEqRows,
             clasificaciones: clasificacionesFormateadas,
             stats_ligas: {},
             nombre_real: userRow["Nombre Real"] || userRow.Usuario,
