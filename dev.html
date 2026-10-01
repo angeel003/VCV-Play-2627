@@ -4167,6 +4167,20 @@ window.renderRankingV2 = function() {
             html += `<button class="cat-filter-btn ${activeClass}" onclick="cambiarLiga('${l}')">Liga ${l}</button>`;
         });
         html += `</div>`;
+        
+        let equiposQuePuntuan = [];
+        if (data.ligas_equipos) {
+            let rowLiga = data.ligas_equipos.find(r => r.Liga === ligaName);
+            if (rowLiga) {
+                for (let k in rowLiga) {
+                    if (k !== 'Liga' && rowLiga[k] && rowLiga[k].toString().toUpperCase() === 'X') {
+                        equiposQuePuntuan.push(k);
+                    }
+                }
+            }
+        }
+        let textoEquipos = equiposQuePuntuan.length > 0 ? "Aquí puntúan: " + equiposQuePuntuan.join(", ") : "Esta clasificación no tiene equipos asignados.";
+        html += `<div style="text-align:center; font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; margin-bottom: 20px; font-style: italic;">${textoEquipos}</div>`;
 
         // PODIUM
         if (ranking.length > 0) {
