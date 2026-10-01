@@ -44,7 +44,7 @@ Cada tarjeta te muestra:
 
 **¿Cómo predigo?** Despliegas la tarjeta y eliges:
 1. 🎯 **Resultado en sets** (3-0, 3-1, 3-2, 2-3, 1-3, 0-3)
-2. 📏 **Diferencia de puntos** en el último set (de 0 a 14+)
+2. 📏 **Diferencia de puntos** total del partido (de 0 a 14+)
 3. ➡️⬅️ Si esos puntos van **a favor o en contra del local**
 
 Le das a **💾 Guardar** y listo. Puedes cambiar tu predicción las veces que quieras **hasta que empiece el partido** (ahí se cierra el chiringuito automáticamente 🔒).
@@ -85,7 +85,7 @@ Cada partido puede darte puntos por **tres conceptos** que se suman entre sí:
 No solo acertaste quién ganaba, sino que clavaste el marcador en sets (ej: predijiste 3-1 y fue 3-1). ¡Eso ya tiene mérito! +30 puntos para ti.
 
 ### 3️⃣ Acertar la Diferencia de Puntos — **hasta 80 puntos** 🧠💎
-Esta es la joya de la corona. Predices cuántos puntos de diferencia habrá en el set decisivo:
+Esta es la joya de la corona. Predices cuántos puntos de diferencia de puntos en total habrá sumando todos los sets del partido:
 - **Clavaste la diferencia exacta (0 de error):** ¡¡80 PUNTOS!! Eres un genio 🧬
 - **Te quedaste cerca (error de 1-8 puntos):** Puntos proporcionales. Cuanto más cerca, más cobras 💰
 - **Te fuiste a 9 puntos o más de error:** 0 puntos. Se siente 💀
