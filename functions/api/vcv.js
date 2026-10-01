@@ -547,6 +547,7 @@ export async function onRequestPost(context) {
         await db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(new_u, new_p, new_n || new_u).run();
         await db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u).run();
         await db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u).run();
+        await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(new_u).run();
 
         // Ligas and Auto-Assign Permissions
         if (ligas_seleccionadas && ligas_seleccionadas.length > 0) {
