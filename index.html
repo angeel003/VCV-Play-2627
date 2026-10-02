@@ -1566,6 +1566,9 @@
             <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
           </div>
           <div class="form-group" style="margin-bottom:8px;">
+            <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
             <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
           </div>
           <div class="form-group" style="margin-bottom:12px;">
@@ -2000,6 +2003,7 @@ window.crearUsuarioAdmin = function(e) {
     e.preventDefault();
     const btn = e.target;
     const nu = document.getElementById('addUsrName').value.trim();
+    const nr = document.getElementById('addUsrRealName') ? document.getElementById('addUsrRealName').value.trim() : "";
     const np = document.getElementById('addUsrPwd').value.trim();
     
     
@@ -2016,7 +2020,7 @@ window.crearUsuarioAdmin = function(e) {
     
     fetchSeguro(scriptURL, { 
         method: 'POST', 
-        body: JSON.stringify({ action: 'add_user', usuario: currentUser, password: currentPassword, new_u: nu, new_p: np, new_n: "" , ligas_seleccionadas: selectedLigas }), 
+        body: JSON.stringify({ action: 'add_user', usuario: currentUser, password: currentPassword, new_u: nu, new_p: np, new_n: nr , ligas_seleccionadas: selectedLigas }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
     .then(res => res.json())
@@ -2024,6 +2028,7 @@ window.crearUsuarioAdmin = function(e) {
         if(d.status === "success") { 
             mostrarToast(d.message); 
             document.getElementById('addUsrName').value = "";
+            if (document.getElementById('addUsrRealName')) document.getElementById('addUsrRealName').value = "";
             document.getElementById('addUsrPwd').value = "";
             
         } 
