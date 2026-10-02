@@ -1748,6 +1748,22 @@
             </div>
             <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
           </a>
+            
+            <a href="https://fvcl.es/es/tournament/1340439/summary" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:1.2rem;">🏆</span>
+                  <span>FVCL - Segunda Femenina Oro</span>
+              </div>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+            </a>
+
+            <a href="https://fvcl.es/es/tournament/1340440/summary" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:1.2rem;">🏆</span>
+                  <span>FVCL - Segunda Masculina</span>
+              </div>
+              <i data-lucide="arrow-up-right" style="width: 16px; height: 16px; color:var(--text-muted);"></i>
+            </a>
         </div>
       </div>
 </section>
@@ -2628,21 +2644,37 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
 
                         
                         let catFilename = eq.categoria + ".svg";
-                        let catLower = eq.categoria.toLowerCase();
-                        if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
-                        else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
-                        else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
-                        else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
-                        else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+    let catLower = eq.categoria.toLowerCase();
+    let isFvcl = false;
+    if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
+    else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+    else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+    else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+    else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+    else if (catLower.includes("segunda") || catLower.includes("2")) {
+        catFilename = "fvcl.png";
+        isFvcl = true;
+    }
 
-                        let catLogoHtml = `
-                                    <div style="display: flex; align-items: center; gap: 6px;">
-                                      <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                                      <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
-                                      <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
-                                        ${eq.categoria.toUpperCase()}
-                                      </span>
-                                    </div>`;
+    let catLogoHtml = "";
+    if (isFvcl) {
+        catLogoHtml = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
+                  ${eq.categoria.toUpperCase()}
+                </span>
+            </div>`;
+    } else {
+        catLogoHtml = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
+                  ${eq.categoria.toUpperCase()}
+                </span>
+            </div>`;
+    }
                         htmlPartidos += `
                         <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
                             <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
@@ -3431,20 +3463,36 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
 
     let catFilename = eq.categoria + ".svg";
     let catLower = eq.categoria.toLowerCase();
+    let isFvcl = false;
     if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
     else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
     else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
     else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
     else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+    else if (catLower.includes("segunda") || catLower.includes("2")) {
+        catFilename = "fvcl.png";
+        isFvcl = true;
+    }
 
-    let catLogoHtml = `
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-            <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
-            <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
-            ${eq.categoria.toUpperCase()}
-            </span>
-        </div>`;
+    let catLogoHtml = "";
+    if (isFvcl) {
+        catLogoHtml = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
+                  ${eq.categoria.toUpperCase()}
+                </span>
+            </div>`;
+    } else {
+        catLogoHtml = `
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
+                  ${eq.categoria.toUpperCase()}
+                </span>
+            </div>`;
+    }
         
     let borderColor = eq.es_derby ? 'border-color: var(--secondary-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);' : '';
     
