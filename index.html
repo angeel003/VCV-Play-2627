@@ -2198,6 +2198,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
             isGuestMode = true;
             window.appData = data;
             if(window.initCalendar) window.initCalendar();
+            if(window.renderHistorialV2) window.renderHistorialV2(data);
             let nameEl = document.getElementById('h2-user-name'); if(nameEl) nameEl.innerText = "Modo Invitado";
             let handleEl = document.getElementById('h2-user-handle'); if(handleEl) handleEl.innerText = "@lectura";
             let badgesEl = document.getElementById('h2-user-badges'); if(badgesEl) badgesEl.innerHTML = "";
@@ -2449,6 +2450,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             currentJornadaGlobal = data.jornada;
             window.appData = data;
             if(window.initCalendar) window.initCalendar();
+            if(window.renderHistorialV2) window.renderHistorialV2(data);
             
             
 
