@@ -1667,29 +1667,7 @@
       </div>
     
     </section>
-    <section id="historialSection">
-    <div style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
-        <i data-lucide="hammer" style="width: 48px; height: 48px; color: var(--vcv-dorado); margin-bottom: 16px;"></i>
-        <h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3>
-        <p>¡Estoy trabajando en implementar esto cuanto antes! 😊</p>
-    </div>
-<div style="display:none;">
-        <h2>✅ Mis Predicciones</h2>
-<p style="color:#555; margin-bottom:20px; font-weight: 500; font-size: 0.95rem;">Historial completo de tus aciertos y puntos conseguidos en jornadas anteriores.</p>
-        <button type="button" class="btn btn-primary mb-4" id="btnHistory" style="font-weight:bold; padding: 10px 25px;">
-             Cargar mi historial
-        </button>
-        <div id="historyMessage" class="alert-box mx-auto" style="max-width:600px;"></div>
-        
-        <div id="historyControls" style="display:none; max-width:700px; margin: 0 auto 20px auto; background:var(--vcv-blanco); padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.05); text-align:left;">
-            <div style="font-weight:bold; color:var(--vcv-morado); margin-bottom:12px; font-size:1.1rem;">Filtrar por Equipo:</div>
-            <div id="filterEquiposContainer" style="margin-bottom:15px; display:flex; flex-wrap:wrap;"></div>
-            <hr style="margin:15px 0;">
-            <button id="btnToggleSort" class="btn btn-outline-dark btn-sm" style="font-weight:bold;">⬇️ Orden Descendente (Nuevos primero)</button>
-        </div>
-
-        <div id="historyListContainer" style="max-width:700px; margin: 0 auto; text-align:left;"></div>
-    </div></section>
+    <section id="historialSection"><div id="historialContentV2"></div></section>
     <section id="calendarioSection">
     <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main);">Calendario de Partidos</h2>
@@ -3043,6 +3021,317 @@ function iniciarRelojTotales() {
             el.innerHTML = `⏳ Cierra en: ${d}d ${h}h ${m}m ${s}s`;
         }
     }, 1000);
+}
+
+window.historialDataCache = null;
+
+function renderHistorialV2(data) {
+    window.historialDataCache = data;
+    drawHistorialUI('todas');
+}
+
+function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
+    const data = window.historialDataCache;
+    const container = document.getElementById('historialContentV2');
+    if (!container || !data) return;
+
+    let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10;
+    if (data.reglas) {
+        ptsGanador = data.reglas.ganador || ptsGanador;
+        ptsSets = data.reglas.sets || ptsSets;
+        ptsDiffExacta = data.reglas.diff_exacta || ptsDiffExacta;
+        maxDistancia = data.reglas.max_dist || maxDistancia;
+    }
+
+    const todosPartidosMap = {};
+    if (data.todos_partidos) {
+        data.todos_partidos.forEach(p => { todosPartidosMap[p.id_partido] = p; });
+    } else if (data.equipos) {
+        data.equipos.forEach(p => { todosPartidosMap[p.id_partido] = p; });
+    }
+
+    let todosArr = Object.values(todosPartidosMap);
+    
+    // Filtrar para mostrar solo los partidos que "están o han estado disponibles":
+    const carteleraMap = {};
+    if (data.equipos) {
+        data.equipos.forEach(p => carteleraMap[p.id_partido] = true);
+    }
+
+    todosArr = todosArr.filter(match => {
+        if (data.predicciones_usuario && data.predicciones_usuario[match.id_partido]) return true;
+        if (match.estado === "CERRADO" || match.oficial_sets) return true;
+        if (carteleraMap[match.id_partido]) return true;
+        // Si es un partido futuro que aún no está en la cartelera, lo ocultamos del historial
+        return false;
+    });
+
+    // Extraer jornadas y equipos de todos los partidos filtrados
+    let jornadas = new Set();
+    let equipos = new Set();
+    todosArr.forEach(match => {
+        if (match.jornada_eq) jornadas.add(match.jornada_eq);
+        if (match.equipo_local) equipos.add(match.equipo_local);
+    });
+    
+    let jornadasArr = Array.from(jornadas).sort((a,b) => parseInt(a) - parseInt(b));
+    let equiposArr = Array.from(equipos).sort();
+
+    // Ordenar de más nuevo a más antiguo por timestamp
+    todosArr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    let ptsTotales = 0;
+    let aciertosGanador = 0;
+    let plenos = 0;
+    let setsExactos = 0;
+    let totalPredicciones = 0;
+    let partidosEvaluados = [];
+
+    for (const match of todosArr) {
+        // Filtrar por jornada y equipo
+        if (selectedJornada !== 'todas' && match.jornada_eq !== selectedJornada) continue;
+        if (selectedEquipo !== 'todos' && match.equipo_local !== selectedEquipo) continue;
+
+        let localName = match.ubicacion === 'LOCAL' ? match.equipo_local : match.rival;
+        let visitName = match.ubicacion === 'LOCAL' ? match.rival : match.equipo_local;
+
+        const pred = (data.predicciones_usuario && data.predicciones_usuario[match.id_partido]) 
+            ? data.predicciones_usuario[match.id_partido] 
+            : null;
+
+        if (!pred) {
+            // NO PREDICTION MADE
+            if (match.estado !== "CERRADO") {
+                // ABIERTO (WARNING)
+                partidosEvaluados.push(`
+                <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="font-size: 0.75rem; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--vcv-dorado);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
+                    <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                  </div>
+                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
+                  
+                  <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; font-weight:600; background:rgba(212,175,55,0.05); padding:10px; border-radius:8px;">
+                    <i data-lucide="alert-triangle" style="width: 16px; height: 16px; color:var(--vcv-dorado);"></i>
+                    <span>¡Aún no has hecho tu predicción! Ve a "Partidos" para guardarla.</span>
+                  </div>
+                </div>`);
+            } else {
+                // CERRADO Y SIN PREDICCION (NO PENALIZA EN ESTADÍSTICAS)
+                // Se quita el totalPredicciones++ para no arruinar la media
+                
+                let oDiffStr = "Sin acta";
+                let oficialTxt = "Sin acta";
+                if (match.oficial_sets) {
+                    let oDiff = 0;
+                    const setsP = match.oficial_parciales.split(",");
+                    for (const sp of setsP) {
+                        const nums = sp.split("-");
+                        if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+                    }
+                    oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
+                    oficialTxt = `${match.oficial_sets} (${oDiffStr} pts local)`;
+                }
+
+                partidosEvaluados.push(`
+                <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
+                    <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                  </div>
+                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
+                  <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="color: var(--text-muted);">Tu Pronóstico:</span>
+                      <strong style="color: var(--text-muted);">No participaste</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                      <span style="color: var(--text-muted);">Acta Oficial:</span>
+                      <strong style="color: var(--text-main);">${oficialTxt}</strong>
+                    </div>
+                  </div>
+                  <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-weight:600;">
+                    <i data-lucide="info" style="width: 14px; height: 14px;"></i>
+                    <span>No enviaste predicción para este partido.</span>
+                  </div>
+                </div>`);
+            }
+            continue;
+        }
+
+        // --- PREDICCIÓN EXISTE ---
+        if (match.estado !== "CERRADO" || !match.oficial_sets) {
+            let uDiff = parseInt(pred.puntos) || 0;
+            if (pred.signo && pred.signo.toLowerCase().includes("en contra")) uDiff = -uDiff;
+            let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
+
+            partidosEvaluados.push(`
+            <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
+                <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+              </div>
+              <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
+              <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Tu Pronóstico:</span>
+                  <strong style="color: var(--secondary-color);">${pred.sets} (${uDiffStr} pts local)</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Acta Oficial:</span>
+                  <strong style="color: var(--text-muted); font-style:italic;">En juego / Sin acta</strong>
+                </div>
+              </div>
+            </div>`);
+            continue;
+        }
+
+        // --- PARTIDO CERRADO CON PREDICCIÓN ---
+        totalPredicciones++;
+
+        const oSets = match.oficial_sets.split("-");
+        const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
+        const uSets = pred.sets.split("-");
+        const uLocalWin = parseInt(uSets[0]) > parseInt(uSets[1]);
+
+        let matchPts = 0;
+        let acertoGanador = false;
+        let acertoSets = false;
+
+        if (uLocalWin === oLocalWin) { matchPts += ptsGanador; acertoGanador = true; aciertosGanador++; }
+        if (pred.sets === match.oficial_sets) { matchPts += ptsSets; acertoSets = true; setsExactos++; }
+
+        let oDiff = 0;
+        const setsP = match.oficial_parciales.split(",");
+        for (const sp of setsP) {
+            const nums = sp.split("-");
+            if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+        }
+        let uDiff = parseInt(pred.puntos) || 0;
+        if (pred.signo && pred.signo.toLowerCase().includes("en contra")) uDiff = -uDiff;
+
+        const dist = Math.abs(oDiff - uDiff);
+        if (dist === 0) matchPts += ptsDiffExacta;
+        else if (maxDistancia > 0 && dist < maxDistancia) {
+            matchPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+        }
+
+        ptsTotales += matchPts;
+        if (acertoGanador && acertoSets && dist <= 2) plenos++;
+
+        let oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
+        let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
+
+        let summaryText = "";
+        let colorClass = "var(--text-muted)";
+        let iconType = "award";
+        if (matchPts > (ptsGanador + ptsSets)) { summaryText = "¡Partidazo! Clavaste la predicción casi perfecta."; colorClass = "var(--success)"; }
+        else if (acertoGanador) { summaryText = "Acertaste el ganador del partido."; colorClass = "var(--text-gold)"; }
+        else { summaryText = "No hubo suerte en este partido."; colorClass = "var(--vcv-rojo)"; iconType = "x-circle"; }
+
+        partidosEvaluados.push(`
+        <!-- Tarjeta Historial -->
+        <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
+            <span style="font-size: 0.95rem; color: ${colorClass}; font-weight: 900;">+${matchPts} PTS</span>
+          </div>
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
+          <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Tu Pronóstico:</span>
+              <strong style="color: var(--secondary-color);">${pred.sets} (${uDiffStr} pts local)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Acta Oficial:</span>
+              <strong style="color: var(--text-main);">${match.oficial_sets} (${oDiffStr} pts local)</strong>
+            </div>
+          </div>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: ${colorClass}; display: flex; align-items: center; gap: 6px; font-weight:600;">
+            <i data-lucide="${iconType}" style="width: 14px; height: 14px;"></i>
+            <span>${summaryText}</span>
+          </div>
+        </div>`);
+    }
+
+    let eficacia = totalPredicciones > 0 ? Math.round((aciertosGanador / totalPredicciones) * 100) : 0;
+    let promedio = totalPredicciones > 0 ? Math.round(ptsTotales / totalPredicciones) : 0;
+    
+    let ptsTxt = totalPredicciones > 0 ? ptsTotales : "-";
+    let setsPorcentaje = totalPredicciones > 0 ? Math.round((setsExactos / totalPredicciones) * 100) : 0;
+    let setsTxt = totalPredicciones > 0 ? `${setsExactos} <span style="font-size:0.9rem; font-weight:900; color:#55efc4; float:right; margin-top:8px;">${setsPorcentaje}%</span>` : "-";
+    let aciertosTxt = totalPredicciones > 0 ? `${aciertosGanador} <span style="font-size:0.8rem; font-weight:normal; color:#ccc;">/ ${totalPredicciones}</span> <span style="font-size:0.9rem; font-weight:900; color:#55efc4; float:right; margin-top:8px;">${eficacia}%</span>` : "-";
+    let promedioTxt = totalPredicciones > 0 ? `${promedio} <span style="font-size:0.8rem; font-weight:normal; color:#ccc;">/ part.</span>` : "-";
+
+    let filterOptionsJ = `<option value="todas" ${selectedJornada==='todas' ? 'selected' : ''}>Todas las jornadas</option>`;
+    jornadasArr.forEach(j => {
+        filterOptionsJ += `<option value="${j}" ${selectedJornada===j ? 'selected' : ''}>Jornada ${j}</option>`;
+    });
+
+    let filterOptionsE = `<option value="todos" ${selectedEquipo==='todos' ? 'selected' : ''}>Todos los equipos</option>`;
+    equiposArr.forEach(eq => {
+        filterOptionsE += `<option value="${eq}" ${selectedEquipo===eq ? 'selected' : ''}>${eq}</option>`;
+    });
+
+    let topBar = `
+      <div style="margin-bottom:15px;">
+         <h2 style="font-size: 1.15rem; font-weight: 900; color:var(--text-main); margin:0 0 10px 0;">
+            <i data-lucide="bar-chart-2" style="width:18px;height:18px;display:inline-block;vertical-align:text-bottom; color:var(--vcv-dorado);"></i> Estadísticas
+         </h2>
+         <div style="display:flex; gap:10px; flex-wrap:wrap;">
+             <select id="histFilterJornada" onchange="drawHistorialUI(this.value, document.getElementById('histFilterEquipo').value)" style="flex:1; min-width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; outline:none;">
+                ${filterOptionsJ}
+             </select>
+             <select id="histFilterEquipo" onchange="drawHistorialUI(document.getElementById('histFilterJornada').value, this.value)" style="flex:2; min-width:180px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; outline:none;">
+                ${filterOptionsE}
+             </select>
+         </div>
+      </div>
+    `;
+
+    let statsHTML = `
+      <!-- Resumen Métricas -->
+      <div style="background: linear-gradient(135deg, var(--vcv-morado) 0%, #15081a 100%); padding: 15px; border-radius:12px; margin-bottom:20px; color:white; border:1px solid var(--vcv-dorado); box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Pts Ganados</div>
+            <div style="font-size: 1.5rem; font-weight: 900; color: var(--vcv-dorado);">${ptsTxt}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Promedio</div>
+            <div style="font-size: 1.5rem; font-weight: 900; color: #a29bfe;">${promedioTxt}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Aciertos (Part.)</div>
+            <div style="font-size: 1.5rem; font-weight: 900; color: #74b9ff;">${aciertosTxt}</div>
+          </div>
+          
+          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Sets Exactos</div>
+            <div style="font-size: 1.5rem; font-weight: 900; color: #fff;">${setsTxt}</div>
+          </div>
+          
+        </div>
+      </div>
+    `;
+
+    let listHTML = "";
+    if (partidosEvaluados.length === 0) {
+        listHTML = `
+        <div style="padding: 40px 20px; text-align: center; color: var(--text-muted); background:var(--bg-card-alt); border-radius:12px; border:1px dashed var(--border-color);">
+            <i data-lucide="clock" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 12px;"></i>
+            <p style="font-weight:600; margin:0;">No hay predicciones ni partidos que coincidan con estos filtros.</p>
+        </div>`;
+    } else {
+        listHTML = `<div style="display: flex; flex-direction: column; gap: 12px;">` + partidosEvaluados.join("") + `</div>`;
+    }
+
+    container.innerHTML = topBar + statsHTML + `<h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main); margin-bottom:12px; margin-top:25px;">Desglose de Partidos</h3>` + listHTML;
+    
+    if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
 }
 
 function cargarDatosAntiguos() {
