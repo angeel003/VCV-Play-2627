@@ -260,6 +260,13 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: "error", message: "Usuario o contraseña incorrectos." });
         }
 
+        // Actualizar último acceso si es un inicio de sesión
+        if (action === "login") {
+            try {
+                await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(usuario).run();
+            } catch(e) {}
+        }
+
         // Partidos y Resultados oficiales
         const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all();
         const { results: resOf } = await db.prepare('SELECT * FROM "Resultados_Oficiales"').all();
