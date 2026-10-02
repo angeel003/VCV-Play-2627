@@ -2425,15 +2425,15 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                 </span>
               </div>
               
-              <div style="display: block;">
-                <span id="user-progress-label" style="float: right; margin-top: 5px; margin-left: 10px; font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap;">${porcentaje}% Listo</span>
-                
-                <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--text-main); margin:0; letter-spacing:-0.5px; line-height:1.1; text-align:left; word-wrap: break-word; overflow-wrap: break-word;">¡Hola ${data.nombre_real || currentUser}!</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left;">
-                  <span style="color: var(--vcv-dorado); font-weight: 700;">@${currentUser}</span>
-                </p>
-                <div style="margin-top: 4px;">${insigniasHTML}</div>
-                <div style="clear: both;"></div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                  <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--text-main); margin:0; letter-spacing:-0.5px; line-height:1.1; text-align:left;">¡Hola ${data.nombre_real || currentUser}!</h2>
+                  <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left;">
+                    <span style="color: var(--vcv-dorado); font-weight: 700;">@${currentUser}</span>
+                  </p>
+                  ${insigniasHTML}
+                </div>
+                <span id="user-progress-label" style="font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap; margin-left:10px;">${porcentaje}% Listo</span>
               </div>
 
               <div style="width: 100%; background: rgba(0, 0, 0, 0.15); border-radius: 9999px; height: 6px; margin-top: 14px; overflow: hidden;">
