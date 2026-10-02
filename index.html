@@ -4417,6 +4417,12 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         modal.style.display = 'flex';
     };
 window.renderRankingV2 = function() {
+        let savedScroll = 0;
+        let oldSlider = document.getElementById('league-slider-container');
+        if (oldSlider) {
+            savedScroll = oldSlider.scrollLeft;
+        }
+        
         const data = window.appData;
         let loggedUser = (data && data.usuario) ? data.usuario : (typeof currentUser !== 'undefined' ? currentUser : '');
         
@@ -4513,7 +4519,7 @@ window.renderRankingV2 = function() {
                  </div>`;
 
         // Botones de Liga SIN EMOJI
-        html += `<div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
+        html += `<div id="league-slider-container" style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
         data.ligas.forEach(l => {
             let activeClass = l === ligaName ? 'active' : '';
             html += `<button class="cat-filter-btn ${activeClass}" onclick="cambiarLiga('${l}')">Liga ${l}</button>`;
@@ -4631,6 +4637,11 @@ window.renderRankingV2 = function() {
         }
 
         container.innerHTML = html;
+        let newSlider = document.getElementById('league-slider-container');
+        if (newSlider) {
+            newSlider.scrollLeft = savedScroll;
+        }
+        if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
     };
 window.updateProgressBar = function() {
         if(!window.appData) return;
