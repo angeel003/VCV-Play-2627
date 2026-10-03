@@ -374,13 +374,23 @@ export async function onRequestPost(context) {
         // Puntos reales calculados de partidos terminados
         const puntosRealesTotales = {};
         for (const p of partidos) {
-            if (p.oficial_sets) {
+            if (p.oficial_sets && p.oficial_sets.includes("-")) {
                 const sL = parseInt(p.oficial_sets.split("-")[0]);
                 const sV = parseInt(p.oficial_sets.split("-")[1]);
                 if (!puntosRealesTotales[p.equipo_local]) puntosRealesTotales[p.equipo_local] = 0;
-                if (sL === 3 && sV <= 1) puntosRealesTotales[p.equipo_local] += 3;
-                else if (sL === 3 && sV === 2) puntosRealesTotales[p.equipo_local] += 2;
-                else if (sL === 2 && sV === 3) puntosRealesTotales[p.equipo_local] += 1;
+                if (!puntosRealesTotales[p.rival]) puntosRealesTotales[p.rival] = 0;
+                
+                if (sL === 3 && sV <= 1) {
+                    puntosRealesTotales[p.equipo_local] += 3;
+                } else if (sL === 3 && sV === 2) {
+                    puntosRealesTotales[p.equipo_local] += 2;
+                    puntosRealesTotales[p.rival] += 1;
+                } else if (sL === 2 && sV === 3) {
+                    puntosRealesTotales[p.equipo_local] += 1;
+                    puntosRealesTotales[p.rival] += 3;
+                } else if (sL <= 1 && sV === 3) {
+                    puntosRealesTotales[p.rival] += 3;
+                }
             }
         }
 
