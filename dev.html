@@ -1414,11 +1414,9 @@
                     <p style="margin-bottom: 10px;">Si quieres acceder a toda la información detallada, <b>resultados pasados</b>, <b>calendario completo de próximos partidos</b> de tus equipos favoritos y <b>jugar en la liga de pronósticos</b>, ¡tienes que registrarte!</p>
                     <p style="margin-bottom: 5px;">Envíanos un correo a <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--vcv-dorado); font-weight: bold; text-decoration: underline;">adminfantasyvcv@gmail.com</a> con:</p>
                     <ul style="padding-left: 20px; margin-bottom: 10px; font-weight: 500;">
-                        <li>Nombre de usuario deseado (ej: juan_vcv)</li>
-                        <li>Contraseña deseada</li>
-                        <li>Tu relación con el club (ej: jugador/entrenador, indicando de qué equipo y categoría) para añadir insignias a tu perfil.</li>
-                        <li>Qué equipos te gustaría seguir.</li>
-                        <li style="margin-top:8px; font-weight:normal; font-size:0.85rem;"><i>(Opcional)</i> <b>Liga Privada:</b> Puedes tener una clasificación privada con tus amigos. Escribe en el correo los nombres de usuario de todos los que os queréis unir y qué equipos puntuarán en vuestra clasificación.</li>
+                        <li>Nombre de usuario deseado (ej: juan_vcv). La contraseña no es necesaria, te asignaremos una genérica y luego tu la podrás cambiar desde los ajustes del perfil</li>
+                        <li>Tu relación con el club (ej: jugador/entrenador, con nombre y categoría) para añadir insignias a tu perfil.</li>
+                        <li style="margin-top:8px; font-weight:normal; font-size:0.85rem;"><i>(Más adelante)</i> <b>Liga Privada:</b> Puedes tener una clasificación privada con tus amigos. Escribe en el correo los nombres de usuario de todos los que os queréis unir y qué equipos puntuarán en vuestra clasificación.</li>
                     </ul>
                     <p style="font-size: 0.85rem; opacity: 0.8; font-style: italic;">Te crearemos la cuenta y te avisaremos enseguida para que puedas acceder al VCV Play.</p>
                 </div>
@@ -1568,6 +1566,9 @@
             <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
           </div>
           <div class="form-group" style="margin-bottom:8px;">
+            <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
             <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
           </div>
           <div class="form-group" style="margin-bottom:12px;">
@@ -1579,6 +1580,17 @@
           <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
             Crear Usuario en Sheets
           </button>
+        </div>
+
+        <!-- Herramienta Aprobación Nombres -->
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+            <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Cambio de Nombre</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
+            
+            <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
+            </button>
+            <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
         <!-- Subida Rápida de Resultados y Links -->
@@ -1641,7 +1653,8 @@
           Cambiar mi Usuario o Nombre
         </h3>
         <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
-          Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.
+          Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.<br><br>
+<span style="color:var(--vcv-dorado); font-size:0.85rem;"><i data-lucide="info" style="width:14px; height:14px; vertical-align:-2px;"></i> <b>Aviso:</b> El cambio de nombre de @usuario requiere aprobación manual de un administrador (aprox. 1 día hábil. Si ves que tras varios días no se ha cambiado, avísanos por correo). Hasta que se apruebe, <b>deberás seguir iniciando sesión con tu @usuario actual</b>. (Los cambios de 'Nombre Real' son instantáneos).</span>
         </p>
         
         <div class="form-group" style="margin-bottom: 12px;">
@@ -1809,9 +1822,7 @@ const fetchSeguro = (url, options, retries = 1) => {
   }
 
 // Nueva API ultrarrápida conectada a Cloudflare D1
-const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com')) 
-    ? '/api/vcv' 
-    : 'https://vcv-play-2627.pages.dev/api/vcv';
+const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com')) ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv';
 
 // Pre-calentar el servidor de Google en segundo plano mientras el usuario escribe sus credenciales
 try {
@@ -1959,7 +1970,67 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     .finally(() => { btn.disabled = false; btn.innerText = "🔄 Auto-Permisos"; });
 });
 
-window.guardarResultadoAdmin = function(e, idPart) {
+
+    let btnLoadNameRequests = document.getElementById('btnLoadNameRequests');
+    if (btnLoadNameRequests) {
+        btnLoadNameRequests.addEventListener('click', async function(e) {
+            let box = document.getElementById('adminNameRequestsBox');
+            btnLoadNameRequests.disabled = true;
+            btnLoadNameRequests.innerText = "Cargando...";
+            
+            try {
+                let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({action: 'get_name_change_requests', usuario: currentUser, password: currentPassword})});
+                let d = await res.json();
+                
+                if (d.status === 'success') {
+                    if (d.requests.length === 0) {
+                        box.innerHTML = '<span style="color:var(--text-muted);">No hay peticiones pendientes.</span>';
+                    } else {
+                        let h = '';
+                        d.requests.forEach(r => {
+                            h += `<div style="background:var(--bg-lighter); padding:10px; border-radius:6px; border:1px solid #333;">
+                                <div><b>Actual:</b> ${r.Usuario} ➡️ <b>Nuevo:</b> ${r.Nuevo_Usuario}</div>
+                                ${r.Nuevo_Nombre ? `<div><b>Nombre Real:</b> ${r.Nuevo_Nombre}</div>` : ''}
+                                <div style="font-size:0.7rem; color:#888;">Fecha: ${new Date(r.Fecha).toLocaleString()}</div>
+                                <div style="margin-top:8px; display:flex; gap:8px;">
+                                    <button class="btn btn-primary" onclick="resolveNameChange('${r.Usuario}', 'approve')" style="flex:1; padding:5px; font-size:0.8rem; background:green; border:none; cursor:pointer;">Aprobar</button>
+                                    <button class="btn btn-primary" onclick="resolveNameChange('${r.Usuario}', 'reject')" style="flex:1; padding:5px; font-size:0.8rem; background:red; border:none; cursor:pointer;">Rechazar</button>
+                                </div>
+                            </div>`;
+                        });
+                        box.innerHTML = h;
+                    }
+                } else {
+                    box.innerText = "❌ Error: " + d.message;
+                }
+            } catch(err) {
+                box.innerText = "❌ Error de conexión al servidor";
+            }
+            btnLoadNameRequests.disabled = false;
+            btnLoadNameRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    }
+
+    window.resolveNameChange = async function(targetUser, resolution) {
+        if(!confirm(`¿Estás seguro de que quieres ${resolution === 'approve' ? 'APROBAR' : 'RECHAZAR'} el cambio para ${targetUser}?`)) return;
+        
+        let payload = { action: 'resolve_name_change', usuario: currentUser, password: currentPassword, target_user: targetUser, resolution: resolution };
+        try {
+            let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            let d = await res.json();
+            if (d.status === 'success') {
+                alert(d.message);
+                document.getElementById('btnLoadNameRequests').click(); // recargar
+            } else {
+                alert("Error: " + d.message);
+            }
+        } catch(err) {
+            alert("Error de conexión");
+        }
+    };
+
+    window.guardarResultadoAdmin = function(e, idPart) {
     e.preventDefault();
     const btn = e.currentTarget || e.target;
     
@@ -2002,6 +2073,7 @@ window.crearUsuarioAdmin = function(e) {
     e.preventDefault();
     const btn = e.target;
     const nu = document.getElementById('addUsrName').value.trim();
+    const nr = document.getElementById('addUsrRealName') ? document.getElementById('addUsrRealName').value.trim() : "";
     const np = document.getElementById('addUsrPwd').value.trim();
     
     
@@ -2018,7 +2090,7 @@ window.crearUsuarioAdmin = function(e) {
     
     fetchSeguro(scriptURL, { 
         method: 'POST', 
-        body: JSON.stringify({ action: 'add_user', usuario: currentUser, password: currentPassword, new_u: nu, new_p: np, new_n: "" , ligas_seleccionadas: selectedLigas }), 
+        body: JSON.stringify({ action: 'add_user', usuario: currentUser, password: currentPassword, new_u: nu, new_p: np, new_n: nr , ligas_seleccionadas: selectedLigas }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
     .then(res => res.json())
@@ -2026,6 +2098,7 @@ window.crearUsuarioAdmin = function(e) {
         if(d.status === "success") { 
             mostrarToast(d.message); 
             document.getElementById('addUsrName').value = "";
+            if (document.getElementById('addUsrRealName')) document.getElementById('addUsrRealName').value = "";
             document.getElementById('addUsrPwd').value = "";
             
         } 
@@ -3027,8 +3100,6 @@ function iniciarRelojTotales() {
     }, 1000);
 }
 
-
-
 window.historialDataCache = null;
 
 function renderHistorialV2(data) {
@@ -3617,16 +3688,16 @@ function renderizarHistorial() {
                     ${infoPabellon}
                 </div>
                 ${htmlReloj}
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; background: rgba(16, 185, 129, 0.1); padding:12px; border-radius:8px; border: 1px solid rgba(16, 185, 129, 0.3); border-left: 4px solid var(--success); margin-top:12px;">
-                                <div style="margin-right:15px; margin-bottom:8px;">
-                                    <span style="color:var(--success); font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:4px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i data-lucide="check-circle-2" style="width:14px; height:14px;"></i> GUARDADA</span>
-                                    <span style="font-weight:900; color:var(--text-main); font-size:1.15rem;">${txtPorraSets}</span> <span style="font-size:0.95rem; color:var(--text-muted);">${txtPorraPtos}</span>
-                                </div>
-                                <div>
-                                    <span style="color:#777; font-size:0.85rem; display:block; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Resultado Oficial</span>
-                                    ${ofText}
-                                </div>
-                            </div>
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; background:var(--bg-general); padding:12px; border-radius:6px; border-left: 4px solid var(--vcv-morado); margin-top:10px;">
+                    <div style="margin-right:15px; margin-bottom:8px;">
+                        <span style="color:#777; font-size:0.85rem; display:block; text-transform:uppercase; letter-spacing:0.5px;">Tu Predicción</span>
+                        <span style="font-weight:bold; color:var(--vcv-morado); font-size:1.05rem;">${txtPorraSets}</span> ${txtPorraPtos}
+                    </div>
+                    <div>
+                        <span style="color:#777; font-size:0.85rem; display:block; text-transform:uppercase; letter-spacing:0.5px;">Resultado Oficial</span>
+                        ${ofText}
+                    </div>
+                </div>
                 ${puntosInfo}
             </div>`;
         });
@@ -4421,6 +4492,12 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         modal.style.display = 'flex';
     };
 window.renderRankingV2 = function() {
+        let savedScroll = 0;
+        let oldSlider = document.getElementById('league-slider-container');
+        if (oldSlider) {
+            savedScroll = oldSlider.scrollLeft;
+        }
+        
         const data = window.appData;
         let loggedUser = (data && data.usuario) ? data.usuario : (typeof currentUser !== 'undefined' ? currentUser : '');
         
@@ -4517,7 +4594,7 @@ window.renderRankingV2 = function() {
                  </div>`;
 
         // Botones de Liga SIN EMOJI
-        html += `<div style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
+        html += `<div id="league-slider-container" style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
         data.ligas.forEach(l => {
             let activeClass = l === ligaName ? 'active' : '';
             html += `<button class="cat-filter-btn ${activeClass}" onclick="cambiarLiga('${l}')">Liga ${l}</button>`;
@@ -4635,6 +4712,11 @@ window.renderRankingV2 = function() {
         }
 
         container.innerHTML = html;
+        let newSlider = document.getElementById('league-slider-container');
+        if (newSlider) {
+            newSlider.scrollLeft = savedScroll;
+        }
+        if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
     };
 window.updateProgressBar = function() {
         if(!window.appData) return;
