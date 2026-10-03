@@ -1988,7 +1988,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                     } else {
                         let h = '';
                         d.requests.forEach(r => {
-                            h += `<div style="background:var(--bg-lighter); padding:10px; border-radius:6px; border:1px solid #333;">
+                            h += `<div style="background:var(--bg-card-alt); padding:10px; border-radius:6px; border:1px solid #333;">
                                 <div><b>Actual:</b> ${r.Usuario} ➡️ <b>Nuevo:</b> ${r.Nuevo_Usuario}</div>
                                 ${r.Nuevo_Nombre ? `<div><b>Nombre Real:</b> ${r.Nuevo_Nombre}</div>` : ''}
                                 <div style="font-size:0.7rem; color:#888;">Fecha: ${new Date(r.Fecha).toLocaleString()}</div>
@@ -3181,7 +3181,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             if (match.estado !== "CERRADO") {
                 // ABIERTO (WARNING)
                 partidosEvaluados.push(`
-                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-lighter)); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
+                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                     <span style="font-size: 0.75rem; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--vcv-dorado);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                     <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
@@ -3212,7 +3212,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
                 }
 
                 partidosEvaluados.push(`
-                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-lighter)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                     <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
                     <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
@@ -3245,7 +3245,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
 
             partidosEvaluados.push(`
-            <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-lighter)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
+            <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                 <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                 <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
@@ -3311,7 +3311,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
 
         partidosEvaluados.push(`
         <!-- Tarjeta Historial -->
-        <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-lighter)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+        <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
             <span style="font-size: 0.95rem; color: ${colorClass}; font-weight: 900;">+${matchPts} PTS</span>
