@@ -622,11 +622,10 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'get_name_change_requests') {
-        const auth = await db.prepare('SELECT "Usuario", "Insignias" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
-        let misInsignias = [];
-        try { misInsignias = JSON.parse(auth.Insignias || "[]"); } catch(e) {}
-        if (!misInsignias.includes("admin")) return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         const { results } = await db.prepare('SELECT * FROM "Peticiones_Renombre" WHERE "Estado" = \'PENDIENTE\' ORDER BY "Fecha" ASC').all();
         return jsonResponse({status: 'success', requests: results});
@@ -635,11 +634,10 @@ export async function onRequestPost(context) {
     if (action === 'resolve_name_change') {
         const { target_user, resolution } = body;
         
-        const auth = await db.prepare('SELECT "Usuario", "Insignias" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
-        let misInsignias = [];
-        try { misInsignias = JSON.parse(auth.Insignias || "[]"); } catch(e) {}
-        if (!misInsignias.includes("admin")) return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         if (resolution === 'reject') {
             await db.prepare('DELETE FROM "Peticiones_Renombre" WHERE "Usuario" = ?').bind(target_user).run();
