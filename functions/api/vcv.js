@@ -377,19 +377,24 @@ export async function onRequestPost(context) {
             if (p.oficial_sets && p.oficial_sets.includes("-")) {
                 const sL = parseInt(p.oficial_sets.split("-")[0]);
                 const sV = parseInt(p.oficial_sets.split("-")[1]);
-                if (!puntosRealesTotales[p.equipo_local]) puntosRealesTotales[p.equipo_local] = 0;
-                if (!puntosRealesTotales[p.rival]) puntosRealesTotales[p.rival] = 0;
+                
+                // Determinar quién jugó a la izquierda (Local real) y quién a la derecha (Visitante real)
+                const leftTeam = (p.ubicacion === 'LOCAL') ? p.equipo_local : p.rival;
+                const rightTeam = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
+
+                if (!puntosRealesTotales[leftTeam]) puntosRealesTotales[leftTeam] = 0;
+                if (!puntosRealesTotales[rightTeam]) puntosRealesTotales[rightTeam] = 0;
                 
                 if (sL === 3 && sV <= 1) {
-                    puntosRealesTotales[p.equipo_local] += 3;
+                    puntosRealesTotales[leftTeam] += 3;
                 } else if (sL === 3 && sV === 2) {
-                    puntosRealesTotales[p.equipo_local] += 2;
-                    puntosRealesTotales[p.rival] += 1;
+                    puntosRealesTotales[leftTeam] += 2;
+                    puntosRealesTotales[rightTeam] += 1;
                 } else if (sL === 2 && sV === 3) {
-                    puntosRealesTotales[p.equipo_local] += 1;
-                    puntosRealesTotales[p.rival] += 3;
+                    puntosRealesTotales[leftTeam] += 1;
+                    puntosRealesTotales[rightTeam] += 3;
                 } else if (sL <= 1 && sV === 3) {
-                    puntosRealesTotales[p.rival] += 3;
+                    puntosRealesTotales[rightTeam] += 3;
                 }
             }
         }
