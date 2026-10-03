@@ -127,10 +127,7 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
     }
 
-    // 3.5. SOLICITUD DE CAMBIO DE NOMBRE
-    if (action === "request_name_change") {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
+    );
 
         const newUsr = (body.new_usuario || "").trim();
         const newName = (body.new_nombre || "").trim();
@@ -616,6 +613,90 @@ export async function onRequestPost(context) {
 
     
     // SAVE EMAIL
+    
+    if (action === 'request_name_change') {
+        const { new_usuario, new_nombre } = body;
+        
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+
+        if (!new_usuario && !new_nombre) {
+            return jsonResponse({status: 'error', message: 'Faltan datos'}, 400);
+        }
+
+        if (new_usuario) {
+            const check = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(new_usuario).first();
+            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está cogido.'}, 400);
+            
+            await db.prepare('INSERT OR REPLACE INTO "Peticiones_Renombre" ("Usuario", "Nuevo_Usuario", "Nuevo_Nombre", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
+                .bind(usuario, new_usuario, new_nombre || '', new Date().toISOString(), 'PENDIENTE').run();
+            
+            return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, avísanos por correo. Mientras tanto, usa tu usuario actual.'});
+        } else {
+            await db.prepare('UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
+            return jsonResponse({status: 'success', message: 'Tu Nombre Real se ha actualizado inmediatamente.'});
+        }
+    }
+
+    if (action === 'get_name_change_requests') {
+        const auth = await db.prepare('SELECT "Usuario", "Insignias" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        let misInsignias = [];
+        try { misInsignias = JSON.parse(auth.Insignias || "[]"); } catch(e) {}
+        if (!misInsignias.includes("admin")) return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
+
+        const { results } = await db.prepare('SELECT * FROM "Peticiones_Renombre" WHERE "Estado" = \'PENDIENTE\' ORDER BY "Fecha" ASC').all();
+        return jsonResponse({status: 'success', requests: results});
+    }
+
+    if (action === 'resolve_name_change') {
+        const { target_user, resolution } = body;
+        
+        const auth = await db.prepare('SELECT "Usuario", "Insignias" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        let misInsignias = [];
+        try { misInsignias = JSON.parse(auth.Insignias || "[]"); } catch(e) {}
+        if (!misInsignias.includes("admin")) return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
+
+        if (resolution === 'reject') {
+            await db.prepare('DELETE FROM "Peticiones_Renombre" WHERE "Usuario" = ?').bind(target_user).run();
+            return jsonResponse({status: 'success', message: 'Petición rechazada.'});
+        }
+
+        if (resolution === 'approve') {
+            const peticion = await db.prepare('SELECT * FROM "Peticiones_Renombre" WHERE "Usuario" = ?').bind(target_user).first();
+            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
+
+            const oldU = peticion.Usuario;
+            const newU = peticion.Nuevo_Usuario;
+            const newN = peticion.Nuevo_Nombre;
+
+            if (newU) {
+                const tables = [
+                    "Usuarios", "Porras", "Ligas", "Permisos_Equipos", 
+                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", 
+                    "Puntuacion_Total_Predecida"
+                ];
+                
+                const stmts = [];
+                for (const table of tables) {
+                    let col = (table === "Ligas" || table === "Permisos_Equipos") ? "Jugador" : "Usuario";
+                    stmts.push(db.prepare(`UPDATE OR IGNORE "${table}" SET "${col}" = ? WHERE "${col}" = ?`).bind(newU, oldU));
+                    stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
+                }
+                
+                if (newN) {
+                    stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, newU));
+                }
+                
+                stmts.push(db.prepare(`DELETE FROM "Peticiones_Renombre" WHERE "Usuario" = ?`).bind(oldU));
+                
+                await db.batch(stmts);
+                return jsonResponse({status: 'success', message: `Usuario ${oldU} renombrado a ${newU} con éxito.`});
+            }
+        }
+    }
+
     if (action === 'save_email') {
         const { email } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
