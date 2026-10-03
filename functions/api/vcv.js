@@ -588,8 +588,8 @@ export async function onRequestPost(context) {
             await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '').run();
         }
         
-        // Invalidate cache
-        await db.prepare("DELETE FROM Cache_App WHERE clave = 'userPointsInLiga'").run();
+        if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave = 'userPointsInLiga'").run(); } catch(e) {}
 
         return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
     }
