@@ -1582,6 +1582,17 @@
           </button>
         </div>
 
+        <!-- Herramienta Aprobación Nombres -->
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+            <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Cambio de Nombre</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
+            
+            <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
+            </button>
+            <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
         <!-- Subida Rápida de Resultados y Links -->
         <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
           <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">🏐 Subir Resultados y Enlaces</h4>
@@ -1642,7 +1653,8 @@
           Cambiar mi Usuario o Nombre
         </h3>
         <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
-          Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.
+          Este es el nombre (ej. Nombre Apellido) o el @usuario que aparecerá en tu perfil y en las clasificaciones.<br><br>
+<span style="color:var(--vcv-dorado); font-size:0.85rem;"><i data-lucide="info" style="width:14px; height:14px; vertical-align:-2px;"></i> <b>Aviso:</b> El cambio de nombre de @usuario requiere aprobación manual de un administrador (aprox. 1 día hábil. Si ves que tras varios días no se ha cambiado, avísanos por correo). Hasta que se apruebe, <b>deberás seguir iniciando sesión con tu @usuario actual</b>. (Los cambios de 'Nombre Real' son instantáneos).</span>
         </p>
         
         <div class="form-group" style="margin-bottom: 12px;">
@@ -1810,9 +1822,7 @@ const fetchSeguro = (url, options, retries = 1) => {
   }
 
 // Nueva API ultrarrápida conectada a Cloudflare D1
-const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com')) 
-    ? '/api/vcv' 
-    : 'https://vcv-play-2627.pages.dev/api/vcv';
+const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com')) ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv';
 
 // Pre-calentar el servidor de Google en segundo plano mientras el usuario escribe sus credenciales
 try {
@@ -1960,7 +1970,67 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     .finally(() => { btn.disabled = false; btn.innerText = "🔄 Auto-Permisos"; });
 });
 
-window.guardarResultadoAdmin = function(e, idPart) {
+
+    let btnLoadNameRequests = document.getElementById('btnLoadNameRequests');
+    if (btnLoadNameRequests) {
+        btnLoadNameRequests.addEventListener('click', async function(e) {
+            let box = document.getElementById('adminNameRequestsBox');
+            btnLoadNameRequests.disabled = true;
+            btnLoadNameRequests.innerText = "Cargando...";
+            
+            try {
+                let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({action: 'get_name_change_requests', usuario: currentUser, password: currentPassword})});
+                let d = await res.json();
+                
+                if (d.status === 'success') {
+                    if (d.requests.length === 0) {
+                        box.innerHTML = '<span style="color:var(--text-muted);">No hay peticiones pendientes.</span>';
+                    } else {
+                        let h = '';
+                        d.requests.forEach(r => {
+                            h += `<div style="background:var(--bg-lighter); padding:10px; border-radius:6px; border:1px solid #333;">
+                                <div><b>Actual:</b> ${r.Usuario} ➡️ <b>Nuevo:</b> ${r.Nuevo_Usuario}</div>
+                                ${r.Nuevo_Nombre ? `<div><b>Nombre Real:</b> ${r.Nuevo_Nombre}</div>` : ''}
+                                <div style="font-size:0.7rem; color:#888;">Fecha: ${new Date(r.Fecha).toLocaleString()}</div>
+                                <div style="margin-top:8px; display:flex; gap:8px;">
+                                    <button class="btn btn-primary" onclick="resolveNameChange('${r.Usuario}', 'approve')" style="flex:1; padding:5px; font-size:0.8rem; background:green; border:none; cursor:pointer;">Aprobar</button>
+                                    <button class="btn btn-primary" onclick="resolveNameChange('${r.Usuario}', 'reject')" style="flex:1; padding:5px; font-size:0.8rem; background:red; border:none; cursor:pointer;">Rechazar</button>
+                                </div>
+                            </div>`;
+                        });
+                        box.innerHTML = h;
+                    }
+                } else {
+                    box.innerText = "❌ Error: " + d.message;
+                }
+            } catch(err) {
+                box.innerText = "❌ Error de conexión al servidor";
+            }
+            btnLoadNameRequests.disabled = false;
+            btnLoadNameRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    }
+
+    window.resolveNameChange = async function(targetUser, resolution) {
+        if(!confirm(`¿Estás seguro de que quieres ${resolution === 'approve' ? 'APROBAR' : 'RECHAZAR'} el cambio para ${targetUser}?`)) return;
+        
+        let payload = { action: 'resolve_name_change', usuario: currentUser, password: currentPassword, target_user: targetUser, resolution: resolution };
+        try {
+            let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify(payload) });
+            let d = await res.json();
+            if (d.status === 'success') {
+                alert(d.message);
+                document.getElementById('btnLoadNameRequests').click(); // recargar
+            } else {
+                alert("Error: " + d.message);
+            }
+        } catch(err) {
+            alert("Error de conexión");
+        }
+    };
+
+    window.guardarResultadoAdmin = function(e, idPart) {
     e.preventDefault();
     const btn = e.currentTarget || e.target;
     
