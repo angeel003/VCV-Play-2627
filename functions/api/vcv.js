@@ -127,23 +127,6 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
     }
 
-    );
-
-        const newUsr = (body.new_usuario || "").trim();
-        const newName = (body.new_nombre || "").trim();
-
-        const userExists = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(newUsr).first();
-        if (userExists) {
-            return jsonResponse({ status: "error", message: "⚠️ Ese nombre de usuario ya está en uso. Por favor, elige otro." });
-        }
-
-        const nowStr = new Date().toLocaleString("es-ES");
-        await db.prepare('INSERT INTO "Peticiones_Nombre" ("Fecha", "Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Estado") VALUES (?, ?, ?, ?, ?)')
-            .bind(nowStr, usuario, newUsr, newName, "Escribe OK para aprobar").run();
-
-        return jsonResponse({ status: "success", message: "Solicitud enviada. El administrador revisará tu petición." });
-    }
-
     // 4. GUARDAR PREDICCIONES (Porras)
     if (action === "save") {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
