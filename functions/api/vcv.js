@@ -629,7 +629,7 @@ export async function onRequestPost(context) {
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
-        const { results } = await db.prepare('SELECT * FROM "Peticiones_Nombre"').all();
+        const { results } = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Estado" = \'PENDIENTE\'').all();
         // Filtrar y mapear a nuestro formato del frontend
         const mapped = (results || []).map(r => ({
             Usuario: r["Usuario Actual"],
@@ -649,7 +649,7 @@ export async function onRequestPost(context) {
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         if (resolution === 'reject') {
-            await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).run();
+            await db.prepare('UPDATE "Peticiones_Nombre" SET "Estado" = \'RECHAZADO\' WHERE "Usuario Actual" = ?').bind(target_user).run();
             return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
@@ -664,8 +664,7 @@ export async function onRequestPost(context) {
             if (newU) {
                 const tables = [
                     "Usuarios", "Porras", "Ligas", "Permisos_Equipos", 
-                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", 
-                    "Puntuacion_Total_Predecida"
+                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas"
                 ];
                 
                 const stmts = [];
@@ -679,7 +678,7 @@ export async function onRequestPost(context) {
                     stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, newU));
                 }
                 
-                stmts.push(db.prepare(`DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?`).bind(oldU));
+                stmts.push(db.prepare(`UPDATE "Peticiones_Nombre" SET "Estado" = 'APROBADO' WHERE "Usuario Actual" = ?`).bind(oldU));
                 
                 await db.batch(stmts);
                 return jsonResponse({status: 'success', message: `Usuario ${oldU} renombrado a ${newU} con éxito.`});
