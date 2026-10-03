@@ -597,6 +597,7 @@ export async function onRequestPost(context) {
     
     // SAVE EMAIL
     
+    
     if (action === 'request_name_change') {
         const { new_usuario, new_nombre } = body;
         
@@ -611,7 +612,8 @@ export async function onRequestPost(context) {
             const check = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(new_usuario).first();
             if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está cogido.'}, 400);
             
-            await db.prepare('INSERT OR REPLACE INTO "Peticiones_Renombre" ("Usuario", "Nuevo_Usuario", "Nuevo_Nombre", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
+            await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(usuario).run();
+            await db.prepare('INSERT INTO "Peticiones_Nombre" ("Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
                 .bind(usuario, new_usuario, new_nombre || '', new Date().toISOString(), 'PENDIENTE').run();
             
             return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, avísanos por correo. Mientras tanto, usa tu usuario actual.'});
@@ -627,8 +629,15 @@ export async function onRequestPost(context) {
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
-        const { results } = await db.prepare('SELECT * FROM "Peticiones_Renombre" WHERE "Estado" = \'PENDIENTE\' ORDER BY "Fecha" ASC').all();
-        return jsonResponse({status: 'success', requests: results});
+        const { results } = await db.prepare('SELECT * FROM "Peticiones_Nombre"').all();
+        // Filtrar y mapear a nuestro formato del frontend
+        const mapped = (results || []).map(r => ({
+            Usuario: r["Usuario Actual"],
+            Nuevo_Usuario: r["Nuevo Usuario Sol"],
+            Nuevo_Nombre: r["Nuevo Nombre Sol"],
+            Fecha: r["Fecha"]
+        }));
+        return jsonResponse({status: 'success', requests: mapped});
     }
 
     if (action === 'resolve_name_change') {
@@ -640,17 +649,17 @@ export async function onRequestPost(context) {
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         if (resolution === 'reject') {
-            await db.prepare('DELETE FROM "Peticiones_Renombre" WHERE "Usuario" = ?').bind(target_user).run();
+            await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).run();
             return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
         if (resolution === 'approve') {
-            const peticion = await db.prepare('SELECT * FROM "Peticiones_Renombre" WHERE "Usuario" = ?').bind(target_user).first();
+            const peticion = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).first();
             if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
-            const oldU = peticion.Usuario;
-            const newU = peticion.Nuevo_Usuario;
-            const newN = peticion.Nuevo_Nombre;
+            const oldU = peticion["Usuario Actual"];
+            const newU = peticion["Nuevo Usuario Sol"];
+            const newN = peticion["Nuevo Nombre Sol"];
 
             if (newU) {
                 const tables = [
@@ -670,7 +679,7 @@ export async function onRequestPost(context) {
                     stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, newU));
                 }
                 
-                stmts.push(db.prepare(`DELETE FROM "Peticiones_Renombre" WHERE "Usuario" = ?`).bind(oldU));
+                stmts.push(db.prepare(`DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?`).bind(oldU));
                 
                 await db.batch(stmts);
                 return jsonResponse({status: 'success', message: `Usuario ${oldU} renombrado a ${newU} con éxito.`});
