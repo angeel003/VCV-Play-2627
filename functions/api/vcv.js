@@ -774,29 +774,13 @@ export async function onRequestPost(context) {
     }
 
     
-    if (action === 'update_badges_self') {
-        const { genero, jugador_de, entrenador_de, exjugador, staff } = body;
+    if (action === 'request_badge_update') {
+        const { payload } = body;
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
-
-        // Make sure row exists
-        await db.prepare('INSERT OR IGNORE INTO "Insignias" ("Usuario") VALUES (?)').bind(usuario).run();
-        
-        await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ? WHERE "Usuario" = ?')
-            .bind(genero || 'M', jugador_de || '', entrenador_de || '', exjugador ? 'X' : '', staff || '', usuario).run();
-
-        return jsonResponse({status: 'success', message: 'Insignias oficiales guardadas con éxito.'});
-    }
-
-    if (action === 'request_external_badge') {
-        const { tipo, equipo_externo } = body;
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
-
-        if (!equipo_externo) return jsonResponse({status: 'error', message: 'Falta el nombre del equipo'}, 400);
 
         await db.prepare('INSERT INTO "Peticiones_Insignias" ("Usuario", "Tipo", "Equipo_Externo", "Estado", "Fecha") VALUES (?, ?, ?, ?, ?)')
-            .bind(usuario, tipo, equipo_externo, 'PENDIENTE', new Date().toISOString()).run();
+            .bind(usuario, 'PERFIL', payload, 'PENDIENTE', new Date().toISOString()).run();
             
         return jsonResponse({status: 'success', message: 'Petición enviada a los administradores.'});
     }
@@ -823,25 +807,34 @@ export async function onRequestPost(context) {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Insignias" WHERE "id_peticion" = ?').bind(id_peticion).first();
             if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
-            const userToUpdate = peticion.Usuario;
-            const tipo = peticion.Tipo; // "Jugador de" o "Entrenador de"
-            const eqExt = peticion.Equipo_Externo;
-
-            const userInsignias = await db.prepare('SELECT * FROM "Insignias" WHERE "Usuario" = ?').bind(userToUpdate).first();
-            let current = (userInsignias && userInsignias[tipo]) ? userInsignias[tipo] : '';
-            if (current && !current.includes(eqExt)) {
-                current += ", " + eqExt;
-            } else if (!current) {
-                current = eqExt;
+            if (peticion.Tipo === 'PERFIL') {
+                const userToUpdate = peticion.Usuario;
+                let payloadObj = {};
+                try { payloadObj = JSON.parse(peticion.Equipo_Externo || '{}'); } catch(e) {}
+                
+                await db.prepare('INSERT OR IGNORE INTO "Insignias" ("Usuario") VALUES (?)').bind(userToUpdate).run();
+                await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ? WHERE "Usuario" = ?')
+                    .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', userToUpdate).run();
+            } else {
+                const userToUpdate = peticion.Usuario;
+                const tipo = peticion.Tipo; 
+                const eqExt = peticion.Equipo_Externo;
+                const userInsignias = await db.prepare('SELECT * FROM "Insignias" WHERE "Usuario" = ?').bind(userToUpdate).first();
+                let current = (userInsignias && userInsignias[tipo]) ? userInsignias[tipo] : '';
+                if (current && !current.includes(eqExt)) {
+                    current += ", " + eqExt;
+                } else if (!current) {
+                    current = eqExt;
+                }
+                await db.prepare(`UPDATE "Insignias" SET "${tipo}" = ? WHERE "Usuario" = ?`).bind(current, userToUpdate).run();
             }
 
-            await db.prepare(`UPDATE "Insignias" SET "${tipo}" = ? WHERE "Usuario" = ?`).bind(current, userToUpdate).run();
             await db.prepare('UPDATE "Peticiones_Insignias" SET "Estado" = \'APROBADO\' WHERE "id_peticion" = ?').bind(id_peticion).run();
-            
             return jsonResponse({status: 'success', message: 'Petición aprobada con éxito.'});
         }
     }
-if (action === 'save_email') {
+
+    if (action === 'save_email') {
         const { email } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);

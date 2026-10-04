@@ -1592,6 +1592,16 @@
             </button>
             <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
+        <!-- Peticiones de Insignias -->
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+            <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Insignias</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
+            
+            <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
+            </button>
+            <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
 
         <!-- Subida Rápida de Resultados y Links -->
         <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
@@ -2079,6 +2089,97 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             alert("Error de conexión");
         }
     };
+
+
+    let btnLoadBadgeRequests = document.getElementById('btnLoadBadgeRequests');
+    if (btnLoadBadgeRequests) {
+        btnLoadBadgeRequests.addEventListener('click', async function(e) {
+            e.preventDefault();
+            btnLoadBadgeRequests.disabled = true;
+            btnLoadBadgeRequests.innerText = "Cargando...";
+            let box = document.getElementById('adminBadgeRequestsBox');
+            if(box) box.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Cargando...</div>';
+
+            try {
+                let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({action: 'get_peticiones_insignias', usuario: currentUser, password: currentPassword})});
+                let data = await res.json();
+                
+                if (data.status === "success") {
+                    if (data.data.length === 0) {
+                        if(box) box.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">No hay peticiones de insignias pendientes.</div>';
+                    } else {
+                        let html = '';
+                        data.data.forEach(req => {
+                            let dateStr = new Date(req.Fecha).toLocaleString('es-ES');
+                            
+                            let details = '';
+                            if (req.Tipo === 'PERFIL') {
+                                let payloadObj = {};
+                                try { payloadObj = JSON.parse(req.Equipo_Externo || '{}'); } catch(e){}
+                                details = `<b>Género:</b> ${payloadObj.genero || '-'}<br>`;
+                                details += `<b>Jugador/a de:</b> ${payloadObj.jugador_de || '-'}<br>`;
+                                details += `<b>Entrenador/a de:</b> ${payloadObj.entrenador_de || '-'}<br>`;
+                                details += `<b>Exjugador/a:</b> ${payloadObj.exjugador === 'X' ? 'Sí' : 'No'}<br>`;
+                                details += `<b>Staff:</b> ${payloadObj.staff || '-'}`;
+                            } else {
+                                details = `<b>Añadir a ${req.Tipo}:</b> ${req.Equipo_Externo}`;
+                            }
+
+                            html += `
+                            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <strong style="color:var(--vcv-morado);">${req.Usuario}</strong>
+                                        <div style="font-size:0.7rem; color:var(--text-muted);">${dateStr}</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:8px; font-size:0.8rem; background:rgba(0,0,0,0.05); padding:8px; border-radius:4px;">
+                                    ${details}
+                                </div>
+                                <div style="display:flex; gap:8px; margin-top:10px;">
+                                    <button onclick="resolveBadgeRequest(${req.id_peticion}, 'approve')" class="btn" style="flex:1; background:#27ae60; color:white; border:none; padding:6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Aprobar</button>
+                                    <button onclick="resolveBadgeRequest(${req.id_peticion}, 'reject')" class="btn" style="flex:1; background:#c0392b; color:white; border:none; padding:6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Rechazar</button>
+                                </div>
+                            </div>`;
+                        });
+                        if(box) box.innerHTML = html;
+                    }
+                } else {
+                    if(box) box.innerHTML = `<div style="color:#e74c3c; font-size:0.8rem;">Error: ${data.message}</div>`;
+                }
+            } catch (err) {
+                if(box) box.innerHTML = `<div style="color:#e74c3c; font-size:0.8rem;">Error de conexión.</div>`;
+            }
+
+            btnLoadBadgeRequests.disabled = false;
+            btnLoadBadgeRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias`;
+            if(window.lucide) window.lucide.createIcons();
+        });
+    }
+
+    window.resolveBadgeRequest = async function(id, accion) {
+        if(!confirm(`¿Estás seguro de que quieres ${accion === 'approve' ? 'aprobar' : 'rechazar'} esta petición?`)) return;
+        
+        try {
+            let res = await fetchSeguro(scriptURL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'resolve_peticion_insignia', usuario: currentUser, password: currentPassword, id_peticion: id, resolution: accion }), 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+            });
+            let data = await res.json();
+            
+            if(data.status === "success") {
+                alert(data.message);
+                let btn = document.getElementById('btnLoadBadgeRequests');
+                if(btn) btn.click();
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (err) {
+            alert("Error de conexión al resolver petición.");
+        }
+    }
+
 
     window.guardarResultadoAdmin = function(e, idPart) {
     e.preventDefault();
