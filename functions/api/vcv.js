@@ -502,7 +502,10 @@ export async function onRequestPost(context) {
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
                 // Si estamos en apagón y el partido se jugó después del viernes a las 23:59, NO suma al ranking
-                if (isFrozen && p.timestamp >= freezeCutoff) continue;
+                if (isFrozen && p.timestamp >= freezeCutoff) {
+                    userPointsInLiga[pr.Usuario]["_pendientes"] = (userPointsInLiga[pr.Usuario]["_pendientes"] || 0) + pts;
+                    continue;
+                }
 
 
                 const oSets = p.oficial_sets.split("-");
@@ -549,7 +552,8 @@ export async function onRequestPost(context) {
                     ranking.push({
                         jugador: uName,
                         nombre_real: mapNombresReales[uName] || uName,
-                        puntos: (userPointsInLiga[uName] && userPointsInLiga[uName][lName]) || 0
+                        puntos: (userPointsInLiga[uName] && userPointsInLiga[uName][lName]) || 0,
+                        puntos_pendientes: (userPointsInLiga[uName] && userPointsInLiga[uName]["_pendientes"]) || 0
                     });
                 }
             }
