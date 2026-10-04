@@ -5136,7 +5136,7 @@ function loadInsigniasUI() {
     let chkHtmlEnt = '';
     teamsArray.forEach(t => {
         let cat = catMap[t];
-        let displayStr = cat ? `${t}, ${cat}` : t;
+        let displayStr = cat ? `${t} - ${cat}` : t;
         chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-jugador" style="margin-right:6px;"> ${displayStr}</label>`;
         chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-entrenador" style="margin-right:6px;"> ${displayStr}</label>`;
     });
@@ -5151,20 +5151,35 @@ function loadInsigniasUI() {
     if(raw) {
         if(raw["Genero"] === "F") { document.querySelector('input[name="ins_genero"][value="F"]').checked = true; }
         
-        let jTeams = raw["Jugador de"] ? raw["Jugador de"].split(',').map(s => s.trim()) : [];
+        let rawJugador = raw["Jugador de"] || "";
+        let rawEntrenador = raw["Entrenador de"] || "";
+        
+        teamsArray.forEach(t => {
+            let cat = catMap[t];
+            if (cat) {
+                rawJugador = rawJugador.replace(`${t}, ${cat}`, `${t} - ${cat}`);
+                rawEntrenador = rawEntrenador.replace(`${t}, ${cat}`, `${t} - ${cat}`);
+            }
+        });
+
+        let jTeams = rawJugador ? rawJugador.split(',').map(s => s.trim()) : [];
         let jExternos = [];
+        let validJ = [];
         document.querySelectorAll('.chk-jugador').forEach(chk => {
+            validJ.push(chk.value);
             if(jTeams.includes(chk.value)) chk.checked = true;
         });
-        jTeams.forEach(t => { if(!teamsArray.includes(t) && t !== "") jExternos.push(t); });
+        jTeams.forEach(t => { if(!validJ.includes(t) && t !== "") jExternos.push(t); });
         document.getElementById('insOtroJugador').value = jExternos.join(', ');
 
-        let eTeams = raw["Entrenador de"] ? raw["Entrenador de"].split(',').map(s => s.trim()) : [];
+        let eTeams = rawEntrenador ? rawEntrenador.split(',').map(s => s.trim()) : [];
         let eExternos = [];
+        let validE = [];
         document.querySelectorAll('.chk-entrenador').forEach(chk => {
+            validE.push(chk.value);
             if(eTeams.includes(chk.value)) chk.checked = true;
         });
-        eTeams.forEach(t => { if(!teamsArray.includes(t) && t !== "") eExternos.push(t); });
+        eTeams.forEach(t => { if(!validE.includes(t) && t !== "") eExternos.push(t); });
         document.getElementById('insOtroEntrenador').value = eExternos.join(', ');
 
         document.getElementById('insExjugador').checked = (raw["Exjugador"] === "X");
