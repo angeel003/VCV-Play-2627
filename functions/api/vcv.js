@@ -532,7 +532,50 @@ export async function onRequestPost(context) {
     if (action === 'sync_permisos') {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
-        return jsonResponse({ status: 'success', message: '¡Cloudflare D1 está sincronizado siempre en tiempo real! No hace falta forzarlo.' });
+        
+        // 1. Fetch Ligas, Ligas_Equipos
+        const { results: ligasRows } = await db.prepare('SELECT * FROM "Ligas"').all();
+        const { results: ligasEqRows } = await db.prepare('SELECT * FROM "Ligas_Equipos"').all();
+        
+        // 2. Map ligas to equipos
+        const ligasMap = {};
+        for (const row of ligasEqRows || []) {
+            const lName = row.Liga;
+            ligasMap[lName] = [];
+            for (const col in row) {
+                if (col !== "Liga" && row[col] && row[col].toString().toUpperCase() === "X") {
+                    ligasMap[lName].push(col);
+                }
+            }
+        }
+        
+        // 3. For each user, figure out which teams they should have 'X'
+        const stmts = [];
+        for (const userLigas of ligasRows || []) {
+            const jName = userLigas.Jugador;
+            const equiposToPermit = new Set();
+            for (const col in userLigas) {
+                if (col !== "Jugador" && userLigas[col] && userLigas[col].toString().toUpperCase() === "X") {
+                    if (ligasMap[col]) {
+                        ligasMap[col].forEach(eq => equiposToPermit.add(eq));
+                    }
+                }
+            }
+            // Generate UPDATE statements for this user
+            for (const team of equiposToPermit) {
+                stmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(jName));
+                stmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(jName));
+            }
+        }
+        
+        if (stmts.length > 0) {
+            // Batch them in chunks of 50 to avoid D1 limits
+            for (let i = 0; i < stmts.length; i += 50) {
+                await db.batch(stmts.slice(i, i + 50));
+            }
+        }
+        
+        return jsonResponse({ status: 'success', message: '¡Permisos sincronizados! Las X han sido rellenadas físicamente en la base de datos.' });
     }
     if (action === 'clear_cache') {
         return jsonResponse({ status: 'success', message: '¡Cloudflare D1 está sincronizado siempre en tiempo real! No hay caché.' });
