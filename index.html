@@ -4646,7 +4646,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 badgesHtml += `
                 <div style="display:flex; align-items:center; gap: 12px;">
                     <img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:24px; height:24px;">
-                    <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${b.text}</span>
+                    <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${b.text.replace(/, /g, " - ")}</span>
                 </div>`;
             });
         }
