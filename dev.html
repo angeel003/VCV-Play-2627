@@ -1560,7 +1560,7 @@
         </div>
 
         <!-- Formulario Crear Nuevo Usuario -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
           <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">➕ Añadir Nuevo Usuario</h4>
           <div class="form-group" style="margin-bottom:8px;">
             <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
@@ -1583,7 +1583,7 @@
         </div>
 
         <!-- Herramienta Aprobación Nombres -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
             <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Cambio de Nombre</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
             
@@ -1593,7 +1593,7 @@
             <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
         <!-- Peticiones de Insignias -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
             <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Insignias</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
             
@@ -1604,7 +1604,7 @@
         </div>
 
         <!-- Subida Rápida de Resultados y Links -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
           <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">🏐 Subir Resultados y Enlaces</h4>
           <div id="adminListaPartidos"></div>
         </div>
@@ -1625,7 +1625,7 @@
         </div>
 
 <!-- MIS INSIGNIAS -->
-      <div class="vcv-card-v2" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+      <div class="vcv-card-v2" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
         <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-award"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg> Mis Insignias
         </h3>
@@ -4987,11 +4987,26 @@ function loadInsigniasUI() {
     // Mostrar solo los equipos a los que el usuario tiene permiso para apostar
     let teamsArray = window.appData.mis_equipos_siguiendo || [];
 
+    let catMap = {};
+    if (window.appData.ligas_equipos) {
+        window.appData.ligas_equipos.forEach(row => {
+            if (row.Liga && row.Liga !== 'Global' && row.Liga !== 'Predicciones Secretas' && row.Liga !== 'Entrenadores') {
+                for (let col in row) {
+                    if (col !== 'Liga' && row[col] === 'X') {
+                        catMap[col] = row.Liga;
+                    }
+                }
+            }
+        });
+    }
+
     let chkHtmlJug = '';
     let chkHtmlEnt = '';
     teamsArray.forEach(t => {
-        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-jugador" style="margin-right:6px;"> ${t}</label>`;
-        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-entrenador" style="margin-right:6px;"> ${t}</label>`;
+        let cat = catMap[t];
+        let displayStr = cat ? `${t}, ${cat}` : t;
+        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-jugador" style="margin-right:6px;"> ${displayStr}</label>`;
+        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-entrenador" style="margin-right:6px;"> ${displayStr}</label>`;
     });
 
     const divJug = document.getElementById('insJugadorList');

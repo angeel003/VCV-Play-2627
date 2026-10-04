@@ -325,8 +325,8 @@ export async function onRequestPost(context) {
             };
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
-            if (b["Entrenador de"]) addBadge('entrenador', lblEnt + ' (' + b["Entrenador de"] + ')');
-            if (b["Jugador de"]) addBadge('jugador', lblJug + ' (' + b["Jugador de"] + ')');
+            if (b["Entrenador de"]) addBadge('entrenador', b["Entrenador de"]);
+            if (b["Jugador de"]) addBadge('jugador', b["Jugador de"]);
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
         }
 
