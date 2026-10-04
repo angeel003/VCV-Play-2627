@@ -218,7 +218,11 @@ export async function onRequestPost(context) {
 
             const uPred = porrasMap[p.id_partido] || null;
             const ligasEq = [];
-            for (const lName in ligasMap) {
+                            if (isFrozen && p.timestamp >= freezeCutoff) {
+                    userPointsInLiga[pr.Usuario]["_pendientes"] = (userPointsInLiga[pr.Usuario]["_pendientes"] || 0) + pts;
+                    continue;
+                }
+                for (const lName in ligasMap) {
                 if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) ligasEq.push(lName);
             }
 
@@ -502,10 +506,7 @@ export async function onRequestPost(context) {
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
                 // Si estamos en apagón y el partido se jugó después del viernes a las 23:59, NO suma al ranking
-                if (isFrozen && p.timestamp >= freezeCutoff) {
-                    userPointsInLiga[pr.Usuario]["_pendientes"] = (userPointsInLiga[pr.Usuario]["_pendientes"] || 0) + pts;
-                    continue;
-                }
+
 
 
                 const oSets = p.oficial_sets.split("-");
@@ -532,6 +533,10 @@ export async function onRequestPost(context) {
                     pts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
+                                if (isFrozen && p.timestamp >= freezeCutoff) {
+                    userPointsInLiga[pr.Usuario]["_pendientes"] = (userPointsInLiga[pr.Usuario]["_pendientes"] || 0) + pts;
+                    continue;
+                }
                 for (const lName in ligasMap) {
                     if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
                         userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
