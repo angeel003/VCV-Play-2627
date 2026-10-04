@@ -4728,6 +4728,9 @@ window.renderRankingV2 = function() {
         });
         
         const getTrendHtml = (jugador, currentArrayIdx) => {
+            if (data.is_frozen) {
+                return `<span style="color:#3498db; font-size:0.95rem; font-weight:800; display:flex; align-items:center;">❄️</span>`;
+            }
             if (maxJornadaJugada <= 1 || previousRanking.length === 0) {
                 return `<span style="color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
             }
@@ -4761,6 +4764,9 @@ window.renderRankingV2 = function() {
         let html = '';
         if (data.is_frozen) {
             html += `<style>
+            #clasificacionSection {
+                --secondary-color: #3498db !important;
+            }
             .ranking-frozen-bg {
                 position: relative;
                 border: 1px solid rgba(52, 152, 219, 0.5) !important;
@@ -4928,7 +4934,7 @@ window.renderRankingV2 = function() {
                 ${c2_snow}
                 <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:2;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: ${data.is_frozen ? '#3498db' : 'var(--secondary-color)'}; color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--secondary-color); color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
                         <span style="font-weight: 900;">${pos}º</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
