@@ -1376,7 +1376,7 @@
     <div class="modal-card-v2">
         <div style="text-align: center; margin-bottom: 18px;">
           <div class="club-crest-v2" style="margin: 0 auto 12px; width: 52px; height: 52px;">
-            <img src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
+            <img loading="lazy" src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain; border-radius: 50%;">
           </div>
           <h2 style="font-size: 1.5rem; font-weight: 900; color:var(--text-main); margin-bottom:4px; letter-spacing: -0.5px;">VCV Play <span style="color:var(--secondary-color);">2627</span></h2>
           <p style="font-size: 0.85rem; font-weight:600; color: var(--text-muted); margin-top: 4px;">App oficial del club</p>
@@ -2290,7 +2290,7 @@ function getCategoryHTML(catName) {
     let safeName = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     let baseUrl = "files/categories/"; 
     let imgUrl = baseUrl + safeName + ".png";
-    return `<img src="${imgUrl}" class="cat-badge-img" alt="${catName}" title="${catName}" onerror="this.onerror=null; this.outerHTML='<div class=\\'cat-badge-text\\' title=\\'${catName}\\'>${catName}</div>';">`;
+    return `<img loading="lazy" src="${imgUrl}" class="cat-badge-img" alt="${catName}" title="${catName}" onerror="this.onerror=null; this.outerHTML='<div class=\\'cat-badge-text\\' title=\\'${catName}\\'>${catName}</div>';">`;
 }
 
 // LÓGICA DE CAMBIO DE CONTRASEÑA
@@ -2545,7 +2545,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
                 let valJornada = String(eq.jornada_eq || "").trim();
                 let infoJornadaEq = valJornada ? (isNaN(valJornada) ? ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`) : "";
                 let iconoLoc = eq.ubicacion === "CASA" ? "🏠" : (eq.ubicacion === "FUERA" ? "✈️" : "");
-                let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
+                let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
                   let infoLocFecha = (iconoLoc || eq.timestamp) ? `<div style="font-size:0.9rem; color:#555; margin-bottom:4px; font-weight:bold;">${iconoLoc} ${formatFecha(eq.timestamp)}${streamIcon}</div>` : (streamIcon ? `<div style="margin-bottom:4px;">${streamIcon}</div>` : "");
                 let infoPabellon = eq.pabellon ? `<div style="font-size:0.85rem; color:#777; margin-bottom:10px;">📍 ${eq.pabellon}</div>` : "<div style='margin-bottom:10px;'></div>";
 
@@ -2651,7 +2651,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                 insigniasHTML += `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">`;
                 myBadges.forEach(b => {
                     let cssColorClass = getBadgeCSS(b.type);
-                    insigniasHTML += `<div style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-general); border:1px solid var(--border-color);"><img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:12px; height:12px;"><span style="color:var(--text-muted); font-weight:600;">${b.text}</span></div>`;
+                    insigniasHTML += `<div style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-general); border:1px solid var(--border-color);"><img loading="lazy" src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:12px; height:12px;"><span style="color:var(--text-muted); font-weight:600;">${b.text}</span></div>`;
                 });
                 insigniasHTML += `</div>`;
             }
@@ -2768,10 +2768,10 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             misInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
                 let cssColorClass = getBadgeCSS(b.type);
-                insigniasHeaderHtml += `<img src="${URL_BADGE_GENERIC}" class="badge-header ${cssColorClass}" title="${b.text}" onclick="showMobileTooltip(event, '${b.text}')">`;
+                insigniasHeaderHtml += `<img loading="lazy" src="${URL_BADGE_GENERIC}" class="badge-header ${cssColorClass}" title="${b.text}" onclick="showMobileTooltip(event, '${b.text}')">`;
                 
                 // NO tooltips, NO onclick for the top header badges! Just visual.
-                insigniasH2Html += `<img src="${URL_BADGE_GENERIC}" class="${cssColorClass}" style="width:14px; height:14px;">`;
+                insigniasH2Html += `<img loading="lazy" src="${URL_BADGE_GENERIC}" class="${cssColorClass}" style="width:14px; height:14px;">`;
             });
             
             let badgesEl = document.getElementById('h2-user-badges'); if(badgesEl) badgesEl.innerHTML = insigniasH2Html;
@@ -2845,7 +2845,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                     }
                     
                     let iconoLoc = eq.ubicacion === "CASA" ? "🏠" : (eq.ubicacion === "FUERA" ? "✈️" : "");
-                    let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
+                    let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
                     let infoLocFecha = (iconoLoc || eq.timestamp) ? `<div style="font-size:0.9rem; color:#555; margin-bottom:4px; font-weight:bold;">${iconoLoc} ${formatFecha(eq.timestamp)}${streamIcon}</div>` : (streamIcon ? `<div style="margin-bottom:4px;">${streamIcon}</div>` : "");
                     let infoPabellon = eq.pabellon ? `<div style="font-size:0.85rem; color:#777; margin-bottom:10px;">📍 ${eq.pabellon}</div>` : "<div style='margin-bottom:10px;'></div>";
                     
@@ -2872,8 +2872,8 @@ document.getElementById('btnLogin').addEventListener('click', function() {
 
                         let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-let localLogo = `<img src="files/images/escudos/${safeLocalName}.png" alt="${localTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
-let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${visitTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
+let localLogo = `<img loading="lazy" src="files/images/escudos/${safeLocalName}.png" alt="${localTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
+let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.png" alt="${visitTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
                         
                         let infoPabellon = eq.pabellon ? `<div style="margin-top:2px;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${eq.pabellon}</div>` : '';
 
@@ -2899,7 +2899,7 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
                 <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
                   ${eq.categoria.toUpperCase()}
                 </span>
@@ -2907,8 +2907,8 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
     } else {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
                 <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
                   ${eq.categoria.toUpperCase()}
                 </span>
@@ -3812,7 +3812,7 @@ function renderizarHistorial() {
                 infoJornadaEq = isNaN(valJornada) ? ` <span style="font-size:0.85rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.85rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`;
             }
 
-            let streamIconHist = p.streaming ? ` <a href="${p.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
+            let streamIconHist = p.streaming ? ` <a href="${p.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
             let infoLocFecha = streamIconHist ? `<span style="margin-left:10px;">${streamIconHist}</span>` : "";
             let htmlReloj = "";
             let iconoLoc = p.ubicacion === "CASA" ? "🏠" : (p.ubicacion === "FUERA" ? "✈️" : "");
@@ -3999,8 +3999,8 @@ function renderMatchCardHtml(eq) {
 
     let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
 let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-let localLogo = `<img src="files/images/escudos/${safeLocalName}.png" alt="${localTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
-let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${visitTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
+let localLogo = `<img loading="lazy" src="files/images/escudos/${safeLocalName}.png" alt="${localTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
+let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.png" alt="${visitTeamName}" onload="this.parentNode.style.border='none'; this.parentNode.style.background='transparent';" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;">`;
     
     let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; font-size:0.75rem; color:var(--text-muted);"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${eq.pabellon}</div>` : '';
 
@@ -4025,7 +4025,7 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
                 <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
                   ${eq.categoria.toUpperCase()}
                 </span>
@@ -4033,8 +4033,8 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
     } else {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                <img src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
                 <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
                   ${eq.categoria.toUpperCase()}
                 </span>
@@ -4645,7 +4645,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
                 badgesHtml += `
                 <div style="display:flex; align-items:center; gap: 12px;">
-                    <img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:24px; height:24px;">
+                    <img loading="lazy" src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:24px; height:24px;">
                     <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${b.text.replace(/, /g, " - ")}</span>
                 </div>`;
             });
@@ -4755,7 +4755,7 @@ window.renderRankingV2 = function() {
             let html = "";
             uBadges.forEach(b => {
                 let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
-                html += `<img src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:16px; height:16px; margin-left:4px; display:inline-block; vertical-align:middle;">`;
+                html += `<img loading="lazy" src="${URL_BADGE_GENERIC}" class="badge-icon ${cssColorClass}" style="width:16px; height:16px; margin-left:4px; display:inline-block; vertical-align:middle;">`;
             });
             return html;
         };
