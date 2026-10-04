@@ -4767,6 +4767,32 @@ window.renderRankingV2 = function() {
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.4px; background: rgba(106, 44, 112, 0.4); color: #e2a6ea; border: 1px solid rgba(144, 60, 152, 0.6);">Jornada ${maxJornada}</span>
                  </div>`;
 
+        if (data.is_frozen) {
+            let unfreezeDate = new Date(data.unfreeze_time);
+            
+            // Format time remaining
+            let now = new Date();
+            let diffMs = unfreezeDate - now;
+            let msg = '';
+            if (diffMs > 0) {
+                let diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                let diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                msg = `Faltan ${diffHrs}h ${diffMins}m`;
+            } else {
+                msg = 'Actualizando pronto...';
+            }
+
+            html += `<div style="background: rgba(230, 126, 34, 0.1); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 15px; display: flex; align-items: flex-start; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e67e22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top:2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <div style="flex: 1;">
+                    <strong style="color: #e67e22; font-size: 0.85rem; display: block; margin-bottom: 2px;">Apagón de Fin de Semana</strong>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0; line-height: 1.3;">Los resultados de este fin de semana están ocultos temporalmente en el ranking global. ¡Se sumarán todos de golpe el lunes a las 23:59!</p>
+                </div>
+                <div style="background: #e67e22; color: #140818; font-size: 0.7rem; font-weight: 900; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">${msg}</div>
+            </div>`;
+        }
+
+
         // Botones de Liga SIN EMOJI
         html += `<div id="league-slider-container" style="display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none;">`;
         data.ligas.forEach(l => {

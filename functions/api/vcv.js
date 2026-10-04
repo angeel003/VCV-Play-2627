@@ -453,8 +453,36 @@ export async function onRequestPost(context) {
         for (const u of allUsers || []) mapNombresReales[u.Usuario] = u["Nombre Real"] || u.Usuario;
 
         // CLASIFICACIONES: calcular puntos por usuario y liga (CON CACHÉ)
+        
+        // --- LOGICA DE APAGON DE RANKINGS (FIN DE SEMANA) ---
+        const now = new Date();
+        const utcDay = now.getUTCDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+        const isFrozen = (utcDay === 6 || utcDay === 0 || utcDay === 1); // Sab, Dom, Lun
+        let freezeCutoff = 0;
+        let unfreezeTime = 0;
+
+        if (isFrozen) {
+            // Cutoff: Viernes a las 23:59:59 UTC
+            let d = new Date(now);
+            if (utcDay === 6) d.setUTCDate(d.getUTCDate() - 1);
+            if (utcDay === 0) d.setUTCDate(d.getUTCDate() - 2);
+            if (utcDay === 1) d.setUTCDate(d.getUTCDate() - 3);
+            d.setUTCHours(23, 59, 59, 999);
+            freezeCutoff = d.getTime();
+
+            // Unfreeze: Lunes a las 23:59:59 UTC
+            let u = new Date(now);
+            if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
+            if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
+            if (utcDay === 1) u.setUTCDate(u.getUTCDate() + 0);
+            u.setUTCHours(23, 59, 59, 999);
+            unfreezeTime = u.getTime();
+        }
+        
+        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
+
         let userPointsInLiga = {};
-        const cacheRow = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'userPointsInLiga'").first();
+        const cacheRow = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(cacheKey).first();
         if (cacheRow && cacheRow.valor) {
             try { userPointsInLiga = JSON.parse(cacheRow.valor); } catch(e) {}
         }
@@ -473,6 +501,9 @@ export async function onRequestPost(context) {
                 const p = mapPartidos[pr["ID Partido"]];
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
+                // Si estamos en apagón y el partido se jugó después del viernes a las 23:59, NO suma al ranking
+                if (isFrozen && p.timestamp >= freezeCutoff) continue;
+
 
                 const oSets = p.oficial_sets.split("-");
                 const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
@@ -504,7 +535,7 @@ export async function onRequestPost(context) {
                     }
                 }
             }
-            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('userPointsInLiga', ?, ?)").bind(JSON.stringify(userPointsInLiga), Date.now()).run();
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(cacheKey, JSON.stringify(userPointsInLiga), Date.now()).run();
         }
 
         // Formatear clasificaciones por liga
@@ -538,6 +569,8 @@ export async function onRequestPost(context) {
 
         return jsonResponse({
             status: "success",
+            is_frozen: isFrozen,
+            unfreeze_time: unfreezeTime,
             jornada: rondaAbierta,
             equipos: cartelera,
             todos_partidos: todosPartidos,
@@ -685,7 +718,7 @@ export async function onRequestPost(context) {
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
-        try { await db.prepare("DELETE FROM Cache_App WHERE clave = 'userPointsInLiga'").run(); } catch(e) {}
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); } catch(e) {}
 
         return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
     }
