@@ -668,13 +668,15 @@ export async function onRequestPost(context) {
             return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
-        if (resolution === 'approve') {
+                if (resolution === 'approve') {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).first();
             if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
             const oldU = peticion["Usuario Actual"];
             const newU = peticion["Nuevo Usuario Sol"];
             const newN = peticion["Nuevo Nombre Sol"];
+            
+            const stmts = [];
 
             if (newU) {
                 const tables = [
@@ -682,22 +684,26 @@ export async function onRequestPost(context) {
                     "Permisos_Secreta", "Insignias", "Predicciones_Secretas"
                 ];
                 
-                const stmts = [];
                 for (const table of tables) {
                     let col = (table === "Ligas" || table === "Permisos_Equipos") ? "Jugador" : "Usuario";
                     stmts.push(db.prepare(`UPDATE OR IGNORE "${table}" SET "${col}" = ? WHERE "${col}" = ?`).bind(newU, oldU));
                     stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
                 }
-                
-                if (newN) {
-                    stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, newU));
-                }
-                
-                stmts.push(db.prepare(`UPDATE "Peticiones_Nombre" SET "Estado" = 'APROBADO' WHERE "Usuario Actual" = ?`).bind(oldU));
-                
-                await db.batch(stmts);
-                return jsonResponse({status: 'success', message: `Usuario ${oldU} renombrado a ${newU} con éxito.`});
             }
+            
+            const targetU = newU ? newU : oldU;
+
+            if (newN) {
+                stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, targetU));
+            }
+            
+            stmts.push(db.prepare(`UPDATE "Peticiones_Nombre" SET "Estado" = 'APROBADO' WHERE "Usuario Actual" = ?`).bind(oldU));
+            
+            await db.batch(stmts);
+            
+            let msg = 'Petición aprobada con éxito.';
+            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con éxito.`;
+            return jsonResponse({status: 'success', message: msg});
         }
     }
 
