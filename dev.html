@@ -4883,8 +4883,8 @@ window.updateProgressBar = function() {
 function loadInsigniasUI() {
     if(!window.appData) return;
     
-    // Usar equipos_totales_publicos
-    let teamsArray = window.appData.equipos_totales_publicos || [];
+    // Mostrar solo los equipos a los que el usuario tiene permiso para apostar
+    let teamsArray = window.appData.mis_equipos_siguiendo || [];
 
     let chkHtmlJug = '';
     let chkHtmlEnt = '';
