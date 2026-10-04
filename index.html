@@ -5013,11 +5013,21 @@ function loadInsigniasUI() {
     // Mostrar solo los equipos a los que el usuario tiene permiso para apostar
     let teamsArray = window.appData.mis_equipos_siguiendo || [];
 
+    let catMap = {};
+    if (window.appData && window.appData.todos_partidos) {
+        window.appData.todos_partidos.forEach(p => {
+            if (p.equipo_local && p.categoria) catMap[p.equipo_local] = p.categoria;
+            if (p.rival && p.categoria) catMap[p.rival] = p.categoria;
+        });
+    }
+
     let chkHtmlJug = '';
     let chkHtmlEnt = '';
     teamsArray.forEach(t => {
-        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-jugador" style="margin-right:6px;"> ${t}</label>`;
-        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-entrenador" style="margin-right:6px;"> ${t}</label>`;
+        let cat = catMap[t];
+        let displayStr = cat ? `${t}, ${cat}` : t;
+        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-jugador" style="margin-right:6px;"> ${displayStr}</label>`;
+        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-entrenador" style="margin-right:6px;"> ${displayStr}</label>`;
     });
 
     const divJug = document.getElementById('insJugadorList');
