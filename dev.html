@@ -1614,6 +1614,54 @@
           </form>
         </div>
 
+<!-- MIS INSIGNIAS -->
+      <div class="vcv-card-v2" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-award"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg> Mis Insignias
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Personaliza las insignias de tu perfil. <b>Cualquier cambio que realices aquí se enviará a los administradores para su aprobación.</b>
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Mostrar mis insignias como:</label>
+          <div style="display: flex; gap: 10px;">
+            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="M" checked> Masculino</label>
+            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="F"> Femenino</label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Jugador/a de los equipos:</label>
+          <div id="insJugadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          </div>
+          <input type="text" id="insOtroJugador" class="form-control" placeholder="Otros equipos (ej: VCV Zaratán, Cadete Masc.)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Entrenador/a de los equipos:</label>
+          <div id="insEntrenadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          </div>
+          <input type="text" id="insOtroEntrenador" class="form-control" placeholder="Otros equipos (ej: VCV Zaratán, Cadete Masc.)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-main);">
+            <input type="checkbox" id="insExjugador"> Soy Exjugador/a de VCV
+          </label>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Staff / Directiva (Puesto):</label>
+          <input type="text" id="insStaff" class="form-control" placeholder="Ej: Fisioterapeuta, Delegado..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+
+        <button class="btn btn-warning" id="btnRequestInsignias" style="width: 100%; background: var(--secondary-color); border: none; padding: 12px; border-radius: 8px; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;" class="lucide lucide-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Enviar Petición a Administradores
+        </button>
+        <div id="msgRequestInsignias" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
+      </div>
+
 <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="key" aria-hidden="true" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-key"><path d="m2 21 9.6-9.6"></path><path d="m7.5 15.5 2.3 2.3a1 1 0 0 1 0 1.4l-2.1 2.1a1 1 0 0 1-1.4 0L4 19"></path><circle cx="15.5" cy="7.5" r="5.5"></circle></svg>
@@ -1680,55 +1728,7 @@
         </button>
         <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
       
-      <!-- MIS INSIGNIAS -->
-      <div class="vcv-card-v2" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-award"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg> Mis Insignias
-        </h3>
-        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
-          Personaliza las insignias de tu perfil. <b>Cualquier cambio que realices aquí se enviará a los administradores para su aprobación.</b>
-        </p>
-
-        <div class="form-group" style="margin-bottom: 12px;">
-          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Mostrar mis insignias como:</label>
-          <div style="display: flex; gap: 10px;">
-            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="M" checked> Masculino</label>
-            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="F"> Femenino</label>
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Jugador/a de los equipos:</label>
-          <div id="insJugadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
-             <!-- Checkboxes here -->
-          </div>
-          <input type="text" id="insOtroJugador" class="form-control" placeholder="Otros clubes externos (ej: CV Zaragoza)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Entrenador/a de los equipos:</label>
-          <div id="insEntrenadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
-             <!-- Checkboxes here -->
-          </div>
-          <input type="text" id="insOtroEntrenador" class="form-control" placeholder="Otros clubes externos (ej: CV Zaragoza)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-main);">
-            <input type="checkbox" id="insExjugador"> Soy Exjugador/a histórico de VCV
-          </label>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Staff / Directiva (Puesto):</label>
-          <input type="text" id="insStaff" class="form-control" placeholder="Ej: Fisioterapeuta, Delegado..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
-        </div>
-
-        <button class="btn btn-warning" id="btnRequestInsignias" style="width: 100%; background: var(--secondary-color); border: none; padding: 12px; border-radius: 8px; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;" class="lucide lucide-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Enviar Petición a Administradores
-        </button>
-        <div id="msgRequestInsignias" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
-      </div>
+      
 </div>
     
     </section>
@@ -2636,9 +2636,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             let isAdmin = false;
 
             // Calculate Rank from Global Leaderboard
-            window.updateHeaderStats();
-
-            
+            if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); } else { setTimeout(() => { if(typeof window.updateHeaderStats === "function") window.updateHeaderStats(); }, 500); }
             misInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
                 let cssColorClass = getBadgeCSS(b.type);
@@ -2902,10 +2900,7 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
             if(data.ligas && data.ligas.length > 0) {
                 window.currentLiga = data.ligas[0];
             }
-            window.renderRankingV2();
-
-
-            
+            if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
             if(!data.equipos_totales || data.equipos_totales.length === 0) {
                 let tsSec = document.getElementById('prediccionesTotalesSection');
                 if(tsSec) tsSec.remove();
@@ -4369,7 +4364,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     window.cambiarLiga = function(ligaName) {
         window.currentLiga = ligaName;
-        window.renderRankingV2();
+            if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
     };
 
     
@@ -4885,16 +4880,10 @@ window.updateProgressBar = function() {
 
 // LOGICA DE INSIGNIAS
 function loadInsigniasUI() {
-    if(!window.appData || !window.appData.ligas_equipos) return;
+    if(!window.appData) return;
     
-    // Extract all unique teams
-    let allTeams = new Set();
-    window.appData.ligas_equipos.forEach(row => {
-        Object.keys(row).forEach(k => {
-            if(k !== 'Liga' && k !== 'id') allTeams.add(k);
-        });
-    });
-    let teamsArray = Array.from(allTeams).sort();
+    // Usar equipos_totales_publicos
+    let teamsArray = window.appData.equipos_totales_publicos || [];
 
     let chkHtmlJug = '';
     let chkHtmlEnt = '';
@@ -4905,8 +4894,8 @@ function loadInsigniasUI() {
 
     const divJug = document.getElementById('insJugadorList');
     const divEnt = document.getElementById('insEntrenadorList');
-    if(divJug && divJug.innerHTML.trim() === '') divJug.innerHTML = chkHtmlJug;
-    if(divEnt && divEnt.innerHTML.trim() === '') divEnt.innerHTML = chkHtmlEnt;
+    if(divJug) divJug.innerHTML = chkHtmlJug;
+    if(divEnt) divEnt.innerHTML = chkHtmlEnt;
 
     // Load current values
     let raw = window.appData.mi_insignia_raw;
@@ -4970,97 +4959,6 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
         msgBox.style.display = "block";
         if(data.status === "success") {
             msgBox.className = "alert-box alert-success"; msgBox.innerText = "¡Petición enviada! Un administrador revisará y aprobará tus nuevas insignias pronto.";
-        } else {
-            msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
-        }
-    }).catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message; msgBox.style.display = "block"; })
-    .finally(() => { btn.disabled = false; });
-});
-
-    let raw = window.appData.mi_insignia_raw;
-    if(raw) {
-        if(raw["Genero"] === "F") { document.querySelector('input[name="ins_genero"][value="F"]').checked = true; }
-        
-        let jTeams = raw["Jugador de"] ? raw["Jugador de"].split(',').map(s => s.trim()) : [];
-        Array.from(selectJug.options).forEach(opt => {
-            if(jTeams.includes(opt.value)) opt.selected = true;
-        });
-
-        let eTeams = raw["Entrenador de"] ? raw["Entrenador de"].split(',').map(s => s.trim()) : [];
-        Array.from(selectEnt.options).forEach(opt => {
-            if(eTeams.includes(opt.value)) opt.selected = true;
-        });
-
-        document.getElementById('insExjugador').checked = (raw["Exjugador"] === "X");
-        document.getElementById('insStaff').value = raw["Directiva / Staff"] || '';
-    }
-}
-
-document.getElementById('btnOtroJugador').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('divOtroJugador').style.display = document.getElementById('divOtroJugador').style.display === 'none' ? 'block' : 'none';
-});
-document.getElementById('btnOtroEntrenador').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('divOtroEntrenador').style.display = document.getElementById('divOtroEntrenador').style.display === 'none' ? 'block' : 'none';
-});
-
-function requestExternalBadge(tipo, inputId, msgId) {
-    let eq = document.getElementById(inputId).value.trim();
-    let msgBox = document.getElementById(msgId);
-    if(!eq) {
-        msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Escribe el nombre del equipo."; msgBox.style.display = "block"; return;
-    }
-    msgBox.style.display = "none";
-    fetchSeguro(scriptURL, { 
-        method: 'POST', 
-        body: JSON.stringify({ action: 'request_external_badge', usuario: currentUser, password: currentPassword, tipo: tipo, equipo_externo: eq }), 
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
-    }).then(res => res.json()).then(data => {
-        msgBox.style.display = "block";
-        if(data.status === "success") {
-            msgBox.className = "alert-box alert-success"; msgBox.innerText = data.message;
-            document.getElementById(inputId).value = "";
-        } else {
-            msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
-        }
-    }).catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message; msgBox.style.display = "block"; });
-}
-document.getElementById('btnReqOtroJugador').addEventListener('click', () => requestExternalBadge('Jugador de', 'insOtroJugador', 'msgOtroJugador'));
-document.getElementById('btnReqOtroEntrenador').addEventListener('click', () => requestExternalBadge('Entrenador de', 'insOtroEntrenador', 'msgOtroEntrenador'));
-
-document.getElementById('btnSaveInsignias').addEventListener('click', function() {
-    let btn = this;
-    let msgBox = document.getElementById('msgSaveInsignias');
-    
-    let gen = document.querySelector('input[name="ins_genero"]:checked').value;
-    let selJug = Array.from(document.getElementById('insJugador').selectedOptions).map(o => o.value).join(', ');
-    let selEnt = Array.from(document.getElementById('insEntrenador').selectedOptions).map(o => o.value).join(', ');
-    let exj = document.getElementById('insExjugador').checked;
-    let stf = document.getElementById('insStaff').value.trim();
-
-    let raw = window.appData.mi_insignia_raw;
-    if(raw) {
-        let jTeams = raw["Jugador de"] ? raw["Jugador de"].split(',').map(s => s.trim()) : [];
-        let extJug = jTeams.filter(t => !window.appData.equipos_totales.includes(t));
-        if(extJug.length > 0 && selJug !== "") selJug += ", " + extJug.join(', ');
-        else if(extJug.length > 0) selJug = extJug.join(', ');
-
-        let eTeams = raw["Entrenador de"] ? raw["Entrenador de"].split(',').map(s => s.trim()) : [];
-        let extEnt = eTeams.filter(t => !window.appData.equipos_totales.includes(t));
-        if(extEnt.length > 0 && selEnt !== "") selEnt += ", " + extEnt.join(', ');
-        else if(extEnt.length > 0) selEnt = extEnt.join(', ');
-    }
-
-    btn.disabled = true; msgBox.style.display = "none";
-    fetchSeguro(scriptURL, { 
-        method: 'POST', 
-        body: JSON.stringify({ action: 'update_badges_self', usuario: currentUser, password: currentPassword, genero: gen, jugador_de: selJug, entrenador_de: selEnt, exjugador: exj, staff: stf }), 
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
-    }).then(res => res.json()).then(data => {
-        msgBox.style.display = "block";
-        if(data.status === "success") {
-            msgBox.className = "alert-box alert-success"; msgBox.innerText = data.message + " Los cambios se verán al recargar la página.";
         } else {
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
         }

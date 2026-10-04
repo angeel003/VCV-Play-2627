@@ -366,6 +366,16 @@ export async function onRequestPost(context) {
         // Equipos permitidos para predicciones secretas (Permisos_Secreta)
         const rowSec = await db.prepare('SELECT * FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(usuario).first();
         const misEquiposTotales = [];
+        let allTeamsPublicSet = new Set();
+        if (ligasEqRows) {
+            for (const row of ligasEqRows) {
+                Object.keys(row).forEach(k => {
+                    if (k !== 'Liga' && k !== 'id') allTeamsPublicSet.add(k);
+                });
+            }
+        }
+        const equiposTotalesPublicos = Array.from(allTeamsPublicSet).sort();
+
         if (rowSec) {
             for (const col in rowSec) {
                 if (col !== "Usuario" && rowSec[col] && rowSec[col].toString().toUpperCase() === "X") {
@@ -528,6 +538,7 @@ export async function onRequestPost(context) {
             mi_insignia_raw: allInsignias ? allInsignias.find(i => i.Usuario === usuario) : null,
             mis_equipos_siguiendo: Object.keys(misPermisos),
             equipos_totales: misEquiposTotales,
+            equipos_totales_publicos: equiposTotalesPublicos,
             puntos_reales: puntosRealesTotales,
             predicciones_totales: prediccionesTotalesMap,
             reglas: {
