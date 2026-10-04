@@ -311,18 +311,23 @@ export async function onRequestPost(context) {
         for (const b of allInsignias || []) {
             const u = b.Usuario;
             if (!u) continue;
-            insigniasMap[u] = [];
+            if (!insigniasMap[u]) insigniasMap[u] = [];
             
             const isF = b["Genero"] === "F";
             const lblEnt = isF ? "Entrenadora" : "Entrenador";
             const lblJug = isF ? "Jugadora" : "Jugador";
             const lblExj = isF ? "Exjugadora VCV" : "Exjugador VCV";
 
-            if (b["Admin Web"] === "X") insigniasMap[u].push({ type: 'admin', text: 'Admin Web' });
-            if (b["Directiva / Staff"]) insigniasMap[u].push({ type: 'staff', text: b["Directiva / Staff"] });
-            if (b["Entrenador de"]) insigniasMap[u].push({ type: 'entrenador', text: lblEnt + ' (' + b["Entrenador de"] + ')' });
-            if (b["Jugador de"]) insigniasMap[u].push({ type: 'jugador', text: lblJug + ' (' + b["Jugador de"] + ')' });
-            if (b.Exjugador === "X") insigniasMap[u].push({ type: 'exjugador', text: lblExj });
+            const addBadge = (type, text) => {
+                if (!insigniasMap[u].some(badge => badge.type === type && badge.text === text)) {
+                    insigniasMap[u].push({ type, text });
+                }
+            };
+            if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
+            if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
+            if (b["Entrenador de"]) addBadge('entrenador', lblEnt + ' (' + b["Entrenador de"] + ')');
+            if (b["Jugador de"]) addBadge('jugador', lblJug + ' (' + b["Jugador de"] + ')');
+            if (b.Exjugador === "X") addBadge('exjugador', lblExj);
         }
 
         // Cartelera y todos_partidos (preservando derbis)
@@ -812,7 +817,10 @@ export async function onRequestPost(context) {
                 let payloadObj = {};
                 try { payloadObj = JSON.parse(peticion.Equipo_Externo || '{}'); } catch(e) {}
                 
-                await db.prepare('INSERT OR IGNORE INTO "Insignias" ("Usuario") VALUES (?)').bind(userToUpdate).run();
+                const existingIns = await db.prepare('SELECT * FROM "Insignias" WHERE "Usuario" = ?').bind(userToUpdate).first();
+                if (!existingIns) {
+                    await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(userToUpdate).run();
+                }
                 await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ? WHERE "Usuario" = ?')
                     .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', userToUpdate).run();
             } else {
