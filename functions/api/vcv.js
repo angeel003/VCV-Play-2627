@@ -676,7 +676,7 @@ export async function onRequestPost(context) {
             
             return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, avísanos por correo. Mientras tanto, usa tu usuario actual.'});
         } else {
-            await db.prepare('UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
+            await db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
             return jsonResponse({status: 'success', message: 'Tu Nombre Real se ha actualizado inmediatamente.'});
         }
     }
@@ -737,7 +737,7 @@ export async function onRequestPost(context) {
             const targetU = newU ? newU : oldU;
 
             if (newN) {
-                stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre_Real" = ? WHERE "Usuario" = ?`).bind(newN, targetU));
+                stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?`).bind(newN, targetU));
             }
             
             stmts.push(db.prepare(`UPDATE "Peticiones_Nombre" SET "Estado" = 'APROBADO' WHERE "Usuario Actual" = ?`).bind(oldU));
