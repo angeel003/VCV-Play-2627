@@ -4996,6 +4996,10 @@ window.renderRankingV2 = function() {
             html += `</div></div>`; // Cierra CAJA 3
         }
 
+        if (data.is_frozen) {
+            html = html.replaceAll('var(--secondary-color)', '#3498db');
+            html = html.replaceAll('rgba(212, 175, 55', 'rgba(52, 152, 219'); // for the box-shadows
+        }
         container.innerHTML = html;
         let newSlider = document.getElementById('league-slider-container');
         if (newSlider) {
