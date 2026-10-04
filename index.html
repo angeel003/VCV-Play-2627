@@ -1505,13 +1505,39 @@
                 
                 <div id="perfilUsuarioTop"></div>
 
-        <div style="background: rgba(230, 126, 34, 0.1); border-left: 4px solid #e67e22; border-radius: 8px; padding: 12px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;">
-            <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #e67e22; flex-shrink: 0; margin-top: 2px;"></i>
-            <div>
-                <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡No olvides tu Predicción Anual!</strong>
-                <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">Tienes hasta el <strong>9 de Octubre</strong> para rellenar los puntos totales de la temporada de cada equipo. Desliza hasta el <strong>final de esta página</strong> para completarla antes de que se agote el tiempo.</p>
+        <style>
+            .vcv-alert-accordion summary { list-style: none; }
+            .vcv-alert-accordion summary::-webkit-details-marker { display: none; }
+            .vcv-alert-accordion[open] .acc-icon { transform: rotate(180deg); }
+        </style>
+        <details class="vcv-alert-accordion" style="background: rgba(230, 126, 34, 0.05); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
+            <summary style="padding: 12px 16px; font-weight: 800; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; background: rgba(230, 126, 34, 0.1);">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i data-lucide="bell-ring" style="width:18px; height:18px;"></i> Avisos Importantes (2)
+                </div>
+                <i data-lucide="chevron-down" style="width:18px; height:18px; transition: transform 0.3s;" class="acc-icon"></i>
+            </summary>
+            <div style="padding: 16px; display:flex; flex-direction:column; gap:16px;">
+                <!-- Aviso 1: Perfil -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <i data-lucide="user-plus" style="width: 20px; height: 20px; color: var(--secondary-color); flex-shrink: 0; margin-top: 2px;"></i>
+                    <div>
+                        <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡Completa tu Perfil!</strong>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">¿Eres jugador/a, entrenador/a, exjugador o staff? Ve a la pestaña de <strong>Perfil</strong> (el icono de la personita abajo) y solicita tus insignias oficiales para lucirlas junto a tu nombre.</p>
+                    </div>
+                </div>
+                <!-- Separator -->
+                <div style="height:1px; background:rgba(230, 126, 34, 0.2); width:100%;"></div>
+                <!-- Aviso 2: Predicción Anual -->
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #e67e22; flex-shrink: 0; margin-top: 2px;"></i>
+                    <div>
+                        <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡No olvides tu Predicción Anual!</strong>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">Tienes hasta el <strong>9 de Octubre</strong> para rellenar los puntos totales de la temporada de cada equipo. Desliza hasta el <strong>final de esta página</strong> para completarla antes de que se agote el tiempo.</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </details>
 
                 
                 
@@ -1560,7 +1586,7 @@
         </div>
 
         <!-- Formulario Crear Nuevo Usuario -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
           <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">➕ Añadir Nuevo Usuario</h4>
           <div class="form-group" style="margin-bottom:8px;">
             <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
@@ -1583,7 +1609,7 @@
         </div>
 
         <!-- Herramienta Aprobación Nombres -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
             <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Cambio de Nombre</h4>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
             
@@ -1592,9 +1618,19 @@
             </button>
             <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
+        <!-- Peticiones de Insignias -->
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); margin-bottom: 12px; box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+            <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;"> Peticiones de Insignias</h4>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
+            
+            <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
+            </button>
+            <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
 
         <!-- Subida Rápida de Resultados y Links -->
-        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
+        <div style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); padding: 16px; border-radius: 12px; border: 1px solid rgba(230, 126, 34, 0.5); box-shadow: 0 4px 10px rgba(230,126,34,0.05);">
           <h4 style="font-size: 0.85rem; font-weight: 800; margin-bottom: 12px; color: #e67e22; margin-top:0; border-bottom: 1px solid rgba(230,126,34,0.2); padding-bottom: 8px;">🏐 Subir Resultados y Enlaces</h4>
           <div id="adminListaPartidos"></div>
         </div>
@@ -1613,6 +1649,54 @@
             <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--vcv-morado); color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(44,62,80,0.2);">Guardar Correo</button>
           </form>
         </div>
+
+<!-- MIS INSIGNIAS -->
+      <div class="vcv-card-v2" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card)); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color); width: 18px; height: 18px;" class="lucide lucide-award"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg> Mis Insignias
+        </h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
+          Personaliza las insignias de tu perfil. <b>Cualquier cambio que realices aquí se enviará a los administradores para su aprobación.</b>
+        </p>
+
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Mostrar mis insignias como:</label>
+          <div style="display: flex; gap: 10px;">
+            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="M" checked> Masculino</label>
+            <label style="font-size: 0.85rem; color: var(--text-main);"><input type="radio" name="ins_genero" value="F"> Femenino</label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Jugador/a de los equipos:</label>
+          <div id="insJugadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          </div>
+          <input type="text" id="insOtroJugador" class="form-control" placeholder="Otros equipos (ej: VCV Zaratán, Cadete Masc.)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Entrenador/a de los equipos:</label>
+          <div id="insEntrenadorList" style="max-height: 120px; overflow-y: auto; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+          </div>
+          <input type="text" id="insOtroEntrenador" class="form-control" placeholder="Otros equipos (ej: VCV Zaratán, Cadete Masc.)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-main);">
+            <input type="checkbox" id="insExjugador"> Soy Exjugador/a de VCV
+          </label>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-muted);">Staff / Directiva (Puesto):</label>
+          <input type="text" id="insStaff" class="form-control" placeholder="Ej: Fisioterapeuta, Delegado..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+        </div>
+
+        <button class="btn btn-warning" id="btnRequestInsignias" style="width: 100%; background: var(--secondary-color); border: none; padding: 12px; border-radius: 8px; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;" class="lucide lucide-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> Enviar Petición a Administradores
+        </button>
+        <div id="msgRequestInsignias" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
+      </div>
 
 <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
@@ -1679,7 +1763,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="save" aria-hidden="true" style="width: 16px; height: 16px;" class="lucide lucide-save"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Enviar Solicitud
         </button>
         <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
-      </div>
+      
+      
+</div>
     
     </section>
     <section id="historialSection"><div id="historialContentV2"></div></section>
@@ -1988,7 +2074,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                     } else {
                         let h = '';
                         d.requests.forEach(r => {
-                            h += `<div style="background:var(--bg-card-alt); padding:10px; border-radius:6px; border:1px solid #333;">
+                            h += `<div style="background:var(--bg-lighter); padding:10px; border-radius:6px; border:1px solid #333;">
                                 <div><b>Actual:</b> ${r.Usuario} ➡️ <b>Nuevo:</b> ${r.Nuevo_Usuario}</div>
                                 ${r.Nuevo_Nombre ? `<div><b>Nombre Real:</b> ${r.Nuevo_Nombre}</div>` : ''}
                                 <div style="font-size:0.7rem; color:#888;">Fecha: ${new Date(r.Fecha).toLocaleString()}</div>
@@ -2029,6 +2115,97 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             alert("Error de conexión");
         }
     };
+
+
+    let btnLoadBadgeRequests = document.getElementById('btnLoadBadgeRequests');
+    if (btnLoadBadgeRequests) {
+        btnLoadBadgeRequests.addEventListener('click', async function(e) {
+            e.preventDefault();
+            btnLoadBadgeRequests.disabled = true;
+            btnLoadBadgeRequests.innerText = "Cargando...";
+            let box = document.getElementById('adminBadgeRequestsBox');
+            if(box) box.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">Cargando...</div>';
+
+            try {
+                let res = await fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({action: 'get_peticiones_insignias', usuario: currentUser, password: currentPassword})});
+                let data = await res.json();
+                
+                if (data.status === "success") {
+                    if (data.data.length === 0) {
+                        if(box) box.innerHTML = '<div style="color:var(--text-muted); font-size:0.8rem;">No hay peticiones de insignias pendientes.</div>';
+                    } else {
+                        let html = '';
+                        data.data.forEach(req => {
+                            let dateStr = new Date(req.Fecha).toLocaleString('es-ES');
+                            
+                            let details = '';
+                            if (req.Tipo === 'PERFIL') {
+                                let payloadObj = {};
+                                try { payloadObj = JSON.parse(req.Equipo_Externo || '{}'); } catch(e){}
+                                details = `<b>Género:</b> ${payloadObj.genero || '-'}<br>`;
+                                details += `<b>Jugador/a de:</b> ${payloadObj.jugador_de || '-'}<br>`;
+                                details += `<b>Entrenador/a de:</b> ${payloadObj.entrenador_de || '-'}<br>`;
+                                details += `<b>Exjugador/a:</b> ${payloadObj.exjugador === 'X' ? 'Sí' : 'No'}<br>`;
+                                details += `<b>Staff:</b> ${payloadObj.staff || '-'}`;
+                            } else {
+                                details = `<b>Añadir a ${req.Tipo}:</b> ${req.Equipo_Externo}`;
+                            }
+
+                            html += `
+                            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:8px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <strong style="color:var(--vcv-morado);">${req.Usuario}</strong>
+                                        <div style="font-size:0.7rem; color:var(--text-muted);">${dateStr}</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:8px; font-size:0.8rem; background:rgba(0,0,0,0.05); padding:8px; border-radius:4px;">
+                                    ${details}
+                                </div>
+                                <div style="display:flex; gap:8px; margin-top:10px;">
+                                    <button onclick="resolveBadgeRequest(${req.id_peticion}, 'approve')" class="btn" style="flex:1; background:#27ae60; color:white; border:none; padding:6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Aprobar</button>
+                                    <button onclick="resolveBadgeRequest(${req.id_peticion}, 'reject')" class="btn" style="flex:1; background:#c0392b; color:white; border:none; padding:6px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Rechazar</button>
+                                </div>
+                            </div>`;
+                        });
+                        if(box) box.innerHTML = html;
+                    }
+                } else {
+                    if(box) box.innerHTML = `<div style="color:#e74c3c; font-size:0.8rem;">Error: ${data.message}</div>`;
+                }
+            } catch (err) {
+                if(box) box.innerHTML = `<div style="color:#e74c3c; font-size:0.8rem;">Error de conexión.</div>`;
+            }
+
+            btnLoadBadgeRequests.disabled = false;
+            btnLoadBadgeRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias`;
+            if(window.lucide) window.lucide.createIcons();
+        });
+    }
+
+    window.resolveBadgeRequest = async function(id, accion) {
+        if(!confirm(`¿Estás seguro de que quieres ${accion === 'approve' ? 'aprobar' : 'rechazar'} esta petición?`)) return;
+        
+        try {
+            let res = await fetchSeguro(scriptURL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'resolve_peticion_insignia', usuario: currentUser, password: currentPassword, id_peticion: id, resolution: accion }), 
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+            });
+            let data = await res.json();
+            
+            if(data.status === "success") {
+                alert(data.message);
+                let btn = document.getElementById('btnLoadBadgeRequests');
+                if(btn) btn.click();
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (err) {
+            alert("Error de conexión al resolver petición.");
+        }
+    }
+
 
     window.guardarResultadoAdmin = function(e, idPart) {
     e.preventDefault();
@@ -2273,6 +2450,7 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
             isGuestMode = true;
             window.appData = data;
             if(window.initCalendar) window.initCalendar();
+            if(window.loadInsigniasUI) window.loadInsigniasUI();
             if(window.renderHistorialV2) window.renderHistorialV2(data);
             let nameEl = document.getElementById('h2-user-name'); if(nameEl) nameEl.innerText = "Modo Invitado";
             let handleEl = document.getElementById('h2-user-handle'); if(handleEl) handleEl.innerText = "@lectura";
@@ -2526,6 +2704,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             window.appData = data;
             if(window.initCalendar) window.initCalendar();
             if(window.renderHistorialV2) window.renderHistorialV2(data);
+            if(window.loadInsigniasUI) window.loadInsigniasUI();
             
             
 
@@ -2585,9 +2764,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             let isAdmin = false;
 
             // Calculate Rank from Global Leaderboard
-            window.updateHeaderStats();
-
-            
+            if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); } else { setTimeout(() => { if(typeof window.updateHeaderStats === "function") window.updateHeaderStats(); }, 500); }
             misInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
                 let cssColorClass = getBadgeCSS(b.type);
@@ -2851,10 +3028,7 @@ let visitLogo = `<img src="files/images/escudos/${safeVisitName}.png" alt="${vis
             if(data.ligas && data.ligas.length > 0) {
                 window.currentLiga = data.ligas[0];
             }
-            window.renderRankingV2();
-
-
-            
+            if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
             if(!data.equipos_totales || data.equipos_totales.length === 0) {
                 let tsSec = document.getElementById('prediccionesTotalesSection');
                 if(tsSec) tsSec.remove();
@@ -3181,13 +3355,12 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             if (match.estado !== "CERRADO") {
                 // ABIERTO (WARNING)
                 partidosEvaluados.push(`
-                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
+                <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                     <span style="font-size: 0.75rem; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--vcv-dorado);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                     <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
                   </div>
-                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 2px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">${formatFecha(match.timestamp) || 'Fecha por confirmar'}</div>
+                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
                   
                   <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; font-weight:600; background:rgba(212,175,55,0.05); padding:10px; border-radius:8px;">
                     <i data-lucide="alert-triangle" style="width: 16px; height: 16px; color:var(--vcv-dorado);"></i>
@@ -3212,13 +3385,12 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
                 }
 
                 partidosEvaluados.push(`
-                <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+                <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                     <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
                     <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
                   </div>
-                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 2px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">${formatFecha(match.timestamp) || 'Fecha por confirmar'}</div>
+                  <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
                   <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
                     <div style="display: flex; justify-content: space-between;">
                       <span style="color: var(--text-muted);">Tu Pronóstico:</span>
@@ -3245,13 +3417,12 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
 
             partidosEvaluados.push(`
-            <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
+            <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                 <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                 <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
               </div>
-              <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 2px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">${formatFecha(match.timestamp) || 'Fecha por confirmar'}</div>
+              <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
               <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: var(--text-muted);">Tu Pronóstico:</span>
@@ -3311,13 +3482,12 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
 
         partidosEvaluados.push(`
         <!-- Tarjeta Historial -->
-        <div class="vcv-card-v2" style="background:linear-gradient(135deg, var(--bg-card), var(--bg-card-alt)); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
+        <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
             <span style="font-size: 0.95rem; color: ${colorClass}; font-weight: 900;">+${matchPts} PTS</span>
           </div>
-          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 2px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">${formatFecha(match.timestamp) || 'Fecha por confirmar'}</div>
+          <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
           <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Tu Pronóstico:</span>
@@ -4322,7 +4492,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     window.cambiarLiga = function(ligaName) {
         window.currentLiga = ligaName;
-        window.renderRankingV2();
+            if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
     };
 
     
@@ -4834,6 +5004,110 @@ window.updateProgressBar = function() {
 // LOGICA DE CALENDARIO
 // ---------------------------------------------------
 
+
+
+// LOGICA DE INSIGNIAS
+function loadInsigniasUI() {
+    if(!window.appData) return;
+    
+    // Mostrar solo los equipos a los que el usuario tiene permiso para apostar
+    let teamsArray = window.appData.mis_equipos_siguiendo || [];
+
+    let catMap = {};
+    if (window.appData.ligas_equipos) {
+        window.appData.ligas_equipos.forEach(row => {
+            if (row.Liga && row.Liga !== 'Global' && row.Liga !== 'Predicciones Secretas' && row.Liga !== 'Entrenadores') {
+                for (let col in row) {
+                    if (col !== 'Liga' && row[col] === 'X') {
+                        catMap[col] = row.Liga;
+                    }
+                }
+            }
+        });
+    }
+
+    let chkHtmlJug = '';
+    let chkHtmlEnt = '';
+    teamsArray.forEach(t => {
+        let cat = catMap[t];
+        let displayStr = cat ? `${t}, ${cat}` : t;
+        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-jugador" style="margin-right:6px;"> ${displayStr}</label>`;
+        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-entrenador" style="margin-right:6px;"> ${displayStr}</label>`;
+    });
+
+    const divJug = document.getElementById('insJugadorList');
+    const divEnt = document.getElementById('insEntrenadorList');
+    if(divJug) divJug.innerHTML = chkHtmlJug;
+    if(divEnt) divEnt.innerHTML = chkHtmlEnt;
+
+    // Load current values
+    let raw = window.appData.mi_insignia_raw;
+    if(raw) {
+        if(raw["Genero"] === "F") { document.querySelector('input[name="ins_genero"][value="F"]').checked = true; }
+        
+        let jTeams = raw["Jugador de"] ? raw["Jugador de"].split(',').map(s => s.trim()) : [];
+        let jExternos = [];
+        document.querySelectorAll('.chk-jugador').forEach(chk => {
+            if(jTeams.includes(chk.value)) chk.checked = true;
+        });
+        jTeams.forEach(t => { if(!teamsArray.includes(t) && t !== "") jExternos.push(t); });
+        document.getElementById('insOtroJugador').value = jExternos.join(', ');
+
+        let eTeams = raw["Entrenador de"] ? raw["Entrenador de"].split(',').map(s => s.trim()) : [];
+        let eExternos = [];
+        document.querySelectorAll('.chk-entrenador').forEach(chk => {
+            if(eTeams.includes(chk.value)) chk.checked = true;
+        });
+        eTeams.forEach(t => { if(!teamsArray.includes(t) && t !== "") eExternos.push(t); });
+        document.getElementById('insOtroEntrenador').value = eExternos.join(', ');
+
+        document.getElementById('insExjugador').checked = (raw["Exjugador"] === "X");
+        document.getElementById('insStaff').value = raw["Directiva / Staff"] || '';
+    }
+}
+
+document.getElementById('btnRequestInsignias').addEventListener('click', function() {
+    let btn = this;
+    let msgBox = document.getElementById('msgRequestInsignias');
+    
+    let gen = document.querySelector('input[name="ins_genero"]:checked').value;
+    
+    let jChecked = Array.from(document.querySelectorAll('.chk-jugador:checked')).map(c => c.value);
+    let jOtro = document.getElementById('insOtroJugador').value.trim();
+    if(jOtro) jChecked.push(jOtro);
+    let finalJugadorDe = jChecked.join(', ');
+
+    let eChecked = Array.from(document.querySelectorAll('.chk-entrenador:checked')).map(c => c.value);
+    let eOtro = document.getElementById('insOtroEntrenador').value.trim();
+    if(eOtro) eChecked.push(eOtro);
+    let finalEntrenadorDe = eChecked.join(', ');
+
+    let exj = document.getElementById('insExjugador').checked;
+    let stf = document.getElementById('insStaff').value.trim();
+
+    let payload = {
+        genero: gen,
+        jugador_de: finalJugadorDe,
+        entrenador_de: finalEntrenadorDe,
+        exjugador: exj ? 'X' : '',
+        staff: stf
+    };
+
+    btn.disabled = true; msgBox.style.display = "none";
+    fetchSeguro(scriptURL, { 
+        method: 'POST', 
+        body: JSON.stringify({ action: 'request_badge_update', usuario: currentUser, password: currentPassword, payload: JSON.stringify(payload) }), 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+    }).then(res => res.json()).then(data => {
+        msgBox.style.display = "block";
+        if(data.status === "success") {
+            msgBox.className = "alert-box alert-success"; msgBox.innerText = "¡Petición enviada! Un administrador revisará y aprobará tus nuevas insignias pronto.";
+        } else {
+            msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message;
+        }
+    }).catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message; msgBox.style.display = "block"; })
+    .finally(() => { btn.disabled = false; });
+});
 
 </script>
 
