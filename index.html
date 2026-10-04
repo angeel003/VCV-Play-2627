@@ -5013,26 +5013,11 @@ function loadInsigniasUI() {
     // Mostrar solo los equipos a los que el usuario tiene permiso para apostar
     let teamsArray = window.appData.mis_equipos_siguiendo || [];
 
-    let catMap = {};
-    if (window.appData.ligas_equipos) {
-        window.appData.ligas_equipos.forEach(row => {
-            if (row.Liga && row.Liga !== 'Global' && row.Liga !== 'Predicciones Secretas' && row.Liga !== 'Entrenadores' && row.Liga !== 'Monumental') {
-                for (let col in row) {
-                    if (col !== 'Liga' && row[col] === 'X') {
-                        catMap[col] = row.Liga;
-                    }
-                }
-            }
-        });
-    }
-
     let chkHtmlJug = '';
     let chkHtmlEnt = '';
     teamsArray.forEach(t => {
-        let cat = catMap[t];
-        let displayStr = cat ? `${t}, ${cat}` : t;
-        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-jugador" style="margin-right:6px;"> ${displayStr}</label>`;
-        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${displayStr}" class="chk-entrenador" style="margin-right:6px;"> ${displayStr}</label>`;
+        chkHtmlJug += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-jugador" style="margin-right:6px;"> ${t}</label>`;
+        chkHtmlEnt += `<label style="display:block; font-size:0.85rem; color:var(--text-main); padding: 4px 0;"><input type="checkbox" value="${t}" class="chk-entrenador" style="margin-right:6px;"> ${t}</label>`;
     });
 
     const divJug = document.getElementById('insJugadorList');
