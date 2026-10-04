@@ -53,6 +53,11 @@ export async function onRequestPost(context) {
     const password = (body.password || "").trim();
 
     // 1. PING
+    if (action === 'migrate_db') {
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS Peticiones_Insignias (id_peticion INTEGER PRIMARY KEY AUTOINCREMENT, Usuario TEXT, Tipo TEXT, Equipo_Externo TEXT, Estado TEXT, Fecha TEXT)").run(); } catch(e) {}
+        return jsonResponse({status: 'success'});
+    }
     if (action === "ping") {
         return jsonResponse({ status: "ok" });
     }
