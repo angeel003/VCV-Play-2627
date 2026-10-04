@@ -245,10 +245,20 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: "error", message: "Usuario o contraseña incorrectos." });
         }
 
-        // Actualizar último acceso si es un inicio de sesión
+                // Actualizar último acceso si es un inicio de sesión (throttled a 1 hora para ahorrar escrituras)
         if (action === "login") {
             try {
-                await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(usuario).run();
+                let shouldUpdate = true;
+                if (userRow.ultimo_acceso) {
+                    // El servidor guarda en UTC via CURRENT_TIMESTAMP
+                    const lastAcc = new Date(userRow.ultimo_acceso + 'Z').getTime();
+                    if (!isNaN(lastAcc) && (Date.now() - lastAcc < 3600000)) {
+                        shouldUpdate = false; // Ha pasado menos de 1 hora
+                    }
+                }
+                if (shouldUpdate) {
+                    await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(usuario).run();
+                }
             } catch(e) {}
         }
 
