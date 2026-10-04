@@ -4932,7 +4932,7 @@ window.renderRankingV2 = function() {
                 ${c2_snow}
                 <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:2;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--secondary-color); color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: ${data.is_frozen ? '#3498db' : 'var(--secondary-color)'}; color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
                         <span style="font-weight: 900;">${pos}º</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
@@ -4996,10 +4996,6 @@ window.renderRankingV2 = function() {
             html += `</div></div>`; // Cierra CAJA 3
         }
 
-        if (data.is_frozen) {
-            html = html.replaceAll('var(--secondary-color)', '#3498db');
-            html = html.replaceAll('rgba(212, 175, 55', 'rgba(52, 152, 219'); // for the box-shadows
-        }
         container.innerHTML = html;
         let newSlider = document.getElementById('league-slider-container');
         if (newSlider) {
