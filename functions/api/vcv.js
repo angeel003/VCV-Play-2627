@@ -657,6 +657,40 @@ export async function onRequestPost(context) {
         
         return jsonResponse({ status: 'success', message: '¡Permisos sincronizados! Las X han sido rellenadas físicamente en la base de datos.' });
     }
+    
+    if (action === 'fix_timestamps') {
+        const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes"').all();
+        let updatedCount = 0;
+        for (const r of rawPartidos || []) {
+            if (r.Fecha && r.ID_Partido) {
+                const parts = r.Fecha.trim().split(' ');
+                if (parts.length >= 1) {
+                    const dateParts = parts[0].split('/');
+                    if (dateParts.length === 3) {
+                        const day = parseInt(dateParts[0], 10);
+                        const month = parseInt(dateParts[1], 10) - 1;
+                        const year = parseInt(dateParts[2], 10);
+                        let hour = 0, minute = 0;
+                        if (parts.length > 1) {
+                            const timeParts = parts[1].split(':');
+                            if (timeParts.length >= 2) {
+                                hour = parseInt(timeParts[0], 10);
+                                minute = parseInt(timeParts[1], 10);
+                            }
+                        }
+                        const dt = new Date(Date.UTC(year, month, day, hour, minute));
+                        const newTs = dt.getTime();
+                        if (r.timestamp !== newTs) {
+                            await db.prepare('UPDATE "Ajustes" SET timestamp = ? WHERE "ID_Partido" = ?').bind(newTs, r.ID_Partido).run();
+                            updatedCount++;
+                        }
+                    }
+                }
+            }
+        }
+        return jsonResponse({ status: 'success', message: 'Timestamps corregidos: ' + updatedCount });
+    }
+
     if (action === 'clear_cache') {
         return jsonResponse({ status: 'success', message: '¡Cloudflare D1 está sincronizado siempre en tiempo real! No hay caché.' });
     }
