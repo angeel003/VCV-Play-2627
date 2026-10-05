@@ -5276,25 +5276,8 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
             <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones y Avisos
         </h3>
         
-        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:20px; text-align:left; color:var(--text-muted); display:flex; flex-direction:column; gap:16px; max-height:60vh; overflow-y:auto;">
-            <!-- Aviso 1: Perfil -->
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <i data-lucide="user-plus" style="width: 20px; height: 20px; color: var(--secondary-color); flex-shrink: 0; margin-top: 2px;"></i>
-                <div>
-                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡Completa tu Perfil!</strong>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">¿Eres jugador/a, entrenador/a, exjugador o staff? Ve a la pestaña de <strong>Perfil</strong> (el icono de la personita abajo) y solicita tus insignias oficiales para lucirlas junto a tu nombre.</p>
-                </div>
-            </div>
-            <!-- Separator -->
-            <div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>
-            <!-- Aviso 2: Predicción Anual -->
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #e67e22; flex-shrink: 0; margin-top: 2px;"></i>
-                <div>
-                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡No olvides tu Predicción Anual!</strong>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">Tienes hasta el <strong>9 de Octubre</strong> para rellenar los puntos totales de la temporada de cada equipo. Desliza hasta el <strong>final de la pestaña de Partidos</strong> para completarla antes de que se agote el tiempo.</p>
-                </div>
-            </div>
+        <div id="notificacionesContainer" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:20px; text-align:left; color:var(--text-muted); display:flex; flex-direction:column; gap:16px; max-height:60vh; overflow-y:auto;">
+            <div style="text-align:center; padding: 20px 0;"><i data-lucide="loader-2" class="spin" style="width:24px;height:24px;"></i> Cargando...</div>
         </div>
         
         <button onclick="document.getElementById('notificacionesModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>

@@ -586,8 +586,18 @@ export async function onRequestPost(context) {
         }
         const rondaAbierta = maxRonda.toString();
 
+        // Fetch Notificaciones
+        let notificaciones = [];
+        try {
+            const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
+            notificaciones = results || [];
+        } catch (e) {
+            // Table might not exist yet
+        }
+
         return jsonResponse({
             status: "success",
+            notificaciones: notificaciones,
             is_frozen: isFrozen,
             unfreeze_time: unfreezeTime,
             jornada: rondaAbierta,
