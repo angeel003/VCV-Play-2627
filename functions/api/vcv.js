@@ -539,7 +539,12 @@ export async function onRequestPost(context) {
                 }
 
                                 if (isFrozen && p.timestamp >= freezeCutoff) {
-                    userPointsInLiga[pr.Usuario]["_pendientes"] = (userPointsInLiga[pr.Usuario]["_pendientes"] || 0) + pts;
+                    for (const lName in ligasMap) {
+                        if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
+                            const pendKey = "_pendientes_" + lName;
+                            userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + pts;
+                        }
+                    }
                     continue;
                 }
                 for (const lName in ligasMap) {
@@ -563,7 +568,7 @@ export async function onRequestPost(context) {
                         jugador: uName,
                         nombre_real: mapNombresReales[uName] || uName,
                         puntos: (userPointsInLiga[uName] && userPointsInLiga[uName][lName]) || 0,
-                        puntos_pendientes: (userPointsInLiga[uName] && userPointsInLiga[uName]["_pendientes"]) || 0
+                        puntos_pendientes: (userPointsInLiga[uName] && userPointsInLiga[uName]["_pendientes_" + lName]) || 0
                     });
                 }
             }
