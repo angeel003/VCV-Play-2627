@@ -461,26 +461,31 @@ export async function onRequestPost(context) {
         // --- LOGICA DE APAGON DE RANKINGS (FIN DE SEMANA) ---
         const now = new Date();
         const utcDay = now.getUTCDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
-        const isFrozen = (utcDay === 6 || utcDay === 0 || utcDay === 1); // Sab, Dom, Lun
+        let isFrozen = false;
         let freezeCutoff = 0;
         let unfreezeTime = 0;
 
-        if (isFrozen) {
-            // Cutoff: Viernes a las 23:59:59 UTC
-            let d = new Date(now);
-            if (utcDay === 6) d.setUTCDate(d.getUTCDate() - 1);
-            if (utcDay === 0) d.setUTCDate(d.getUTCDate() - 2);
-            if (utcDay === 1) d.setUTCDate(d.getUTCDate() - 3);
-            d.setUTCHours(23, 59, 59, 999);
-            freezeCutoff = d.getTime();
-
-            // Unfreeze: Lunes a las 23:59:59 UTC
+        if (utcDay === 6 || utcDay === 0 || utcDay === 1) {
+            // Unfreeze: Lunes a las 18:00 hora espaola (16:00 UTC en verano, 17:00 UTC en invierno)
+            // Usamos 16:30 UTC como punto medio seguro para que coincida aprox.
             let u = new Date(now);
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
             if (utcDay === 1) u.setUTCDate(u.getUTCDate() + 0);
-            u.setUTCHours(23, 59, 59, 999);
+            u.setUTCHours(16, 30, 0, 0); // 18:30 verano / 17:30 invierno
             unfreezeTime = u.getTime();
+
+            // Si todava no hemos superado la hora de descongelacin del lunes
+            if (now.getTime() < unfreezeTime) {
+                isFrozen = true;
+                // Cutoff: Viernes a las 23:59:59 UTC
+                let d = new Date(now);
+                if (utcDay === 6) d.setUTCDate(d.getUTCDate() - 1);
+                if (utcDay === 0) d.setUTCDate(d.getUTCDate() - 2);
+                if (utcDay === 1) d.setUTCDate(d.getUTCDate() - 3);
+                d.setUTCHours(23, 59, 59, 999);
+                freezeCutoff = d.getTime();
+            }
         }
         
         const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
