@@ -2419,6 +2419,47 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
         if(data.status === "success") {
             
             isGuestMode = true;
+            // --- NOTIFICACIONES ---
+            if (data.notificaciones) {
+                const notifBadge = document.querySelector('.header-bell-badge');
+                const notifContainer = document.getElementById('notificacionesContainer');
+                
+                if (data.notificaciones.length > 0) {
+                    if (notifBadge) {
+                        notifBadge.style.display = 'flex';
+                        notifBadge.innerText = data.notificaciones.length;
+                        const hasHigh = data.notificaciones.some(n => n.Importancia === 'ALTA');
+                        notifBadge.style.animation = hasHigh ? 'pulse-badge 2s infinite' : 'none';
+                    }
+                    
+                    if (notifContainer) {
+                        let html = '';
+                        data.notificaciones.forEach((n, idx) => {
+                            const iconColor = n.Tipo === 'Aviso' ? '#e67e22' : 'var(--primary-color)';
+                            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
+                            const isLast = idx === data.notificaciones.length - 1;
+                            
+                            html += `
+                            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i data-lucide="${iconType}" style="width: 20px; height: 20px; color: ${iconColor}; flex-shrink: 0; margin-top: 2px;"></i>
+                                <div>
+                                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">${n.Titulo}</strong>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">${n.Mensaje}</p>
+                                </div>
+                            </div>`;
+                            
+                            if (!isLast) {
+                                html += `<div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>`;
+                            }
+                        });
+                        notifContainer.innerHTML = html;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    }
+                } else {
+                    if (notifBadge) notifBadge.style.display = 'none';
+                    if (notifContainer) notifContainer.innerHTML = '<div style="text-align:center; padding: 20px 0;">No hay notificaciones nuevas.</div>';
+                }
+            }
             window.appData = data;
             if(window.initCalendar) window.initCalendar();
             if(window.loadInsigniasUI) window.loadInsigniasUI();
@@ -2602,6 +2643,47 @@ document.getElementById('btnLogin').addEventListener('click', function() {
         if(data.status === "success") {
             
             currentUser = usr; currentPassword = pwd;
+            // --- NOTIFICACIONES ---
+            if (data.notificaciones) {
+                const notifBadge = document.querySelector('.header-bell-badge');
+                const notifContainer = document.getElementById('notificacionesContainer');
+                
+                if (data.notificaciones.length > 0) {
+                    if (notifBadge) {
+                        notifBadge.style.display = 'flex';
+                        notifBadge.innerText = data.notificaciones.length;
+                        const hasHigh = data.notificaciones.some(n => n.Importancia === 'ALTA');
+                        notifBadge.style.animation = hasHigh ? 'pulse-badge 2s infinite' : 'none';
+                    }
+                    
+                    if (notifContainer) {
+                        let html = '';
+                        data.notificaciones.forEach((n, idx) => {
+                            const iconColor = n.Tipo === 'Aviso' ? '#e67e22' : 'var(--primary-color)';
+                            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
+                            const isLast = idx === data.notificaciones.length - 1;
+                            
+                            html += `
+                            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                                <i data-lucide="${iconType}" style="width: 20px; height: 20px; color: ${iconColor}; flex-shrink: 0; margin-top: 2px;"></i>
+                                <div>
+                                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">${n.Titulo}</strong>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">${n.Mensaje}</p>
+                                </div>
+                            </div>`;
+                            
+                            if (!isLast) {
+                                html += `<div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>`;
+                            }
+                        });
+                        notifContainer.innerHTML = html;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    }
+                } else {
+                    if (notifBadge) notifBadge.style.display = 'none';
+                    if (notifContainer) notifContainer.innerHTML = '<div style="text-align:center; padding: 20px 0;">No hay notificaciones nuevas.</div>';
+                }
+            }
             
             
             let totalOpen = 0;
