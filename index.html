@@ -443,7 +443,8 @@
     .header-dot { width: 4px; height: 4px; border-radius: 50%; background: #71717a; }
     .header-pts { font-size: 12px; font-weight: 600; color: #e4e4e7; }
     .header-bell-btn { width:  40px; height:  40px; border-radius: 50%; background: #221127; border: 1px solid #3e1d45; color: #d4d4d8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-    .header-bell-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #d4af37; border: 2px solid #160a19; }
+    .header-bell-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #160a19; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); animation: pulse-badge 2s infinite; }
+    @keyframes pulse-badge { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
@@ -1153,7 +1154,8 @@
     .header-dot { width: 4px; height: 4px; border-radius: 50%; background: #71717a; }
     .header-pts { font-size: 12px; font-weight: 600; color: #e4e4e7; }
     .header-bell-btn { width:  40px; height:  40px; border-radius: 50%; background: #221127; border: 1px solid #3e1d45; color: #d4d4d8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-    .header-bell-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #d4af37; border: 2px solid #160a19; }
+    .header-bell-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #160a19; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); animation: pulse-badge 2s infinite; }
+    @keyframes pulse-badge { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
@@ -1488,7 +1490,7 @@
         </div>
         <button class="header-bell-btn" onclick="document.getElementById('notificacionesModal').style.display='flex'">
           <i data-lucide="bell" style="width:18px; height:18px;"></i>
-          <span class="header-bell-dot"></span>
+          <span class="header-bell-badge">2</span>
         </button>
       </div>
     </div>
@@ -1505,39 +1507,8 @@
                 
                 <div id="perfilUsuarioTop"></div>
 
-        <style>
-            .vcv-alert-accordion summary { list-style: none; }
-            .vcv-alert-accordion summary::-webkit-details-marker { display: none; }
-            .vcv-alert-accordion[open] .acc-icon { transform: rotate(180deg); }
-        </style>
-        <details class="vcv-alert-accordion" style="background: rgba(230, 126, 34, 0.05); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
-            <summary style="padding: 12px 16px; font-weight: 800; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; background: rgba(230, 126, 34, 0.1);">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i data-lucide="bell-ring" style="width:18px; height:18px;"></i> Avisos Importantes (2)
-                </div>
-                <i data-lucide="chevron-down" style="width:18px; height:18px; transition: transform 0.3s;" class="acc-icon"></i>
-            </summary>
-            <div style="padding: 16px; display:flex; flex-direction:column; gap:16px;">
-                <!-- Aviso 1: Perfil -->
-                <div style="display: flex; align-items: flex-start; gap: 10px;">
-                    <i data-lucide="user-plus" style="width: 20px; height: 20px; color: var(--secondary-color); flex-shrink: 0; margin-top: 2px;"></i>
-                    <div>
-                        <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡Completa tu Perfil!</strong>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">¿Eres jugador/a, entrenador/a, exjugador o staff? Ve a la pestaña de <strong>Perfil</strong> (el icono de la personita abajo) y solicita tus insignias oficiales para lucirlas junto a tu nombre.</p>
-                    </div>
-                </div>
-                <!-- Separator -->
-                <div style="height:1px; background:rgba(230, 126, 34, 0.2); width:100%;"></div>
-                <!-- Aviso 2: Predicción Anual -->
-                <div style="display: flex; align-items: flex-start; gap: 10px;">
-                    <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #e67e22; flex-shrink: 0; margin-top: 2px;"></i>
-                    <div>
-                        <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡No olvides tu Predicción Anual!</strong>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">Tienes hasta el <strong>9 de Octubre</strong> para rellenar los puntos totales de la temporada de cada equipo. Desliza hasta el <strong>final de esta página</strong> para completarla antes de que se agote el tiempo.</p>
-                    </div>
-                </div>
-            </div>
-        </details>
+        
+        
 
                 
                 
@@ -5302,12 +5273,28 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
         <button onclick="document.getElementById('notificacionesModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
         
         <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones
+            <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones y Avisos
         </h3>
         
-        <div style="background:var(--bg-input); border:1px dashed var(--border-color); border-radius:12px; padding:30px 20px; text-align:center; color:var(--text-muted);">
-            <i data-lucide="hammer" style="width:36px; height:36px; margin-bottom:12px; color:var(--primary-color);"></i>
-            <p style="margin:0; font-size:0.95rem; line-height:1.5;"><strong>¡En construcción!</strong><br><br>Estoy trabajando para implementar las notificaciones reales más adelante. :)</p>
+        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:20px; text-align:left; color:var(--text-muted); display:flex; flex-direction:column; gap:16px; max-height:60vh; overflow-y:auto;">
+            <!-- Aviso 1: Perfil -->
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i data-lucide="user-plus" style="width: 20px; height: 20px; color: var(--secondary-color); flex-shrink: 0; margin-top: 2px;"></i>
+                <div>
+                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡Completa tu Perfil!</strong>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">¿Eres jugador/a, entrenador/a, exjugador o staff? Ve a la pestaña de <strong>Perfil</strong> (el icono de la personita abajo) y solicita tus insignias oficiales para lucirlas junto a tu nombre.</p>
+                </div>
+            </div>
+            <!-- Separator -->
+            <div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>
+            <!-- Aviso 2: Predicción Anual -->
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i data-lucide="alert-triangle" style="width: 20px; height: 20px; color: #e67e22; flex-shrink: 0; margin-top: 2px;"></i>
+                <div>
+                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">¡No olvides tu Predicción Anual!</strong>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">Tienes hasta el <strong>9 de Octubre</strong> para rellenar los puntos totales de la temporada de cada equipo. Desliza hasta el <strong>final de la pestaña de Partidos</strong> para completarla antes de que se agote el tiempo.</p>
+                </div>
+            </div>
         </div>
         
         <button onclick="document.getElementById('notificacionesModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>
