@@ -662,6 +662,7 @@ export async function onRequestPost(context) {
         const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes"').all();
         let updatedCount = 0;
         for (const r of rawPartidos || []) {
+            if (r.Estado === 'CERRADO') continue;
             if (r.Fecha && r.ID_Partido) {
                 const parts = r.Fecha.trim().split(' ');
                 if (parts.length >= 1) {
