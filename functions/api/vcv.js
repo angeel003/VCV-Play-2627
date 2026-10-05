@@ -699,7 +699,8 @@ export async function onRequestPost(context) {
                 }
             }
         }
-        return jsonResponse({ status: 'success', message: 'Timestamps corregidos: ' + updatedCount });
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); } catch(e) {}
+        return jsonResponse({ status: 'success', message: 'Timestamps corregidos y Caché borrada: ' + updatedCount });
     }
 
     if (action === 'clear_cache') {
