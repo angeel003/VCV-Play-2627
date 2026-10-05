@@ -472,7 +472,7 @@ export async function onRequestPost(context) {
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
             if (utcDay === 1) u.setUTCDate(u.getUTCDate() + 0);
-            u.setUTCHours(16, 30, 0, 0); // 18:30 verano / 17:30 invierno
+            u.setUTCHours(16, 0, 0, 0); // 18:00 verano / 17:00 invierno
             unfreezeTime = u.getTime();
 
             // Si todava no hemos superado la hora de descongelacin del lunes
