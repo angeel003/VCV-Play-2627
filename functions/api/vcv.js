@@ -365,9 +365,13 @@ export async function onRequestPost(context) {
                 // 1. Calendario: Entran todos los permitidos
                 todosPartidos.push(pCopy);
 
-                // 2. Cartelera: Solo los que están a <= 7 días o ya pasados
+                // 2. Cartelera: Solo los que están a <= 7 días, que tengan fecha, y que no hayan pasado más de 48h desde el inicio
                 const pCartelera = { ...pCopy };
-                if (!pCartelera.timestamp || (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000)) {
+                let noTimestamp = !pCartelera.timestamp;
+                let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
+                let isTooOld = pCartelera.timestamp && (Date.now() - pCartelera.timestamp > 48 * 60 * 60 * 1000);
+                
+                if (noTimestamp || isTooFarFuture || isTooOld) {
                     pCartelera.visibilidad = "OCULTAR";
                 } else {
                     pCartelera.visibilidad = "MOSTRAR";
