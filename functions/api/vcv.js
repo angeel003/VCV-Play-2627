@@ -14,6 +14,16 @@ function jsonResponse(data, status = 200) {
     });
 }
 
+function getMadridTimestamp(year, month, day, hour, minute) {
+    const d = new Date(Date.UTC(year, month, day, hour, minute));
+    const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    const formatted = formatter.format(d);
+    const match = formatted.match(/(\d\d)\/(\d\d)\/(\d{4}), (\d\d):(\d\d):(\d\d)/);
+    if (!match) return d.getTime();
+    const diffMs = Date.UTC(parseInt(match[3]), parseInt(match[2])-1, parseInt(match[1]), parseInt(match[4])) - Date.UTC(year, month, day, hour);
+    return d.getTime() - diffMs;
+}
+
 export async function onRequestOptions() {
     return new Response(null, {
         headers: {
@@ -84,7 +94,7 @@ export async function onRequestPost(context) {
                             minute = parseInt(timeParts[1], 10);
                         }
                     }
-                    ts = new Date(year, month, day, hour, minute).getTime();
+                    ts = getMadridTimestamp(year, month, day, hour, minute);
                 }
             }
         }
@@ -703,8 +713,7 @@ export async function onRequestPost(context) {
                                 minute = parseInt(timeParts[1], 10);
                             }
                         }
-                        const dt = new Date(Date.UTC(year, month, day, hour, minute));
-                        const newTs = dt.getTime();
+                        const newTs = getMadridTimestamp(year, month, day, hour, minute);
                         if (r.timestamp !== newTs) {
                             await db.prepare('UPDATE "Ajustes" SET timestamp = ? WHERE "ID_Partido" = ?').bind(newTs, r.ID_Partido).run();
                             updatedCount++;
