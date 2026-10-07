@@ -1677,7 +1677,7 @@
             </label>
             <div id="insAvatarContainer" style="display:none; margin-top:6px;">
                 <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
-                    <input type="file" id="insAvatarFile" accept="image/*" style="display: none;" onchange="uploadToImgBB(this)">
+                    <input type="file" id="insAvatarFile" accept="image/*" style="display: none;" onchange="uploadToImgBB(this, 'insAvatarUrl', 'avatarUploadStatus')">
                     <button type="button" onclick="document.getElementById('insAvatarFile').click()" style="padding: 6px 12px; background: var(--secondary-color); color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">🖼️ Subir Imagen</button>
                     <span id="avatarUploadStatus" style="font-size: 0.75rem; color: var(--text-muted);">Sin foto</span>
                 </div>
@@ -1690,8 +1690,13 @@
               <input type="checkbox" id="insCustom" onchange="document.getElementById('insCustomContainer').style.display = this.checked ? 'block' : 'none'"> Insignia Personalizada
             </label>
             <div id="insCustomContainer" style="display:none; margin-top:6px;">
-                <input type="text" id="insCustomEmoji" class="form-control" placeholder="Emoji (🦁), link de imagen, o descríbela y la busco" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
-                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Puedes poner un Emoji, pegar un enlace directo a una imagen, o simplemente decirme qué quieres (ej: "un león") y yo me encargo.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                    <input type="file" id="insCustomFile" accept="image/*" style="display: none;" onchange="uploadToImgBB(this, 'insCustomEmoji', 'customUploadStatus')">
+                    <button type="button" onclick="document.getElementById('insCustomFile').click()" style="padding: 6px 12px; background: var(--secondary-color); color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">🖼️ Subir Imagen</button>
+                    <span id="customUploadStatus" style="font-size: 0.75rem; color: var(--text-muted);">Sin foto</span>
+                </div>
+                <input type="text" id="insCustomEmoji" class="form-control" placeholder="Pega un link, o pon un Emoji (🦁)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto, pon un emoji, o descríbela y la busco.</p>
                 <input type="text" id="insCustomDesc" class="form-control" placeholder="Título de la insignia (ej: MVP Copa 2026)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
             </div>
           </div>
@@ -1957,11 +1962,11 @@ function sanitizeImgUrl(url) {
     return url;
 }
 
-async function uploadToImgBB(input) {
+async function uploadToImgBB(input, targetUrlId, targetStatusId) {
     const file = input.files[0];
     if (!file) return;
 
-    const statusSpan = document.getElementById('avatarUploadStatus');
+    const statusSpan = document.getElementById(targetStatusId);
     statusSpan.textContent = "Subiendo...";
     statusSpan.style.color = "#3498db";
 
@@ -1978,7 +1983,7 @@ async function uploadToImgBB(input) {
         const data = await response.json();
 
         if (data.success) {
-            document.getElementById('insAvatarUrl').value = data.data.url;
+            document.getElementById(targetUrlId).value = data.data.url;
             statusSpan.textContent = "¡Subida con éxito!";
             statusSpan.style.color = "#2ecc71";
         } else {
