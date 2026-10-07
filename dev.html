@@ -2837,9 +2837,10 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             
             let myBadges = data.insignias ? (data.insignias[currentUser] || []) : [];
             let insigniasHTML = "";
-            if (myBadges.length > 0) {
+            let displayMyBadges = myBadges.filter(b => b.type !== 'avatar');
+            if (displayMyBadges.length > 0) {
                 insigniasHTML += `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">`;
-                myBadges.forEach(b => {
+                displayMyBadges.forEach(b => {
                     let cssColorClass = getBadgeCSS(b.type);
                     insigniasHTML += `<div style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-general); border:1px solid var(--border-color);">${renderBadgeIcon(b, "badge-icon", "width:12px; height:12px;")}<span style="color:var(--text-muted); font-weight:600;">${b.text}</span></div>`;
                 });
@@ -2955,7 +2956,8 @@ document.getElementById('btnLogin').addEventListener('click', function() {
 
             // Calculate Rank from Global Leaderboard
             if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); } else { setTimeout(() => { if(typeof window.updateHeaderStats === "function") window.updateHeaderStats(); }, 500); }
-            misInsignias.forEach(b => {
+            let displayMisInsignias = misInsignias.filter(b => b.type !== 'avatar');
+            displayMisInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
                 let cssColorClass = getBadgeCSS(b.type);
                 insigniasHeaderHtml += renderBadgeIcon(b, "badge-header", "width:18px; height:18px; cursor:pointer;").replace(">", ` title="${b.text}" onclick="showMobileTooltip(event, \'${b.text}\')">`);
