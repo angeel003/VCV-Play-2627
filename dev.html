@@ -1973,7 +1973,7 @@ function sanitizeImgUrl(url) {
 async function directDeleteAvatar() {
     if(!confirm("¿Estás seguro de que quieres borrar tu foto de perfil al instante?")) return;
     try {
-        let res = await fetch(API_URL, { 
+        let res = await fetchSeguro(scriptURL, { 
             method: 'POST', 
             body: JSON.stringify({ action: 'delete_avatar', usuario: localStorage.getItem('vcv_usuario'), password: localStorage.getItem('vcv_password') }), 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
@@ -1999,7 +1999,7 @@ async function directDeleteAvatar() {
 async function directDeleteCustomBadge() {
     if(!confirm("¿Estás seguro de que quieres borrar tu insignia personalizada al instante?")) return;
     try {
-        let res = await fetch(API_URL, { 
+        let res = await fetchSeguro(scriptURL, { 
             method: 'POST', 
             body: JSON.stringify({ action: 'delete_custom_badge', usuario: localStorage.getItem('vcv_usuario'), password: localStorage.getItem('vcv_password') }), 
             headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
