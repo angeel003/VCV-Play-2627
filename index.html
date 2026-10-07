@@ -2156,6 +2156,28 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                                 details += `<b>Entrenador/a de:</b> ${payloadObj.entrenador_de || '-'}<br>`;
                                 details += `<b>Exjugador/a:</b> ${payloadObj.exjugador === 'X' ? 'Sí' : 'No'}<br>`;
                                 details += `<b>Staff:</b> ${payloadObj.staff || '-'}`;
+                                
+                                if (payloadObj.lesionado === 'X') {
+                                    details += `<br><b style="color:#ff3b30;">Lesionado:</b> Sí (${payloadObj.lesionado_desc || 'Sin detalles'})`;
+                                }
+                                if (payloadObj.custom === 'X') {
+                                    details += `<br><br><b>Insignia Personalizada:</b> Sí<br>`;
+                                    details += `<i>Título:</i> ${payloadObj.custom_desc || '-'}<br>`;
+                                    
+                                    let icon = (payloadObj.custom_emoji || '').trim();
+                                    let preview = '';
+                                    if (icon) {
+                                        if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif')) {
+                                            let src = icon.includes('/') ? icon : 'files/images/' + icon;
+                                            preview = `<img loading="lazy" src="${src}" style="max-width:24px; max-height:24px; vertical-align:middle; border-radius:4px;">`;
+                                        } else if (icon.startsWith('http')) {
+                                            preview = `<img loading="lazy" src="${icon}" style="max-width:24px; max-height:24px; vertical-align:middle; border-radius:4px;">`;
+                                        } else {
+                                            preview = `<span style="font-size:1.5rem; vertical-align:middle;">${icon}</span>`;
+                                        }
+                                        details += `<i>Solicita:</i> ${icon} ${preview}`;
+                                    }
+                                }
                             } else {
                                 details = `<b>Añadir a ${req.Tipo}:</b> ${req.Equipo_Externo}`;
                             }
