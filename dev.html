@@ -1684,7 +1684,7 @@
                 <input type="text" id="insAvatarUrl" class="form-control" placeholder="El link aparecerá aquí automáticamente" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pega directamente un link de imagen.</p>
                                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button type="button" onclick="directDeleteAvatar()" style="flex:1; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Foto Directamente</button>
+                    <button type="button" id="btnDeleteAvatar" onclick="directDeleteAvatar()" style="flex:1; display:none; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Foto Directamente</button>
                 </div>
             </div>
           </div>
@@ -1703,7 +1703,7 @@
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pon directamente el emoji que quieras.</p>
                 <input type="text" id="insCustomDesc" class="form-control" placeholder="Título de la insignia (ej: MVP Copa 2026)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
                                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button type="button" onclick="directDeleteCustomBadge()" style="flex:1; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Insignia Directamente</button>
+                    <button type="button" id="btnDeleteCustom" onclick="directDeleteCustomBadge()" style="flex:1; display:none; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Insignia Directamente</button>
                 </div>
             </div>
           </div>
@@ -1972,12 +1972,12 @@ function sanitizeImgUrl(url) {
 
 async function directDeleteAvatar() {
     if(!confirm("¿Estás seguro de que quieres borrar tu foto de perfil al instante?")) return;
-    const formData = new URLSearchParams();
-    formData.append('action', 'delete_avatar');
-    formData.append('usuario', localStorage.getItem('vcv_usuario'));
-    formData.append('password', localStorage.getItem('vcv_password'));
     try {
-        let res = await fetch(API_URL, { method: 'POST', body: formData });
+        let res = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'delete_avatar', usuario: localStorage.getItem('vcv_usuario'), password: localStorage.getItem('vcv_password') }), 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        });
         let data = await res.json();
         if (data.status === 'success') {
             mostrarToast("Foto borrada.");
@@ -1998,12 +1998,12 @@ async function directDeleteAvatar() {
 
 async function directDeleteCustomBadge() {
     if(!confirm("¿Estás seguro de que quieres borrar tu insignia personalizada al instante?")) return;
-    const formData = new URLSearchParams();
-    formData.append('action', 'delete_custom_badge');
-    formData.append('usuario', localStorage.getItem('vcv_usuario'));
-    formData.append('password', localStorage.getItem('vcv_password'));
     try {
-        let res = await fetch(API_URL, { method: 'POST', body: formData });
+        let res = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'delete_custom_badge', usuario: localStorage.getItem('vcv_usuario'), password: localStorage.getItem('vcv_password') }), 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        });
         let data = await res.json();
         if (data.status === 'success') {
             mostrarToast("Insignia borrada.");
@@ -5488,16 +5488,30 @@ function loadInsigniasUI() {
               document.getElementById('insLesionado').checked = (raw["Lesionado"] === "X");
               if(raw["Lesionado"] === "X") document.getElementById('insLesionadoDesc').style.display = 'block';
               document.getElementById('insLesionadoDesc').value = raw["Lesion_Desc"] || '';
+              
               document.getElementById('insCustom').checked = (raw["Custom_Badge"] === "X");
-              if(raw["Custom_Badge"] === "X") document.getElementById('insCustomContainer').style.display = 'block';
+              if(raw["Custom_Badge"] === "X") {
+                  document.getElementById('insCustomContainer').style.display = 'block';
+                  if(document.getElementById('btnDeleteCustom')) document.getElementById('btnDeleteCustom').style.display = 'block';
+              } else {
+                  if(document.getElementById('btnDeleteCustom')) document.getElementById('btnDeleteCustom').style.display = 'none';
+              }
               document.getElementById('insCustomEmoji').value = raw["Custom_Emoji"] || '';
               document.getElementById('insCustomDesc').value = raw["Custom_Desc"] || '';
+
+              
               
               if(document.getElementById('insAvatar')) {
                   document.getElementById('insAvatar').checked = (raw["Avatar"] === "X");
-                  if(raw["Avatar"] === "X") document.getElementById('insAvatarContainer').style.display = 'block';
+                  if(raw["Avatar"] === "X") {
+                      document.getElementById('insAvatarContainer').style.display = 'block';
+                      if(document.getElementById('btnDeleteAvatar')) document.getElementById('btnDeleteAvatar').style.display = 'block';
+                  } else {
+                      if(document.getElementById('btnDeleteAvatar')) document.getElementById('btnDeleteAvatar').style.display = 'none';
+                  }
                   document.getElementById('insAvatarUrl').value = raw["Avatar_Url"] || '';
               }
+
           }
 
     }
