@@ -360,6 +360,11 @@ export async function onRequestPost(context) {
                     insigniasMap[u].push({ type: 'custom', text: (b.Custom_Desc || 'Insignia'), emoji: (b.Custom_Emoji || '✨') });
                 }
             }
+            if (b.Avatar === "X" && b.Avatar_Url) {
+                if (!insigniasMap[u].some(badge => badge.type === 'avatar')) {
+                    insigniasMap[u].push({ type: 'avatar', emoji: b.Avatar_Url });
+                }
+            }
         }
 
         // Cartelera y todos_partidos (preservando derbis)
