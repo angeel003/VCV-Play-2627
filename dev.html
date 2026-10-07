@@ -1941,13 +1941,25 @@ function formatFecha(ts) {
     return d.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
 }
 
+function sanitizeImgUrl(url) {
+    if(!url) return "";
+    url = url.trim();
+    if(url.startsWith('https://imgur.com/') && !url.includes('/a/') && !url.includes('/gallery/')) {
+        let id = url.split('imgur.com/')[1].split('?')[0];
+        if(id && !id.includes('.')) {
+            return `https://i.imgur.com/${id}.jpeg`;
+        }
+    }
+    return url;
+}
+
 
 function renderBadgeIcon(b, sizeClasses, extraStyles) {
     if (b.type === 'lesionado') {
         return `<span style="font-size:${extraStyles.includes('12px') ? '11px' : '20px'}; margin-right:4px; color: #ff3b30; font-weight: 900; line-height: 1;">✚</span>`;
     }
     if (b.type === 'custom') {
-        let icon = b.emoji || '✨';
+        let icon = sanitizeImgUrl(b.emoji || '✨');
         if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif')) {
             let src = icon.includes('/') ? icon : 'files/images/' + icon;
             return `<img loading="lazy" src="${src}" class="${sizeClasses}" style="${extraStyles}">`;
@@ -2174,27 +2186,27 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                                     details += `<br><br><b>Insignia Personalizada:</b> Sí<br>`;
                                     details += `<i>Título:</i> ${payloadObj.custom_desc || '-'}<br>`;
                                     
-                                    let icon = (payloadObj.custom_emoji || '').trim();
+                                    let rawIcon = (payloadObj.custom_emoji || '').trim();
+                                    let icon = sanitizeImgUrl(rawIcon);
                                     let preview = '';
                                     if (icon) {
-                                        if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif')) {
-                                            let src = icon.includes('/') ? icon : 'files/images/' + icon;
+                                        if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                                            let src = icon.includes('/') || icon.startsWith('http') ? icon : 'files/images/' + icon;
                                             preview = `<img loading="lazy" src="${src}" style="max-width:24px; max-height:24px; vertical-align:middle; border-radius:4px;">`;
-                                        } else if (icon.startsWith('http')) {
-                                            preview = `<img loading="lazy" src="${icon}" style="max-width:24px; max-height:24px; vertical-align:middle; border-radius:4px;">`;
                                         } else {
                                             preview = `<span style="font-size:1.5rem; vertical-align:middle;">${icon}</span>`;
                                         }
-                                        details += `<i>Solicita:</i> ${icon} ${preview}`;
+                                        details += `<i>Solicita:</i> ${rawIcon} ${preview}`;
                                     }
                                 }
                                 if (payloadObj.avatar === 'X') {
                                     details += `<br><br><b>Foto de Perfil:</b> Sí<br>`;
-                                    let url = (payloadObj.avatar_url || '').trim();
+                                    let rawUrl = (payloadObj.avatar_url || '').trim();
+                                    let url = sanitizeImgUrl(rawUrl);
                                     if (url.startsWith('http')) {
-                                        details += `<a href="${url}" target="_blank">${url}</a><br><img loading="lazy" src="${url}" style="max-width:60px; max-height:60px; border-radius:8px; margin-top:4px;">`;
+                                        details += `<a href="${url}" target="_blank">${rawUrl}</a><br><img loading="lazy" src="${url}" style="max-width:60px; max-height:60px; border-radius:8px; margin-top:4px;">`;
                                     } else {
-                                        details += `<i>Link inválido o no proporcionado:</i> ${url}`;
+                                        details += `<i>Link inválido o no proporcionado:</i> ${rawUrl}`;
                                     }
                                 }
                             } else {
@@ -4645,10 +4657,10 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let customBadge = uBadges.find(b => b.type === 'custom');
         
         if (avatarBadge && avatarBadge.emoji) {
-            let url = avatarBadge.emoji.trim();
+            let url = sanitizeImgUrl(avatarBadge.emoji.trim());
             initialsEl.innerHTML = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
         } else if (customBadge) {
-            let icon = (customBadge.emoji || '✨').trim();
+            let icon = sanitizeImgUrl((customBadge.emoji || '✨').trim());
             if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
                 let src = icon.includes('/') || icon.startsWith('http') ? icon : 'files/images/' + icon;
                 initialsEl.innerHTML = `<img loading="lazy" src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
@@ -5029,12 +5041,12 @@ window.renderRankingV2 = function() {
                 
                 let isAvatarCustom = false;
                 if (avatarBadge && avatarBadge.emoji) {
-                    let url = avatarBadge.emoji.trim();
+                    let url = sanitizeImgUrl(avatarBadge.emoji.trim());
                     initials = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
                     isAvatarCustom = true;
                 } else if (customBadge) {
-                    let icon = (customBadge.emoji || '✨').trim();
-                    if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                    let icon = sanitizeImgUrl((customBadge.emoji || '✨').trim());
+                    if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.jpeg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
                         let src = icon.includes('/') || icon.startsWith('http') ? icon : 'files/images/' + icon;
                         initials = `<img loading="lazy" src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
                     } else {
@@ -5408,10 +5420,10 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
       let les = document.getElementById('insLesionado').checked;
       let lesDesc = document.getElementById('insLesionadoDesc').value.trim();
       let custom = document.getElementById('insCustom').checked;
-      let customEmoji = document.getElementById('insCustomEmoji').value.trim();
+      let customEmoji = sanitizeImgUrl(document.getElementById('insCustomEmoji').value.trim());
       let customDesc = document.getElementById('insCustomDesc').value.trim();
       let avatar = document.getElementById('insAvatar') ? document.getElementById('insAvatar').checked : false;
-      let avatarUrl = document.getElementById('insAvatarUrl') ? document.getElementById('insAvatarUrl').value.trim() : '';
+      let avatarUrl = document.getElementById('insAvatarUrl') ? sanitizeImgUrl(document.getElementById('insAvatarUrl').value.trim()) : '';
 
 
     let payload = {
@@ -5497,7 +5509,7 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
         <button onclick="document.getElementById('playerInfoModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
-        <div style="width:64px; height:64px; border-radius:14px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 1.5rem; font-weight: 900; color: #fff;" id="playerInfoInitials">
+        <div style="width:96px; height:96px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2.2rem; font-weight: 900; color: #fff;" id="playerInfoInitials">
             ...
         </div>
         <h3 id="playerInfoName" style="margin:0 0 4px; font-size:1.2rem; color:var(--text-main);">@username</h3>
