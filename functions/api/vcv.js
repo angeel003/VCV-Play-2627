@@ -911,8 +911,25 @@ export async function onRequestPost(context) {
             return jsonResponse({status: 'success', message: msg});
         }
     }
+    if (action === 'update_profile_images') {
+        const { payload } = body;
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
-    
+        const existingIns = await db.prepare('SELECT * FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!existingIns) {
+            await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(usuario).run();
+        }
+
+        let avatarX = payload.avatar ? "X" : "";
+        let customX = payload.custom ? "X" : "";
+
+        await db.prepare('UPDATE "Insignias" SET "Avatar" = ?, "Avatar_Url" = ?, "Custom_Badge" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ? WHERE "Usuario" = ?')
+            .bind(avatarX, payload.avatar_url || '', customX, payload.custom_emoji || '', payload.custom_desc || '', usuario).run();
+
+        return jsonResponse({status: 'success', message: 'Guardado correctamente.'});
+    }
+
     if (action === 'request_badge_update') {
         const { payload } = body;
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
