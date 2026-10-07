@@ -4842,16 +4842,18 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
         
         // --- INSIGNIAS ---
+        let displayBadges = uBadges.filter(b => b.type !== 'avatar');
         let badgesHtml = "";
-        if(uBadges.length === 0) {
+        if(displayBadges.length === 0) {
             badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
         } else {
-            uBadges.forEach(b => {
+            displayBadges.forEach(b => {
                 let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
+                let text = (b.text || '').replace(/, /g, " - ");
                 badgesHtml += `
                   <div style="display:flex; align-items:center; gap: 12px;">
                       ${renderBadgeIcon(b, "badge-icon", "width:24px; height:24px;")}
-                      <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${b.text.replace(/, /g, " - ")}</span>
+                      <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${text}</span>
                   </div>`;
             });
         }
@@ -4956,9 +4958,10 @@ window.renderRankingV2 = function() {
 
         const buildBadgesInline = (jugador) => {
             let uBadges = data.insignias[jugador] || [];
-            if(uBadges.length === 0) return "";
+            let displayBadges = uBadges.filter(b => b.type !== 'avatar');
+            if(displayBadges.length === 0) return "";
             let html = "";
-            uBadges.forEach(b => {
+            displayBadges.forEach(b => {
                 let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
                 html += renderBadgeIcon(b, "badge-icon", "width:16px; height:16px; margin-left:4px; display:inline-block; vertical-align:middle;");
             });
