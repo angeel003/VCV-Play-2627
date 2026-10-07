@@ -352,6 +352,12 @@ export async function onRequestPost(context) {
             if (b["Entrenador de"]) addBadge('entrenador', b["Entrenador de"]);
             if (b["Jugador de"]) addBadge('jugador', b["Jugador de"]);
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
+            if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
+            if (b.Custom_Badge === "X") {
+                if (!insigniasMap[u].some(badge => badge.type === 'custom' && badge.text === (b.Custom_Desc || 'Insignia'))) {
+                    insigniasMap[u].push({ type: 'custom', text: (b.Custom_Desc || 'Insignia'), emoji: (b.Custom_Emoji || '✨') });
+                }
+            }
         }
 
         // Cartelera y todos_partidos (preservando derbis)
@@ -942,8 +948,8 @@ export async function onRequestPost(context) {
                 if (!existingIns) {
                     await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(userToUpdate).run();
                 }
-                await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ? WHERE "Usuario" = ?')
-                    .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', userToUpdate).run();
+                await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ?, "Lesionado" = ?, "Lesion_Desc" = ?, "Custom_Badge" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ? WHERE "Usuario" = ?')
+                    .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', payloadObj.lesionado || '', payloadObj.lesionado_desc || '', payloadObj.custom || '', payloadObj.custom_emoji || '', payloadObj.custom_desc || '', userToUpdate).run();
             } else {
                 const userToUpdate = peticion.Usuario;
                 const tipo = peticion.Tipo; 
