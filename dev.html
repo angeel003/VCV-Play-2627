@@ -1676,8 +1676,12 @@
               <input type="checkbox" id="insAvatar" onchange="document.getElementById('insAvatarContainer').style.display = this.checked ? 'block' : 'none'"> Foto de Perfil
             </label>
             <div id="insAvatarContainer" style="display:none; margin-top:6px;">
-                <input type="text" id="insAvatarUrl" class="form-control" placeholder="Pega aquí el enlace de la imagen" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
-                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube tu foto a <a href="https://imgur.com/upload" target="_blank" style="color:var(--secondary-color);">Imgur</a> y pega aquí el enlace.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                    <input type="file" id="insAvatarFile" accept="image/*" style="display: none;" onchange="uploadToImgBB(this)">
+                    <button type="button" onclick="document.getElementById('insAvatarFile').click()" style="padding: 6px 12px; background: var(--secondary-color); color: white; border: none; border-radius: 6px; font-size: 0.8rem; cursor: pointer;">🖼️ Subir Imagen</button>
+                    <span id="avatarUploadStatus" style="font-size: 0.75rem; color: var(--text-muted);">Sin foto</span>
+                </div>
+                <input type="text" id="insAvatarUrl" class="form-control" placeholder="El link aparecerá aquí automáticamente" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
             </div>
           </div>
           
@@ -1951,6 +1955,42 @@ function sanitizeImgUrl(url) {
         }
     }
     return url;
+}
+
+async function uploadToImgBB(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const statusSpan = document.getElementById('avatarUploadStatus');
+    statusSpan.textContent = "Subiendo...";
+    statusSpan.style.color = "#3498db";
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const API_KEY = 'e972b481c99f7bf7a305bebab9e14a04'; // Reemplazar con API Key
+
+    try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('insAvatarUrl').value = data.data.url;
+            statusSpan.textContent = "¡Subida con éxito!";
+            statusSpan.style.color = "#2ecc71";
+        } else {
+            statusSpan.textContent = "Error al subir";
+            statusSpan.style.color = "#e74c3c";
+            console.error(data);
+        }
+    } catch (err) {
+        statusSpan.textContent = "Error de red";
+        statusSpan.style.color = "#e74c3c";
+        console.error(err);
+    }
 }
 
 
