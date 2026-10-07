@@ -1683,9 +1683,8 @@
                 </div>
                 <input type="text" id="insAvatarUrl" class="form-control" placeholder="El link aparecerá aquí automáticamente" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pega directamente un link de imagen.</p>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button type="button" onclick="directSaveImages()" style="flex:1; padding: 6px; background: #2ecc71; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">💾 Guardar Foto</button>
-                    <button type="button" onclick="document.getElementById('insAvatarUrl').value=''; document.getElementById('avatarUploadStatus').textContent='Sin foto'; directSaveImages()" style="padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar</button>
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" onclick="directDeleteAvatar()" style="flex:1; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Foto Directamente</button>
                 </div>
             </div>
           </div>
@@ -1703,9 +1702,8 @@
                 <input type="text" id="insCustomEmoji" class="form-control" placeholder="Pega un link, o pon un Emoji (🦁)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pon directamente el emoji que quieras.</p>
                 <input type="text" id="insCustomDesc" class="form-control" placeholder="Título de la insignia (ej: MVP Copa 2026)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button type="button" onclick="directSaveImages()" style="flex:1; padding: 6px; background: #2ecc71; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">💾 Guardar Insignia</button>
-                    <button type="button" onclick="document.getElementById('insCustomEmoji').value=''; document.getElementById('insCustomDesc').value=''; document.getElementById('customUploadStatus').textContent='Sin foto'; directSaveImages()" style="padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar</button>
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button type="button" onclick="directDeleteCustomBadge()" style="flex:1; padding: 6px; background: #e74c3c; color: white; border: none; border-radius: 6px; font-weight:bold; cursor: pointer;">🗑️ Borrar Insignia Directamente</button>
                 </div>
             </div>
           </div>
@@ -1971,32 +1969,52 @@ function sanitizeImgUrl(url) {
     return url;
 }
 
-async function directSaveImages() {
-    let custom = document.getElementById('insCustom').checked;
-    let customEmoji = sanitizeImgUrl(document.getElementById('insCustomEmoji').value.trim());
-    let customDesc = document.getElementById('insCustomDesc').value.trim();
-    let avatar = document.getElementById('insAvatar') ? document.getElementById('insAvatar').checked : false;
-    let avatarUrl = document.getElementById('insAvatarUrl') ? sanitizeImgUrl(document.getElementById('insAvatarUrl').value.trim()) : '';
 
-    let payload = {
-        custom: custom, custom_emoji: customEmoji, custom_desc: customDesc,
-        avatar: avatar, avatar_url: avatarUrl
-    };
-
+async function directDeleteAvatar() {
+    if(!confirm("¿Estás seguro de que quieres borrar tu foto de perfil al instante?")) return;
     const formData = new URLSearchParams();
-    formData.append('action', 'update_profile_images');
+    formData.append('action', 'delete_avatar');
     formData.append('usuario', localStorage.getItem('vcv_usuario'));
     formData.append('password', localStorage.getItem('vcv_password'));
-    formData.append('body', JSON.stringify({ payload }));
-
     try {
         let res = await fetch(API_URL, { method: 'POST', body: formData });
         let data = await res.json();
         if (data.status === 'success') {
-            mostrarToast("Guardado instantáneo completado.");
-            cargarDatosAntiguos(); // Refresh app data
+            mostrarToast("Foto borrada.");
+            if(document.getElementById('insAvatarUrl')) document.getElementById('insAvatarUrl').value = '';
+            if(document.getElementById('avatarUploadStatus')) document.getElementById('avatarUploadStatus').textContent = 'Sin foto';
+            if(document.getElementById('insAvatar')) {
+                document.getElementById('insAvatar').checked = false;
+                document.getElementById('insAvatarContainer').style.display = 'none';
+            }
+            cargarDatosAntiguos();
         } else {
-            mostrarToast("Error al guardar: " + data.message);
+            mostrarToast("Error al borrar: " + data.message);
+        }
+    } catch(e) {
+        mostrarToast("Error de conexión");
+    }
+}
+
+async function directDeleteCustomBadge() {
+    if(!confirm("¿Estás seguro de que quieres borrar tu insignia personalizada al instante?")) return;
+    const formData = new URLSearchParams();
+    formData.append('action', 'delete_custom_badge');
+    formData.append('usuario', localStorage.getItem('vcv_usuario'));
+    formData.append('password', localStorage.getItem('vcv_password'));
+    try {
+        let res = await fetch(API_URL, { method: 'POST', body: formData });
+        let data = await res.json();
+        if (data.status === 'success') {
+            mostrarToast("Insignia borrada.");
+            document.getElementById('insCustomEmoji').value = '';
+            document.getElementById('insCustomDesc').value = '';
+            document.getElementById('customUploadStatus').textContent = 'Sin foto';
+            document.getElementById('insCustom').checked = false;
+            document.getElementById('insCustomContainer').style.display = 'none';
+            cargarDatosAntiguos();
+        } else {
+            mostrarToast("Error al borrar: " + data.message);
         }
     } catch(e) {
         mostrarToast("Error de conexión");
@@ -2027,7 +2045,6 @@ async function uploadToImgBB(input, targetUrlId, targetStatusId) {
             document.getElementById(targetUrlId).value = data.data.url;
             statusSpan.textContent = "¡Subida con éxito!";
             statusSpan.style.color = "#2ecc71";
-            directSaveImages();
         } else {
             statusSpan.textContent = "Error al subir";
             statusSpan.style.color = "#e74c3c";
