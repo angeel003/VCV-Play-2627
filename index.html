@@ -1673,6 +1673,16 @@
           
           <div class="form-group" style="margin-bottom: 16px;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-main);">
+              <input type="checkbox" id="insAvatar" onchange="document.getElementById('insAvatarContainer').style.display = this.checked ? 'block' : 'none'"> Foto de Perfil
+            </label>
+            <div id="insAvatarContainer" style="display:none; margin-top:6px;">
+                <input type="text" id="insAvatarUrl" class="form-control" placeholder="Pega aquí el enlace de la imagen" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube tu foto a <a href="https://imgur.com/upload" target="_blank" style="color:var(--secondary-color);">Imgur</a> y pega aquí el enlace.</p>
+            </div>
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-main);">
               <input type="checkbox" id="insCustom" onchange="document.getElementById('insCustomContainer').style.display = this.checked ? 'block' : 'none'"> Insignia Personalizada
             </label>
             <div id="insCustomContainer" style="display:none; margin-top:6px;">
@@ -2176,6 +2186,15 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                                             preview = `<span style="font-size:1.5rem; vertical-align:middle;">${icon}</span>`;
                                         }
                                         details += `<i>Solicita:</i> ${icon} ${preview}`;
+                                    }
+                                }
+                                if (payloadObj.avatar === 'X') {
+                                    details += `<br><br><b>Foto de Perfil:</b> Sí<br>`;
+                                    let url = (payloadObj.avatar_url || '').trim();
+                                    if (url.startsWith('http')) {
+                                        details += `<a href="${url}" target="_blank">${url}</a><br><img loading="lazy" src="${url}" style="max-width:60px; max-height:60px; border-radius:8px; margin-top:4px;">`;
+                                    } else {
+                                        details += `<i>Link inválido o no proporcionado:</i> ${url}`;
                                     }
                                 }
                             } else {
@@ -4622,7 +4641,23 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         
         if(!modal) return;
         
-        initialsEl.innerText = jugador.substring(0,2).toUpperCase();
+        let avatarBadge = uBadges.find(b => b.type === 'avatar');
+        let customBadge = uBadges.find(b => b.type === 'custom');
+        
+        if (avatarBadge && avatarBadge.emoji) {
+            let url = avatarBadge.emoji.trim();
+            initialsEl.innerHTML = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+        } else if (customBadge) {
+            let icon = (customBadge.emoji || '✨').trim();
+            if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                let src = icon.includes('/') || icon.startsWith('http') ? icon : 'files/images/' + icon;
+                initialsEl.innerHTML = `<img loading="lazy" src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+            } else {
+                initialsEl.innerHTML = `<span style="font-size:2.5rem; line-height:1;">${icon}</span>`;
+            }
+        } else {
+            initialsEl.innerHTML = jugador.substring(0,2).toUpperCase();
+        }
         nameEl.innerText = "@" + jugador;
         
         // Use nombre_real instead of role under the username
@@ -4987,16 +5022,38 @@ window.renderRankingV2 = function() {
             const renderSlot = (rankIndex, slotClass) => {
                 if(rankIndex >= ranking.length) return `<div class="podium-slot ${slotClass}"></div>`;
                 let r = ranking[rankIndex];
+                let uBadges = window.appData && window.appData.insignias ? (window.appData.insignias[r.jugador] || []) : [];
+                let avatarBadge = uBadges.find(b => b.type === 'avatar');
+                let customBadge = uBadges.find(b => b.type === 'custom');
                 let initials = r.jugador.substring(0,2).toUpperCase();
+                
+                let isAvatarCustom = false;
+                if (avatarBadge && avatarBadge.emoji) {
+                    let url = avatarBadge.emoji.trim();
+                    initials = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+                    isAvatarCustom = true;
+                } else if (customBadge) {
+                    let icon = (customBadge.emoji || '✨').trim();
+                    if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                        let src = icon.includes('/') || icon.startsWith('http') ? icon : 'files/images/' + icon;
+                        initials = `<img loading="lazy" src="${src}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+                    } else {
+                        initials = `<span style="font-size: 2.2rem; line-height:1;">${icon}</span>`;
+                    }
+                    isAvatarCustom = true;
+                }
+
                 let isFirst = rankIndex === 0;
                 let rankNum = r.realRank;
                 
                 let avatarContent = isFirst ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown crown-icon" style="width: 22px; height: 22px;"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg>${initials}` : initials;
                 let textColor = isFirst ? 'var(--secondary-color)' : (rankIndex === 1 ? '#ced6e0' : '#e58e26');
                 
+                let customStyle = isAvatarCustom ? 'background: transparent; border: none; box-shadow: none;' : '';
+
                 return `
                 <div class="podium-slot ${slotClass}">
-                    <div class="podium-avatar">${avatarContent}</div>
+                    <div class="podium-avatar" style="${customStyle}">${avatarContent}</div>
                     <div class="podium-bar">
                         <div style="display:flex; align-items:center; margin-bottom: 2px;">
                             <span style="font-weight: ${isFirst ? '900' : '800'}; font-size: ${isFirst ? '1rem' : '0.9rem'}; color: ${textColor};">${rankNum}º</span>
@@ -5306,6 +5363,12 @@ function loadInsigniasUI() {
               if(raw["Custom_Badge"] === "X") document.getElementById('insCustomContainer').style.display = 'block';
               document.getElementById('insCustomEmoji').value = raw["Custom_Emoji"] || '';
               document.getElementById('insCustomDesc').value = raw["Custom_Desc"] || '';
+              
+              if(document.getElementById('insAvatar')) {
+                  document.getElementById('insAvatar').checked = (raw["Avatar"] === "X");
+                  if(raw["Avatar"] === "X") document.getElementById('insAvatarContainer').style.display = 'block';
+                  document.getElementById('insAvatarUrl').value = raw["Avatar_Url"] || '';
+              }
           }
 
     }
@@ -5314,6 +5377,18 @@ function loadInsigniasUI() {
 document.getElementById('btnRequestInsignias').addEventListener('click', function() {
     let btn = this;
     let msgBox = document.getElementById('msgRequestInsignias');
+    
+    let lastReq = localStorage.getItem('lastBadgeRequestTime');
+    let now = Date.now();
+    if (lastReq && (now - parseInt(lastReq)) < 60000) {
+        let remaining = Math.ceil((60000 - (now - parseInt(lastReq))) / 1000);
+        msgBox.style.display = "block";
+        msgBox.className = "alert-box alert-error";
+        msgBox.style.background = "#ffcccb";
+        msgBox.style.color = "#c0392b";
+        msgBox.innerText = `Por favor, espera ${remaining} segundos antes de enviar otra petición.`;
+        return;
+    }
     
     let gen = document.querySelector('input[name="ins_genero"]:checked').value;
     
@@ -5335,6 +5410,8 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
       let custom = document.getElementById('insCustom').checked;
       let customEmoji = document.getElementById('insCustomEmoji').value.trim();
       let customDesc = document.getElementById('insCustomDesc').value.trim();
+      let avatar = document.getElementById('insAvatar') ? document.getElementById('insAvatar').checked : false;
+      let avatarUrl = document.getElementById('insAvatarUrl') ? document.getElementById('insAvatarUrl').value.trim() : '';
 
 
     let payload = {
@@ -5347,10 +5424,13 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
         lesionado_desc: lesDesc,
         custom: custom ? 'X' : '',
         custom_emoji: customEmoji,
-        custom_desc: customDesc
+        custom_desc: customDesc,
+        avatar: avatar ? 'X' : '',
+        avatar_url: avatarUrl
     };
 
     btn.disabled = true; msgBox.style.display = "none";
+    localStorage.setItem('lastBadgeRequestTime', Date.now().toString());
     fetchSeguro(scriptURL, { 
         method: 'POST', 
         body: JSON.stringify({ action: 'request_badge_update', usuario: currentUser, password: currentPassword, payload: JSON.stringify(payload) }), 
