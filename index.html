@@ -1682,6 +1682,7 @@
                     <span id="avatarUploadStatus" style="font-size: 0.75rem; color: var(--text-muted);">Sin foto</span>
                 </div>
                 <input type="text" id="insAvatarUrl" class="form-control" placeholder="El link aparecerá aquí automáticamente" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pega directamente un link de imagen.</p>
             </div>
           </div>
           
@@ -1696,7 +1697,7 @@
                     <span id="customUploadStatus" style="font-size: 0.75rem; color: var(--text-muted);">Sin foto</span>
                 </div>
                 <input type="text" id="insCustomEmoji" class="form-control" placeholder="Pega un link, o pon un Emoji (🦁)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem; margin-bottom: 2px;">
-                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto, pon un emoji, o descríbela y la busco.</p>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin: 0 0 8px 4px; line-height: 1.2;">Sube una foto con el botón, o pon directamente el emoji que quieras.</p>
                 <input type="text" id="insCustomDesc" class="form-control" placeholder="Título de la insignia (ej: MVP Copa 2026)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.8rem;">
             </div>
           </div>
@@ -4702,8 +4703,12 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let customBadge = uBadges.find(b => b.type === 'custom');
         
         if (avatarBadge && avatarBadge.emoji) {
-            let url = sanitizeImgUrl(avatarBadge.emoji.trim());
-            initialsEl.innerHTML = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+            let icon = sanitizeImgUrl(avatarBadge.emoji.trim());
+            if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.jpeg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                initialsEl.innerHTML = `<img loading="lazy" src="${icon}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit;">`;
+            } else {
+                initialsEl.innerHTML = `<span style="font-size:2.5rem; line-height:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">${icon}</span>`;
+            }
         } else if (customBadge) {
             let icon = sanitizeImgUrl((customBadge.emoji || '✨').trim());
             if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
@@ -5089,8 +5094,12 @@ window.renderRankingV2 = function() {
                 
                 let isAvatarCustom = false;
                 if (avatarBadge && avatarBadge.emoji) {
-                    let url = sanitizeImgUrl(avatarBadge.emoji.trim());
-                    initials = `<img loading="lazy" src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+                    let icon = sanitizeImgUrl(avatarBadge.emoji.trim());
+                    if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.jpeg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif') || icon.startsWith('http')) {
+                        initials = `<img loading="lazy" src="${icon}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+                    } else {
+                        initials = `<span style="font-size: 2.2rem; line-height:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">${icon}</span>`;
+                    }
                     isAvatarCustom = true;
                 } else if (customBadge) {
                     let icon = sanitizeImgUrl((customBadge.emoji || '✨').trim());
