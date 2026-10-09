@@ -3286,7 +3286,7 @@ let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.
             if(data.equipos_totales && data.equipos_totales.length > 0) {
                 
                 
-                let isClosed = new Date().getTime() >= new Date("2026-10-09T23:59:59").getTime();
+                let isClosed = new Date().getTime() >= new Date("2026-10-10T12:00:00").getTime();
                 
                 let htmlTot = ``;
                 
@@ -3504,7 +3504,7 @@ function iniciarRelojes() {
 
 function iniciarRelojTotales() {
     if(intervalTotalesCountdown) clearInterval(intervalTotalesCountdown);
-    const deadline = new Date("2026-10-09T23:59:59").getTime();
+    const deadline = new Date("2026-10-10T12:00:00").getTime();
     intervalTotalesCountdown = setInterval(() => {
         const el = document.getElementById('relojTotales');
         if(!el) return;
