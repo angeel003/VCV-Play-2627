@@ -740,7 +740,14 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'clear_cache') {
-        return jsonResponse({ status: 'success', message: '¡Cloudflare D1 está sincronizado siempre en tiempo real! No hay caché.' });
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        
+        try { 
+            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); 
+        } catch(e) {}
+        
+        return jsonResponse({ status: 'success', message: 'Caché borrada. Las clasificaciones se recalcularán al recargar la web.' });
     }
 
     // ADMIN: ADD USER
