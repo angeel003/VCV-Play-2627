@@ -448,9 +448,11 @@
 
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
-    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; cursor: grab; user-select: none; -webkit-user-select: none; }
     .category-filter-strip:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
     .category-filter-strip::-webkit-scrollbar { display: none; }
+    .category-filter-strip.is-dragging, #league-slider-container.is-dragging { cursor: grabbing !important; }
+    #league-slider-container { cursor: grab; user-select: none; -webkit-user-select: none; }
     .cat-filter-btn { padding: 6px 14px; border-radius: 9999px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
     .cat-filter-btn:hover { border-color: var(--secondary-color); color: var(--text-main); }
     .cat-filter-btn.active { background: var(--secondary-color); color: #000; border-color: var(--secondary-color); font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
@@ -6251,6 +6253,69 @@ window.aplicarIndicesBD = async function(e) {
         if (btn) { btn.disabled = false; btn.innerText = oldText; }
     }
 };
+
+// --- SOPORTE DE DESPLAZAMIENTO HORIZONTAL EN PC (RUEDA DEL RATÓN + CLICK & DRAG) ---
+(function() {
+    let activeDragSlider = null;
+    let dragStartX = 0;
+    let dragInitialScroll = 0;
+    let didDrag = false;
+
+    function getSlider(target) {
+        if (!target || !target.closest) return null;
+        return target.closest('.category-filter-strip, #league-slider-container, .horizontal-drag-scroll');
+    }
+
+    // 1. Rueda del ratón horizontal
+    window.addEventListener('wheel', function(e) {
+        const slider = getSlider(e.target);
+        if (slider && slider.scrollWidth > slider.clientWidth) {
+            // Si la rueda se mueve en vertical y no en horizontal
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                slider.scrollLeft += e.deltaY;
+            }
+        }
+    }, { passive: false });
+
+    // 2. Click & Drag (Arrastrar con el cursor)
+    window.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return; // Solo clic izquierdo
+        const slider = getSlider(e.target);
+        if (slider && slider.scrollWidth > slider.clientWidth) {
+            activeDragSlider = slider;
+            didDrag = false;
+            dragStartX = e.pageX;
+            dragInitialScroll = slider.scrollLeft;
+            slider.classList.add('is-dragging');
+        }
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!activeDragSlider) return;
+        const walk = e.pageX - dragStartX;
+        if (Math.abs(walk) > 4) {
+            didDrag = true;
+        }
+        activeDragSlider.scrollLeft = dragInitialScroll - walk;
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (activeDragSlider) {
+            activeDragSlider.classList.remove('is-dragging');
+            activeDragSlider = null;
+            setTimeout(function() { didDrag = false; }, 60);
+        }
+    });
+
+    // 3. Prevenir clic accidental en botones si el usuario ha arrastrado
+    window.addEventListener('click', function(e) {
+        if (didDrag) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+    }, true);
+})();
 </script>
 </body>
 
