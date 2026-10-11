@@ -62,13 +62,39 @@ export async function onRequestPost(context) {
     const usuario = (body.usuario || "").trim();
     const password = (body.password || "").trim();
 
-    // 1. PING
-    if (action === 'migrate_db') {
+    // 1. PING & MIGRACIONES / ÍNDICES
+    if (action === 'migrate_db' || action === 'apply_indexes') {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
         try { await db.prepare("CREATE TABLE IF NOT EXISTS Peticiones_Insignias (id_peticion INTEGER PRIMARY KEY AUTOINCREMENT, Usuario TEXT, Tipo TEXT, Equipo_Externo TEXT, Estado TEXT, Fecha TEXT)").run(); } catch(e) {}
-        return jsonResponse({status: 'success'});
+        
+        const indexQueries = [
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario ON "Usuarios"("Usuario")',
+            'CREATE INDEX IF NOT EXISTS idx_usuarios_login ON "Usuarios"("Usuario", "Password")',
+            'CREATE INDEX IF NOT EXISTS idx_ajustes_id_partido ON "Ajustes"("ID_Partido")',
+            'CREATE INDEX IF NOT EXISTS idx_ajustes_vis_ts ON "Ajustes"("Visibilidad", "timestamp")',
+            'CREATE INDEX IF NOT EXISTS idx_ajustes_estado ON "Ajustes"("Estado")',
+            'CREATE INDEX IF NOT EXISTS idx_porras_usuario ON "Porras"("Usuario")',
+            'CREATE INDEX IF NOT EXISTS idx_porras_usuario_partido ON "Porras"("Usuario", "ID Partido")',
+            'CREATE INDEX IF NOT EXISTS idx_porras_id_partido ON "Porras"("ID Partido")',
+            'CREATE INDEX IF NOT EXISTS idx_pred_secretas_usuario ON "Predicciones_Secretas"("Usuario")',
+            'CREATE INDEX IF NOT EXISTS idx_pred_secretas_usuario_equipo ON "Predicciones_Secretas"("Usuario", "Equipo")',
+            'CREATE INDEX IF NOT EXISTS idx_insignias_usuario ON "Insignias"("Usuario")',
+            'CREATE INDEX IF NOT EXISTS idx_ligas_jugador ON "Ligas"("Jugador")',
+            'CREATE INDEX IF NOT EXISTS idx_permisos_equipos_jugador ON "Permisos_Equipos"("Jugador")',
+            'CREATE INDEX IF NOT EXISTS idx_permisos_secreta_usuario ON "Permisos_Secreta"("Usuario")',
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_resultados_id_partido ON "Resultados_Oficiales"("ID Partido")',
+            'CREATE INDEX IF NOT EXISTS idx_notificaciones_vis_ts ON "Notificaciones"("Visibilidad", "timestamp", "ID")',
+            'CREATE INDEX IF NOT EXISTS idx_peticiones_nombre_estado ON "Peticiones_Nombre"("Estado")',
+            'CREATE INDEX IF NOT EXISTS idx_peticiones_insignias_estado ON "Peticiones_Insignias"("Estado")',
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_cache_app_clave ON "Cache_App"("clave")',
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_ligas_config_liga ON "Ligas_Config"("Liga")'
+        ];
+        for (const iq of indexQueries) {
+            try { await db.prepare(iq).run(); } catch(e) {}
+        }
+        return jsonResponse({status: 'success', message: 'Migración e índices optimizados aplicados con éxito.'});
     }
     if (action === "ping") {
         return jsonResponse({ status: "ok" });
@@ -160,15 +186,19 @@ export async function onRequestPost(context) {
             }
         }
 
-        // Borrar porras previas de estos partidos para este usuario (equivalente a deleteRow)
+        // Optimización: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
+        const batchStmts = [];
+        const nowStr = new Date().toLocaleString("es-ES");
         for (const idPart in preds) {
-            await db.prepare('DELETE FROM "Porras" WHERE "Usuario" = ? AND "ID Partido" = ?').bind(usuario, idPart).run();
+            batchStmts.push(db.prepare('DELETE FROM "Porras" WHERE "Usuario" = ? AND "ID Partido" = ?').bind(usuario, idPart));
             const p = preds[idPart];
             if (p.sets) {
-                const nowStr = new Date().toLocaleString("es-ES");
-                await db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local") VALUES (?, ?, ?, ?, ?, ?)')
-                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo).run();
+                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local") VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo));
             }
+        }
+        if (batchStmts.length > 0) {
+            await db.batch(batchStmts);
         }
         return jsonResponse({ status: "success", message: "Predicciones guardadas correctamente." });
     }
@@ -184,14 +214,18 @@ export async function onRequestPost(context) {
         }
 
         const totals = body.predicciones_totales || {};
+        const batchTotales = [];
+        const nowStrTotales = new Date().toLocaleString("es-ES");
         for (const eq in totals) {
-            await db.prepare('DELETE FROM "Predicciones_Secretas" WHERE "Usuario" = ? AND "Equipo" = ?').bind(usuario, eq).run();
+            batchTotales.push(db.prepare('DELETE FROM "Predicciones_Secretas" WHERE "Usuario" = ? AND "Equipo" = ?').bind(usuario, eq));
             const pts = totals[eq];
             if (pts !== "" && !isNaN(parseInt(pts))) {
-                const nowStr = new Date().toLocaleString("es-ES");
-                await db.prepare('INSERT INTO "Predicciones_Secretas" ("Fecha", "Usuario", "Equipo", "Puntos Predichos") VALUES (?, ?, ?, ?)')
-                    .bind(nowStr, usuario, eq, pts.toString()).run();
+                batchTotales.push(db.prepare('INSERT INTO "Predicciones_Secretas" ("Fecha", "Usuario", "Equipo", "Puntos Predichos") VALUES (?, ?, ?, ?)')
+                    .bind(nowStrTotales, usuario, eq, pts.toString()));
             }
+        }
+        if (batchTotales.length > 0) {
+            await db.batch(batchTotales);
         }
         return jsonResponse({ status: "success", message: "¡Tus predicciones a final de temporada han sido guardadas!" });
     }
