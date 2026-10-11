@@ -1537,153 +1537,163 @@
     </section>
     <section id="enlacesRfevbSection" style=" padding-bottom:30px;">
 
-<div class="vcv-card" id="adminPanelWrapper" style="display: none; margin-bottom:20px; border: 2px dashed #e67e22; background: rgba(230, 126, 34, 0.08); border-radius: 16px; padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+<div class="vcv-card" id="adminPanelWrapper" style="display: none; margin-bottom:20px; border: 2px dashed #e67e22; background: rgba(230, 126, 34, 0.08); border-radius: 16px; padding: 0; overflow: hidden;">
+    <details id="adminMainDetails" style="width: 100%;">
+        <summary style="padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; list-style: none;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="shield-alert" aria-hidden="true" style="color: #e67e22; width: 22px; height: 22px;" class="lucide lucide-shield-alert"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert" style="color: #e67e22;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
             <h3 style="font-size: 1.05rem; font-weight: 800; color: #e67e22; margin:0;">Intranet Administrador</h3>
           </div>
-          <span style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
-        </div>
-
-        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 14px;">
-          Panel de control enlazado directamente a tu Google Sheet de base de datos.
-        </p>
-
-        <style>
-          details.admin-collapsible summary {
-            list-style: none;
-          }
-          details.admin-collapsible summary::-webkit-details-marker {
-            display: none;
-          }
-          details.admin-collapsible summary::after {
-            content: '▼';
-            font-size: 0.65rem;
-            transition: transform 0.2s ease;
-            color: var(--text-muted);
-            margin-left: 8px;
-          }
-          details.admin-collapsible[open] summary::after {
-            transform: rotate(180deg);
-          }
-        </style>
-
-        <!-- 1. Botones de Control Servidor -->
-        <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">⚡ Controles y Sincronización Servidor</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Auto-Permisos
-              </button>
-              <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnForceSyncExcel">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-ccw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg> Sincronizar Fechas
-              </button>
-              <button class="btn" id="btnAdminClearCache" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e74c3c; background:rgba(231, 76, 60, 0.1); color:#e74c3c; font-weight:bold;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg> Recalcular Puntos
-              </button>
-            </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
+            <span class="admin-main-arrow" style="color: #e67e22; font-size: 0.75rem; transition: transform 0.2s;">▼</span>
           </div>
-        </details>
+        </summary>
+        <div style="padding: 0 20px 20px 20px; border-top: 1px solid rgba(230, 126, 34, 0.2);">
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin: 12px 0 14px 0;">
+            Panel de control enlazado directamente a tu base de datos Cloudflare D1.
+          </p>
 
-        <!-- 2. Herramienta Congelar Ligas (Fin de Semana) -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.12), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">❄️ Congelar Rankings en Fin de Semana</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.2);">
-            <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px; line-height:1.3;">
-              Marca qué ligas ocultarán sus resultados del fin de semana hasta el lunes a las 18:00. Las ligas desmarcadas sumarán puntos <b>siempre en directo</b>.
-            </p>
-            <div id="adminLigasCongelarCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-              <span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>
-            </div>
-            <button class="btn" id="btnSaveLigasFreeze" style="width:100%; padding: 10px; font-size: 0.85rem; background:#3498db; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(52,152,219,0.2);" onclick="guardarAjusteLigasFreeze(event)">
-              💾 Guardar Ajuste de Ligas
-            </button>
-          </div>
-        </details>
+          <style>
+            details#adminMainDetails summary::-webkit-details-marker { display: none; }
+            details#adminMainDetails[open] summary .admin-main-arrow { transform: rotate(180deg); }
+            details.admin-collapsible summary {
+              list-style: none;
+            }
+            details.admin-collapsible summary::-webkit-details-marker {
+              display: none;
+            }
+            details.admin-collapsible summary::after {
+              content: '▼';
+              font-size: 0.65rem;
+              transition: transform 0.2s ease;
+              color: var(--text-muted);
+              margin-left: 8px;
+            }
+            details.admin-collapsible[open] summary::after {
+              transform: rotate(180deg);
+            }
+          </style>
 
-        <!-- 3. Formulario Crear Nuevo Usuario -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">➕ Añadir Nuevo Usuario</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-            <div class="form-group" style="margin-bottom:8px;">
-              <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-            </div>
-            <div class="form-group" style="margin-bottom:8px;">
-              <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-            </div>
-            <div class="form-group" style="margin-bottom:8px;">
-              <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-            </div>
-            <div class="form-group" style="margin-bottom:12px;">
-              <label style="font-size: 0.75rem; color:var(--text-muted);">Inscribir a Ligas:</label>
-              <div id="adminLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
-                <!-- Populated by JS -->
+          <!-- 1. Botones de Control Servidor -->
+          <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">⚡ Controles y Sincronización Servidor</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Auto-Permisos
+                </button>
+                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnForceSyncExcel">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-ccw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg> Sincronizar Fechas
+                </button>
+                <button class="btn" id="btnAdminClearCache" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e74c3c; background:rgba(231, 76, 60, 0.1); color:#e74c3c; font-weight:bold;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg> Recalcular Puntos
+                </button>
               </div>
             </div>
-            <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
-              Crear Usuario en Sheets
-            </button>
-          </div>
-        </details>
+          </details>
 
-        <!-- 4. Herramienta Aprobación Nombres -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">👤 Peticiones de Cambio de Nombre</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
-            <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
-                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
-            </button>
-            <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-        </details>
+          <!-- 2. Herramienta Congelar Ligas (Fin de Semana) -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.12), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">❄️ Congelar Rankings en Fin de Semana</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.2);">
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px; line-height:1.3;">
+                Marca qué ligas ocultarán sus resultados del fin de semana hasta el lunes a las 18:00. Las ligas desmarcadas sumarán puntos <b>siempre en directo</b>.
+              </p>
+              <div id="adminLigasCongelarCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                <span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>
+              </div>
+              <button class="btn" id="btnSaveLigasFreeze" style="width:100%; padding: 10px; font-size: 0.85rem; background:#3498db; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(52,152,219,0.2);" onclick="guardarAjusteLigasFreeze(event)">
+                💾 Guardar Ajuste de Ligas
+              </button>
+            </div>
+          </details>
 
-        <!-- 5. Peticiones de Insignias -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">🛡️ Peticiones de Insignias</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
-            <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
-                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
-            </button>
-            <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
-          </div>
-        </details>
+          <!-- 3. Formulario Crear Nuevo Usuario -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">➕ Añadir Nuevo Usuario</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size: 0.75rem; color:var(--text-muted);">Inscribir a Ligas:</label>
+                <div id="adminLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
+                Crear Usuario en Sheets
+              </button>
+            </div>
+          </details>
 
-        <!-- 6. Subida Rápida de Resultados y Links -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-            <div id="adminListaPartidos"></div>
-          </div>
-        <!-- 7. Optimización y Rendimiento de BD -->
-        <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-          <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #27ae60; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-            <span style="display:flex; align-items:center; gap:6px;">⚡ Optimización de Base de Datos</span>
-          </summary>
-          <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.3;">Crea y activa los índices compuestos de alto rendimiento en Cloudflare D1 (clasificaciones, porras y autenticación instantáneas).</p>
-            <button id="btnApplyDbIndexes" class="btn btn-primary btn-block" style="background: #27ae60; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; width:100%; box-shadow: 0 4px 6px rgba(46,204,113,0.2);" onclick="aplicarIndicesBD(event)">
-                🚀 Aplicar Índices de Rendimiento en D1
-            </button>
-            <div id="adminDbIndexesStatus" style="font-size: 0.8rem; margin-top: 8px;"></div>
-          </div>
-        </details>
-      </div>
+          <!-- 4. Herramienta Aprobación Nombres -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">👤 Peticiones de Cambio de Nombre</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
+              <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
+              </button>
+              <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </details>
+
+          <!-- 5. Peticiones de Insignias -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🛡️ Peticiones de Insignias</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
+              <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
+              </button>
+              <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </details>
+
+          <!-- 6. Subida Rápida de Resultados y Links -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div id="adminListaPartidos"></div>
+            </div>
+          </details>
+
+          <!-- 7. Optimización y Rendimiento de BD -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #27ae60; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">⚡ Optimización de Base de Datos</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.3;">Crea y activa los índices compuestos de alto rendimiento en Cloudflare D1 (clasificaciones, porras y autenticación instantáneas).</p>
+              <button id="btnApplyDbIndexes" class="btn btn-primary btn-block" style="background: #27ae60; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; width:100%; box-shadow: 0 4px 6px rgba(46,204,113,0.2);" onclick="aplicarIndicesBD(event)">
+                  🚀 Aplicar Índices de Rendimiento en D1
+              </button>
+              <div id="adminDbIndexesStatus" style="font-size: 0.8rem; margin-top: 8px;"></div>
+            </div>
+          </details>
+        </div>
+    </details>
+</div>
 
       <!-- TARJETA DE PERFIL PROPIO (Estilo popup de jugador) -->
       <div id="myProfileCardContainer" style="margin-bottom: 20px;"></div>
