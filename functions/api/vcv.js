@@ -515,19 +515,53 @@ export async function onRequestPost(context) {
             }
         }
         
+        // --- CONFIGURACION DE LIGAS CONGELADAS (Ligas_Config) ---
+        let ligasCongeladasSet = new Set(todasLasLigas);
+        try {
+            await db.prepare('CREATE TABLE IF NOT EXISTS "Ligas_Config" ("Liga" TEXT PRIMARY KEY, "Congelar" TEXT DEFAULT \'SI\')').run();
+            const { results: cfgRows } = await db.prepare('SELECT * FROM "Ligas_Config"').all();
+            if (cfgRows && cfgRows.length > 0) {
+                ligasCongeladasSet = new Set();
+                for (const row of cfgRows) {
+                    const val = (row.Congelar || "").toString().trim().toUpperCase();
+                    if (val === "SI" || val === "X" || val === "1" || val === "TRUE") {
+                        ligasCongeladasSet.add(row.Liga);
+                    }
+                }
+            } else {
+                for (const lName of todasLasLigas) {
+                    await db.prepare('INSERT OR IGNORE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, \'SI\')').bind(lName).run();
+                }
+            }
+        } catch(e) {
+            console.error("Error Ligas_Config:", e);
+        }
+
         const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
+        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN' : 'statsLigas';
 
         let userPointsInLiga = {};
+        let statsLigas = {};
         const cacheRow = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(cacheKey).first();
         if (cacheRow && cacheRow.valor) {
             try { userPointsInLiga = JSON.parse(cacheRow.valor); } catch(e) {}
         }
+        const statsCacheRow = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(statsCacheKey).first();
+        if (statsCacheRow && statsCacheRow.valor) {
+            try { statsLigas = JSON.parse(statsCacheRow.valor); } catch(e) {}
+        }
 
-        if (Object.keys(userPointsInLiga).length === 0) {
+        if (Object.keys(userPointsInLiga).length === 0 || Object.keys(statsLigas).length === 0) {
+            userPointsInLiga = {};
+            statsLigas = {};
             const { results: allPorras } = await db.prepare('SELECT * FROM "Porras"').all();
             for (const u of allUsers || []) {
                 userPointsInLiga[u.Usuario] = {};
-                for (const lName of todasLasLigas) userPointsInLiga[u.Usuario][lName] = 0;
+                statsLigas[u.Usuario] = {};
+                for (const lName of todasLasLigas) {
+                    userPointsInLiga[u.Usuario][lName] = 0;
+                    statsLigas[u.Usuario][lName] = { porJornada: {} };
+                }
             }
 
             const mapPartidos = {};
@@ -565,11 +599,20 @@ export async function onRequestPost(context) {
                     pts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
-                                if (isFrozen && p.timestamp >= freezeCutoff) {
+                const jNum = parseInt(p.ronda_global) || 1;
+
+                if (isFrozen && p.timestamp >= freezeCutoff) {
                     for (const lName in ligasMap) {
                         if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
-                            const pendKey = "_pendientes_" + lName;
-                            userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + pts;
+                            if (ligasCongeladasSet.has(lName)) {
+                                const pendKey = "_pendientes_" + lName;
+                                userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + pts;
+                            } else {
+                                userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
+                                if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
+                                    statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
+                                }
+                            }
                         }
                     }
                     continue;
@@ -577,10 +620,14 @@ export async function onRequestPost(context) {
                 for (const lName in ligasMap) {
                     if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
                         userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
+                        if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
+                            statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
+                        }
                     }
                 }
             }
             await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(cacheKey, JSON.stringify(userPointsInLiga), Date.now()).run();
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(statsCacheKey, JSON.stringify(statsLigas), Date.now()).run();
         }
 
         // Formatear clasificaciones por liga
@@ -588,6 +635,7 @@ export async function onRequestPost(context) {
         const clasificacionesFormateadas = {};
         for (const lName of misLigas) {
             const ranking = [];
+            const isThisLigaFrozen = isFrozen && ligasCongeladasSet.has(lName);
             for (const row of allLigasRows || []) {
                 const uName = row.Jugador;
                 if (row[lName] && row[lName].toString().toUpperCase() === "X") {
@@ -595,7 +643,7 @@ export async function onRequestPost(context) {
                         jugador: uName,
                         nombre_real: mapNombresReales[uName] || uName,
                         puntos: (userPointsInLiga[uName] && userPointsInLiga[uName][lName]) || 0,
-                        puntos_pendientes: (userPointsInLiga[uName] && userPointsInLiga[uName]["_pendientes_" + lName]) || 0
+                        puntos_pendientes: isThisLigaFrozen ? ((userPointsInLiga[uName] && userPointsInLiga[uName]["_pendientes_" + lName]) || 0) : 0
                     });
                 }
             }
@@ -626,6 +674,7 @@ export async function onRequestPost(context) {
             status: "success",
             notificaciones: notificaciones,
             is_frozen: isFrozen,
+            ligas_congeladas: Array.from(ligasCongeladasSet),
             unfreeze_time: unfreezeTime,
             jornada: rondaAbierta,
             equipos: cartelera,
@@ -635,7 +684,7 @@ export async function onRequestPost(context) {
             todas_las_ligas: todasLasLigas,
             ligas_equipos: ligasEqRows,
             clasificaciones: clasificacionesFormateadas,
-            stats_ligas: {},
+            stats_ligas: statsLigas,
             nombre_real: userRow["Nombre Real"] || userRow.Usuario,
             correo: userRow["Correo"] || "",
             insignias: insigniasMap,
@@ -735,8 +784,23 @@ export async function onRequestPost(context) {
                 }
             }
         }
-        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); } catch(e) {}
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
         return jsonResponse({ status: 'success', message: 'Timestamps corregidos y Caché borrada: ' + updatedCount });
+    }
+
+    if (action === 'save_ligas_config') {
+        const { config } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        for (const lName in config || {}) {
+            const val = config[lName] ? 'SI' : 'NO';
+            await db.prepare('INSERT OR REPLACE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, ?)').bind(lName, val).run();
+        }
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
+        return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y caché reseteada.' });
     }
 
     if (action === 'clear_cache') {
@@ -744,7 +808,7 @@ export async function onRequestPost(context) {
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         try { 
-            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); 
+            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); 
         } catch(e) {}
         
         return jsonResponse({ status: 'success', message: 'Caché borrada. Las clasificaciones se recalcularán al recargar la web.' });
@@ -816,7 +880,7 @@ export async function onRequestPost(context) {
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
-        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%'").run(); } catch(e) {}
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
         return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
     }
