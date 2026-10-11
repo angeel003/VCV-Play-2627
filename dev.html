@@ -4846,7 +4846,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let targetUser = jugador || loggedUser;
         if (targetUser !== loggedUser) isViewingOther = true;
 
-        let isFrozenThisLiga = data.is_frozen && (data.ligas_congeladas ? data.ligas_congeladas.includes(ligaName) : true);
+        let isFrozenThisLiga = Boolean(data.is_frozen && (data.ligas_congeladas ? data.ligas_congeladas.some(l => String(l).trim().toLowerCase() === String(ligaName).trim().toLowerCase()) : true));
 
         // 1. Si es el propio usuario logueado y se permite ver partidos: desglose completo por jornada y partido
         if (!isViewingOther && targetUser === loggedUser && data.predicciones_usuario && (data.todos_partidos || data.equipos)) {
@@ -5386,7 +5386,7 @@ window.renderRankingV2 = function() {
         let totalJugadores = ranking.length;
 
         // Determinar si esta liga específica participa en el apagón de fin de semana
-        let isLigaFrozen = data.is_frozen && (!data.ligas_congeladas || data.ligas_congeladas.includes(ligaName));
+        let isLigaFrozen = Boolean(data.is_frozen && (!data.ligas_congeladas || data.ligas_congeladas.some(l => String(l).trim().toLowerCase() === String(ligaName).trim().toLowerCase())));
 
         // Si esta liga NO está congelada pero tenía puntos pendientes calculados por el fin de semana, sumarlos en vivo
         if (!isLigaFrozen && ranking.length > 0) {
@@ -5436,7 +5436,7 @@ window.renderRankingV2 = function() {
         });
         
         const getTrendHtml = (jugador, currentArrayIdx) => {
-            if (data.is_frozen) {
+            if (isLigaFrozen) {
                 return `<span style="color:#3498db; font-size:0.95rem; font-weight:800; display:flex; align-items:center;">❄️</span>`;
             }
             if (maxJornadaJugada <= 1 || previousRanking.length === 0) {
@@ -5645,14 +5645,14 @@ window.renderRankingV2 = function() {
             let pos = r.realRank;
 
             let pendingHtml = '';
-            if (data.is_frozen && r.puntos_pendientes > 0) {
+            if (isLigaFrozen && r.puntos_pendientes > 0) {
                 pendingHtml = `<span style="color: #e67e22; font-size: 0.95rem; margin-left: 6px; text-shadow:none;">+${r.puntos_pendientes} 🔥</span>`;
             }
 
-            let c2_class = data.is_frozen ? "vcv-card-v2 ranking-frozen-bg" : "vcv-card-v2";
-            let c2_bg = data.is_frozen ? "" : "background: rgba(106, 44, 112, 0.4);";
+            let c2_class = isLigaFrozen ? "vcv-card-v2 ranking-frozen-bg" : "vcv-card-v2";
+            let c2_bg = isLigaFrozen ? "" : "background: rgba(106, 44, 112, 0.4);";
             let c2_snow = '';
-            if (data.is_frozen) {
+            if (isLigaFrozen) {
                 for(let i=0; i<10; i++) {
                     let left = Math.random() * 95;
                     let dur = 3 + Math.random() * 7;
@@ -5667,7 +5667,7 @@ window.renderRankingV2 = function() {
                 ${c2_snow}
                 <div style="display: flex; justify-content: space-between; align-items: center; position:relative; z-index:2;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: ${data.is_frozen ? '#3498db' : 'var(--secondary-color)'}; color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: ${isLigaFrozen ? '#3498db' : 'var(--secondary-color)'}; color: #140818; display: flex; flex-direction:column; align-items: center; justify-content: center;">
                         <span style="font-weight: 900;">${pos}º</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
