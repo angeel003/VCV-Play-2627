@@ -134,22 +134,23 @@
 
     #mobileTooltip {
         position: fixed;
-        background: var(--vcv-morado);
-        color: var(--vcv-blanco);
+        background: #1e0e24 !important;
+        color: #ffffff !important;
         padding: 8px 14px;
-        border-radius: 6px;
+        border-radius: 8px;
         font-size: 0.85rem;
-        z-index: 9999;
+        z-index: 10000;
         pointer-events: none;
         opacity: 0;
         transition: opacity 0.2s ease;
         transform: translate(-50%, calc(-100% - 10px));
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0,0,0,0.5);
         white-space: normal;
         max-width: 250px;
         text-align: center;
-        font-weight: bold;
-        border: 1px solid var(--vcv-dorado);
+        font-weight: 700;
+        border: 1px solid var(--secondary-color, #d4af37);
+        backdrop-filter: none;
     }
     #mobileTooltip.show { opacity: 1; }
 
@@ -420,33 +421,251 @@
     
     
     #appSection {
-        padding-top: calc(env(safe-area-inset-top, 50px) + 75px);
+        padding-top: calc(env(safe-area-inset-top, 0px) + 70px) !important;
         padding-bottom: 80px;
         max-width: 500px;
         margin: 0 auto;
         width: 100%;
+        box-sizing: border-box;
     }
 
-    /* V2 TAILWIND-MIMIC HEADER CSS */
-    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding: 14px 18px; padding-top: calc(env(safe-area-inset-top, 50px) + 14px); z-index: 1000; }
-    .header-container-v2 { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto; }
-    .header-brand-v2 { display: flex; align-items: center; gap: 10px; }
-    .header-logo-circle { width:  44px; height:  44px; border-radius: 50%; background: linear-gradient(to top right, #6a2c70, #d4af37); padding: 2px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
-    .header-logo-inner { width: 100%; height: 100%; background: #240f28; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d4af37; }
-    .header-title-row { display: flex; align-items: center; gap: 6px; }
-    .header-title-text { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size:  1.2rem; letter-spacing: 0.05em; color: #fff; margin:0; line-height:1; }
-    .header-title-badge { background: rgba(212,175,55,0.2); color: #d4af37; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(212,175,55,0.3); }
-    .header-subtitle { font-size: 11px; color: #a1a1aa; font-weight: 500; margin:0; margin-top:3px; letter-spacing: -0.02em; }
-    .header-right-v2 { display: flex; align-items: center; gap: 8px; }
-    .header-user-chip { display: flex; align-items: center; gap: 6px; background: #221127; padding:  8px 12px; border-radius: 20px; border: 1px solid #3e1d45; }
-    .header-rank { font-size: 12px; color: #d4af37; font-weight: 700; }
-    .header-dot { width: 4px; height: 4px; border-radius: 50%; background: #71717a; }
-    .header-pts { font-size: 12px; font-weight: 600; color: #e4e4e7; }
-    .header-bell-btn { width:  40px; height:  40px; border-radius: 50%; background: #221127; border: 1px solid #3e1d45; color: #d4d4d8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-    .header-bell-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #160a19; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); animation: pulse-badge 2s infinite; }
+    /* V2 HEADER CSS */
+    .app-header-v2 {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background: rgba(22, 10, 25, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid #3e1d45;
+        padding: 10px 16px;
+        padding-top: calc(env(safe-area-inset-top, 0px) + 18px);
+        z-index: 1000;
+        box-sizing: border-box;
+    }
+    .header-container-v2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 500px;
+        margin: 0 auto;
+        width: 100%;
+        flex-wrap: nowrap;
+        gap: 8px;
+        box-sizing: border-box;
+    }
+    .header-brand-v2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .header-logo-circle {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border-radius: 50%;
+        background: linear-gradient(to top right, #6a2c70, #d4af37);
+        padding: 2px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .header-logo-inner {
+        width: 100%;
+        height: 100%;
+        background: #240f28;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #d4af37;
+    }
+    .header-logo-inner svg, .header-logo-inner i {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    .header-title-col {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        text-align: left;
+    }
+    .header-title-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .header-title-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 900;
+        font-size: 1.1rem;
+        letter-spacing: 0.03em;
+        color: #fff;
+        margin: 0;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    .header-title-badge {
+        background: rgba(212,175,55,0.2);
+        color: #d4af37;
+        font-size: 7.5px;
+        font-weight: 800;
+        padding: 1px 4px;
+        border-radius: 4px;
+        border: 1px solid rgba(212,175,55,0.3);
+        line-height: 1;
+        flex-shrink: 0;
+        display: inline-block;
+    }
+    .header-subtitle {
+        font-size: 10px;
+        color: #a1a1aa;
+        font-weight: 500;
+        margin: 0;
+        margin-top: 1px;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+        display: block;
+        max-width: 100%;
+    }
+    .header-right-v2 {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+    .header-user-chip {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #221127;
+        padding: 5px 10px;
+        border-radius: 20px;
+        border: 1px solid #3e1d45;
+        white-space: nowrap;
+    }
+    .header-rank {
+        font-size: 11px;
+        color: #d4af37;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .header-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #71717a;
+    }
+    .header-pts {
+        font-size: 11px;
+        font-weight: 600;
+        color: #e4e4e7;
+        white-space: nowrap;
+    }
+    .header-bell-btn {
+        width: 35px;
+        height: 35px;
+        min-width: 35px;
+        border-radius: 50%;
+        background: #221127;
+        border: 1px solid #3e1d45;
+        color: #d4d4d8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .header-bell-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: #e74c3c;
+        color: white;
+        font-size: 9px;
+        font-weight: bold;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #160a19;
+        box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+        animation: pulse-badge 2s infinite;
+    }
     @keyframes pulse-badge { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
+    @media (max-width: 380px) {
+        .app-header-v2 {
+            padding: 7px 12px;
+            padding-top: calc(env(safe-area-inset-top, 0px) + 15px);
+        }
+        .header-container-v2 {
+            gap: 5px;
+        }
+        .header-brand-v2 {
+            gap: 6px;
+        }
+        .header-logo-circle {
+            width: 33px;
+            height: 33px;
+            min-width: 33px;
+        }
+        .header-title-text {
+            font-size: 1rem;
+        }
+        .header-title-badge {
+            font-size: 7px;
+            padding: 1px 3px;
+        }
+        .header-subtitle {
+            font-size: 9.5px;
+        }
+        .header-user-chip {
+            padding: 4px 7px;
+            gap: 3px;
+        }
+        .header-rank, .header-pts {
+            font-size: 10px;
+        }
+        .header-bell-btn {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+        }
+        #appSection {
+            padding-top: calc(env(safe-area-inset-top, 0px) + 62px) !important;
+        }
+    }
+
 #h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
+
+    .user-badge-chip-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+    }
+    .user-badge-chip-icon img, .user-badge-chip-icon span {
+        margin: 0 !important;
+        vertical-align: middle !important;
+        display: block !important;
+    }
 
     .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; cursor: grab; user-select: none; -webkit-user-select: none; }
     .category-filter-strip:empty { display: none !important; margin: 0 !important; padding: 0 !important; }
@@ -1063,108 +1282,8 @@
         }
     }
 
-    /* V2 HEADER */
-    .app-header-v2 {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: auto;
-        background: var(--bg-card);
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 16px;
-        z-index: 1000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .header-brand-v2 h1 {
-        font-size: 1.25rem;
-        font-weight: 900;
-        margin: 0;
-        color: var(--text-main);
-        letter-spacing: -0.5px;
-        font-family: 'Space Grotesk', sans-serif;
-    }
-    .header-user-v2 {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 2px;
-    }
-    .header-user-name {
-        font-weight: 700;
-        color: var(--text-main);
-    }
-    .header-user-handle {
-        font-family: monospace;
-        opacity: 0.8;
-    }
-    .header-badges-v2 {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-    }
-    .header-badges-v2 img {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-    }
-    .header-actions-v2 {
-        display: flex;
-        align-items: center;
-    }
-    .bell-btn-v2 {
-        background: none;
-        border: none;
-        color: var(--text-main);
-        position: relative;
-        padding: 6px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .bell-dot-v2 {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 8px;
-        height: 8px;
-        background: var(--primary-color);
-        border-radius: 50%;
-        border: 2px solid var(--bg-card);
-    }
-    #appSection {
-        padding-top: calc(env(safe-area-inset-top, 50px) + 75px);
-        padding-bottom: 80px;
-        max-width: 500px;
-        margin: 0 auto;
-        width: 100%;
-    }
 
-    /* V2 TAILWIND-MIMIC HEADER CSS */
-    .app-header-v2 { position: fixed; top: 0; left: 0; width: 100%; background: rgba(22, 10, 25, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #3e1d45; padding: 14px 18px; padding-top: calc(env(safe-area-inset-top, 50px) + 14px); z-index: 1000; }
-    .header-container-v2 { display: flex; justify-content: space-between; align-items: center; max-width: 500px; margin: 0 auto; }
-    .header-brand-v2 { display: flex; align-items: center; gap: 10px; }
-    .header-logo-circle { width:  44px; height:  44px; border-radius: 50%; background: linear-gradient(to top right, #6a2c70, #d4af37); padding: 2px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; }
-    .header-logo-inner { width: 100%; height: 100%; background: #240f28; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #d4af37; }
-    .header-title-row { display: flex; align-items: center; gap: 6px; }
-    .header-title-text { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size:  1.2rem; letter-spacing: 0.05em; color: #fff; margin:0; line-height:1; }
-    .header-title-badge { background: rgba(212,175,55,0.2); color: #d4af37; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(212,175,55,0.3); }
-    .header-subtitle { font-size: 11px; color: #a1a1aa; font-weight: 500; margin:0; margin-top:3px; letter-spacing: -0.02em; }
-    .header-right-v2 { display: flex; align-items: center; gap: 8px; }
-    .header-user-chip { display: flex; align-items: center; gap: 6px; background: #221127; padding:  8px 12px; border-radius: 20px; border: 1px solid #3e1d45; }
-    .header-rank { font-size: 12px; color: #d4af37; font-weight: 700; }
-    .header-dot { width: 4px; height: 4px; border-radius: 50%; background: #71717a; }
-    .header-pts { font-size: 12px; font-weight: 600; color: #e4e4e7; }
-    .header-bell-btn { width:  40px; height:  40px; border-radius: 50%; background: #221127; border: 1px solid #3e1d45; color: #d4d4d8; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
-    .header-bell-badge { position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; font-size: 10px; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #160a19; box-shadow: 0 0 8px rgba(231, 76, 60, 0.8); animation: pulse-badge 2s infinite; }
-    @keyframes pulse-badge { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-#h2-user-badges img { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; }
 
     .category-filter-strip { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; scrollbar-width: none; -ms-overflow-style: none; max-width: 500px; margin-left: auto; margin-right: auto; }
     .category-filter-strip:empty, .category-filter-strip[style*="none"] { display: none !important; margin: 0 !important; padding: 0 !important; }
@@ -1482,13 +1601,13 @@
             <i data-lucide="volleyball" style="width:20px; height:20px;"></i>
           </div>
         </div>
-        <div>
+        <div class="header-title-col">
           <div class="header-title-row">
             <h1 class="header-title-text">VCV PLAY</h1>
             <span class="header-title-badge">26/27</span>
           </div>
-          <div class="header-subtitle" style="display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:4px;">
-            <span style="color: #a1a1aa; font-weight:500;">Valladolid Club Voleibol</span>
+          <div class="header-subtitle">
+            <span>Valladolid Club Voleibol</span>
           </div>
         </div>
       </div>
@@ -2184,13 +2303,38 @@ function getBadgeCSS(type) {
 function showMobileTooltip(e, text) {
     e.stopPropagation(); 
     const tooltip = document.getElementById('mobileTooltip');
+    if (!tooltip) return;
     tooltip.innerText = text;
     
-    const rect = e.target.getBoundingClientRect();
-    tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-    tooltip.style.top = rect.top + 'px';
+    const target = e.currentTarget || e.target;
+    const rect = target.getBoundingClientRect();
     
+    // Posicionar inicialmente para medir dimensiones reales
     tooltip.classList.add('show');
+    const tipRect = tooltip.getBoundingClientRect();
+    
+    // Centrado horizontal con margen para que no se salga de la pantalla
+    let left = rect.left + (rect.width / 2);
+    const halfWidth = tipRect.width / 2;
+    if (left - halfWidth < 12) {
+        left = 12 + halfWidth;
+    } else if (left + halfWidth > window.innerWidth - 12) {
+        left = window.innerWidth - 12 - halfWidth;
+    }
+    
+    // Posición vertical: si no cabe arriba o choca con la barra/notch, ponerlo debajo
+    let top = rect.top;
+    if (rect.top - tipRect.height - 12 < 70) {
+        // Mostrar debajo del elemento si arriba choca con la cabecera/notch
+        top = rect.bottom + 12;
+        tooltip.style.transform = 'translate(-50%, 0)';
+    } else {
+        top = rect.top - 10;
+        tooltip.style.transform = 'translate(-50%, -100%)';
+    }
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
     
     clearTimeout(tooltip.timeoutId);
     tooltip.timeoutId = setTimeout(() => {
@@ -2198,11 +2342,16 @@ function showMobileTooltip(e, text) {
     }, 3500); 
 }
 
-document.addEventListener('click', function(e) {
+function hideMobileTooltip() {
     const tooltip = document.getElementById('mobileTooltip');
     if (tooltip && tooltip.classList.contains('show')) {
+        clearTimeout(tooltip.timeoutId);
         tooltip.classList.remove('show');
     }
+}
+
+document.addEventListener('click', function(e) {
+    hideMobileTooltip();
 });
 
 function mostrarToast(mensaje) {
@@ -2989,10 +3138,11 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             let insigniasHTML = "";
             let displayMyBadges = myBadges.filter(b => b.type !== 'avatar');
             if (displayMyBadges.length > 0) {
-                insigniasHTML += `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">`;
+                insigniasHTML += `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px;">`;
                 displayMyBadges.forEach(b => {
-                    let cssColorClass = getBadgeCSS(b.type);
-                    insigniasHTML += `<div style="display:inline-flex; align-items:center; gap:4px; font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-general); border:1px solid var(--border-color);">${renderBadgeIcon(b, "badge-icon", "width:12px; height:12px;")}<span style="color:var(--text-muted); font-weight:600;">${b.text}</span></div>`;
+                    let safeText = (b.text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    let badgeIcon = renderBadgeIcon(b, "", "width:18px; height:18px; display:block; margin:0;");
+                    insigniasHTML += `<div class="user-badge-chip-icon" title="${safeText}" onclick="showMobileTooltip(event, '${safeText}')" onmouseenter="showMobileTooltip(event, '${safeText}')" onmouseleave="hideMobileTooltip()" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--bg-general); border:1px solid var(--border-color); cursor:pointer; transition:transform 0.15s ease, border-color 0.15s ease;">${badgeIcon}</div>`;
                 });
                 insigniasHTML += `</div>`;
             }
