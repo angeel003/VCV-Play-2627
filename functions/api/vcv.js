@@ -527,8 +527,7 @@ export async function onRequestPost(context) {
         let unfreezeTime = 0;
 
         if (utcDay === 6 || utcDay === 0 || utcDay === 1) {
-            // Unfreeze: Lunes a las 18:00 hora espaola (16:00 UTC en verano, 17:00 UTC en invierno)
-            // Usamos 16:30 UTC como punto medio seguro para que coincida aprox.
+            // Unfreeze: Lunes a las 18:00 hora española (16:00 UTC en verano, 17:00 UTC en invierno)
             let u = new Date(now);
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
@@ -536,7 +535,7 @@ export async function onRequestPost(context) {
             u.setUTCHours(16, 0, 0, 0); // 18:00 verano / 17:00 invierno
             unfreezeTime = u.getTime();
 
-            // Si todava no hemos superado la hora de descongelacin del lunes
+            // Si todavía no hemos superado la hora de descongelación del lunes
             if (now.getTime() < unfreezeTime) {
                 isFrozen = true;
                 // Cutoff: Viernes a las 23:59:59 UTC
@@ -547,6 +546,30 @@ export async function onRequestPost(context) {
                 d.setUTCHours(23, 59, 59, 999);
                 freezeCutoff = d.getTime();
             }
+        }
+
+        // --- OVERRIDE MANUAL DE CONGELACIÓN (ADMIN INTRANET) ---
+        let freezeOverride = null; // 'UNFREEZE', 'FREEZE', o null
+        try {
+            const rowOverride = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").first();
+            if (rowOverride && rowOverride.valor) {
+                const parsed = JSON.parse(rowOverride.valor);
+                // Si el override expiró (por ejemplo superó unfreeze_until o expires_at), se descarta automáticamente
+                if (parsed.expires_at && now.getTime() > parsed.expires_at) {
+                    await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
+                } else {
+                    freezeOverride = parsed.mode; // 'UNFREEZE' o 'FREEZE'
+                }
+            }
+        } catch(e) {
+            console.error("Error comprobando freeze override:", e);
+        }
+
+        if (freezeOverride === 'UNFREEZE') {
+            isFrozen = false;
+        } else if (freezeOverride === 'FREEZE') {
+            isFrozen = true;
+            if (!freezeCutoff) freezeCutoff = Date.now();
         }
         
         // --- CONFIGURACION DE LIGAS CONGELADAS (Ligas_Config) ---
@@ -708,6 +731,7 @@ export async function onRequestPost(context) {
             status: "success",
             notificaciones: notificaciones,
             is_frozen: isFrozen,
+            freeze_override: freezeOverride,
             ligas_congeladas: Array.from(ligasCongeladasSet),
             unfreeze_time: unfreezeTime,
             jornada: rondaAbierta,
@@ -835,6 +859,44 @@ export async function onRequestPost(context) {
         }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
         return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y caché reseteada.' });
+    }
+
+    if (action === 'set_freeze_override') {
+        const { mode } = body; // 'UNFREEZE', 'FREEZE', o 'AUTO'
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        if (mode === 'AUTO' || !mode) {
+            await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
+        } else {
+            // Calcular fecha de expiración automática: el próximo martes a las 00:00 UTC
+            // de modo que el siguiente fin de semana vuelva a funcionar 100% automático sin tener que acordarse
+            const expireDate = new Date();
+            const currDay = expireDate.getUTCDay(); // 0=Dom, 1=Lun...
+            let daysUntilTuesday = (2 - currDay + 7) % 7;
+            if (daysUntilTuesday === 0) daysUntilTuesday = 7;
+            expireDate.setUTCDate(expireDate.getUTCDate() + daysUntilTuesday);
+            expireDate.setUTCHours(0, 0, 0, 0);
+
+            const overrideData = JSON.stringify({
+                mode: mode,
+                set_by: usuario,
+                set_at: Date.now(),
+                expires_at: expireDate.getTime()
+            });
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor) VALUES ('FREEZE_OVERRIDE', ?)").bind(overrideData).run();
+        }
+
+        // Limpiar caché de clasificaciones para que el cambio surta efecto de inmediato
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
+
+        let mensajeExito = "Horario restablecido a AUTOMÁTICO.";
+        if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con éxito. Todos los puntos se muestran en vivo.";
+        if (mode === 'FREEZE') mensajeExito = "Clasificaciones CONGELADAS manualmente.";
+
+        return jsonResponse({ status: 'success', message: mensajeExito, mode: mode });
     }
 
     if (action === 'clear_cache') {
