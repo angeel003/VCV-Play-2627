@@ -599,7 +599,7 @@ export async function onRequestPost(context) {
                     pts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
-                const jNum = parseInt(p.ronda_global) || 1;
+                const jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
 
                 if (isFrozen && p.timestamp >= freezeCutoff) {
                     for (const lName in ligasMap) {

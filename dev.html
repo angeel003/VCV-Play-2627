@@ -5402,27 +5402,33 @@ window.renderRankingV2 = function() {
         let maxJornada = 1;
         let maxJornadaJugada = 0;
         if (data.stats_ligas) {
-            for(let u in data.stats_ligas) {
-                if(!data.stats_ligas[u][ligaName]) continue;
-                if(data.stats_ligas[u][ligaName].porJornada) {
-                    for(let j in data.stats_ligas[u][ligaName].porJornada) {
+            ranking.forEach(r => {
+                let u = r.jugador;
+                if (data.stats_ligas[u] && data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                    for (let j in data.stats_ligas[u][ligaName].porJornada) {
                         let jNum = parseInt(j);
-                        if(jNum > maxJornadaJugada) maxJornadaJugada = jNum;
+                        if (jNum > maxJornadaJugada && data.stats_ligas[u][ligaName].porJornada[j] > 0) {
+                            maxJornadaJugada = jNum;
+                        }
                     }
                 }
-            }
+            });
         }
         if (maxJornadaJugada > 0) maxJornada = maxJornadaJugada;
         
-        // Calcular Ranking Previo para flechas de tendencia
+        // Calcular Ranking Previo para flechas de tendencia (estrictamente dentro de esta liga)
         let previousRanking = [];
         if (maxJornada > 1 && data.stats_ligas) {
-            for(let u in data.stats_ligas) {
-                if(!data.stats_ligas[u][ligaName]) continue;
+            ranking.forEach(r => {
+                let u = r.jugador;
                 let ptsUpToPrev = 0;
-                for(let x=1; x<maxJornada; x++){ ptsUpToPrev += (data.stats_ligas[u][ligaName].porJornada[x] || 0); }
+                if (data.stats_ligas[u] && data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                    for (let x = 1; x < maxJornada; x++) {
+                        ptsUpToPrev += (data.stats_ligas[u][ligaName].porJornada[x] || 0);
+                    }
+                }
                 previousRanking.push({ jugador: u, pts: ptsUpToPrev });
-            }
+            });
             previousRanking.sort((a,b) => b.pts - a.pts);
             // Asignar realRank para empates
             previousRanking.forEach(r => {
@@ -5439,12 +5445,13 @@ window.renderRankingV2 = function() {
             if (isLigaFrozen) {
                 return `<span style="color:#3498db; font-size:0.95rem; font-weight:800; display:flex; align-items:center;">❄️</span>`;
             }
-            if (maxJornadaJugada <= 1 || previousRanking.length === 0) {
+            let hasAnyPrevPts = previousRanking.some(x => x.pts > 0);
+            if (maxJornadaJugada <= 1 || previousRanking.length === 0 || !hasAnyPrevPts) {
                 return `<span style="color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
             }
             let prevUser = previousRanking.find(x => x.jugador === jugador);
             let currUser = ranking[currentArrayIdx];
-            if (!prevUser || (prevUser.pts === 0 && currUser.puntos === 0)) {
+            if (!prevUser) {
                 return `<span style="color:var(--text-muted); font-size:0.8rem; display:flex; align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></span>`;
             }
             let diff = prevUser.realRank - currUser.realRank; 
