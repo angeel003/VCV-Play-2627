@@ -67,32 +67,36 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
-        try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT)").run(); } catch(e) {}
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT, apodo TEXT, posicion TEXT)").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN apodo TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN posicion TEXT").run(); } catch(e) {}
         try { await db.prepare("CREATE TABLE IF NOT EXISTS MVP_Votos (id_partido TEXT, usuario TEXT, jugador TEXT, timestamp INTEGER, PRIMARY KEY (id_partido, usuario))").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_candidatos TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_oficial TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
 
         // Sembrar plantilla inicial si está vacía
         try {
             const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga").first();
             if (!countRow || countRow.c === 0) {
                 const initialPlayers = [
-                    [1, "Alonso Rivas Jorge"],
-                    [2, "Cabañeros Rodríguez Samuel"],
-                    [3, "de León Rodríguez Iker"],
-                    [6, "Alonso Rivas Sergio"],
-                    [7, "Novella Gutierrez Álvaro"],
-                    [8, "Posadas Yenes Manuel"],
-                    [9, "Bertrán Catalina Alejandro"],
-                    [10, "González Fernández Alejandro"],
-                    [11, "Biserov Nankov Nikola"],
-                    [16, "Valverde Lorenzo Eduardo"],
-                    [18, "Carrasco Alvarado Enrique"],
-                    [21, "Corona Mediavilla Fabián"],
-                    [23, "García de Castro Álvaro"],
-                    [24, "Biserov Nankov Kaloyan"]
+                    [1, "Alonso Rivas Jorge", "Jorge", "Colocador"],
+                    [2, "Cabañeros Rodríguez Samuel", "Samuel", "Receptor"],
+                    [3, "de León Rodríguez Iker", "Iker", "Central"],
+                    [6, "Alonso Rivas Sergio", "Alonso", "Líbero"],
+                    [7, "Novella Gutierrez Álvaro", "Álvaro", "Opuesto"],
+                    [8, "Posadas Yenes Manuel", "Manu", "Receptor"],
+                    [9, "Bertrán Catalina Alejandro", "Alejandro", "Central"],
+                    [10, "González Fernández Alejandro", "Jany Jr", "Colocador"],
+                    [11, "Biserov Nankov Nikola", "Nikola", "Central"],
+                    [16, "Valverde Lorenzo Eduardo", "Edu", "Líbero"],
+                    [18, "Carrasco Alvarado Enrique", "Kike", "Receptor"],
+                    [21, "Corona Mediavilla Fabián", "Fabián", "Opuesto"],
+                    [23, "García de Castro Álvaro", "Álvaro G.", "Receptor"],
+                    [24, "Biserov Nankov Kaloyan", "Kaloyan", "Central"]
                 ];
-                for (const [dor, nom] of initialPlayers) {
-                    await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre) VALUES (?, ?)").bind(dor, nom).run();
+                for (const [dor, nom, apod, pos] of initialPlayers) {
+                    await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)").bind(dor, nom, apod, pos).run();
                 }
             }
         } catch(e) {}
@@ -173,7 +177,9 @@ export async function onRequestPost(context) {
             oficial_sets: oRes["Sets Oficial"] || "",
             oficial_parciales: oRes["Parciales Oficial"] || "",
             streaming: oRes.Streaming || "",
-            mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : []
+            mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [],
+            mvp_oficial: oRes.mvp_oficial || "",
+            mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : []
         };
     }
 
@@ -523,7 +529,7 @@ export async function onRequestPost(context) {
                     puntosRealesTotales[rightTeam] += 1;
                 } else if (sL === 2 && sV === 3) {
                     puntosRealesTotales[leftTeam] += 1;
-                    puntosRealesTotales[rightTeam] += 3;
+                    puntosRealesTotales[rightTeam] += 2;
                 } else if (sL <= 1 && sV === 3) {
                     puntosRealesTotales[rightTeam] += 3;
                 }
@@ -758,7 +764,7 @@ export async function onRequestPost(context) {
             }
         } catch(e) {}
         try {
-            const { results: pRows } = await db.prepare('SELECT dorsal, nombre FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
+            const { results: pRows } = await db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
             plantillaSuperliga = pRows || [];
         } catch(e) {}
 
@@ -1000,24 +1006,54 @@ export async function onRequestPost(context) {
 
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
-        const { id_partido, sets, parciales, streaming, mvp_candidatos } = body;
+        const { id_partido, sets, parciales, streaming, mvp_candidatos, mvp_oficial, mvp_stats } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
         const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
+        const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
 
         // Update Resultados_Oficiales
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', streaming || '', candStr, id_partido).run();
+            let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
+            let params = [sets || '', parciales || '', streaming || '', candStr];
+            if (mvp_oficial !== undefined) {
+                sql += ', "mvp_oficial" = ?';
+                params.push(mvp_oficial || '');
+            }
+            if (mvp_stats !== undefined) {
+                sql += ', "mvp_stats" = ?';
+                params.push(statsStr);
+            }
+            sql += ' WHERE "ID Partido" = ?';
+            params.push(id_partido);
+            await db.prepare(sql).bind(...params).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos") VALUES (?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr).run();
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
-        return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
+        return jsonResponse({ status: 'success', message: 'Resultados y datos guardados con éxito' });
+    }
+
+    // ADMIN: SET MVP OFICIAL DE JORNADA / PARTIDO
+    if (action === 'set_mvp_oficial') {
+        const { id_partido, mvp_oficial, mvp_stats } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+
+        const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
+        const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
+        if (exist) {
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, id_partido).run();
+        } else {
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr).run();
+        }
+
+        return jsonResponse({ status: 'success', message: 'MVP Oficial y estadísticas guardadas con éxito en la base de datos' });
     }
 
     // VOTAR MVP DE PARTIDO
@@ -1029,6 +1065,18 @@ export async function onRequestPost(context) {
 
         await db.prepare('INSERT OR REPLACE INTO MVP_Votos (id_partido, usuario, jugador, timestamp) VALUES (?, ?, ?, ?)').bind(id_partido, usuario, jugador, Date.now()).run();
         return jsonResponse({ status: 'success', message: '¡Voto registrado para ' + jugador + '!' });
+    }
+
+    // ADMIN: OBTENER RECUENTO DE VOTOS MVP DE UN PARTIDO
+    if (action === 'get_mvp_votos_summary') {
+        const { id_partido } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { results: votos } = await db.prepare('SELECT jugador, COUNT(*) as total FROM MVP_Votos WHERE id_partido = ? GROUP BY jugador ORDER BY total DESC').bind(id_partido).all();
+        return jsonResponse({ status: 'success', votos: votos || [] });
     }
 
     // ADMIN: GESTIONAR PLANTILLA SUPERLIGA
@@ -1044,8 +1092,10 @@ export async function onRequestPost(context) {
             for (const j of jugadores) {
                 const dor = parseInt(j.dorsal);
                 const nom = (j.nombre || '').trim();
+                const apod = (j.apodo || '').trim();
+                const pos = (j.posicion || '').trim();
                 if (!isNaN(dor) && nom) {
-                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre) VALUES (?, ?)').bind(dor, nom).run();
+                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)').bind(dor, nom, apod, pos).run();
                 }
             }
         }
