@@ -493,7 +493,7 @@ export async function onRequestPost(context) {
                     puntosRealesTotales[rightTeam] += 1;
                 } else if (sL === 2 && sV === 3) {
                     puntosRealesTotales[leftTeam] += 1;
-                    puntosRealesTotales[rightTeam] += 3;
+                    puntosRealesTotales[rightTeam] += 2;
                 } else if (sL <= 1 && sV === 3) {
                     puntosRealesTotales[rightTeam] += 3;
                 }

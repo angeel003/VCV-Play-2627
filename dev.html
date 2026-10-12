@@ -3478,102 +3478,182 @@ let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.
                 </span>
             </div>`;
     }
-                        htmlPartidos += `
-                        <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
-                            <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
-                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                    ${catLogoHtml}
-                                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                </div>
-                                <div style="text-align: right;">
-                                    <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
-                                    ${infoPabellon}
-                                </div>
-                            </div>
+                        if (eq.estado === "CERRADO") {
+                            // --- PARTIDO CERRADO: DISEÑO COMPACTO Y SIMÉTRICO (OFICIAL VS TU PRONÓSTICO) ---
+                            let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : 'Sin datos';
+                            let miPronDetalle = 'Sin predicción';
+                            if (isPredicted) {
+                                let isWinnerLocal = pSig.toLowerCase().includes('a favor');
+                                let isWinnerVisit = pSig.toLowerCase().includes('en contra');
+                                let winnerSafe = isWinnerLocal ? safeLocalName : (isWinnerVisit ? safeVisitName : '');
+                                let winnerAbrev = isWinnerLocal ? localAbrev : (isWinnerVisit ? visitAbrev : '');
 
-                            <div class="teams-versus-container-v2">
-                                <div class="team-box-v2">
-                                  <div class="team-avatar-v2">${localLogo}</div>
-                                  <span class="team-name-v2">${localTeamName}</span>
-                                  <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
-                                </div>
-                                <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
-                                  <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
-                                  <div>VS</div>
-                                  ${btnStreaming}
-                                </div>
-                                <div class="team-box-v2">
-                                  <div class="team-avatar-v2">${visitLogo}</div>
-                                  <span class="team-name-v2">${visitTeamName}</span>
-                                  <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
-                                </div>
-                            </div>
-                            <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-                                <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
-                            </div>
-                            
-                            
+                                if (pPts == 0) {
+                                    miPronDetalle = `<span>Empate en puntos (0 pts)</span>`;
+                                } else if (winnerSafe) {
+                                    miPronDetalle = `
+                                    <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                                        <span>+${pPts} pts</span>
+                                        <img loading="lazy" src="files/images/escudos/${winnerSafe}.png" alt="" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain; vertical-align:middle;">
+                                    </div>`;
+                                } else {
+                                    miPronDetalle = `<span>Dif: ${pPts} pts</span>`;
+                                }
+                            }
 
-                            ${eq.estado === "CERRADO" ? `<div style="text-align:center; margin-top:15px; padding:15px; background:var(--bg-card-alt); border-radius:12px; border:1px solid var(--border-color);"><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">RESULTADO OFICIAL</div><div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main);">${eq.oficial_sets || 'Sin resultado'}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${eq.oficial_parciales || ''}</div></div>` : ``}
-
-                            <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
-                                <div id="summary-text-${eq.id_partido}">
-                                ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
-                                </div>
-                            </div>
-
-                            ${eq.estado !== "CERRADO" ? `
-                            <!-- HIDDEN INPUTS -->
-                            <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
-                            <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
-                            <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
-
-                            <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
-                                <div class="sets-grid-label-v2">
-                                  <span>Resultado</span>
-                                  
-                                </div>
-                                <div class="sets-selector-grid-v2">
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
-                                    <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
+                            htmlPartidos += `
+                            <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${eq.es_derby ? 'box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);' : ''}">
+                                <!-- Header completo con Fecha, Jornada y Pabellón/Lugar -->
+                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                        ${catLogoHtml}
+                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                                    </div>
+                                    <div style="text-align: right; color:var(--text-muted); font-size:0.78rem;">
+                                        <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
+                                        ${infoPabellon}
+                                    </div>
                                 </div>
 
-                                <div class="points-diff-container-v2">
-                                  <div class="points-header-v2">
-                                    <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
-                                    
-                                  </div>
-                                  <div class="points-controls-row-v2">
-                                    <div class="stepper-container-v2">
-                                      <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
-                                      <div class="stepper-value-v2">
-                                        <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
-                                        <small>PTS</small>
+                                <!-- Fila de Equipos con Escudos Grandes -->
+                                <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
+                                    <div class="team-box-v2">
+                                        <div class="team-avatar-v2">${localLogo}</div>
+                                        <span class="team-name-v2">${localTeamName}</span>
+                                        <span class="team-role-v2" style="color: var(--success); font-weight:800;">LOCAL</span>
+                                    </div>
+                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                                        <div style="font-size: 0.85rem; font-weight:900; color:var(--text-muted);">VS</div>
+                                        ${btnStreaming}
+                                    </div>
+                                    <div class="team-box-v2">
+                                        <div class="team-avatar-v2">${visitLogo}</div>
+                                        <span class="team-name-v2">${visitTeamName}</span>
+                                        <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">VISITANTE</span>
+                                    </div>
+                                </div>
+
+                                <!-- Comparativa Visual Gemela: Resultado Oficial vs Tu Predicción -->
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                    <!-- Caja Resultado Oficial -->
+                                    <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                                            RESULTADO OFICIAL
+                                        </div>
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
+                                            ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
+                                        </div>
+                                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.oficial_parciales || ''}">
+                                            ${eq.oficial_parciales || 'Parciales pendientes'}
+                                        </div>
+                                    </div>
+
+                                    <!-- Caja Tu Predicción -->
+                                    <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px;"></i> TU PREDICCIÓN
+                                        </div>
+                                        <div style="font-size: 1.25rem; font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
+                                            ${miPronSets}
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${miPronDetalle}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        } else {
+                            // --- PARTIDO ABIERTO / EN CURSO ---
+                            htmlPartidos += `
+                            <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
+                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                        ${catLogoHtml}
+                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
+                                        ${infoPabellon}
+                                    </div>
+                                </div>
+
+                                <div class="teams-versus-container-v2">
+                                    <div class="team-box-v2">
+                                      <div class="team-avatar-v2">${localLogo}</div>
+                                      <span class="team-name-v2">${localTeamName}</span>
+                                      <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
+                                    </div>
+                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                                      <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
+                                      <div>VS</div>
+                                      ${btnStreaming}
+                                    </div>
+                                    <div class="team-box-v2">
+                                      <div class="team-avatar-v2">${visitLogo}</div>
+                                      <span class="team-name-v2">${visitTeamName}</span>
+                                      <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+                                    <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
+                                </div>
+
+                                <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
+                                    <div id="summary-text-${eq.id_partido}">
+                                    ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
+                                    </div>
+                                </div>
+
+                                <!-- HIDDEN INPUTS -->
+                                <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
+                                <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
+                                <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
+
+                                <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
+                                    <div class="sets-grid-label-v2">
+                                      <span>Resultado</span>
+                                    </div>
+                                    <div class="sets-selector-grid-v2">
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
+                                        <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
+                                    </div>
+
+                                    <div class="points-diff-container-v2">
+                                      <div class="points-header-v2">
+                                        <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
                                       </div>
-                                      <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
+                                      <div class="points-controls-row-v2">
+                                        <div class="stepper-container-v2">
+                                          <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
+                                          <div class="stepper-value-v2">
+                                            <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
+                                            <small>PTS</small>
+                                          </div>
+                                          <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
+                                        </div>
+                                        <div class="sign-selector-v2">
+                                          <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
+                                            <span style="font-size:0.7rem;">${localTeamName}</span>
+                                          </button>
+                                          <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
+                                            <span style="font-size:0.7rem;">${visitTeamName}</span>
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div class="sign-selector-v2">
-                                      <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
-                                        <span style="font-size:0.7rem;">${localTeamName}</span>
-                                      </button>
-                                      <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
-                                        <span style="font-size:0.7rem;">${visitTeamName}</span>
-                                      </button>
-                                    </div>
-                                  </div>
                                 </div>
-                            </div>
-                            
-                            <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s; ${eq.estado === 'CERRADO' ? 'display:none;' : ''}">
-                                ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
-                            </button>` : ``}
-                            
-                            ${destacadoHtml}
-                        </div>`;
+                                
+                                <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
+                                    ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
+                                </button>
+                                
+                                ${destacadoHtml}
+                            </div>`;
+                        }
                     }
                 }
             });
