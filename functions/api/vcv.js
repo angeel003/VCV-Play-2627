@@ -67,8 +67,36 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
-        try { await db.prepare("CREATE TABLE IF NOT EXISTS Peticiones_Insignias (id_peticion INTEGER PRIMARY KEY AUTOINCREMENT, Usuario TEXT, Tipo TEXT, Equipo_Externo TEXT, Estado TEXT, Fecha TEXT)").run(); } catch(e) {}
-        
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT)").run(); } catch(e) {}
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS MVP_Votos (id_partido TEXT, usuario TEXT, jugador TEXT, timestamp INTEGER, PRIMARY KEY (id_partido, usuario))").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_candidatos TEXT").run(); } catch(e) {}
+
+        // Sembrar plantilla inicial si está vacía
+        try {
+            const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga").first();
+            if (!countRow || countRow.c === 0) {
+                const initialPlayers = [
+                    [1, "Alonso Rivas Jorge"],
+                    [2, "Cabañeros Rodríguez Samuel"],
+                    [3, "de León Rodríguez Iker"],
+                    [6, "Alonso Rivas Sergio"],
+                    [7, "Novella Gutierrez Álvaro"],
+                    [8, "Posadas Yenes Manuel"],
+                    [9, "Bertrán Catalina Alejandro"],
+                    [10, "González Fernández Alejandro"],
+                    [11, "Biserov Nankov Nikola"],
+                    [16, "Valverde Lorenzo Eduardo"],
+                    [18, "Carrasco Alvarado Enrique"],
+                    [21, "Corona Mediavilla Fabián"],
+                    [23, "García de Castro Álvaro"],
+                    [24, "Biserov Nankov Kaloyan"]
+                ];
+                for (const [dor, nom] of initialPlayers) {
+                    await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre) VALUES (?, ?)").bind(dor, nom).run();
+                }
+            }
+        } catch(e) {}
+
         const indexQueries = [
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario ON "Usuarios"("Usuario")',
             'CREATE INDEX IF NOT EXISTS idx_usuarios_login ON "Usuarios"("Usuario", "Password")',
@@ -89,7 +117,8 @@ export async function onRequestPost(context) {
             'CREATE INDEX IF NOT EXISTS idx_peticiones_nombre_estado ON "Peticiones_Nombre"("Estado")',
             'CREATE INDEX IF NOT EXISTS idx_peticiones_insignias_estado ON "Peticiones_Insignias"("Estado")',
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_cache_app_clave ON "Cache_App"("clave")',
-            'CREATE UNIQUE INDEX IF NOT EXISTS idx_ligas_config_liga ON "Ligas_Config"("Liga")'
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_ligas_config_liga ON "Ligas_Config"("Liga")',
+            'CREATE INDEX IF NOT EXISTS idx_mvp_votos_partido ON "MVP_Votos"("id_partido")'
         ];
         for (const iq of indexQueries) {
             try { await db.prepare(iq).run(); } catch(e) {}
@@ -143,7 +172,8 @@ export async function onRequestPost(context) {
             abrev_rival: r.Abrev_der || "",
             oficial_sets: oRes["Sets Oficial"] || "",
             oficial_parciales: oRes["Parciales Oficial"] || "",
-            streaming: oRes.Streaming || ""
+            streaming: oRes.Streaming || "",
+            mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : []
         };
     }
 
@@ -718,18 +748,25 @@ export async function onRequestPost(context) {
         }
         const rondaAbierta = maxRonda.toString();
 
-        // Fetch Notificaciones
-        let notificaciones = [];
+        // MVP: Obtener votos del usuario y plantilla superliga
+        let misVotosMvp = {};
+        let plantillaSuperliga = [];
         try {
-            const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
-            notificaciones = results || [];
-        } catch (e) {
-            // Table might not exist yet
-        }
+            const { results: vRows } = await db.prepare('SELECT id_partido, jugador FROM MVP_Votos WHERE usuario = ?').bind(usuario).all();
+            for (const vr of vRows || []) {
+                misVotosMvp[vr.id_partido] = vr.jugador;
+            }
+        } catch(e) {}
+        try {
+            const { results: pRows } = await db.prepare('SELECT dorsal, nombre FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
+            plantillaSuperliga = pRows || [];
+        } catch(e) {}
 
         return jsonResponse({
             status: "success",
             notificaciones: notificaciones,
+            mvp_votos: misVotosMvp,
+            plantilla_superliga: plantillaSuperliga,
             is_frozen: isFrozen,
             freeze_override: freezeOverride,
             ligas_congeladas: Array.from(ligasCongeladasSet),
@@ -963,22 +1000,56 @@ export async function onRequestPost(context) {
 
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
-        const { id_partido, sets, parciales, streaming } = body;
+        const { id_partido, sets, parciales, streaming, mvp_candidatos } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+
+        const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
 
         // Update Resultados_Oficiales
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', streaming || '', id_partido).run();
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', streaming || '', candStr, id_partido).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '').run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos") VALUES (?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr).run();
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
         return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
+    }
+
+    // VOTAR MVP DE PARTIDO
+    if (action === 'vote_mvp') {
+        const { id_partido, jugador } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
+
+        await db.prepare('INSERT OR REPLACE INTO MVP_Votos (id_partido, usuario, jugador, timestamp) VALUES (?, ?, ?, ?)').bind(id_partido, usuario, jugador, Date.now()).run();
+        return jsonResponse({ status: 'success', message: '¡Voto registrado para ' + jugador + '!' });
+    }
+
+    // ADMIN: GESTIONAR PLANTILLA SUPERLIGA
+    if (action === 'save_plantilla_superliga') {
+        const { jugadores } = body; // Array de { dorsal: number, nombre: string }
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        if (Array.isArray(jugadores)) {
+            await db.prepare('DELETE FROM Plantilla_Superliga').run();
+            for (const j of jugadores) {
+                const dor = parseInt(j.dorsal);
+                const nom = (j.nombre || '').trim();
+                if (!isNaN(dor) && nom) {
+                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre) VALUES (?, ?)').bind(dor, nom).run();
+                }
+            }
+        }
+        return jsonResponse({ status: 'success', message: 'Plantilla de Superliga actualizada con éxito.' });
     }
 
     
