@@ -474,8 +474,11 @@ export async function onRequestPost(context) {
 
         // Puntos reales calculados de partidos terminados
         const puntosRealesTotales = {};
+        const nowPointsMs = Date.now();
         for (const p of partidos) {
-            if (p.oficial_sets && p.oficial_sets.includes("-")) {
+            // Solo computar si el partido está oficialmente CERRADO o ya se ha jugado/comenzado en el tiempo
+            const yaJugado = p.estado === "CERRADO" || (p.timestamp && nowPointsMs >= p.timestamp);
+            if (yaJugado && p.oficial_sets && p.oficial_sets.includes("-")) {
                 const sL = parseInt(p.oficial_sets.split("-")[0]);
                 const sV = parseInt(p.oficial_sets.split("-")[1]);
                 
