@@ -1458,156 +1458,6 @@
 
     /* PESTAÑA: TOP SECRET */
     
-    /* MVP VOTING STYLES & ANIMATIONS (BANNER ESTILO REFERENCIA VCV) */
-    .mvp-candidates-grid {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      align-items: stretch;
-      width: 100%;
-      position: relative;
-    }
-    .mvp-card-slot {
-      flex: 1 1 0;
-      min-width: 0;
-      position: relative;
-      display: flex;
-    }
-    .mvp-card-btn {
-      width: 100%;
-      background: #180922;
-      border: 1.5px solid rgba(212, 175, 55, 0.4);
-      border-radius: 12px;
-      padding: 0 0 10px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-      box-sizing: border-box;
-      overflow: hidden;
-      will-change: transform, opacity;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .mvp-card-btn:hover {
-      border-color: var(--secondary-color);
-      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
-    }
-    .mvp-card-btn.is-voted-state {
-      border-color: var(--secondary-color);
-      box-shadow: 0 0 20px rgba(212, 175, 55, 0.45);
-      background: linear-gradient(180deg, #250b36 0%, #170724 100%);
-      cursor: default;
-    }
-    .mvp-photo-wrapper {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #110519;
-      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .mvp-photo-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .mvp-dorsal-tag {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: var(--secondary-color);
-      color: #000;
-      font-size: 0.72rem;
-      font-weight: 900;
-      padding: 2px 6px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      letter-spacing: -0.2px;
-    }
-    .mvp-name-label {
-      font-family: 'Space Grotesk', -apple-system, sans-serif;
-      font-size: 0.92rem;
-      font-weight: 900;
-      color: #f7e7ce;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      text-align: center;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      padding: 4px 6px 0 6px;
-    }
-    .mvp-sub-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: var(--secondary-color);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      padding: 0 6px;
-    }
-    .mvp-voted-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      font-weight: 900;
-      color: #000;
-      background: var(--secondary-color);
-      padding: 3px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-top: 2px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    .mvp-undo-btn {
-      padding: 6px 12px;
-      font-size: 0.74rem;
-      font-weight: 800;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(212, 175, 55, 0.4);
-      color: var(--secondary-color);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .mvp-undo-btn:hover {
-      background: rgba(212, 175, 55, 0.2);
-      border-color: var(--secondary-color);
-      color: #fff;
-    }
-    .mvp-voted-detail-panel {
-      flex: 2 1 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 8px 14px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      border-radius: 12px;
-      opacity: 0;
-      transform: translateX(10px);
-      transition: opacity 0.35s ease 0.1s, transform 0.35s ease 0.1s;
-    }
-    .mvp-voted-detail-panel.visible {
-      opacity: 1;
-      transform: translateX(0);
-    }
   </style>
 
 
@@ -1969,140 +1819,7 @@
               <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
             </summary>
             <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
-                <span style="font-size:0.75rem; color:var(--text-muted);">Listado de partidos para subir resultado o streaming:</span>
-                <label style="font-size:0.75rem; color:var(--secondary-color); cursor:pointer; display:flex; align-items:center; gap:5px; font-weight:700;">
-                  <input type="checkbox" id="adminCheckVerTodosPartidos" onchange="window.adminToggleVerTodosPartidos(this.checked)" style="cursor:pointer;">
-                  Ver todos (incl. pasados o cerrados)
-                </label>
-              </div>
               <div id="adminListaPartidos"></div>
-            </div>
-          </details>
-
-          <!-- 6.B Plantilla Superliga (MVP) -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">⭐ Plantilla Superliga 2 y Nominados MVP</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
-                Aquí tienes la lista de jugadores disponibles para nominar a MVP. Puedes añadir nuevos jugadores en cualquier momento:
-              </p>
-              <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
-                <!-- Populated by JS -->
-              </div>
-              <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
-                <input type="number" id="nuevoJugadorDorsal" placeholder="Dorsal" style="width: 65px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; text-align: center;">
-                <input type="text" id="nuevoJugadorApodo" placeholder="Apodo (ej: Jorge)" style="width: 110px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorPosicion" placeholder="Posición (ej: Receptor)" style="width: 130px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorNombre" placeholder="Nombre completo" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <button type="button" class="btn" onclick="agregarJugadorPlantilla()" style="padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer;">
-                  + Añadir
-                </button>
-              </div>
-              <button type="button" id="btnGuardarPlantillaMvp" class="btn" onclick="guardarPlantillaSuperligaEnBD(event)" style="width: 100%; padding: 10px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); font-weight: 800; border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
-                💾 Guardar Cambios en Plantilla
-              </button>
-
-              <!-- CAJA DIRECTA PARA ELEGIR LOS 3 CANDIDATOS MVP -->
-              <div id="adminDirectMvpBox" style="margin-top: 14px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
-                <div style="font-weight: 800; font-size: 0.88rem; color: var(--secondary-color); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  🏆 Elegir los 3 Nominados al MVP para la Cartelera
-                </div>
-                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px;">
-                  Selecciona el partido de Superliga 2 y los 3 jugadores que aparecerán en la cartelera para que los aficionados voten:
-                </div>
-                
-                <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-                  <div style="min-width: 110px; flex: 1;">
-                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Jornada:</label>
-                    <select id="directMvpJornadaSelect" onchange="window.onDirectMvpJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div style="flex: 2; min-width: 200px;">
-                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Partido de Superliga 2:</label>
-                    <select id="directMvpPartidoSelect" onchange="window.onDirectMvpPartidoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (los 3 valen igual):</label>
-                    <select id="directMvp1" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (los 3 valen igual):</label>
-                    <select id="directMvp2" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (los 3 valen igual):</label>
-                    <select id="directMvp3" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                </div>
-
-                <button type="button" id="btnGuardarDirectMvp" class="btn" onclick="window.guardarDirectMvp(event)" style="width: 100%; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3); margin-bottom: 8px;">
-                  ⭐ Guardar 3 Nominados en Cartelera
-                </button>
-                <button type="button" class="btn" onclick="probarMvpEnCartelera()" style="width: 100%; padding: 8px; background: rgba(52, 152, 219, 0.15); border: 1px dashed #3498db; color: #3498db; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem; margin-bottom: 12px;">
-                  🧪 Ver/Probar Votación MVP en Cartelera
-                </button>
-
-                <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
-                <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
-                  <div style="font-weight: 800; font-size: 0.85rem; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    👑 Proclamar MVP Oficial del Partido / Jornada
-                  </div>
-                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
-                    Selecciona quién ha sido galardonado definitivamente como el MVP oficial de este partido (se guardará en la base de datos):
-                  </div>
-                  <div style="margin-bottom: 8px;">
-                    <select id="directMvpOficialSelect" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <!-- ESTADÍSTICAS DESTACADAS DEL MVP (OPCIONALES 1 a 4) -->
-                  <div style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.25);">
-                    <div style="font-size: 0.73rem; font-weight: 800; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-                      <span>📊 Estadísticas del Jugador en el Partido (Opcional, 1 a 4)</span>
-                    </div>
-                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px;">
-                      Ej: <em>Ataques: 15 (65%)</em>, <em>Recepción: 19</em>, <em>Saques directos: 5 (29%)</em>, <em>Bloqueos: 4</em>. Deja vacías las que no uses.
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                      <input type="text" id="mvpStat1" placeholder="Estadística 1 (ej: Ataques: 15 (65%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat2" placeholder="Estadística 2 (ej: Recepción: 19)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat3" placeholder="Estadística 3 (ej: Puntos saque: 5 (29%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat4" placeholder="Estadística 4 (ej: Bloqueos: 4)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                    </div>
-                  </div>
-
-                  <div style="display:flex; gap:6px;">
-                    <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
-                      👑 Guardar MVP Oficial en BD
-                    </button>
-                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación de 3">
-                      Quitar (Volver a Votar)
-                    </button>
-                  </div>
-                </div>
-
-                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
-                <div style="margin-top: 10px; padding: 10px; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición en este partido:</span>
-                    <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
-                      🔄 Consultar Votos
-                    </button>
-                  </div>
-                  <div id="adminRecuentoVotosMvp" style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">
-                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido.
-                  </div>
-                </div>
-              </div>
             </div>
           </details>
 
@@ -2674,86 +2391,34 @@ function mostrarToast(mensaje) {
 
 
 // ------------------------------------------------------------------
-// PLANTILLA INICIAL SUPERLIGA 2 (DORSAL, APODO, NOMBRE)
-// ------------------------------------------------------------------
-const PLANTILLA_SUPERLIGA_DEFAULT = [
-    { dorsal: 1, apodo: "Jorge", nombre: "Alonso Rivas Jorge", posicion: "Colocador" },
-    { dorsal: 2, apodo: "Samuel", nombre: "Cabañeros Rodríguez Samuel", posicion: "Receptor" },
-    { dorsal: 3, apodo: "Iker", nombre: "de León Rodríguez Iker", posicion: "Central" },
-    { dorsal: 6, apodo: "Alonso", nombre: "Alonso Rivas Sergio", posicion: "Líbero" },
-    { dorsal: 7, apodo: "Álvaro", nombre: "Novella Gutierrez Álvaro", posicion: "Opuesto" },
-    { dorsal: 8, apodo: "Manu", nombre: "Posadas Yenes Manuel", posicion: "Receptor" },
-    { dorsal: 9, apodo: "Alejandro", nombre: "Bertrán Catalina Alejandro", posicion: "Central" },
-    { dorsal: 10, apodo: "Jany Jr", nombre: "González Fernández Alejandro", posicion: "Colocador" },
-    { dorsal: 11, apodo: "Nikola", nombre: "Biserov Nankov Nikola", posicion: "Central" },
-    { dorsal: 16, apodo: "Edu", nombre: "Valverde Lorenzo Eduardo", posicion: "Líbero" },
-    { dorsal: 18, apodo: "Kike", nombre: "Carrasco Alvarado Enrique", posicion: "Receptor" },
-    { dorsal: 21, apodo: "Fabián", nombre: "Corona Mediavilla Fabián", posicion: "Opuesto" },
-    { dorsal: 23, apodo: "Álvaro G.", nombre: "García de Castro Álvaro", posicion: "Receptor" },
-    { dorsal: 24, apodo: "Kaloyan", nombre: "Biserov Nankov Kaloyan", posicion: "Central" }
-];
-
-window.getPlantillaSuperligaActual = function() {
-    if (!window.appData) window.appData = {};
-    if (!Array.isArray(window.appData.plantilla_superliga) || window.appData.plantilla_superliga.length === 0) {
-        try {
-            const cached = localStorage.getItem('vcv_plantilla_superliga_cache');
-            if (cached) {
-                const parsed = JSON.parse(cached);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    window.appData.plantilla_superliga = parsed;
-                }
-            }
-        } catch(e) {}
-    }
-    if (!Array.isArray(window.appData.plantilla_superliga) || window.appData.plantilla_superliga.length === 0) {
-        window.appData.plantilla_superliga = JSON.parse(JSON.stringify(PLANTILLA_SUPERLIGA_DEFAULT));
-    }
-    return window.appData.plantilla_superliga;
-};
-
-// ------------------------------------------------------------------
 // FUNCIONES INTRANET ADMINISTRADOR
 // ------------------------------------------------------------------
-window.adminVerTodosPartidos = false;
-window.adminToggleVerTodosPartidos = function(checked) {
-    window.adminVerTodosPartidos = !!checked;
-    if (window.appData && window.appData.equipos) {
-        renderAdminPanel(window.appData.equipos);
-    }
-};
-
 function renderAdminPanel(equipos) {
     let html = "";
     let now = new Date().getTime();
     equipos.forEach(eq => {
         let ts = eq.timestamp || Infinity;
         let isAvailable = eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR";
-        let endedRecently = (eq.estado === "FINALIZADO" || eq.estado === "BLOQUEADO" || eq.estado === "CERRADO") && (now - (eq.timestamp_bloqueo || ts)) < 48 * 60 * 60 * 1000;
-        let catL = (eq.categoria || '').toLowerCase();
-        let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
-
-        // Los partidos de Superliga siempre aparecen para poder configurar el MVP, o todos si se marca el checkbox
-        if (window.adminVerTodosPartidos || isSuperliga || isAvailable || endedRecently) {
+        let endedRecently = (eq.estado === "FINALIZADO" || eq.estado === "BLOQUEADO") && (now - (eq.timestamp_bloqueo || ts)) < 48 * 60 * 60 * 1000;
+        if (isAvailable || endedRecently) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
             
             html += `
             <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center;">
-                    <span>${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit}</span>
-                    <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-card-alt); color:var(--secondary-color); font-weight:800;">${eq.categoria}</span>
+                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem;">
+                    ${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit}
                 </div>
                 
                 <!-- SECCIÓN RESULTADOS -->
                 <div style="margin-bottom: 8px; border-left: 2px solid var(--vcv-morado); padding-left: 8px;">
                     <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Resultado Final</label>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
+                        <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;" ${now >= ts ? '' : 'disabled'}>
                         <span style="color: var(--text-muted);">-</span>
-                        <input type="number" id="adm_sets_vis_${eq.id_partido}" class="form-control" placeholder="Sets Visitante" value="${eq.oficial_sets ? (eq.oficial_sets.split('-')[1] || '') : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
+                        <input type="number" id="adm_sets_vis_${eq.id_partido}" class="form-control" placeholder="Sets Visitante" value="${eq.oficial_sets ? (eq.oficial_sets.split('-')[1] || '') : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;" ${now >= ts ? '' : 'disabled'}>
                     </div>
-                    <input type="text" id="adm_parc_${eq.id_partido}" class="form-control" placeholder="Parciales (ej: 25-20, 25-22...)" value="${eq.oficial_parciales || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-top: 6px;">
+                    <input type="text" id="adm_parc_${eq.id_partido}" class="form-control" placeholder="${now >= ts ? 'Parciales (ej: 25-20, 25-22...)' : 'Bloqueado (No ha empezado)'}" value="${eq.oficial_parciales || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-top: 6px;" ${now >= ts ? '' : 'disabled'}>
                 </div>
 
                 <!-- SECCIÓN STREAMING -->
@@ -2762,761 +2427,15 @@ function renderAdminPanel(equipos) {
                     <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
-                ${(function() {
-                    let catL = (eq.categoria || '').toLowerCase();
-                    if (!catL.includes('sm2') && !catL.includes('superliga')) return '';
-                    let cands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos : [];
-                    let c1 = cands[0] || '';
-                    let c2 = cands[1] || '';
-                    let c3 = cands[2] || '';
-                    
-                    let opts = '<option value="">-- Seleccionar Jugador --</option>';
-                    let plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
-                    plantilla.forEach(pj => {
-                        let posPart = pj.posicion ? ` [${pj.posicion}]` : '';
-                        let apodoPart = pj.apodo ? ` (${pj.apodo})` : '';
-                        let valStr = `#${pj.dorsal} ${pj.nombre}${apodoPart}${posPart}`;
-                        opts += `<option value="${valStr}">#${pj.dorsal} ${pj.apodo || pj.nombre}${posPart} - ${pj.nombre}</option>`;
-                    });
-
-                    return `
-                    <!-- SECCIÓN NOMINADOS MVP (SUPERLIGA) -->
-                    <div style="margin-bottom: 10px; border-left: 2px solid var(--secondary-color); padding-left: 8px; background: rgba(212, 175, 55, 0.05); padding: 8px; border-radius: 6px;">
-                        <label style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 800; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                            ⭐ 3 Candidatos MVP del Partido (Superliga 2 - los 3 valen igual)
-                        </label>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <select id="adm_mvp1_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c1}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                            <select id="adm_mvp2_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c2}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                            <select id="adm_mvp3_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c3}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                        </div>
-                    </div>`;
-                })()}
-
                 <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
                     Guardar Cambios
                 </button>
             </div>`;
         }
     });
-    if (html === "") html = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:10px;'>No hay partidos disponibles recientemente. Marca 'Ver todos' para mostrar todos los partidos de la temporada.</div>";
-    const container = document.getElementById('adminListaPartidos');
-    if (container) container.innerHTML = html;
-
-    // Restaurar valores seleccionados en los dropdowns de MVP de forma segura
-    document.querySelectorAll('.select-mvp-candidato').forEach(sel => {
-        let val = sel.getAttribute('data-sel');
-        if (val) {
-            if (typeof window.setSelectValueSafely === 'function') {
-                window.setSelectValueSafely(sel, val);
-            } else {
-                sel.value = val;
-            }
-        }
-    });
-
-    renderAdminPlantillaMvp();
-    if (typeof window.populateDirectMvpBoxes === 'function') {
-        window.populateDirectMvpBoxes();
-    }
+    if (html === "") html = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:10px;'>No hay partidos disponibles o han pasado más de 48h.</div>";
+    document.getElementById('adminListaPartidos').innerHTML = html;
 }
-
-window.renderAdminPlantillaMvp = function() {
-    const cont = document.getElementById('adminListaPlantillaMvp');
-    if (!cont) return;
-    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
-    if (plantilla.length === 0) {
-        cont.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:8px;">No hay jugadores en la plantilla todavía.</div>';
-        return;
-    }
-    let h = '';
-    plantilla.forEach((j, idx) => {
-        let apodoBadge = j.apodo ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${j.apodo}</span>` : '';
-        let posBadge = j.posicion ? `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); border:1px solid var(--border-color); padding:1px 6px; border-radius:4px; font-size:0.68rem; font-weight:600;">${j.posicion}</span>` : '';
-        h += `
-        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-general); border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; font-size:0.8rem;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <span style="font-weight:900; color:var(--secondary-color); min-width:24px;">#${j.dorsal}</span>
-                <span style="color:var(--text-main); font-weight:600;">${j.nombre}</span>
-                ${apodoBadge}
-                ${posBadge}
-            </div>
-            <button type="button" onclick="eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem; padding:0 4px;" title="Eliminar">&times;</button>
-        </div>`;
-    });
-    cont.innerHTML = h;
-};
-
-window.agregarJugadorPlantilla = function() {
-    const dorInput = document.getElementById('nuevoJugadorDorsal');
-    const apodInput = document.getElementById('nuevoJugadorApodo');
-    const posInput = document.getElementById('nuevoJugadorPosicion');
-    const nomInput = document.getElementById('nuevoJugadorNombre');
-    if (!dorInput || !nomInput) return;
-    const dVal = parseInt(dorInput.value);
-    const nVal = nomInput.value.trim();
-    const aVal = apodInput ? apodInput.value.trim() : "";
-    const pVal = posInput ? posInput.value.trim() : "";
-    if (isNaN(dVal) || !nVal) {
-        alert("Por favor introduce un dorsal numérico y un nombre.");
-        return;
-    }
-    if (!window.appData) window.appData = {};
-    if (!Array.isArray(window.appData.plantilla_superliga)) {
-        window.appData.plantilla_superliga = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : [];
-    }
-    
-    // Comprobar si dorsal ya existe
-    const exists = window.appData.plantilla_superliga.some(p => p.dorsal === dVal);
-    if (exists) {
-        alert("Ya existe un jugador con el dorsal #" + dVal);
-        return;
-    }
-    window.appData.plantilla_superliga.push({ 
-        dorsal: dVal, 
-        apodo: aVal || nVal.split(' ')[0], 
-        posicion: pVal, 
-        nombre: nVal 
-    });
-    window.appData.plantilla_superliga.sort((a, b) => a.dorsal - b.dorsal);
-    dorInput.value = '';
-    nomInput.value = '';
-    if (apodInput) apodInput.value = '';
-    if (posInput) posInput.value = '';
-    try {
-        localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-    } catch(e) {}
-    renderAdminPlantillaMvp();
-    if (window.appData.equipos) renderAdminPanel(window.appData.equipos);
-};
-
-window.eliminarJugadorPlantilla = function(idx) {
-    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
-    window.appData.plantilla_superliga.splice(idx, 1);
-    try {
-        localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-    } catch(e) {}
-    renderAdminPlantillaMvp();
-    if (window.appData.equipos) renderAdminPanel(window.appData.equipos);
-};
-
-window.guardarPlantillaSuperligaEnBD = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const btn = document.getElementById('btnGuardarPlantillaMvp');
-    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando en base de datos..."; }
-    
-    // Guardar siempre una copia local de respaldo inmediato
-    try {
-        localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-    } catch(err) {}
-
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'save_plantilla_superliga',
-            usuario: currentUser,
-            password: currentPassword,
-            jugadores: window.appData.plantilla_superliga
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
-        if (d.status === 'success') {
-            mostrarToast("Plantilla actualizada en base de datos con éxito");
-        } else {
-            // Si el backend remoto aún no tiene la acción activa, guardado local para pruebas
-            mostrarToast("Plantilla guardada (modo pruebas)");
-        }
-    })
-    .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
-        mostrarToast("Plantilla guardada localmente (modo pruebas)");
-    });
-};
-
-window.probarMvpEnCartelera = function() {
-    if (!window.appData) window.appData = {};
-    if (!window.appData.equipos) window.appData.equipos = [];
-    
-    // Buscar si ya hay un partido de Superliga en data.equipos o en todos_partidos
-    let partidosList = window.appData.equipos;
-    let pSm2 = partidosList.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-    
-    if (!pSm2 && window.appData.todos_partidos) {
-        let foundInAll = window.appData.todos_partidos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-        if (foundInAll) {
-            pSm2 = { ...foundInAll };
-            partidosList.unshift(pSm2);
-        }
-    }
-    
-    if (!pSm2) {
-        // Crear un partido simulado de Superliga para pruebas
-        pSm2 = {
-            id_partido: "DEMO_SM2_MVP",
-            equipo_local: "Voleibol Club Valladolid",
-            rival: "CyL Palencia 2028",
-            abrev_local: "VCV",
-            abrev_rival: "PAL",
-            categoria: "SM2",
-            jornada_eq: "1",
-            ubicacion: "LOCAL",
-            estado: "CERRADO",
-            visibilidad: "MOSTRAR",
-            permitido: true,
-            timestamp: Date.now() - 3600000,
-            pabellon: "Polideportivo Pisuerga",
-            oficial_sets: "3-1",
-            oficial_parciales: "25-21, 23-25, 25-18, 25-20"
-        };
-        partidosList.unshift(pSm2);
-    }
-    
-    // Forzar estado cerrado y visibilidad
-    pSm2.estado = "CERRADO";
-    pSm2.visibilidad = "MOSTRAR";
-    pSm2.permitido = true;
-    if (!pSm2.oficial_sets) pSm2.oficial_sets = "3-1";
-    if (!pSm2.oficial_parciales) pSm2.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-    
-    // Respetar los candidatos seleccionados en la intranet o ya guardados
-    const s1 = document.getElementById('directMvp1');
-    const s2 = document.getElementById('directMvp2');
-    const s3 = document.getElementById('directMvp3');
-    const m1 = s1 ? s1.value : '';
-    const m2 = s2 ? s2.value : '';
-    const m3 = s3 ? s3.value : '';
-    
-    if (m1 && m2 && m3) {
-        pSm2.mvp_candidatos = [m1, m2, m3];
-    } else if (!Array.isArray(pSm2.mvp_candidatos) || pSm2.mvp_candidatos.length < 3) {
-        let plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
-        if (plantilla.length >= 3) {
-            pSm2.mvp_candidatos = [
-                `#${plantilla[0].dorsal} ${plantilla[0].nombre}${plantilla[0].apodo ? ' (' + plantilla[0].apodo + ')' : ''}${plantilla[0].posicion ? ' [' + plantilla[0].posicion + ']' : ''}`,
-                `#${plantilla[1].dorsal} ${plantilla[1].nombre}${plantilla[1].apodo ? ' (' + plantilla[1].apodo + ')' : ''}${plantilla[1].posicion ? ' [' + plantilla[1].posicion + ']' : ''}`,
-                `#${plantilla[2].dorsal} ${plantilla[2].nombre}${plantilla[2].apodo ? ' (' + plantilla[2].apodo + ')' : ''}${plantilla[2].posicion ? ' [' + plantilla[2].posicion + ']' : ''}`
-            ];
-        }
-    }
-    
-    // Añadir una predicción de prueba para este usuario si no tenía
-    if (!window.appData.predicciones_usuario) window.appData.predicciones_usuario = {};
-    if (!window.appData.predicciones_usuario[pSm2.id_partido]) {
-        window.appData.predicciones_usuario[pSm2.id_partido] = {
-            sets: "3-1",
-            puntos: "12",
-            signo: "A favor"
-        };
-    }
-    
-    // Resetear voto local de este partido para que pueda votar
-    if (window.appData.mvp_votos) delete window.appData.mvp_votos[pSm2.id_partido];
-    
-    // Re-renderizar cartelera con el nuevo método limpio
-    if (typeof window.renderCarteleraHTML === 'function') {
-        window.renderCarteleraHTML(window.appData);
-    }
-    
-    // Resetear filtro de categoría a 'all' si existe para asegurar que se vea
-    const btnAll = document.querySelector('.cat-filter-btn[data-filter="all"]');
-    if (btnAll) btnAll.click();
-    
-    // Navegar a la pestaña de Partidos
-    const navBtn = document.querySelector('.nav-item-v2[onclick*="carteleraSection"]');
-    if (typeof switchTabV2 === 'function') {
-        switchTabV2('carteleraSection', navBtn);
-    } else if (typeof showTabV2 === 'function') {
-        showTabV2('carteleraSection', navBtn);
-    }
-    
-    mostrarToast("Partido de prueba cargado en Partidos. ¡Ya puedes probar a votar!");
-};
-
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
-// GESTOR DIRECTO DE NOMINADOS MVP EN SECCIÓN 6.B
-// ------------------------------------------------------------------
-window.setSelectValueSafely = function(selectEl, rawVal) {
-    if (!selectEl) return;
-    if (!rawVal) {
-        selectEl.selectedIndex = 0;
-        return;
-    }
-    // 1. Coincidencia exacta de valor
-    for (let i = 0; i < selectEl.options.length; i++) {
-        if (selectEl.options[i].value === rawVal) {
-            selectEl.selectedIndex = i;
-            return;
-        }
-    }
-    // 2. Coincidencia por dorsal (#X)
-    let m = String(rawVal).match(/^#(\d+)\b/);
-    if (m) {
-        let dor = m[1];
-        for (let i = 0; i < selectEl.options.length; i++) {
-            if (selectEl.options[i].value.startsWith(`#${dor} `)) {
-                selectEl.selectedIndex = i;
-                return;
-            }
-        }
-    }
-    // 3. Coincidencia por texto o nombre contenido
-    let rawClean = String(rawVal).toLowerCase().replace(/[^a-záéíóúüñ]/g, ' ').trim();
-    if (rawClean) {
-        for (let i = 0; i < selectEl.options.length; i++) {
-            let optClean = selectEl.options[i].value.toLowerCase().replace(/[^a-záéíóúüñ]/g, ' ').trim();
-            if (optClean && (optClean.includes(rawClean) || rawClean.includes(optClean))) {
-                selectEl.selectedIndex = i;
-                return;
-            }
-        }
-    }
-    selectEl.selectedIndex = 0;
-};
-
-window.populateDirectMvpBoxes = function() {
-    const selJor = document.getElementById('directMvpJornadaSelect');
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    if (!selPart) return;
-    
-    // Obtener partidos de Superliga
-    let sm2MatchesMap = {};
-    if (window.appData && Array.isArray(window.appData.equipos)) {
-        window.appData.equipos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) sm2MatchesMap[p.id_partido] = p;
-        });
-    }
-    if (window.appData && Array.isArray(window.appData.todos_partidos)) {
-        window.appData.todos_partidos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) {
-                if (!sm2MatchesMap[p.id_partido]) sm2MatchesMap[p.id_partido] = p;
-            }
-        });
-    }
-    
-    let sm2Matches = Object.values(sm2MatchesMap);
-    if (sm2Matches.length === 0) {
-        sm2Matches = [{
-            id_partido: "DEMO_SM2_MVP",
-            equipo_local: "Voleibol Club Valladolid",
-            rival: "CyL Palencia 2028",
-            categoria: "SM2",
-            jornada_eq: "1"
-        }];
-    }
-    
-    // Extraer jornadas únicas
-    let jornadas = [...new Set(sm2Matches.map(p => String(p.jornada_eq || p.jornada || '1')))];
-    jornadas.sort((a, b) => parseInt(a) - parseInt(b));
-    
-    if (selJor) {
-        let curJor = selJor.value;
-        selJor.innerHTML = '<option value="todas">Todas las Jornadas</option>';
-        jornadas.forEach(j => {
-            let opt = document.createElement('option');
-            opt.value = j;
-            opt.textContent = `Jornada ${j}`;
-            selJor.appendChild(opt);
-        });
-        if (curJor && (curJor === 'todas' || jornadas.includes(curJor))) {
-            selJor.value = curJor;
-        } else if (jornadas.length > 0) {
-            selJor.value = jornadas[0];
-        }
-    }
-    
-    window.onDirectMvpJornadaChange(selJor ? selJor.value : 'todas');
-};
-
-window.onDirectMvpJornadaChange = function(jorVal) {
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    if (!selPart) return;
-    
-    let sm2MatchesMap = {};
-    if (window.appData && Array.isArray(window.appData.equipos)) {
-        window.appData.equipos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) sm2MatchesMap[p.id_partido] = p;
-        });
-    }
-    if (window.appData && Array.isArray(window.appData.todos_partidos)) {
-        window.appData.todos_partidos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) {
-                if (!sm2MatchesMap[p.id_partido]) sm2MatchesMap[p.id_partido] = p;
-            }
-        });
-    }
-    let sm2Matches = Object.values(sm2MatchesMap);
-    if (sm2Matches.length === 0) {
-        sm2Matches = [{ id_partido: "DEMO_SM2_MVP", equipo_local: "Voleibol Club Valladolid", rival: "CyL Palencia 2028", categoria: "SM2", jornada_eq: "1" }];
-    }
-    
-    let filtrados = sm2Matches;
-    if (jorVal && jorVal !== 'todas') {
-        filtrados = sm2Matches.filter(p => String(p.jornada_eq || p.jornada || '1') === String(jorVal));
-        if (filtrados.length === 0) filtrados = sm2Matches;
-    }
-    
-    let curVal = selPart.value;
-    selPart.innerHTML = '';
-    filtrados.forEach(p => {
-        let opt = document.createElement('option');
-        opt.value = p.id_partido;
-        opt.textContent = `J.${p.jornada_eq || '1'}: ${p.equipo_local || 'VCV'} vs ${p.rival || 'Rival'}`;
-        selPart.appendChild(opt);
-    });
-    if (curVal && filtrados.some(p => p.id_partido === curVal)) {
-        selPart.value = curVal;
-    } else if (filtrados.length > 0) {
-        selPart.value = filtrados[0].id_partido;
-    }
-    
-    window.onDirectMvpPartidoChange(selPart.value);
-};
-
-window.onDirectMvpPartidoChange = function(idPart) {
-    const s1 = document.getElementById('directMvp1');
-    const s2 = document.getElementById('directMvp2');
-    const s3 = document.getElementById('directMvp3');
-    const sOficial = document.getElementById('directMvpOficialSelect');
-    if (!s1 || !s2 || !s3) return;
-    
-    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
-    
-    let optsHtml = '<option value="">-- Seleccionar Jugador --</option>';
-    plantilla.forEach(pj => {
-        let posPart = pj.posicion ? ` [${pj.posicion}]` : '';
-        let apodoPart = pj.apodo ? ` (${pj.apodo})` : '';
-        let valStr = `#${pj.dorsal} ${pj.nombre}${apodoPart}${posPart}`;
-        optsHtml += `<option value="${valStr}">#${pj.dorsal} ${pj.apodo || pj.nombre}${posPart} - ${pj.nombre}</option>`;
-    });
-    
-    s1.innerHTML = optsHtml;
-    s2.innerHTML = optsHtml;
-    s3.innerHTML = optsHtml;
-
-    if (sOficial) {
-        sOficial.innerHTML = '<option value="">-- Sin MVP Oficial asignado --</option>' + optsHtml.replace('<option value="">-- Seleccionar Jugador --</option>', '');
-    }
-    
-    // Buscar si el partido ya tiene candidatos u oficial
-    let matchObj = null;
-    if (window.appData && Array.isArray(window.appData.equipos)) {
-        matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
-    }
-    if (!matchObj && window.appData && Array.isArray(window.appData.todos_partidos)) {
-        matchObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
-    }
-    let cands = (matchObj && Array.isArray(matchObj.mvp_candidatos)) ? matchObj.mvp_candidatos : [];
-    
-    window.setSelectValueSafely(s1, cands[0] || '');
-    window.setSelectValueSafely(s2, cands[1] || '');
-    window.setSelectValueSafely(s3, cands[2] || '');
-
-    if (sOficial) {
-        window.setSelectValueSafely(sOficial, (matchObj && matchObj.mvp_oficial) || '');
-    }
-
-    // Cargar estadísticas si ya existían para este partido
-    let stats = (matchObj && Array.isArray(matchObj.mvp_stats)) ? matchObj.mvp_stats : [];
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el) el.value = stats[k - 1] || '';
-    }
-};
-
-window.guardarDirectMvp = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const btn = document.getElementById('btnGuardarDirectMvp');
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    const idPart = selPart ? selPart.value : '';
-    if (!idPart) {
-        alert("Por favor selecciona un partido de Superliga.");
-        return;
-    }
-    const s1 = document.getElementById('directMvp1');
-    const s2 = document.getElementById('directMvp2');
-    const s3 = document.getElementById('directMvp3');
-    const m1 = s1 ? s1.value : '';
-    const m2 = s2 ? s2.value : '';
-    const m3 = s3 ? s3.value : '';
-    
-    if (!m1 || !m2 || !m3) {
-        alert("Debes seleccionar los 3 nominados al MVP. Por favor elige un jugador en cada desplegable.");
-        return;
-    }
-    if (m1 === m2 || m1 === m3 || m2 === m3) {
-        alert("Los 3 nominados deben ser jugadores diferentes. No puedes repetir al mismo jugador.");
-        return;
-    }
-    
-    const cands = [m1, m2, m3];
-    
-    // Buscar el partido en window.appData.equipos o crearlo si era el demo
-    if (!window.appData) window.appData = {};
-    if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];
-    
-    let pObj = window.appData.equipos.find(p => p.id_partido === idPart);
-    if (!pObj && window.appData.todos_partidos) {
-        pObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
-        if (pObj) window.appData.equipos.unshift(pObj);
-    }
-    if (!pObj) {
-        pObj = {
-            id_partido: idPart,
-            equipo_local: "Voleibol Club Valladolid",
-            rival: "CyL Palencia 2028",
-            abrev_local: "VCV",
-            abrev_rival: "PAL",
-            categoria: "SM2",
-            jornada_eq: "1",
-            ubicacion: "LOCAL",
-            estado: "CERRADO",
-            visibilidad: "MOSTRAR",
-            permitido: true,
-            timestamp: Date.now() - 3600000,
-            pabellon: "Polideportivo Pisuerga",
-            oficial_sets: "3-1",
-            oficial_parciales: "25-21, 23-25, 25-18, 25-20"
-        };
-        window.appData.equipos.unshift(pObj);
-    }
-    
-    pObj.mvp_candidatos = cands;
-    pObj.visibilidad = "MOSTRAR";
-    pObj.permitido = true;
-    if (pObj.estado !== "CERRADO" && pObj.estado !== "FINALIZADO") {
-        pObj.estado = "CERRADO";
-    }
-    if (!pObj.oficial_sets) pObj.oficial_sets = "3-1";
-    if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-    
-    // Asegurar que cualquier partido de Superliga en cartelera tenga estos candidatos sincronizados
-    window.appData.equipos.forEach(p => {
-        let cat = (p.categoria || '').toLowerCase();
-        if (cat.includes('sm2') || cat.includes('superliga')) {
-            p.mvp_candidatos = cands;
-            p.visibilidad = "MOSTRAR";
-            p.permitido = true;
-        }
-    });
-
-    // Resetear voto local de este partido para poder probar a votar
-    if (window.appData.mvp_votos) delete window.appData.mvp_votos[idPart];
-    
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando..."; }
-    
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'save_resultado_admin',
-            usuario: currentUser,
-            password: currentPassword,
-            id_partido: idPart,
-            sets: pObj.oficial_sets || '',
-            parciales: pObj.oficial_parciales || '',
-            streaming: pObj.streaming || '',
-            mvp_candidatos: cands
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "⭐ Guardar 3 Nominados en Cartelera"; }
-        mostrarToast("¡3 Nominados MVP guardados con éxito!");
-        if (typeof window.renderCarteleraHTML === 'function') {
-            window.renderCarteleraHTML(window.appData);
-        }
-        if (window.appData && window.appData.equipos) {
-            renderAdminPanel(window.appData.equipos);
-        }
-    })
-    .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "⭐ Guardar 3 Nominados en Cartelera"; }
-        mostrarToast("Guardado localmente. ¡Ya puedes verlo en Cartelera!");
-        if (typeof window.renderCarteleraHTML === 'function') {
-            window.renderCarteleraHTML(window.appData);
-        }
-    });
-};
-
-window.guardarMvpOficial = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const btn = document.getElementById('btnGuardarMvpOficial');
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    const idPart = selPart ? selPart.value : '';
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    const valOficial = selOficial ? selOficial.value : '';
-    
-    if (!idPart) {
-        alert("Por favor selecciona un partido de Superliga.");
-        return;
-    }
-    if (!valOficial) {
-        alert("Por favor selecciona qué jugador es el MVP Oficial.");
-        return;
-    }
-
-    // Recoger hasta 4 estadísticas ingresadas por el usuario
-    let collectedStats = [];
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el && el.value.trim()) {
-            collectedStats.push(el.value.trim());
-        }
-    }
-    
-    if (!window.appData) window.appData = {};
-    if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];
-    
-    let pObj = window.appData.equipos.find(p => p.id_partido === idPart);
-    if (!pObj && window.appData.todos_partidos) {
-        pObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
-        if (pObj) window.appData.equipos.unshift(pObj);
-    }
-    if (pObj) {
-        pObj.mvp_oficial = valOficial;
-        pObj.mvp_stats = collectedStats;
-        pObj.visibilidad = "MOSTRAR";
-        pObj.permitido = true;
-    }
-
-    // Sincronizar en todos los partidos Superliga en memoria
-    window.appData.equipos.forEach(p => {
-        let cat = (p.categoria || '').toLowerCase();
-        if (cat.includes('sm2') || cat.includes('superliga')) {
-            p.mvp_oficial = valOficial;
-            p.mvp_stats = collectedStats;
-            p.visibilidad = "MOSTRAR";
-        }
-    });
-    
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando..."; }
-    
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'set_mvp_oficial',
-            usuario: currentUser,
-            password: currentPassword,
-            id_partido: idPart,
-            mvp_oficial: valOficial,
-            mvp_stats: collectedStats
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar MVP Oficial en BD"; }
-        mostrarToast("¡MVP Oficial y estadísticas guardadas con éxito!");
-        if (typeof window.renderCarteleraHTML === 'function') {
-            window.renderCarteleraHTML(window.appData);
-        }
-    })
-    .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar MVP Oficial en BD"; }
-        mostrarToast("MVP Oficial guardado localmente");
-        if (typeof window.renderCarteleraHTML === 'function') {
-            window.renderCarteleraHTML(window.appData);
-        }
-    });
-};
-
-window.quitarMvpOficial = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    const idPart = selPart ? selPart.value : '';
-    if (!idPart) return;
-    
-    if (window.appData && Array.isArray(window.appData.equipos)) {
-        window.appData.equipos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) {
-                p.mvp_oficial = '';
-                p.mvp_stats = [];
-            }
-        });
-    }
-    
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    if (selOficial) selOficial.selectedIndex = 0;
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el) el.value = '';
-    }
-    
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'set_mvp_oficial',
-            usuario: currentUser,
-            password: currentPassword,
-            id_partido: idPart,
-            mvp_oficial: '',
-            mvp_stats: []
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    }).catch(e => {});
-    
-    mostrarToast("MVP Oficial retirado. ¡Vuelve a mostrarse la votación!");
-    if (typeof window.renderCarteleraHTML === 'function') {
-        window.renderCarteleraHTML(window.appData);
-    }
-};
-
-window.cargarRecuentoVotosMvp = function() {
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    const idPart = selPart ? selPart.value : '';
-    const cont = document.getElementById('adminRecuentoVotosMvp');
-    if (!idPart || !cont) return;
-    
-    cont.innerHTML = '<span style="color:var(--text-muted);">Consultando votos en la base de datos...</span>';
-    
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'get_mvp_votos_summary',
-            usuario: currentUser,
-            password: currentPassword,
-            id_partido: idPart
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d && d.status === 'success' && Array.isArray(d.votos) && d.votos.length > 0) {
-            let totalGeneral = d.votos.reduce((acc, cur) => acc + (parseInt(cur.total) || 0), 0);
-            let items = d.votos.map(v => {
-                let pInfo = window.parseCandInfo(v.jugador);
-                let pct = totalGeneral > 0 ? Math.round((v.total / totalGeneral) * 100) : 0;
-                return `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <span style="font-weight:700; color:#fff;">${pInfo.dorsal ? '#' + pInfo.dorsal + ' ' : ''}${pInfo.apodo}:</span>
-                    <span style="font-weight:800; color:var(--secondary-color);">${v.total} votos (${pct}%)</span>
-                </div>`;
-            }).join('');
-            cont.innerHTML = `<div style="margin-top:4px;">${items}<div style="text-align:right; margin-top:4px; font-weight:800; color:var(--text-muted); font-size:0.7rem;">Total: ${totalGeneral} votos</div></div>`;
-        } else {
-            cont.innerHTML = '<span style="color:var(--text-muted);">Aún no hay votos registrados por aficionados para este partido.</span>';
-        }
-    })
-    .catch(() => {
-        cont.innerHTML = '<span style="color:#e74c3c;">No se pudo conectar para obtener los votos.</span>';
-    });
-};
 
 const btnAdminSyncEl = document.getElementById('btnAdminSync');
 if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
@@ -3736,68 +2655,26 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     const parc = elParc ? elParc.value.trim() : "";
     const stream = elStream ? elStream.value.trim() : "";
     
-    // Leer candidatos MVP si existen los selects
-    const m1 = document.getElementById(`adm_mvp1_${idPart}`);
-    const m2 = document.getElementById(`adm_mvp2_${idPart}`);
-    const m3 = document.getElementById(`adm_mvp3_${idPart}`);
-    const cands = [];
-    if (m1 && m1.value) cands.push(m1.value);
-    if (m2 && m2.value && !cands.includes(m2.value)) cands.push(m2.value);
-    if (m3 && m3.value && !cands.includes(m3.value)) cands.push(m3.value);
-
     btn.disabled = true; btn.innerText = "Subiendo...";
     
     fetchSeguro(scriptURL, { 
         method: 'POST', 
-        body: JSON.stringify({ 
-            action: 'save_resultado_admin', 
-            usuario: currentUser, 
-            password: currentPassword, 
-            id_partido: idPart, 
-            sets: sets, 
-            parciales: parc, 
-            streaming: stream,
-            mvp_candidatos: cands
-        }), 
+        body: JSON.stringify({ action: 'save_resultado_admin', usuario: currentUser, password: currentPassword, id_partido: idPart, sets: sets, parciales: parc, streaming: stream }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
     .then(res => res.json())
     .then(d => {
         btn.disabled = false; btn.innerText = "Guardar Cambios";
-        if(window.appData && Array.isArray(window.appData.equipos)) {
-            let eq = window.appData.equipos.find(p => p.id_partido === idPart);
-            if (eq) {
-                if (cands.length > 0) eq.mvp_candidatos = cands;
-                if (sets) eq.oficial_sets = sets;
-                if (parc) eq.oficial_parciales = parc;
-                if (stream) eq.streaming = stream;
-            }
-        }
-        if (typeof window.renderCarteleraHTML === 'function' && window.appData) {
-            window.renderCarteleraHTML(window.appData);
-        }
         if(d.status === "success") { 
             mostrarToast("Guardado correctamente"); 
             cargarPartidos(); 
         } else { 
-            mostrarToast(d.message || "Guardado localmente"); 
+            mostrarToast(d.message || "Error al guardar"); 
         }
     })
     .catch(err => {
         btn.disabled = false; btn.innerText = "Guardar Cambios";
-        if(window.appData && Array.isArray(window.appData.equipos)) {
-            let eq = window.appData.equipos.find(p => p.id_partido === idPart);
-            if (eq) {
-                if (cands.length > 0) eq.mvp_candidatos = cands;
-                if (sets) eq.oficial_sets = sets;
-                if (parc) eq.oficial_parciales = parc;
-                if (stream) eq.streaming = stream;
-            }
-        }
-        if (typeof window.renderCarteleraHTML === 'function' && window.appData) {
-            window.renderCarteleraHTML(window.appData);
-        }
-        mostrarToast("Guardado localmente");
+        mostrarToast("Error de conexión");
     });
 }
 window.crearUsuarioAdmin = function(e) {
@@ -4415,7 +3292,6 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             });
             
             let badgesEl = document.getElementById('h2-user-badges'); if(badgesEl) badgesEl.innerHTML = insigniasH2Html;
-            window.isUserAdmin = !!isAdmin;
             
             // Render lucide icons in the newly injected HTML
             lucide.createIcons();
@@ -4489,17 +3365,15 @@ document.getElementById('btnLogin').addEventListener('click', function() {
 
              document.getElementById('tituloPrincipalSeccion').style.display = 'block';
 
-            window.renderCarteleraHTML = function(data) {
-                if (!data || !data.equipos) return;
-                data.equipos.sort((a, b) => {
-                    let tsA = a.timestamp || Infinity; 
-                    let tsB = b.timestamp || Infinity;
-                    return tsA - tsB; 
-                });
-                
-                equiposTotalesInfo = data.equipos;
+            data.equipos.sort((a, b) => {
+                let tsA = a.timestamp || Infinity; 
+                let tsB = b.timestamp || Infinity;
+                return tsA - tsB; 
+            });
+            
+            equiposTotalesInfo = data.equipos;
 
-                let htmlPartidos = ``;
+            let htmlPartidos = ``;
             let equiposPermitidos = 0;
             let equiposCerrados = 0;
             let nowMs = new Date().getTime();
@@ -4604,239 +3478,102 @@ let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.
                 </span>
             </div>`;
     }
-                        if (eq.estado === "CERRADO") {
-                            // --- PARTIDO CERRADO: DISEÑO COMPACTO Y MODERNO + MVP SUPERLIGA ---
-                            let catL = (eq.categoria || '').toLowerCase();
-                            let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
-                            let mvpCands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
-                            let myMvpVote = (window.appData && window.appData.mvp_votos) ? window.appData.mvp_votos[eq.id_partido] : null;
-                            let mvpOficial = eq.mvp_oficial || '';
+                        htmlPartidos += `
+                        <div class="vcv-card-v2 ${isPredicted && eq.estado !== 'CERRADO' ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
+                            <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    ${catLogoHtml}
+                                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                                </div>
+                                <div style="text-align: right;">
+                                    <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
+                                    ${infoPabellon}
+                                </div>
+                            </div>
 
-                            // Widget de Votación MVP o Proclamación Oficial (Solo visible para administradores)
-                            let mvpHtml = '';
-                            if (window.isUserAdmin && isSuperliga && mvpOficial) {
-                                let oInfo = window.parseCandInfo(mvpOficial);
-                                let myVoteNote = myMvpVote ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">Tu voto en la jornada fue para: <strong style="color:var(--text-main);">${window.parseCandInfo(myMvpVote).apodo}</strong></div>` : '';
-                                mvpHtml = `
-                                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden;">
-                                            <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
-                                        </div>
-                                        <div>
-                                            <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 4px;">
-                                                👑 MVP OFICIAL DEL PARTIDO
-                                            </div>
-                                            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                                <span>${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
-                                                ${oInfo.posicion ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">${oInfo.posicion}</span>` : ''}
-                                            </div>
-                                            ${(function() {
-                                                let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
-                                                if (statsList.length === 0) return '';
-                                                let badges = statsList.map(st => `
-                                                    <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.35); padding:2px 7px; border-radius:6px;">
-                                                        <span style="color:var(--secondary-color);">⚡</span> ${st}
-                                                    </span>
-                                                `).join('');
-                                                return `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;">${badges}</div>`;
-                                            })()}
-                                            ${myVoteNote}
-                                        </div>
-                                    </div>
-                                    <div style="font-size: 1.8rem; filter: drop-shadow(0 0 10px rgba(212,175,55,0.7)); flex-shrink: 0;">
-                                        🏆
-                                    </div>
-                                </div>`;
-                            } else if (window.isUserAdmin && isSuperliga && mvpCands.length > 0) {
-                                if (typeof window.renderMvpWidgetContent === 'function') {
-                                    mvpHtml = `
-                                    <div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">
-                                        ${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}
-                                    </div>`;
-                                } else {
-                                    mvpHtml = `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;"></div>`;
-                                }
-                            }
+                            <div class="teams-versus-container-v2">
+                                <div class="team-box-v2">
+                                  <div class="team-avatar-v2">${localLogo}</div>
+                                  <span class="team-name-v2">${localTeamName}</span>
+                                  <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
+                                </div>
+                                <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                                  <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
+                                  <div>VS</div>
+                                  ${btnStreaming}
+                                </div>
+                                <div class="team-box-v2">
+                                  <div class="team-avatar-v2">${visitLogo}</div>
+                                  <span class="team-name-v2">${visitTeamName}</span>
+                                  <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+                                <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
+                            </div>
+                            
+                            
 
-                            // Preparar datos del pronóstico en formato gemelo al oficial
-                            let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : 'Sin datos';
-                            let miPronDetalle = 'Sin predicción';
-                            if (isPredicted) {
-                                let isWinnerLocal = pSig.toLowerCase().includes('a favor');
-                                let isWinnerVisit = pSig.toLowerCase().includes('en contra');
-                                let winnerSafe = isWinnerLocal ? safeLocalName : (isWinnerVisit ? safeVisitName : '');
-                                let winnerAbrev = isWinnerLocal ? localAbrev : (isWinnerVisit ? visitAbrev : '');
+                            ${eq.estado === "CERRADO" ? `<div style="text-align:center; margin-top:15px; padding:15px; background:var(--bg-card-alt); border-radius:12px; border:1px solid var(--border-color);"><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">RESULTADO OFICIAL</div><div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main);">${eq.oficial_sets || 'Sin resultado'}</div><div style="font-size: 0.85rem; color: var(--text-muted);">${eq.oficial_parciales || ''}</div></div>` : ``}
 
-                                if (pPts == 0) {
-                                    miPronDetalle = `<span>Empate en puntos (0 pts)</span>`;
-                                } else if (winnerSafe) {
-                                    miPronDetalle = `
-                                    <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-                                        <span>+${pPts} pts</span>
-                                        <img loading="lazy" src="files/images/escudos/${winnerSafe}.png" alt="" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain; vertical-align:middle;">
-                                    </div>`;
-                                } else {
-                                    miPronDetalle = `<span>Dif: ${pPts} pts</span>`;
-                                }
-                            }
+                            <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
+                                <div id="summary-text-${eq.id_partido}">
+                                ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
+                                </div>
+                            </div>
 
-                            htmlPartidos += `
-                            <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${eq.es_derby ? 'box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);' : ''}">
-                                <!-- Header completo con Fecha, Jornada y Pabellón/Lugar -->
-                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                        ${catLogoHtml}
-                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                    </div>
-                                    <div style="text-align: right; color:var(--text-muted); font-size:0.78rem;">
-                                        <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
-                                        ${infoPabellon}
-                                    </div>
+                            ${eq.estado !== "CERRADO" ? `
+                            <!-- HIDDEN INPUTS -->
+                            <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
+                            <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
+                            <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
+
+                            <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
+                                <div class="sets-grid-label-v2">
+                                  <span>Resultado</span>
+                                  
+                                </div>
+                                <div class="sets-selector-grid-v2">
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
                                 </div>
 
-                                <!-- Fila de Equipos con Escudos Grandes -->
-                                <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
-                                    <div class="team-box-v2">
-                                        <div class="team-avatar-v2">${localLogo}</div>
-                                        <span class="team-name-v2">${localTeamName}</span>
-                                        <span class="team-role-v2" style="color: var(--success); font-weight:800;">LOCAL</span>
-                                    </div>
-                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                        <div style="font-size: 0.85rem; font-weight:900; color:var(--text-muted);">VS</div>
-                                        ${btnStreaming}
-                                    </div>
-                                    <div class="team-box-v2">
-                                        <div class="team-avatar-v2">${visitLogo}</div>
-                                        <span class="team-name-v2">${visitTeamName}</span>
-                                        <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">VISITANTE</span>
-                                    </div>
-                                </div>
-
-                                <!-- Comparativa Visual Gemela: Resultado Oficial vs Tu Predicción -->
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                                    <!-- Caja Resultado Oficial -->
-                                    <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
-                                            RESULTADO OFICIAL
-                                        </div>
-                                        <div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
-                                            ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
-                                        </div>
-                                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.oficial_parciales || ''}">
-                                            ${eq.oficial_parciales || 'Parciales pendientes'}
-                                        </div>
-                                    </div>
-
-                                    <!-- Caja Tu Predicción -->
-                                    <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                            <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px;"></i> TU PREDICCIÓN
-                                        </div>
-                                        <div style="font-size: 1.25rem; font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
-                                            ${miPronSets}
-                                        </div>
-                                        <div style="font-size: 0.75rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                            ${miPronDetalle}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Votación MVP (si aplica) -->
-                                ${mvpHtml}
-                            </div>`;
-                        } else {
-                            // --- PARTIDO ABIERTO / EN CURSO ---
-                            htmlPartidos += `
-                            <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
-                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
-                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                                        ${catLogoHtml}
-                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
-                                        ${infoPabellon}
-                                    </div>
-                                </div>
-
-                                <div class="teams-versus-container-v2">
-                                    <div class="team-box-v2">
-                                      <div class="team-avatar-v2">${localLogo}</div>
-                                      <span class="team-name-v2">${localTeamName}</span>
-                                      <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
-                                    </div>
-                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
-                                      <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
-                                      <div>VS</div>
-                                      ${btnStreaming}
-                                    </div>
-                                    <div class="team-box-v2">
-                                      <div class="team-avatar-v2">${visitLogo}</div>
-                                      <span class="team-name-v2">${visitTeamName}</span>
-                                      <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
-                                    </div>
-                                </div>
-                                <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-                                    <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
-                                </div>
-
-                                <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
-                                    <div id="summary-text-${eq.id_partido}">
-                                    ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
-                                    </div>
-                                </div>
-
-                                <!-- HIDDEN INPUTS -->
-                                <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
-                                <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
-                                <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
-
-                                <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
-                                    <div class="sets-grid-label-v2">
-                                      <span>Resultado</span>
-                                    </div>
-                                    <div class="sets-selector-grid-v2">
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
-                                    </div>
-
-                                    <div class="points-diff-container-v2">
-                                      <div class="points-header-v2">
-                                        <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
+                                <div class="points-diff-container-v2">
+                                  <div class="points-header-v2">
+                                    <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
+                                    
+                                  </div>
+                                  <div class="points-controls-row-v2">
+                                    <div class="stepper-container-v2">
+                                      <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
+                                      <div class="stepper-value-v2">
+                                        <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
+                                        <small>PTS</small>
                                       </div>
-                                      <div class="points-controls-row-v2">
-                                        <div class="stepper-container-v2">
-                                          <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
-                                          <div class="stepper-value-v2">
-                                            <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
-                                            <small>PTS</small>
-                                          </div>
-                                          <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
-                                        </div>
-                                        <div class="sign-selector-v2">
-                                          <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
-                                            <span style="font-size:0.7rem;">${localTeamName}</span>
-                                          </button>
-                                          <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
-                                            <span style="font-size:0.7rem;">${visitTeamName}</span>
-                                          </button>
-                                        </div>
-                                      </div>
+                                      <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
                                     </div>
+                                    <div class="sign-selector-v2">
+                                      <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
+                                        <span style="font-size:0.7rem;">${localTeamName}</span>
+                                      </button>
+                                      <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
+                                        <span style="font-size:0.7rem;">${visitTeamName}</span>
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                                
-                                <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
-                                    ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
-                                </button>
-                                
-                                ${destacadoHtml}
-                            </div>`;
-                        }
+                            </div>
+                            
+                            <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s; ${eq.estado === 'CERRADO' ? 'display:none;' : ''}">
+                                ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
+                            </button>` : ``}
+                            
+                            ${destacadoHtml}
+                        </div>`;
                     }
                 }
             });
@@ -4850,9 +3587,6 @@ let visitLogo = `<img loading="lazy" src="files/images/escudos/${safeVisitName}.
             if(window.updateCategoryFilter) window.updateCategoryFilter();
             iniciarRelojes();
             if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
-            };
-
-            window.renderCarteleraHTML(data);
 
             
             if(data.ligas && data.ligas.length > 0) {
@@ -6285,287 +5019,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             });
         }
     }
-
-    // --- VOTACIÓN MVP SUPERLIGA CON FOTOS Y ANIMACIÓN ---
-    window.parseCandInfo = function(candStr) {
-        if (!candStr) return { dorsal: null, nombre: '', apodo: 'Jugador', posicion: '', photoSrc: 'files/images/jugadores/dorsal_0.png', initials: 'VC', raw: '' };
-        
-        let dorsal = null;
-        let nombre = '';
-        let apodo = '';
-        let posicion = '';
-        
-        let s = String(candStr).trim();
-        let dorMatch = s.match(/#(\d+)/);
-        if (dorMatch) dorsal = parseInt(dorMatch[1]);
-        
-        let posMatch = s.match(/\[([^\]]+)\]/);
-        if (posMatch) posicion = posMatch[1].trim();
-
-        let apMatch = s.match(/\(([^)]+)\)/);
-        if (apMatch) apodo = apMatch[1].trim();
-        
-        let cleaned = s.replace(/#\d+\s*/, '').replace(/\s*\([^)]+\)/, '').replace(/\s*\[[^\]]+\]/, '').trim();
-        if (cleaned) nombre = cleaned;
-        
-        // Consultar la plantilla oficial para enriquecer datos del dorsal exacto
-        let plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
-        if (dorsal && Array.isArray(plantilla) && plantilla.length > 0) {
-            let found = plantilla.find(p => parseInt(p.dorsal) === dorsal);
-            if (found) {
-                if (found.nombre) nombre = found.nombre;
-                if (found.apodo) apodo = found.apodo;
-                if (found.posicion) posicion = found.posicion;
-            }
-        }
-        
-        if (!apodo) apodo = (nombre ? nombre.split(' ')[0] : 'Jugador');
-        if (!nombre) nombre = apodo;
-        
-        let dorKey = dorsal || 0;
-        let photoSrc = `files/images/jugadores/dorsal_${dorKey}.png`;
-        let initials = apodo.substring(0, 2).toUpperCase();
-
-        return { dorsal, nombre, apodo, posicion, photoSrc, initials, raw: candStr };
-    };
-
-    window.renderMvpWidgetContent = function(idPart, cands, myVote) {
-        if (!Array.isArray(cands) || cands.length === 0) return '';
-        
-        let votedIdx = -1;
-        if (myVote) {
-            let voteInfo = window.parseCandInfo(myVote);
-            votedIdx = cands.findIndex((c, i) => {
-                let cInfo = window.parseCandInfo(c);
-                if (c === myVote) return true;
-                if (voteInfo.dorsal && cInfo.dorsal && voteInfo.dorsal === cInfo.dorsal) return true;
-                if (voteInfo.apodo && cInfo.apodo && voteInfo.apodo.toLowerCase() === cInfo.apodo.toLowerCase()) return true;
-                return false;
-            });
-            if (votedIdx < 0 && cands.length > 0) votedIdx = 0;
-        }
-
-        let isVoted = !!myVote;
-
-        if (isVoted) {
-            let votedCand = cands[votedIdx];
-            let info = window.parseCandInfo(votedCand || myVote);
-            let displayPos = (info.posicion && info.posicion.toLowerCase() !== 'jugador') ? info.posicion : '';
-
-            return `
-            <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-                <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <span style="display:flex; align-items:center; gap:6px;"><span>⭐</span> Tu voto para el MVP</span>
-                    <button type="button" class="mvp-undo-btn" onclick="cambiarVotoMvp('${idPart}', '${encodeURIComponent(JSON.stringify(cands))}', '${encodeURIComponent(myVote || '')}')">
-                        ✏️ Cambiar Voto
-                    </button>
-                </div>
-                <div class="mvp-candidates-grid" id="mvp-grid-${idPart}">
-                    <div class="mvp-card-slot" id="mvp-slot-${idPart}-voted" style="flex: 1 1 0; min-width: 0;">
-                        <div class="mvp-card-btn is-voted-state" id="mvp-cand-${idPart}-voted">
-                            <div class="mvp-photo-wrapper">
-                                <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.4rem; color:var(--secondary-color);\\'>${info.initials}</span>';">
-                                ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
-                            </div>
-                            <div class="mvp-name-label">${info.apodo}</div>
-                            ${displayPos ? `<div class="mvp-sub-label">${displayPos}</div>` : ''}
-                            <span class="mvp-voted-badge">TU VOTO</span>
-                        </div>
-                    </div>
-                    <div class="mvp-voted-detail-panel visible" id="mvp-detail-${idPart}">
-                        <div style="font-size:0.68rem; font-weight:800; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px; display:flex; align-items:center; gap:5px;">
-                            <span>🏆</span> JUGADOR VOTADO
-                        </div>
-                        <div style="font-size:1.15rem; font-weight:900; color:#fff; font-family:'Space Grotesk', sans-serif; line-height:1.2; margin-bottom:4px;">
-                            ${info.dorsal ? '#' + info.dorsal + ' ' : ''}${info.apodo}
-                        </div>
-                        <div style="font-size:0.85rem; font-weight:700; color:rgba(255,255,255,0.85); margin-bottom:4px;">
-                            ${info.nombre || info.apodo}
-                        </div>
-                        ${displayPos ? `
-                        <div style="margin-top:2px;">
-                            <span style="font-size:0.72rem; font-weight:800; color:var(--secondary-color); background:rgba(212,175,55,0.14); border:1px solid rgba(212,175,55,0.3); padding:2px 8px; border-radius:6px; text-transform:uppercase;">
-                                ${displayPos}
-                            </span>
-                        </div>` : ''}
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        let slotsHtml = cands.map((cand, idx) => {
-            let info = window.parseCandInfo(cand);
-            let displayPos = (info.posicion && info.posicion.toLowerCase() !== 'jugador') ? info.posicion : '';
-
-            return `
-            <div class="mvp-card-slot" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}">
-                <div class="mvp-card-btn" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')">
-                    <div class="mvp-photo-wrapper">
-                        <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.4rem; color:var(--secondary-color);\\'>${info.initials}</span>';">
-                        ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
-                    </div>
-                    <div class="mvp-name-label">${info.apodo}</div>
-                    ${displayPos ? `<div class="mvp-sub-label">${displayPos}</div>` : ''}
-                </div>
-            </div>`;
-        }).join('');
-
-        return `
-        <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
-            <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span>⭐</span> ELIGE AL MVP DEL PARTIDO
-            </div>
-            <div class="mvp-candidates-grid" id="mvp-grid-${idPart}">
-                ${slotsHtml}
-            </div>
-        </div>`;
-    };
-
-    window.cambiarVotoMvp = function(idPart, candsEncoded, prevVoteEncoded) {
-        let cands = [];
-        try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}
-        let prevVote = '';
-        try { prevVote = decodeURIComponent(prevVoteEncoded || ''); } catch(e) {}
-        
-        let votedIdx = -1;
-        if (prevVote && cands.length > 0) {
-            let voteInfo = window.parseCandInfo(prevVote);
-            votedIdx = cands.findIndex((c, i) => {
-                let cInfo = window.parseCandInfo(c);
-                if (c === prevVote) return true;
-                if (voteInfo.dorsal && cInfo.dorsal && voteInfo.dorsal === cInfo.dorsal) return true;
-                if (voteInfo.apodo && cInfo.apodo && voteInfo.apodo.toLowerCase() === cInfo.apodo.toLowerCase()) return true;
-                return false;
-            });
-        }
-        if (votedIdx < 0) votedIdx = 0;
-
-        const widget = document.getElementById('mvp-widget-' + idPart);
-        if (!widget) return;
-
-        // Renderizar el estado inicial completo con los 3 slots llenos
-        widget.innerHTML = window.renderMvpWidgetContent(idPart, cands, null);
-
-        const slot0 = document.getElementById(`mvp-slot-${idPart}-0`);
-        const slotOrig = document.getElementById(`mvp-slot-${idPart}-${votedIdx}`);
-        const allCards = widget.querySelectorAll('.mvp-card-btn');
-        const targetCard = document.getElementById(`mvp-cand-${idPart}-${votedIdx}`);
-
-        if (slot0 && slotOrig && targetCard) {
-            const r0 = slot0.getBoundingClientRect();
-            const rOrig = slotOrig.getBoundingClientRect();
-            const deltaX = r0.left - rOrig.left;
-
-            // Colocar temporalmente el elemento donde estaba (a la izquierda)
-            targetCard.style.transition = 'none';
-            targetCard.style.transform = `translateX(${deltaX}px)`;
-            targetCard.classList.add('is-voted-state');
-
-            allCards.forEach((c, idx) => {
-                if (idx !== votedIdx) {
-                    c.style.transition = 'none';
-                    c.style.opacity = '0';
-                    c.style.pointerEvents = 'none';
-                }
-            });
-
-            // En el siguiente cuadro, animar de vuelta hacia su posición original
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    targetCard.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-                    targetCard.style.transform = 'translateX(0)';
-                    targetCard.classList.remove('is-voted-state');
-
-                    allCards.forEach((c, idx) => {
-                        if (idx !== votedIdx) {
-                            c.style.transition = 'opacity 0.35s ease 0.08s';
-                            c.style.opacity = '1';
-                            c.style.pointerEvents = '';
-                        }
-                    });
-                }, 20);
-            });
-        }
-
-        if (window.appData && window.appData.mvp_votos) {
-            delete window.appData.mvp_votos[idPart];
-        }
-    };
-
-    window.votarMvpPartido = function(idPart, jugador, selectedIdx, candsEncoded) {
-        if(window.isGuestMode) { alert("Modo invitado. Inicia sesión para votar."); return; }
-        if(!currentUser) { alert("Tu sesión ha expirado."); window.location.reload(); return; }
-        if(!idPart || !jugador) return;
-
-        let cands = [];
-        try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}
-
-        const slot0 = document.getElementById(`mvp-slot-${idPart}-0`);
-        const slotTarget = document.getElementById(`mvp-slot-${idPart}-${selectedIdx}`);
-        const targetCard = document.getElementById(`mvp-cand-${idPart}-${selectedIdx}`);
-        const widget = document.getElementById('mvp-widget-' + idPart);
-
-        if (slot0 && slotTarget && targetCard && widget) {
-            const r0 = slot0.getBoundingClientRect();
-            const rTarget = slotTarget.getBoundingClientRect();
-            const deltaX = r0.left - rTarget.left;
-
-            const allCards = widget.querySelectorAll('.mvp-card-btn');
-            allCards.forEach((c, idx) => {
-                if (idx !== selectedIdx) {
-                    c.style.transition = 'opacity 0.28s ease';
-                    c.style.opacity = '0';
-                    c.style.pointerEvents = 'none';
-                } else {
-                    c.style.zIndex = '10';
-                    c.classList.add('is-voted-state');
-                    c.style.transition = 'transform 0.42s cubic-bezier(0.25, 1, 0.5, 1)';
-                    c.style.transform = `translateX(${deltaX}px)`;
-                }
-            });
-        }
-
-        // Finalizar y fijar el estado estable en el slot izquierdo con su panel informativo a la derecha
-        const finalizeVote = () => {
-            if(!window.appData) window.appData = {};
-            if(!window.appData.mvp_votos) window.appData.mvp_votos = {};
-            window.appData.mvp_votos[idPart] = jugador;
-
-            const w = document.getElementById('mvp-widget-' + idPart);
-            if (w) {
-                w.innerHTML = window.renderMvpWidgetContent(idPart, cands, jugador);
-            }
-        };
-
-        fetchSeguro(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'vote_mvp',
-                usuario: currentUser,
-                password: currentPassword,
-                id_partido: idPart,
-                jugador: jugador
-            }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            setTimeout(() => {
-                if(data && data.status === 'success') {
-                    mostrarToast("¡Voto MVP registrado!");
-                } else {
-                    mostrarToast("¡Voto MVP registrado (modo pruebas)!");
-                }
-                finalizeVote();
-            }, 430);
-        })
-        .catch(err => {
-            setTimeout(() => {
-                mostrarToast("¡Voto MVP registrado localmente (modo pruebas)!");
-                finalizeVote();
-            }, 430);
-        });
-    };
+    // Add FAQ scroll behavior directly
     (function() {
         const masterFaq = document.getElementById('masterFaq');
         if(masterFaq) {
