@@ -578,7 +578,6 @@ export async function onRequestPost(context) {
         // --- CONFIGURACION DE LIGAS CONGELADAS (Ligas_Config) ---
         let ligasCongeladasSet = new Set(todasLasLigas);
         try {
-            await db.prepare('CREATE TABLE IF NOT EXISTS "Ligas_Config" ("Liga" TEXT PRIMARY KEY, "Congelar" TEXT DEFAULT \'SI\')').run();
             const { results: cfgRows } = await db.prepare('SELECT * FROM "Ligas_Config"').all();
             if (cfgRows && cfgRows.length > 0) {
                 ligasCongeladasSet = new Set();
@@ -587,10 +586,6 @@ export async function onRequestPost(context) {
                     if (val === "SI" || val === "X" || val === "1" || val === "TRUE") {
                         ligasCongeladasSet.add(row.Liga);
                     }
-                }
-            } else {
-                for (const lName of todasLasLigas) {
-                    await db.prepare('INSERT OR IGNORE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, \'SI\')').bind(lName).run();
                 }
             }
         } catch(e) {

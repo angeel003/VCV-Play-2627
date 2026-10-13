@@ -5145,6 +5145,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     window.cambiarLiga = function(ligaName) {
         window.currentLiga = ligaName;
+        if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); }
         if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
         if(typeof window.renderMyProfileCard === "function") { window.renderMyProfileCard(); }
     };
@@ -5605,7 +5606,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
     };
 
     
-    window.openPlayerInfo = function(jugador) {
+    window.openPlayerInfo = function(jugador, selectedLiga = null) {
         if(!window.appData || !window.appData.insignias) return;
         let data = window.appData;
         let uBadges = data.insignias[jugador] || [];
@@ -5641,22 +5642,36 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         }
         nameEl.innerText = "@" + jugador;
         
+        // Determinar liga concreta activa (la pasada por parámetro, o window.currentLiga, o primera liga donde esté)
+        let playerLigas = [];
+        if (data.clasificaciones) {
+            for (let l in data.clasificaciones) {
+                if (data.clasificaciones[l].some(r => r.jugador === jugador)) {
+                    playerLigas.push(l);
+                }
+            }
+        }
+        if (playerLigas.length === 0 && data.ligas) playerLigas = [...data.ligas];
+
+        let ligaName = selectedLiga || window.currentLiga;
+        if (!ligaName || !playerLigas.includes(ligaName)) {
+            ligaName = playerLigas[0] || (data.ligas && data.ligas[0]) || null;
+        }
+
         // Use nombre_real instead of role under the username
         let nombreReal = jugador;
-        // Search in clasificaciones to find the real name
-        let ligaName = window.currentLiga || (data.ligas && data.ligas.length > 0 ? data.ligas[0] : null);
         if (ligaName && data.clasificaciones && data.clasificaciones[ligaName]) {
             let pObj = data.clasificaciones[ligaName].find(r => r.jugador === jugador);
             if (pObj && pObj.nombre_real) nombreReal = pObj.nombre_real;
         }
-        roleEl.innerText = (nombreReal !== jugador) ? nombreReal : ""; // Only show if different
+        roleEl.innerText = (nombreReal !== jugador) ? nombreReal : "";
         if (nombreReal === jugador) {
             roleEl.style.display = 'none';
         } else {
             roleEl.style.display = 'block';
         }
         
-        // --- CALCULO DE ESTADISTICAS HISTORICAS ---
+        // --- CALCULO DE ESTADISTICAS HISTORICAS PARA LA LIGA CONCRETA ---
         let loggedUser = data.usuario || (typeof currentUser !== 'undefined' ? currentUser : '');
         let isOwn = (jugador === loggedUser);
         let statsResult = window.calculateUserStatsHelper(jugador, ligaName, !isOwn);
@@ -5666,6 +5681,19 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let recordPartido = statsResult.recordPartido;
         let desgloseHtml = statsResult.desgloseHtml;
         
+        // Selector / Pastillas de liga en caso de que el jugador esté en más de una liga
+        let ligaPillsHtml = "";
+        if (playerLigas.length > 1) {
+            ligaPillsHtml = `<div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">` +
+                playerLigas.map(l => {
+                    let isAct = (l === ligaName);
+                    return `<button type="button" onclick="openPlayerInfo('${jugador}', '${l}')" style="font-size:0.75rem; padding:4px 10px; border-radius:20px; border:1px solid ${isAct ? 'var(--secondary-color)' : 'var(--border-color)'}; background:${isAct ? 'rgba(212, 175, 55, 0.2)' : 'rgba(255,255,255,0.05)'}; color:${isAct ? 'var(--secondary-color)' : 'var(--text-muted)'}; font-weight:${isAct ? '700' : '500'}; cursor:pointer;">${l}</button>`;
+                }).join('') +
+            `</div>`;
+        } else if (ligaName) {
+            ligaPillsHtml = `<div style="display:flex; justify-content:center; margin-bottom:12px;"><span style="font-size:0.75rem; padding:3px 10px; border-radius:20px; background:rgba(212,175,55,0.12); color:var(--secondary-color); font-weight:700; border:1px solid rgba(212,175,55,0.3);">Liga ${ligaName}</span></div>`;
+        }
+
         let statsGridHtml = "";
         if (isOwn) {
             statsGridHtml = `
@@ -5705,9 +5733,10 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             </div>`;
         }
 
-        let desgloseTitle = isOwn ? "Desglose de Puntos (Jornadas y Partidos)" : "Desglose por Jornada";
+        let desgloseTitle = isOwn ? `Desglose de Puntos (${ligaName ? 'Liga ' + ligaName : 'General'})` : `Desglose por Jornada (${ligaName ? 'Liga ' + ligaName : 'General'})`;
 
         htmlStats = `
+            ${ligaPillsHtml}
             ${statsGridHtml}
             <div style="text-align: left; margin-bottom: 20px;">
                 <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">${desgloseTitle}</h4>
@@ -6020,7 +6049,7 @@ window.renderRankingV2 = function() {
                         <div style="display:flex; align-items:center; margin-bottom: 2px;">
                             <span style="font-weight: ${isFirst ? '900' : '800'}; font-size: ${isFirst ? '1rem' : '0.9rem'}; color: ${textColor};">${rankNum}º</span>
                         </div>
-                        <span class="player-handle" style="cursor:pointer; font-size:0.75rem; word-break:break-all; max-width:100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; line-height:1.1;" onclick="openPlayerInfo('${r.jugador}')">@${r.jugador}</span>
+                        <span class="player-handle" style="cursor:pointer; font-size:0.75rem; word-break:break-all; max-width:100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; white-space:normal; line-height:1.1;" onclick="openPlayerInfo('${r.jugador}', '${ligaName}')">@${r.jugador}</span>
                         <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
                             ${getTrendHtml(r.jugador, rankIndex)}
                             <span class="player-pts" style="margin-top:0;">${r.puntos} pts</span>
@@ -6110,7 +6139,7 @@ window.renderRankingV2 = function() {
                 // ROLE BADGE ELIMINADO AQUI COMO PIDIÓ EL USUARIO
 
                 html += `
-                <div class="ranking-list-item ${meClass}" style="cursor:pointer;" onclick="openPlayerInfo('${r.jugador}')">
+                <div class="ranking-list-item ${meClass}" style="cursor:pointer;" onclick="openPlayerInfo('${r.jugador}', '${ligaName}')">
                     <div class="rank-left">
                         <div style="display:flex; flex-direction:column; align-items:center; min-width:24px;">
                             <span class="rank-num" style="margin:0;">${r.realRank}</span>
