@@ -5329,7 +5329,47 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 recordJornada = maxJornadaPts.toString();
                 recordPartido = maxMatchPts.toString();
 
-                if (ligaName && data.clasificaciones && data.clasificaciones[ligaName]) {
+                // Calcular Media de Posición real en la liga analizando el histórico acumulado por jornada
+                if (ligaName && data.stats_ligas) {
+                    let posiciones = [];
+                    let jSet = new Set();
+                    for (let u in data.stats_ligas) {
+                        if (data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                            Object.keys(data.stats_ligas[u][ligaName].porJornada).forEach(j => jSet.add(Number(j)));
+                        }
+                    }
+                    let todasJ = Array.from(jSet).sort((a,b)=>a-b);
+                    todasJ.forEach(j => {
+                        let rnkJ = [];
+                        let targetParticipated = false;
+                        for (let u in data.stats_ligas) {
+                            if (!data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
+                            let ptsUpToJ = 0;
+                            for (let x = 1; x <= j; x++) {
+                                ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0);
+                            }
+                            if (u === targetUser && data.stats_ligas[u][ligaName].porJornada[j] !== undefined) targetParticipated = true;
+                            rnkJ.push({ u: u, pts: ptsUpToJ });
+                        }
+                        if (targetParticipated && rnkJ.length > 0) {
+                            rnkJ.sort((a,b) => b.pts - a.pts);
+                            let myObj = rnkJ.find(x => x.u === targetUser);
+                            if (myObj) {
+                                let realRank = rnkJ.findIndex(x => x.pts === myObj.pts) + 1;
+                                posiciones.push(realRank);
+                            }
+                        }
+                    });
+
+                    if (posiciones.length > 0) {
+                        let sumPos = posiciones.reduce((a,b)=>a+b, 0);
+                        mediaPos = (sumPos / posiciones.length).toFixed(1) + "º";
+                    } else if (data.clasificaciones && data.clasificaciones[ligaName]) {
+                        let rnk = data.clasificaciones[ligaName];
+                        let myIndex = rnk.findIndex(r => r.jugador === targetUser);
+                        if (myIndex !== -1) mediaPos = (myIndex + 1) + "º";
+                    }
+                } else if (ligaName && data.clasificaciones && data.clasificaciones[ligaName]) {
                     let rnk = data.clasificaciones[ligaName];
                     let myIndex = rnk.findIndex(r => r.jugador === targetUser);
                     if (myIndex !== -1) mediaPos = (myIndex + 1) + "º";
@@ -5378,7 +5418,41 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 mediaPuntos = countJ > 0 ? (totalPuntos / countJ).toFixed(1) : "0";
                 recordJornada = maxPVal.toString();
 
-                if (ligaName && data.clasificaciones && data.clasificaciones[ligaName]) {
+                // Calcular Media de Posición real
+                let posiciones = [];
+                let jSet = new Set();
+                for (let u in data.stats_ligas) {
+                    if (data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                        Object.keys(data.stats_ligas[u][ligaName].porJornada).forEach(j => jSet.add(Number(j)));
+                    }
+                }
+                let todasJ = Array.from(jSet).sort((a,b)=>a-b);
+                todasJ.forEach(j => {
+                    let rnkJ = [];
+                    let targetParticipated = false;
+                    for (let u in data.stats_ligas) {
+                        if (!data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
+                        let ptsUpToJ = 0;
+                        for (let x = 1; x <= j; x++) {
+                            ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0);
+                        }
+                        if (u === targetUser && data.stats_ligas[u][ligaName].porJornada[j] !== undefined) targetParticipated = true;
+                        rnkJ.push({ u: u, pts: ptsUpToJ });
+                    }
+                    if (targetParticipated && rnkJ.length > 0) {
+                        rnkJ.sort((a,b) => b.pts - a.pts);
+                        let myObj = rnkJ.find(x => x.u === targetUser);
+                        if (myObj) {
+                            let realRank = rnkJ.findIndex(x => x.pts === myObj.pts) + 1;
+                            posiciones.push(realRank);
+                        }
+                    }
+                });
+
+                if (posiciones.length > 0) {
+                    let sumPos = posiciones.reduce((a,b)=>a+b, 0);
+                    mediaPos = (sumPos / posiciones.length).toFixed(1) + "º";
+                } else if (data.clasificaciones && data.clasificaciones[ligaName]) {
                     let rnk = data.clasificaciones[ligaName];
                     let myIndex = rnk.findIndex(r => r.jugador === targetUser);
                     if (myIndex !== -1) mediaPos = (myIndex + 1) + "º";
