@@ -5334,8 +5334,19 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 if (ligaName && data.stats_ligas) {
                     let posiciones = [];
                     let jSet = new Set();
-                    for (let u in data.stats_ligas) {
-                        if (data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                    // Obtener los miembros que pertenecen a ESTA liga concreta
+                    let ligaMembers = new Set();
+                    if (data.clasificaciones && data.clasificaciones[ligaName]) {
+                        data.clasificaciones[ligaName].forEach(r => ligaMembers.add(r.jugador));
+                    }
+                    if (ligaMembers.size === 0) {
+                        for (let u in data.stats_ligas) {
+                            if (data.stats_ligas[u][ligaName]) ligaMembers.add(u);
+                        }
+                    }
+
+                    for (let u of ligaMembers) {
+                        if (data.stats_ligas[u] && data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
                             Object.keys(data.stats_ligas[u][ligaName].porJornada).forEach(j => jSet.add(Number(j)));
                         }
                     }
@@ -5343,8 +5354,8 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     todasJ.forEach(j => {
                         let rnkJ = [];
                         let targetParticipated = false;
-                        for (let u in data.stats_ligas) {
-                            if (!data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
+                        for (let u of ligaMembers) {
+                            if (!data.stats_ligas[u] || !data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
                             let ptsUpToJ = 0;
                             for (let x = 1; x <= j; x++) {
                                 ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0);
@@ -5422,8 +5433,18 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 // Calcular Media de Posición real
                 let posiciones = [];
                 let jSet = new Set();
-                for (let u in data.stats_ligas) {
-                    if (data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
+                let ligaMembers = new Set();
+                if (data.clasificaciones && data.clasificaciones[ligaName]) {
+                    data.clasificaciones[ligaName].forEach(r => ligaMembers.add(r.jugador));
+                }
+                if (ligaMembers.size === 0) {
+                    for (let u in data.stats_ligas) {
+                        if (data.stats_ligas[u][ligaName]) ligaMembers.add(u);
+                    }
+                }
+
+                for (let u of ligaMembers) {
+                    if (data.stats_ligas[u] && data.stats_ligas[u][ligaName] && data.stats_ligas[u][ligaName].porJornada) {
                         Object.keys(data.stats_ligas[u][ligaName].porJornada).forEach(j => jSet.add(Number(j)));
                     }
                 }
@@ -5431,8 +5452,8 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 todasJ.forEach(j => {
                     let rnkJ = [];
                     let targetParticipated = false;
-                    for (let u in data.stats_ligas) {
-                        if (!data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
+                    for (let u of ligaMembers) {
+                        if (!data.stats_ligas[u] || !data.stats_ligas[u][ligaName] || !data.stats_ligas[u][ligaName].porJornada) continue;
                         let ptsUpToJ = 0;
                         for (let x = 1; x <= j; x++) {
                             ptsUpToJ += (data.stats_ligas[u][ligaName].porJornada[x] || 0);
