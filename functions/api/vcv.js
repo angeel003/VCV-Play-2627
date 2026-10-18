@@ -105,6 +105,11 @@ export async function onRequestPost(context) {
             }
         } catch(e) {}
 
+        // Sembrar regla Porcentaje Extra MVP si no existe
+        try {
+            await db.prepare('INSERT OR IGNORE INTO "Reglas_Puntuacion" ("Regla", "Puntos") VALUES (\'Porcentaje Extra MVP\', \'10\')').run();
+        } catch(e) {}
+
         const indexQueries = [
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario ON "Usuarios"("Usuario")',
             'CREATE INDEX IF NOT EXISTS idx_usuarios_login ON "Usuarios"("Usuario", "Password")',
@@ -131,9 +136,12 @@ export async function onRequestPost(context) {
         for (const iq of indexQueries) {
             try { await db.prepare(iq).run(); } catch(e) {}
         }
-        return jsonResponse({status: 'success', message: 'Migraci├│n e ├¡ndices optimizados aplicados con ├®xito.'});
+        return jsonResponse({status: 'success', message: 'Migración e índices optimizados aplicados con éxito.'});
     }
     if (action === "ping") {
+        try {
+            await db.prepare('INSERT OR IGNORE INTO "Reglas_Puntuacion" ("Regla", "Puntos") VALUES (\'Porcentaje Extra MVP\', \'10\')').run();
+        } catch(e) {}
         return jsonResponse({ status: "ok" });
     }
 
