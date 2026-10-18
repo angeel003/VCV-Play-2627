@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: /api/vcv
 // Backend nativo conectado 1:1 a las tablas exactas de Cloudflare D1
 
-function jsonResponse(data, status = 200, cacheControl = "no-store") {
+function jsonResponse(data, status = 200) {
     return new Response(JSON.stringify(data), {
         status,
         headers: {
@@ -9,7 +9,7 @@ function jsonResponse(data, status = 200, cacheControl = "no-store") {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
-            "Cache-Control": cacheControl
+            "Cache-Control": "no-store"
         }
     });
 }
@@ -62,13 +62,45 @@ export async function onRequestPost(context) {
     const usuario = (body.usuario || "").trim();
     const password = (body.password || "").trim();
 
-    // 1. PING & MIGRACIONES / ÍNDICES
+    // 1. PING & MIGRACIONES / ├ìNDICES
     if (action === 'migrate_db' || action === 'apply_indexes') {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
-        try { await db.prepare("CREATE TABLE IF NOT EXISTS Peticiones_Insignias (id_peticion INTEGER PRIMARY KEY AUTOINCREMENT, Usuario TEXT, Tipo TEXT, Equipo_Externo TEXT, Estado TEXT, Fecha TEXT)").run(); } catch(e) {}
-        
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT, apodo TEXT, posicion TEXT)").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN apodo TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN posicion TEXT").run(); } catch(e) {}
+        try { await db.prepare("CREATE TABLE IF NOT EXISTS MVP_Votos (id_partido TEXT, usuario TEXT, jugador TEXT, timestamp INTEGER, PRIMARY KEY (id_partido, usuario))").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_candidatos TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_oficial TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
+
+        // Sembrar plantilla inicial si est├í vac├¡a
+        try {
+            const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga").first();
+            if (!countRow || countRow.c === 0) {
+                const initialPlayers = [
+                    [1, "Alonso Rivas Jorge", "Jorge", "Colocador"],
+                    [2, "Caba├▒eros Rodr├¡guez Samuel", "Samuel", "Receptor"],
+                    [3, "de Le├│n Rodr├¡guez Iker", "Iker", "Central"],
+                    [6, "Alonso Rivas Sergio", "Alonso", "L├¡bero"],
+                    [7, "Novella Gutierrez ├ülvaro", "├ülvaro", "Opuesto"],
+                    [8, "Posadas Yenes Manuel", "Manu", "Receptor"],
+                    [9, "Bertr├ín Catalina Alejandro", "Alejandro", "Central"],
+                    [10, "Gonz├ílez Fern├índez Alejandro", "Jany Jr", "Colocador"],
+                    [11, "Biserov Nankov Nikola", "Nikola", "Central"],
+                    [16, "Valverde Lorenzo Eduardo", "Edu", "L├¡bero"],
+                    [18, "Carrasco Alvarado Enrique", "Kike", "Receptor"],
+                    [21, "Corona Mediavilla Fabi├ín", "Fabi├ín", "Opuesto"],
+                    [23, "Garc├¡a de Castro ├ülvaro", "├ülvaro G.", "Receptor"],
+                    [24, "Biserov Nankov Kaloyan", "Kaloyan", "Central"]
+                ];
+                for (const [dor, nom, apod, pos] of initialPlayers) {
+                    await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)").bind(dor, nom, apod, pos).run();
+                }
+            }
+        } catch(e) {}
+
         const indexQueries = [
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_usuario ON "Usuarios"("Usuario")',
             'CREATE INDEX IF NOT EXISTS idx_usuarios_login ON "Usuarios"("Usuario", "Password")',
@@ -89,12 +121,13 @@ export async function onRequestPost(context) {
             'CREATE INDEX IF NOT EXISTS idx_peticiones_nombre_estado ON "Peticiones_Nombre"("Estado")',
             'CREATE INDEX IF NOT EXISTS idx_peticiones_insignias_estado ON "Peticiones_Insignias"("Estado")',
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_cache_app_clave ON "Cache_App"("clave")',
-            'CREATE UNIQUE INDEX IF NOT EXISTS idx_ligas_config_liga ON "Ligas_Config"("Liga")'
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_ligas_config_liga ON "Ligas_Config"("Liga")',
+            'CREATE INDEX IF NOT EXISTS idx_mvp_votos_partido ON "MVP_Votos"("id_partido")'
         ];
         for (const iq of indexQueries) {
             try { await db.prepare(iq).run(); } catch(e) {}
         }
-        return jsonResponse({status: 'success', message: 'Migración e índices optimizados aplicados con éxito.'});
+        return jsonResponse({status: 'success', message: 'Migraci├│n e ├¡ndices optimizados aplicados con ├®xito.'});
     }
     if (action === "ping") {
         return jsonResponse({ status: "ok" });
@@ -143,7 +176,10 @@ export async function onRequestPost(context) {
             abrev_rival: r.Abrev_der || "",
             oficial_sets: oRes["Sets Oficial"] || "",
             oficial_parciales: oRes["Parciales Oficial"] || "",
-            streaming: oRes.Streaming || ""
+            streaming: oRes.Streaming || "",
+            mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [],
+            mvp_oficial: oRes.mvp_oficial || "",
+            mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : []
         };
     }
 
@@ -158,16 +194,16 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: "success", equipos });
     }
 
-    // 3. CAMBIO DE CONTRASEÑA
+    // 3. CAMBIO DE CONTRASE├æA
     if (action === "change_password") {
         const oldPwd = (body.old_password || "").trim();
         const newPwd = (body.new_password || "").trim();
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, oldPwd).first();
         if (!user) {
-            return jsonResponse({ status: "error", message: "La contraseña actual no es correcta." });
+            return jsonResponse({ status: "error", message: "La contrase├▒a actual no es correcta." });
         }
         await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(newPwd, usuario).run();
-        return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
+        return jsonResponse({ status: "success", message: "┬íContrase├▒a actualizada con ├®xito!" });
     }
 
     // 4. GUARDAR PREDICCIONES (Porras)
@@ -182,11 +218,11 @@ export async function onRequestPost(context) {
         for (const idPart in preds) {
             const partido = await db.prepare('SELECT "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPart).first();
             if (partido && (partido.Estado === "CERRADO" || (partido.timestamp && nowMs >= partido.timestamp))) {
-                return jsonResponse({ status: "error", message: `⚠️ Seguridad: El partido ${idPart} ya ha comenzado o está cerrado.` });
+                return jsonResponse({ status: "error", message: `ÔÜá´©Å Seguridad: El partido ${idPart} ya ha comenzado o est├í cerrado.` });
             }
         }
 
-        // Optimización: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
+        // Optimizaci├│n: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
         const batchStmts = [];
         const nowStr = new Date().toLocaleString("es-ES");
         for (const idPart in preds) {
@@ -227,7 +263,7 @@ export async function onRequestPost(context) {
         if (batchTotales.length > 0) {
             await db.batch(batchTotales);
         }
-        return jsonResponse({ status: "success", message: "¡Tus predicciones a final de temporada han sido guardadas!" });
+        return jsonResponse({ status: "success", message: "┬íTus predicciones a final de temporada han sido guardadas!" });
     }
 
     // 6. HISTORIAL DE PARTIDOS
@@ -292,10 +328,10 @@ export async function onRequestPost(context) {
     if (action === "login" || action === "get_data") {
         const userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!userRow) {
-            return jsonResponse({ status: "error", message: "Usuario o contraseña incorrectos." });
+            return jsonResponse({ status: "error", message: "Usuario o contrase├▒a incorrectos." });
         }
 
-                // Actualizar último acceso si es un inicio de sesión (throttled a 1 hora para ahorrar escrituras)
+                // Actualizar ├║ltimo acceso si es un inicio de sesi├│n (throttled a 1 hora para ahorrar escrituras)
         if (action === "login") {
             try {
                 let shouldUpdate = true;
@@ -378,34 +414,20 @@ export async function onRequestPost(context) {
             const lblJug = isF ? "Jugadora" : "Jugador";
             const lblExj = isF ? "Exjugadora VCV" : "Exjugador VCV";
 
-            const addBadge = (type, text, extra = {}) => {
+            const addBadge = (type, text) => {
                 if (!insigniasMap[u].some(badge => badge.type === type && badge.text === text)) {
-                    insigniasMap[u].push({ type, text, ...extra });
+                    insigniasMap[u].push({ type, text });
                 }
             };
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
-            if (b["Entrenador de"]) {
-                const entVal = b["Entrenador de"].trim();
-                const teamsList = entVal.split(',').map(s => s.trim()).filter(Boolean);
-                const entText = teamsList.length > 1 
-                    ? `${lblEnt} de: ${teamsList.join(' | ')}`
-                    : `${lblEnt} de ${teamsList[0] || entVal}`;
-                addBadge('entrenador', entText, { roleTitle: `${lblEnt} de`, items: teamsList });
-            }
-            if (b["Jugador de"]) {
-                const jugVal = b["Jugador de"].trim();
-                const teamsList = jugVal.split(',').map(s => s.trim()).filter(Boolean);
-                const jugText = teamsList.length > 1
-                    ? `${lblJug} de: ${teamsList.join(' | ')}`
-                    : `${lblJug} de ${teamsList[0] || jugVal}`;
-                addBadge('jugador', jugText, { roleTitle: `${lblJug} de`, items: teamsList });
-            }
+            if (b["Entrenador de"]) addBadge('entrenador', b["Entrenador de"]);
+            if (b["Jugador de"]) addBadge('jugador', b["Jugador de"]);
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
             if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
             if (b.Custom_Badge === "X") {
                 if (!insigniasMap[u].some(badge => badge.type === 'custom' && badge.text === (b.Custom_Desc || 'Insignia'))) {
-                    insigniasMap[u].push({ type: 'custom', text: (b.Custom_Desc || 'Insignia'), emoji: (b.Custom_Emoji || '✨') });
+                    insigniasMap[u].push({ type: 'custom', text: (b.Custom_Desc || 'Insignia'), emoji: (b.Custom_Emoji || 'Ô£¿') });
                 }
             }
             if (b.Avatar === "X" && b.Avatar_Url) {
@@ -421,7 +443,7 @@ export async function onRequestPost(context) {
         const idsEnCartelera = {};
 
         for (const p of partidos) {
-            // SI ESTÁ OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
+            // SI EST├ü OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
             if (p.visibilidad === "OCULTAR") continue;
 
             const esLoc = misPermisos[p.equipo_local] === true;
@@ -436,7 +458,7 @@ export async function onRequestPost(context) {
                 // 1. Calendario: Entran todos los permitidos
                 todosPartidos.push(pCopy);
 
-                // 2. Cartelera: Solo los que están a <= 7 días, que tengan fecha, y que no hayan pasado más de 36h desde el inicio
+                // 2. Cartelera: Solo los que est├ín a <= 7 d├¡as, que tengan fecha, y que no hayan pasado m├ís de 36h desde el inicio
                 const pCartelera = { ...pCopy };
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
@@ -488,15 +510,12 @@ export async function onRequestPost(context) {
 
         // Puntos reales calculados de partidos terminados
         const puntosRealesTotales = {};
-        const nowPointsMs = Date.now();
         for (const p of partidos) {
-            // Solo computar si el partido está oficialmente CERRADO o ya se ha jugado/comenzado en el tiempo
-            const yaJugado = p.estado === "CERRADO" || (p.timestamp && nowPointsMs >= p.timestamp);
-            if (yaJugado && p.oficial_sets && p.oficial_sets.includes("-")) {
+            if (p.oficial_sets && p.oficial_sets.includes("-")) {
                 const sL = parseInt(p.oficial_sets.split("-")[0]);
                 const sV = parseInt(p.oficial_sets.split("-")[1]);
                 
-                // Determinar quién jugó a la izquierda (Local real) y quién a la derecha (Visitante real)
+                // Determinar qui├®n jug├│ a la izquierda (Local real) y qui├®n a la derecha (Visitante real)
                 const leftTeam = (p.ubicacion === 'LOCAL') ? p.equipo_local : p.rival;
                 const rightTeam = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
 
@@ -517,7 +536,7 @@ export async function onRequestPost(context) {
             }
         }
 
-        // Reglas de puntuación
+        // Reglas de puntuaci├│n
         const { results: regRows } = await db.prepare('SELECT * FROM "Reglas_Puntuacion"').all();
         let ptsSets = 5, ptsGanador = 3, ptsDiffExacta = 2, maxDistancia = 10;
         for (const r of regRows || []) {
@@ -534,7 +553,7 @@ export async function onRequestPost(context) {
         const mapNombresReales = {};
         for (const u of allUsers || []) mapNombresReales[u.Usuario] = u["Nombre Real"] || u.Usuario;
 
-        // CLASIFICACIONES: calcular puntos por usuario y liga (CON CACHÉ)
+        // CLASIFICACIONES: calcular puntos por usuario y liga (CON CACH├ë)
         
         // --- LOGICA DE APAGON DE RANKINGS (FIN DE SEMANA) ---
         const now = new Date();
@@ -544,7 +563,7 @@ export async function onRequestPost(context) {
         let unfreezeTime = 0;
 
         if (utcDay === 6 || utcDay === 0 || utcDay === 1) {
-            // Unfreeze: Lunes a las 18:00 hora española (16:00 UTC en verano, 17:00 UTC en invierno)
+            // Unfreeze: Lunes a las 18:00 hora espa├▒ola (16:00 UTC en verano, 17:00 UTC en invierno)
             let u = new Date(now);
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
@@ -552,7 +571,7 @@ export async function onRequestPost(context) {
             u.setUTCHours(16, 0, 0, 0); // 18:00 verano / 17:00 invierno
             unfreezeTime = u.getTime();
 
-            // Si todavía no hemos superado la hora de descongelación del lunes
+            // Si todav├¡a no hemos superado la hora de descongelaci├│n del lunes
             if (now.getTime() < unfreezeTime) {
                 isFrozen = true;
                 // Cutoff: Viernes a las 23:59:59 UTC
@@ -565,13 +584,13 @@ export async function onRequestPost(context) {
             }
         }
 
-        // --- OVERRIDE MANUAL DE CONGELACIÓN (ADMIN INTRANET) ---
+        // --- OVERRIDE MANUAL DE CONGELACI├ôN (ADMIN INTRANET) ---
         let freezeOverride = null; // 'UNFREEZE', 'FREEZE', o null
         try {
             const rowOverride = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").first();
             if (rowOverride && rowOverride.valor) {
                 const parsed = JSON.parse(rowOverride.valor);
-                // Si el override expiró (por ejemplo superó unfreeze_until o expires_at), se descarta automáticamente
+                // Si el override expir├│ (por ejemplo super├│ unfreeze_until o expires_at), se descarta autom├íticamente
                 if (parsed.expires_at && now.getTime() > parsed.expires_at) {
                     await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
                 } else {
@@ -592,6 +611,7 @@ export async function onRequestPost(context) {
         // --- CONFIGURACION DE LIGAS CONGELADAS (Ligas_Config) ---
         let ligasCongeladasSet = new Set(todasLasLigas);
         try {
+            await db.prepare('CREATE TABLE IF NOT EXISTS "Ligas_Config" ("Liga" TEXT PRIMARY KEY, "Congelar" TEXT DEFAULT \'SI\')').run();
             const { results: cfgRows } = await db.prepare('SELECT * FROM "Ligas_Config"').all();
             if (cfgRows && cfgRows.length > 0) {
                 ligasCongeladasSet = new Set();
@@ -601,13 +621,17 @@ export async function onRequestPost(context) {
                         ligasCongeladasSet.add(row.Liga);
                     }
                 }
+            } else {
+                for (const lName of todasLasLigas) {
+                    await db.prepare('INSERT OR IGNORE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, \'SI\')').bind(lName).run();
+                }
             }
         } catch(e) {
             console.error("Error Ligas_Config:", e);
         }
 
-        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN_v2' : 'userPointsInLiga_v2';
-        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN_v2' : 'statsLigas_v2';
+        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
+        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN' : 'statsLigas';
 
         let userPointsInLiga = {};
         let statsLigas = {};
@@ -624,20 +648,6 @@ export async function onRequestPost(context) {
             userPointsInLiga = {};
             statsLigas = {};
             const { results: allPorras } = await db.prepare('SELECT * FROM "Porras"').all();
-
-            // Cargar permisos de equipos de todos los usuarios para calcular derbis
-            const { results: allPermRows } = await db.prepare('SELECT * FROM "Permisos_Equipos"').all();
-            const mapUserPerms = {};
-            for (const r of allPermRows || []) {
-                if (!r.Jugador) continue;
-                mapUserPerms[r.Jugador] = {};
-                for (const col in r) {
-                    if (col !== "Jugador" && r[col] && r[col].toString().toUpperCase() === "X") {
-                        mapUserPerms[r.Jugador][col] = true;
-                    }
-                }
-            }
-
             for (const u of allUsers || []) {
                 userPointsInLiga[u.Usuario] = {};
                 statsLigas[u.Usuario] = {};
@@ -654,6 +664,9 @@ export async function onRequestPost(context) {
                 const p = mapPartidos[pr["ID Partido"]];
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
+                // Si estamos en apag├│n y el partido se jug├│ despu├®s del viernes a las 23:59, NO suma al ranking
+
+
 
                 const oSets = p.oficial_sets.split("-");
                 const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
@@ -681,25 +694,16 @@ export async function onRequestPost(context) {
 
                 const jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
 
-                // Comprobar si para este usuario es derby (tiene permisos para ambos equipos)
-                const uPerms = mapUserPerms[pr.Usuario] || {};
-                const isUserDerby = Boolean(uPerms[p.equipo_local] && uPerms[p.rival]);
-
                 if (isFrozen && p.timestamp >= freezeCutoff) {
                     for (const lName in ligasMap) {
-                        const hasLocal = ligasMap[lName].includes(p.equipo_local);
-                        const hasRival = ligasMap[lName].includes(p.rival);
-                        if (hasLocal || hasRival) {
-                            const isLigaDerby = hasLocal && hasRival && isUserDerby;
-                            const ptsToAdd = isLigaDerby ? (pts * 2) : pts;
-
+                        if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
                             if (ligasCongeladasSet.has(lName)) {
                                 const pendKey = "_pendientes_" + lName;
-                                userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + ptsToAdd;
+                                userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + pts;
                             } else {
-                                userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + ptsToAdd;
+                                userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
                                 if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
-                                    statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + ptsToAdd;
+                                    statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
                                 }
                             }
                         }
@@ -707,15 +711,10 @@ export async function onRequestPost(context) {
                     continue;
                 }
                 for (const lName in ligasMap) {
-                    const hasLocal = ligasMap[lName].includes(p.equipo_local);
-                    const hasRival = ligasMap[lName].includes(p.rival);
-                    if (hasLocal || hasRival) {
-                        const isLigaDerby = hasLocal && hasRival && isUserDerby;
-                        const ptsToAdd = isLigaDerby ? (pts * 2) : pts;
-
-                        userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + ptsToAdd;
+                    if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
+                        userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
                         if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
-                            statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + ptsToAdd;
+                            statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
                         }
                     }
                 }
@@ -755,6 +754,20 @@ export async function onRequestPost(context) {
         }
         const rondaAbierta = maxRonda.toString();
 
+        // MVP: Obtener votos del usuario y plantilla superliga
+        let misVotosMvp = {};
+        let plantillaSuperliga = [];
+        try {
+            const { results: vRows } = await db.prepare('SELECT id_partido, jugador FROM MVP_Votos WHERE usuario = ?').bind(usuario).all();
+            for (const vr of vRows || []) {
+                misVotosMvp[vr.id_partido] = vr.jugador;
+            }
+        } catch(e) {}
+        try {
+            const { results: pRows } = await db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
+            plantillaSuperliga = pRows || [];
+        } catch(e) {}
+
         // Fetch Notificaciones
         let notificaciones = [];
         try {
@@ -767,6 +780,8 @@ export async function onRequestPost(context) {
         return jsonResponse({
             status: "success",
             notificaciones: notificaciones,
+            mvp_votos: misVotosMvp,
+            plantilla_superliga: plantillaSuperliga,
             is_frozen: isFrozen,
             freeze_override: freezeOverride,
             ligas_congeladas: Array.from(ligasCongeladasSet),
@@ -846,7 +861,7 @@ export async function onRequestPost(context) {
             }
         }
         
-        return jsonResponse({ status: 'success', message: '¡Permisos sincronizados! Las X han sido rellenadas físicamente en la base de datos.' });
+        return jsonResponse({ status: 'success', message: '┬íPermisos sincronizados! Las X han sido rellenadas f├¡sicamente en la base de datos.' });
     }
     
     if (action === 'fix_timestamps') {
@@ -880,7 +895,7 @@ export async function onRequestPost(context) {
             }
         }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
-        return jsonResponse({ status: 'success', message: 'Timestamps corregidos y Caché borrada: ' + updatedCount });
+        return jsonResponse({ status: 'success', message: 'Timestamps corregidos y Cach├® borrada: ' + updatedCount });
     }
 
     if (action === 'save_ligas_config') {
@@ -895,7 +910,7 @@ export async function onRequestPost(context) {
             await db.prepare('INSERT OR REPLACE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, ?)').bind(lName, val).run();
         }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
-        return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y caché reseteada.' });
+        return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y cach├® reseteada.' });
     }
 
     if (action === 'set_freeze_override') {
@@ -908,8 +923,8 @@ export async function onRequestPost(context) {
         if (mode === 'AUTO' || !mode) {
             await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
         } else {
-            // Calcular fecha de expiración automática: el próximo martes a las 00:00 UTC
-            // de modo que el siguiente fin de semana vuelva a funcionar 100% automático sin tener que acordarse
+            // Calcular fecha de expiraci├│n autom├ítica: el pr├│ximo martes a las 00:00 UTC
+            // de modo que el siguiente fin de semana vuelva a funcionar 100% autom├ítico sin tener que acordarse
             const expireDate = new Date();
             const currDay = expireDate.getUTCDay(); // 0=Dom, 1=Lun...
             let daysUntilTuesday = (2 - currDay + 7) % 7;
@@ -926,11 +941,11 @@ export async function onRequestPost(context) {
             await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor) VALUES ('FREEZE_OVERRIDE', ?)").bind(overrideData).run();
         }
 
-        // Limpiar caché de clasificaciones para que el cambio surta efecto de inmediato
+        // Limpiar cach├® de clasificaciones para que el cambio surta efecto de inmediato
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
-        let mensajeExito = "Horario restablecido a AUTOMÁTICO.";
-        if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con éxito. Todos los puntos se muestran en vivo.";
+        let mensajeExito = "Horario restablecido a AUTOM├üTICO.";
+        if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con ├®xito. Todos los puntos se muestran en vivo.";
         if (mode === 'FREEZE') mensajeExito = "Clasificaciones CONGELADAS manualmente.";
 
         return jsonResponse({ status: 'success', message: mensajeExito, mode: mode });
@@ -944,7 +959,7 @@ export async function onRequestPost(context) {
             await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); 
         } catch(e) {}
         
-        return jsonResponse({ status: 'success', message: 'Caché borrada. Las clasificaciones se recalcularán al recargar la web.' });
+        return jsonResponse({ status: 'success', message: 'Cach├® borrada. Las clasificaciones se recalcular├ín al recargar la web.' });
     }
 
     // ADMIN: ADD USER
@@ -995,27 +1010,105 @@ export async function onRequestPost(context) {
             await db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(new_u).run();
         }
 
-        return jsonResponse({ status: 'success', message: 'Usuario creado con éxito en la BD de Cloudflare' });
+        return jsonResponse({ status: 'success', message: 'Usuario creado con ├®xito en la BD de Cloudflare' });
     }
 
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
-        const { id_partido, sets, parciales, streaming } = body;
+        const { id_partido, sets, parciales, streaming, mvp_candidatos, mvp_oficial, mvp_stats } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+
+        const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
+        const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
 
         // Update Resultados_Oficiales
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ? WHERE "ID Partido" = ?').bind(sets || '', parciales || '', streaming || '', id_partido).run();
+            let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
+            let params = [sets || '', parciales || '', streaming || '', candStr];
+            if (mvp_oficial !== undefined) {
+                sql += ', "mvp_oficial" = ?';
+                params.push(mvp_oficial || '');
+            }
+            if (mvp_stats !== undefined) {
+                sql += ', "mvp_stats" = ?';
+                params.push(statsStr);
+            }
+            sql += ' WHERE "ID Partido" = ?';
+            params.push(id_partido);
+            await db.prepare(sql).bind(...params).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '').run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr).run();
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
-        return jsonResponse({ status: 'success', message: 'Resultados y/o streaming guardados con éxito' });
+        return jsonResponse({ status: 'success', message: 'Resultados y datos guardados con ├®xito' });
+    }
+
+    // ADMIN: SET MVP OFICIAL DE JORNADA / PARTIDO
+    if (action === 'set_mvp_oficial') {
+        const { id_partido, mvp_oficial, mvp_stats } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+
+        const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
+        const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
+        if (exist) {
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, id_partido).run();
+        } else {
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr).run();
+        }
+
+        return jsonResponse({ status: 'success', message: 'MVP Oficial y estad├¡sticas guardadas con ├®xito en la base de datos' });
+    }
+
+    // VOTAR MVP DE PARTIDO
+    if (action === 'vote_mvp') {
+        const { id_partido, jugador } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votaci├│n' }, 400);
+
+        await db.prepare('INSERT OR REPLACE INTO MVP_Votos (id_partido, usuario, jugador, timestamp) VALUES (?, ?, ?, ?)').bind(id_partido, usuario, jugador, Date.now()).run();
+        return jsonResponse({ status: 'success', message: '┬íVoto registrado para ' + jugador + '!' });
+    }
+
+    // ADMIN: OBTENER RECUENTO DE VOTOS MVP DE UN PARTIDO
+    if (action === 'get_mvp_votos_summary') {
+        const { id_partido } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { results: votos } = await db.prepare('SELECT jugador, COUNT(*) as total FROM MVP_Votos WHERE id_partido = ? GROUP BY jugador ORDER BY total DESC').bind(id_partido).all();
+        return jsonResponse({ status: 'success', votos: votos || [] });
+    }
+
+    // ADMIN: GESTIONAR PLANTILLA SUPERLIGA
+    if (action === 'save_plantilla_superliga') {
+        const { jugadores } = body; // Array de { dorsal: number, nombre: string }
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        if (Array.isArray(jugadores)) {
+            await db.prepare('DELETE FROM Plantilla_Superliga').run();
+            for (const j of jugadores) {
+                const dor = parseInt(j.dorsal);
+                const nom = (j.nombre || '').trim();
+                const apod = (j.apodo || '').trim();
+                const pos = (j.posicion || '').trim();
+                if (!isNaN(dor) && nom) {
+                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)').bind(dor, nom, apod, pos).run();
+                }
+            }
+        }
+        return jsonResponse({ status: 'success', message: 'Plantilla de Superliga actualizada con ├®xito.' });
     }
 
     
@@ -1026,7 +1119,7 @@ export async function onRequestPost(context) {
         const { new_usuario, new_nombre } = body;
         
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
 
         if (!new_usuario && !new_nombre) {
             return jsonResponse({status: 'error', message: 'Faltan datos'}, 400);
@@ -1034,13 +1127,13 @@ export async function onRequestPost(context) {
 
         if (new_usuario) {
             const check = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(new_usuario).first();
-            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está cogido.'}, 400);
+            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya est├í cogido.'}, 400);
             
             await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(usuario).run();
             await db.prepare('INSERT INTO "Peticiones_Nombre" ("Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
                 .bind(usuario, new_usuario, new_nombre || '', new Date().toISOString(), 'PENDIENTE').run();
             
-            return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, avísanos por correo. Mientras tanto, usa tu usuario actual.'});
+            return jsonResponse({status: 'success', message: 'Un administrador la revisar├í. Si tras varios d├¡as no se ha cambiado, av├¡sanos por correo. Mientras tanto, usa tu usuario actual.'});
         } else {
             await db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
             return jsonResponse({status: 'success', message: 'Tu Nombre Real se ha actualizado inmediatamente.'});
@@ -1049,7 +1142,7 @@ export async function onRequestPost(context) {
 
     if (action === 'get_name_change_requests') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
@@ -1068,18 +1161,18 @@ export async function onRequestPost(context) {
         const { target_user, resolution } = body;
         
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         if (resolution === 'reject') {
             await db.prepare('UPDATE "Peticiones_Nombre" SET "Estado" = \'RECHAZADO\' WHERE "Usuario Actual" = ?').bind(target_user).run();
-            return jsonResponse({status: 'success', message: 'Petición rechazada.'});
+            return jsonResponse({status: 'success', message: 'Petici├│n rechazada.'});
         }
 
                 if (resolution === 'approve') {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).first();
-            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
+            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontr├│ la petici├│n.'}, 404);
 
             const oldU = peticion["Usuario Actual"];
             const newU = peticion["Nuevo Usuario Sol"];
@@ -1110,14 +1203,14 @@ export async function onRequestPost(context) {
             
             await db.batch(stmts);
             
-            let msg = 'Petición aprobada con éxito.';
-            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con éxito.`;
+            let msg = 'Petici├│n aprobada con ├®xito.';
+            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con ├®xito.`;
             return jsonResponse({status: 'success', message: msg});
         }
     }
     if (action === 'delete_avatar') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Avatar" = \'\', "Avatar_Url" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
         return jsonResponse({status: 'success', message: 'Foto borrada.'});
@@ -1125,7 +1218,7 @@ export async function onRequestPost(context) {
 
     if (action === 'delete_custom_badge') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Custom_Badge" = \'\', "Custom_Emoji" = \'\', "Custom_Desc" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
         return jsonResponse({status: 'success', message: 'Insignia borrada.'});
@@ -1134,12 +1227,12 @@ export async function onRequestPost(context) {
     if (action === 'request_badge_update') {
         const { payload } = body;
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
 
         await db.prepare('INSERT INTO "Peticiones_Insignias" ("Usuario", "Tipo", "Equipo_Externo", "Estado", "Fecha") VALUES (?, ?, ?, ?, ?)')
             .bind(usuario, 'PERFIL', payload, 'PENDIENTE', new Date().toISOString()).run();
             
-        return jsonResponse({status: 'success', message: 'Petición enviada a los administradores.'});
+        return jsonResponse({status: 'success', message: 'Petici├│n enviada a los administradores.'});
     }
 
     if (action === 'get_peticiones_insignias') {
@@ -1157,12 +1250,12 @@ export async function onRequestPost(context) {
 
         if (resolution === 'reject') {
             await db.prepare('UPDATE "Peticiones_Insignias" SET "Estado" = \'RECHAZADO\' WHERE "id_peticion" = ?').bind(id_peticion).run();
-            return jsonResponse({status: 'success', message: 'Petición rechazada.'});
+            return jsonResponse({status: 'success', message: 'Petici├│n rechazada.'});
         }
 
         if (resolution === 'approve') {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Insignias" WHERE "id_peticion" = ?').bind(id_peticion).first();
-            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
+            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontr├│ la petici├│n.'}, 404);
 
             if (peticion.Tipo === 'PERFIL') {
                 const userToUpdate = peticion.Usuario;
@@ -1190,7 +1283,7 @@ export async function onRequestPost(context) {
             }
 
             await db.prepare('UPDATE "Peticiones_Insignias" SET "Estado" = \'APROBADO\' WHERE "id_peticion" = ?').bind(id_peticion).run();
-            return jsonResponse({status: 'success', message: 'Petición aprobada con éxito.'});
+            return jsonResponse({status: 'success', message: 'Petici├│n aprobada con ├®xito.'});
         }
     }
 
@@ -1201,14 +1294,14 @@ export async function onRequestPost(context) {
         
         try {
             await db.prepare('UPDATE "Usuarios" SET "Correo" = ? WHERE "Usuario" = ?').bind(email, usuario).run();
-            return jsonResponse({ status: 'success', message: 'Correo guardado con éxito.' });
+            return jsonResponse({ status: 'success', message: 'Correo guardado con ├®xito.' });
         } catch(e) {
             if (e.message && e.message.includes('no such column')) {
-                return jsonResponse({ status: 'error', message: 'Error interno: La columna Correo aún no existe en la BD de Cloudflare. Por favor avisa al administrador.' }, 500);
+                return jsonResponse({ status: 'error', message: 'Error interno: La columna Correo a├║n no existe en la BD de Cloudflare. Por favor avisa al administrador.' }, 500);
             }
             return jsonResponse({ status: 'error', message: 'Error al guardar el correo.' }, 500);
         }
     }
 
-    return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
+    return jsonResponse({ status: "error", message: `Acci├│n desconocida: ${action}` }, 400);
 }
