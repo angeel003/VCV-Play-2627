@@ -9422,5 +9422,219 @@ window.descargarTarjetaCanvas = function() {
 <!-- MODAL COMPARTIR TARJETA CANVAS -->
 <div id="shareCardModal" onclick="if(event.target === this) closeShareCardModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10001; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
     <div style="background:var(--bg-card); width:100%; max-width:420px; max-height:92vh; overflow-y:auto; border-radius:18px; padding:20px; box-shadow:0 12px 48px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border-color); text-align:center; box-sizing:border-box;">
-        <button onclick="closeShareCardModal()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.4); border:none; color:var(--text-main); font-size:1.6rem; cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1
-... [truncated for diff preview]
+        <button onclick="closeShareCardModal()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.4); border:none; color:var(--text-main); font-size:1.6rem; cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1; z-index:5;">&times;</button>
+        
+        <h3 style="margin:0 0 12px; font-size:1.15rem; font-weight:800; color:var(--text-main); display:flex; align-items:center; justify-content:center; gap:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--secondary-color);"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+            Compartir Tarjeta
+        </h3>
+
+        <!-- Selector de Liga (solo visible al compartir jornada) -->
+        <div id="shareLigaSelectorContainer" style="display:none; margin-bottom:12px;">
+            <label style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Liga a mostrar:</label>
+            <select id="shareLigaSelect" onchange="window.cambiarLigaCompartir(this.value)" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:6px 12px; border-radius:8px; font-size:0.85rem; font-weight:700; width:100%; outline:none;">
+            </select>
+        </div>
+
+        <!-- Contenedor del Canvas de Previsualización -->
+        <div style="background:#0e0612; border-radius:14px; padding:10px; border:1px solid var(--border-color); margin-bottom:16px; display:flex; justify-content:center; align-items:center; min-height:260px;">
+            <canvas id="shareCardCanvas" style="max-width:100%; height:auto; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
+        </div>
+
+        <!-- Botón de Acción Principal -->
+        <div>
+            <button id="btnShareNative" onclick="window.ejecutarCompartirTarjeta()" class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, var(--primary-color), #8e3c96); border:none; font-weight:800; border-radius:12px; padding:12px 16px; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(123,51,130,0.4);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                Compartir Imagen
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+if(document.getElementById('btnAdminClearCache')){
+    document.getElementById('btnAdminClearCache').addEventListener('click', function(e) {
+        e.preventDefault();
+        let btn = this;
+        let oldHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Recalculando...';
+        btn.disabled = true;
+        fetchSeguro(scriptURL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'clear_cache', usuario: currentUser, password: currentPassword }), 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            btn.innerHTML = oldHTML;
+            btn.disabled = false;
+        }).catch(err => {
+            alert("Error: " + err);
+            btn.innerHTML = oldHTML;
+            btn.disabled = false;
+        });
+    });
+}
+</script>
+
+<script>
+window.guardarAjusteLigasFreeze = async function(e) {
+    if(e) e.preventDefault();
+    const btn = document.getElementById('btnSaveLigasFreeze');
+    const oldText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = "Guardando...";
+
+    const cfg = {};
+    const cbs = document.querySelectorAll('.chk-liga-freeze');
+    cbs.forEach(cb => {
+        cfg[cb.value] = cb.checked;
+    });
+
+    try {
+        let res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'save_ligas_config', usuario: currentUser, password: currentPassword, config: cfg }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        let d = await res.json();
+        alert(d.message || "Ajuste guardado");
+        if(d.status === 'success') {
+            setTimeout(() => window.location.reload(), 500);
+        }
+    } catch(err) {
+        alert("Error de conexión al guardar ajuste de ligas.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = oldText;
+    }
+};
+
+window.cambiarModoCongelacion = async function(modo) {
+    var txtConfirm = "¿Confirmas cambiar el modo de congelación a " + modo + "?";
+    if (modo === 'UNFREEZE') txtConfirm = "¿Descongelar ahora las clasificaciones? Todo el mundo verá los puntos en directo.";
+    if (modo === 'FREEZE') txtConfirm = "¿Congelar manualmente las clasificaciones ahora?";
+    if (modo === 'AUTO') txtConfirm = "¿Restablecer al horario automático de fin de semana?";
+
+    if (!confirm(txtConfirm)) return;
+
+    var btnU = document.getElementById('btnAdminUnfreezeNow');
+    var btnF = document.getElementById('btnAdminFreezeNow');
+    var btnA = document.getElementById('btnAdminAutoFreeze');
+    if (btnU) btnU.disabled = true;
+    if (btnF) btnF.disabled = true;
+    if (btnA) btnA.disabled = true;
+
+    try {
+        var res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'set_freeze_override', usuario: currentUser, password: currentPassword, mode: modo }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        var d = await res.json();
+        alert(d.message || "Modo actualizado con éxito");
+        if (d.status === 'success') {
+            window.location.reload();
+        }
+    } catch(err) {
+        alert("Error de conexión al cambiar el modo de congelación.");
+    } finally {
+        if (btnU) btnU.disabled = false;
+        if (btnF) btnF.disabled = false;
+        if (btnA) btnA.disabled = false;
+    }
+};
+
+window.aplicarIndicesBD = async function(e) {
+    if (e) e.preventDefault();
+    var btn = document.getElementById('btnApplyDbIndexes');
+    var status = document.getElementById('adminDbIndexesStatus');
+    var oldText = btn ? btn.innerText : '';
+    if (btn) { btn.disabled = true; btn.innerText = '⏳ Aplicando...'; }
+    if (status) status.innerHTML = '<span style="color:#e67e22; font-weight:600;">⏳ Creando y optimizando índices en Cloudflare D1...</span>';
+    try {
+        var res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'apply_indexes', usuario: currentUser, password: currentPassword }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        var d = await res.json();
+        if (d.status === 'success') {
+            if (status) status.innerHTML = '<span style="color:#27ae60; font-weight:bold;">✅ ' + (d.message || '¡Índices aplicados correctamente en D1!') + '</span>';
+        } else {
+            if (status) status.innerHTML = '<span style="color:#e74c3c;">❌ ' + (d.message || 'Error al aplicar índices.') + '</span>';
+        }
+    } catch(err) {
+        if (status) status.innerHTML = '<span style="color:#e74c3c;">❌ Error de conexión: ' + err.message + '</span>';
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerText = oldText; }
+    }
+};
+
+// --- SOPORTE DE DESPLAZAMIENTO HORIZONTAL EN PC (RUEDA DEL RATÓN + CLICK & DRAG) ---
+(function() {
+    let activeDragSlider = null;
+    let dragStartX = 0;
+    let dragInitialScroll = 0;
+    let didDrag = false;
+
+    function getSlider(target) {
+        if (!target || !target.closest) return null;
+        return target.closest('.category-filter-strip, #league-slider-container, .horizontal-drag-scroll');
+    }
+
+    // 1. Rueda del ratón horizontal
+    window.addEventListener('wheel', function(e) {
+        const slider = getSlider(e.target);
+        if (slider && slider.scrollWidth > slider.clientWidth) {
+            // Si la rueda se mueve en vertical y no en horizontal
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                slider.scrollLeft += e.deltaY;
+            }
+        }
+    }, { passive: false });
+
+    // 2. Click & Drag (Arrastrar con el cursor)
+    window.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return; // Solo clic izquierdo
+        const slider = getSlider(e.target);
+        if (slider && slider.scrollWidth > slider.clientWidth) {
+            activeDragSlider = slider;
+            didDrag = false;
+            dragStartX = e.pageX;
+            dragInitialScroll = slider.scrollLeft;
+            slider.classList.add('is-dragging');
+        }
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!activeDragSlider) return;
+        const walk = e.pageX - dragStartX;
+        if (Math.abs(walk) > 4) {
+            didDrag = true;
+        }
+        activeDragSlider.scrollLeft = dragInitialScroll - walk;
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (activeDragSlider) {
+            activeDragSlider.classList.remove('is-dragging');
+            activeDragSlider = null;
+            setTimeout(function() { didDrag = false; }, 60);
+        }
+    });
+
+    // 3. Prevenir clic accidental en botones si el usuario ha arrastrado
+    window.addEventListener('click', function(e) {
+        if (didDrag) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }
+    }, true);
+})();
+</script>
+</body>
+
+</html>
