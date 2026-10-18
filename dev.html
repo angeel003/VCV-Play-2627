@@ -2137,7 +2137,7 @@
                     </div>
                   </div>
 
-                  <div style="display:flex; gap:6px;">
+                  <div style="display:flex; gap:6px; margin-bottom: 6px;">
                     <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
                       👑 Guardar MVP Oficial en BD
                     </button>
@@ -2145,6 +2145,9 @@
                       Quitar (Volver a Votar)
                     </button>
                   </div>
+                  <button type="button" class="btn" onclick="window.probarMvpOficialEnCarteleraYPerfil()" style="width: 100%; padding: 8px; background: rgba(46, 204, 113, 0.15); border: 1px dashed #2ecc71; color: #2ecc71; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Simular que el candidato seleccionado ha ganado el MVP y ver su estrella ⭐">
+                    🧪 Probar Proclamación y Ver Insignia ⭐ en Perfil
+                  </button>
                 </div>
 
                 <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
@@ -3122,6 +3125,7 @@ window.probarMvpEnCartelera = function() {
     pSm2.estado = "CERRADO";
     pSm2.visibilidad = "MOSTRAR";
     pSm2.permitido = true;
+    pSm2.mvp_oficial = ''; // Para que se muestren las 3 tarjetas de votación
     if (!pSm2.oficial_sets) pSm2.oficial_sets = "3-1";
     if (!pSm2.oficial_parciales) pSm2.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
     
@@ -3177,6 +3181,192 @@ window.probarMvpEnCartelera = function() {
     }
     
     mostrarToast("Partido de prueba cargado en Partidos. ¡Ya puedes probar a votar!");
+};
+
+// Función para recalcular en caliente las insignias MVP en memoria
+window.recalcularInsigniasMvpLocal = function() {
+    if (!window.appData) return;
+    if (!window.appData.insignias) window.appData.insignias = {};
+    
+    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
+    const partidos = (window.appData.equipos || []).concat(window.appData.todos_partidos || []);
+    
+    // Limpiar insignias tipo 'mvp' anteriores
+    Object.keys(window.appData.insignias).forEach(u => {
+        if (Array.isArray(window.appData.insignias[u])) {
+            window.appData.insignias[u] = window.appData.insignias[u].filter(b => b.type !== 'mvp');
+        }
+    });
+
+    plantilla.forEach(pl => {
+        const uPlayer = pl.usuario ? pl.usuario.trim() : '';
+        if (!uPlayer) return;
+
+        const sm2MvpMatches = [];
+        const seenPartidos = new Set();
+        
+        partidos.forEach(p => {
+            if (!p.mvp_oficial || seenPartidos.has(p.id_partido)) return;
+            seenPartidos.add(p.id_partido);
+            
+            const mvpOf = String(p.mvp_oficial).trim().toLowerCase();
+            const plNombre = String(pl.nombre).trim().toLowerCase();
+            const plApodo = String(pl.apodo || '').trim().toLowerCase();
+            const plDorsal = '#' + pl.dorsal;
+
+            const matchDorsal = mvpOf.includes(plDorsal);
+            const matchNombre = plNombre && mvpOf.includes(plNombre);
+            const matchApodo = plApodo && mvpOf.includes(plApodo);
+
+            if (matchDorsal || matchNombre || matchApodo) {
+                const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
+                const jNum = p.jornada_eq || p.ronda_global || '1';
+                sm2MvpMatches.push({
+                    jornada: jNum,
+                    rival: rivalName,
+                    id_partido: p.id_partido
+                });
+            }
+        });
+
+        if (sm2MvpMatches.length > 0) {
+            if (!window.appData.insignias[uPlayer]) window.appData.insignias[uPlayer] = [];
+            const count = sm2MvpMatches.length;
+            const starText = count === 1 ? `⭐ MVP Superliga 2 (1 vez)` : `⭐ MVP Superliga 2 (${count} veces)`;
+            const items = sm2MvpMatches.map(m => `J. ${m.jornada} vs ${m.rival}`);
+
+            window.appData.insignias[uPlayer].push({
+                type: 'mvp',
+                text: starText,
+                roleTitle: starText,
+                emoji: '⭐',
+                count: count,
+                items: items
+            });
+        }
+    });
+
+    // Refrescar tarjeta de perfil propio
+    if (typeof window.renderMyProfileCard === 'function') {
+        window.renderMyProfileCard();
+    }
+    // Refrescar clasificaciones si están visibles
+    if (typeof window.renderClasificacion === 'function') {
+        window.renderClasificacion();
+    }
+};
+
+window.probarMvpOficialEnCarteleraYPerfil = function() {
+    if (!window.appData) window.appData = {};
+    if (!window.appData.equipos) window.appData.equipos = [];
+
+    // 1. Obtener o crear partido Superliga demo
+    let pSm2 = window.appData.equipos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
+    if (!pSm2 && window.appData.todos_partidos) {
+        let foundInAll = window.appData.todos_partidos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
+        if (foundInAll) {
+            pSm2 = { ...foundInAll };
+            window.appData.equipos.unshift(pSm2);
+        }
+    }
+    if (!pSm2) {
+        pSm2 = {
+            id_partido: "DEMO_SM2_MVP",
+            equipo_local: "Voleibol Club Valladolid",
+            rival: "CyL Palencia 2028",
+            abrev_local: "VCV",
+            abrev_rival: "PAL",
+            categoria: "SM2",
+            jornada_eq: "1",
+            ubicacion: "LOCAL",
+            estado: "CERRADO",
+            visibilidad: "MOSTRAR",
+            permitido: true,
+            timestamp: Date.now() - 3600000,
+            pabellon: "Polideportivo Pisuerga",
+            oficial_sets: "3-1",
+            oficial_parciales: "25-21, 23-25, 25-18, 25-20"
+        };
+        window.appData.equipos.unshift(pSm2);
+    }
+
+    // 2. Jugador a proclamar
+    const selOficial = document.getElementById('directMvpOficialSelect');
+    let elegido = selOficial ? selOficial.value : '';
+
+    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
+
+    if (!elegido && plantilla.length > 0) {
+        // Si no seleccionó ninguno, buscar si el usuario actual está asociado a algún jugador
+        let myPlayer = plantilla.find(pl => pl.usuario && pl.usuario.toLowerCase() === (currentUser || '').toLowerCase());
+        if (!myPlayer) myPlayer = plantilla[0];
+        let posPart = myPlayer.posicion ? ` [${myPlayer.posicion}]` : '';
+        let apodoPart = myPlayer.apodo ? ` (${myPlayer.apodo})` : '';
+        elegido = `#${myPlayer.dorsal} ${myPlayer.nombre}${apodoPart}${posPart}`;
+        if (selOficial) window.setSelectValueSafely(selOficial, elegido);
+    }
+
+    if (!elegido) {
+        alert("Por favor selecciona un jugador en el desplegable de MVP Oficial.");
+        return;
+    }
+
+    // 3. Estadísticas
+    let stats = [];
+    for (let k = 1; k <= 4; k++) {
+        let el = document.getElementById(`mvpStat${k}`);
+        if (el && el.value.trim()) stats.push(el.value.trim());
+    }
+    if (stats.length === 0) {
+        stats = ["Ataques: 18 (62%)", "Bloqueos: 4", "Saques directos: 3", "Recepción: 16"];
+    }
+
+    // 4. Asignar en partido
+    pSm2.mvp_oficial = elegido;
+    pSm2.mvp_stats = stats;
+    pSm2.estado = "CERRADO";
+    pSm2.visibilidad = "MOSTRAR";
+    pSm2.permitido = true;
+    if (!pSm2.mvp_candidatos || pSm2.mvp_candidatos.length < 3) {
+        if (plantilla.length >= 3) {
+            pSm2.mvp_candidatos = [
+                `#${plantilla[0].dorsal} ${plantilla[0].nombre}${plantilla[0].apodo ? ' (' + plantilla[0].apodo + ')' : ''}`,
+                `#${plantilla[1].dorsal} ${plantilla[1].nombre}${plantilla[1].apodo ? ' (' + plantilla[1].apodo + ')' : ''}`,
+                `#${plantilla[2].dorsal} ${plantilla[2].nombre}${plantilla[2].apodo ? ' (' + plantilla[2].apodo + ')' : ''}`
+            ];
+        }
+    }
+
+    // Sincronizar en todos los partidos Superliga en memoria
+    window.appData.equipos.forEach(p => {
+        let cat = (p.categoria || '').toLowerCase();
+        if (cat.includes('sm2') || cat.includes('superliga')) {
+            p.mvp_oficial = elegido;
+            p.mvp_stats = stats;
+            p.visibilidad = "MOSTRAR";
+            p.permitido = true;
+        }
+    });
+
+    // 5. Recalcular insignias
+    if (typeof window.recalcularInsigniasMvpLocal === 'function') {
+        window.recalcularInsigniasMvpLocal();
+    }
+
+    // 6. Re-renderizar cartelera
+    if (typeof window.renderCarteleraHTML === 'function') {
+        window.renderCarteleraHTML(window.appData);
+    }
+
+    mostrarToast(`¡${elegido} proclamado MVP de prueba! Revisa la Cartelera y tu Perfil.`);
+
+    // Navegar a Cartelera para ver el widget oficial
+    const navBtn = document.querySelector('.nav-item-v2[onclick*="carteleraSection"]');
+    if (typeof switchTabV2 === 'function') {
+        switchTabV2('carteleraSection', navBtn);
+    } else if (typeof showTabV2 === 'function') {
+        showTabV2('carteleraSection', navBtn);
+    }
 };
 
 // ------------------------------------------------------------------
@@ -3559,6 +3749,9 @@ window.guardarMvpOficial = function(e) {
     .then(d => {
         if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar MVP Oficial en BD"; }
         mostrarToast("¡MVP Oficial y estadísticas guardadas con éxito!");
+        if (typeof window.recalcularInsigniasMvpLocal === 'function') {
+            window.recalcularInsigniasMvpLocal();
+        }
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
@@ -3566,6 +3759,9 @@ window.guardarMvpOficial = function(e) {
     .catch(err => {
         if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar MVP Oficial en BD"; }
         mostrarToast("MVP Oficial guardado localmente");
+        if (typeof window.recalcularInsigniasMvpLocal === 'function') {
+            window.recalcularInsigniasMvpLocal();
+        }
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
@@ -3609,6 +3805,9 @@ window.quitarMvpOficial = function(e) {
     }).catch(e => {});
     
     mostrarToast("MVP Oficial retirado. ¡Vuelve a mostrarse la votación!");
+    if (typeof window.recalcularInsigniasMvpLocal === 'function') {
+        window.recalcularInsigniasMvpLocal();
+    }
     if (typeof window.renderCarteleraHTML === 'function') {
         window.renderCarteleraHTML(window.appData);
     }
