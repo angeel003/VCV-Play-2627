@@ -3545,6 +3545,8 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
             usuario: currentUser,
             password: currentPassword,
             id_partido: idPart,
+            sets: pObj ? (pObj.oficial_sets || undefined) : undefined,
+            parciales: pObj ? (pObj.oficial_parciales || undefined) : undefined,
             mvp_candidatos: hacerVisible ? cands : [],
             mvp_visible: hacerVisible
         }),

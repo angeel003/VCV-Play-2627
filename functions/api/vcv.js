@@ -1184,11 +1184,16 @@ export async function onRequestPost(context) {
         const { mvp_visible } = body;
         const visibleVal = (mvp_visible === false || mvp_visible === 0 || mvp_visible === '0' || mvp_visible === 'OCULTAR') ? 0 : 1;
 
-        // Update Resultados_Oficiales
+        // Update Resultados_Oficiales preservando siempre datos existentes de sets, parciales y streaming si no se envían
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
+            let finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
+            let finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
+            let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
+            let finalCand = (mvp_candidatos !== undefined) ? candStr : (exist["mvp_candidatos"] || '');
+
             let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
-            let params = [sets || '', parciales || '', streaming || '', candStr];
+            let params = [finalSets, finalParc, finalStream, finalCand];
             if (mvp_oficial !== undefined) {
                 sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
                 params.push(mvp_oficial || '');
