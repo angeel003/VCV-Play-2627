@@ -2089,17 +2089,17 @@
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
                   <div>
                     <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (Obligatorio):</label>
-                    <select id="directMvp1" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    <select id="directMvp1" onchange="window.actualizarOpcionesMvpOficial()" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                   <div>
                     <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (Obligatorio):</label>
-                    <select id="directMvp2" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    <select id="directMvp2" onchange="window.actualizarOpcionesMvpOficial()" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                   <div>
                     <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (Opcional - deja vacío si solo hay 2):</label>
-                    <select id="directMvp3" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    <select id="directMvp3" onchange="window.actualizarOpcionesMvpOficial()" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                 </div>
@@ -3267,10 +3267,6 @@ window.onDirectMvpPartidoChange = function(idPart) {
     s2.innerHTML = optsHtml;
     s3.innerHTML = optsHtml;
 
-    if (sOficial) {
-        sOficial.innerHTML = '<option value="">-- Sin MVP Oficial asignado --</option>' + optsHtml.replace('<option value="">-- Seleccionar Jugador --</option>', '');
-    }
-    
     // Buscar si el partido ya tiene candidatos u oficial
     let matchObj = null;
     if (window.appData && Array.isArray(window.appData.equipos)) {
@@ -3285,12 +3281,45 @@ window.onDirectMvpPartidoChange = function(idPart) {
     window.setSelectValueSafely(s2, cands[1] || '');
     window.setSelectValueSafely(s3, cands[2] || '');
 
-    if (sOficial) {
-        window.setSelectValueSafely(sOficial, (matchObj && matchObj.mvp_oficial) || '');
-    }
+    // Actualizar opciones del MVP Oficial para que SOLO salgan los candidatos seleccionados
+    window.actualizarOpcionesMvpOficial(matchObj ? matchObj.mvp_oficial : '');
 
     // Actualizar banner de estado visual de este partido
     window.actualizarBannerEstadoMvp(matchObj);
+};
+
+window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
+    const s1 = document.getElementById('directMvp1');
+    const s2 = document.getElementById('directMvp2');
+    const s3 = document.getElementById('directMvp3');
+    const sOficial = document.getElementById('directMvpOficialSelect');
+    if (!sOficial) return;
+
+    let selActual = valorSeleccionadoPrevio !== undefined ? valorSeleccionadoPrevio : sOficial.value;
+
+    const m1 = s1 ? s1.value : '';
+    const m2 = s2 ? s2.value : '';
+    const m3 = s3 ? s3.value : '';
+
+    let candidatosActivos = [m1, m2, m3].filter(c => c && c.trim() !== '');
+
+    let h = '<option value="">-- Sin MVP Oficial asignado --</option>';
+    if (candidatosActivos.length === 0) {
+        h = '<option value="">-- Primero selecciona los nominados arriba --</option>';
+    } else {
+        candidatosActivos.forEach(cand => {
+            let info = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand, posicion: '' };
+            let etiqueta = (info.dorsal ? '#' + info.dorsal + ' ' : '') + info.apodo + (info.posicion ? ' [' + info.posicion + ']' : '');
+            h += `<option value="${cand}">${etiqueta}</option>`;
+        });
+    }
+    sOficial.innerHTML = h;
+
+    if (selActual && candidatosActivos.includes(selActual)) {
+        window.setSelectValueSafely(sOficial, selActual);
+    } else {
+        sOficial.selectedIndex = 0;
+    }
 };
 
 window.actualizarBannerEstadoMvp = function(matchObj) {
