@@ -2321,6 +2321,44 @@ function getBadgeCSS(type) {
     return '';
 }
 
+function renderBadgeItemHtml(b, iconSize = "24px") {
+    // Si la insignia contiene una lista estructurada de varios equipos
+    if (b.items && Array.isArray(b.items) && b.items.length > 1) {
+        let title = b.roleTitle || ((b.type === 'entrenador') ? 'Entrenador de:' : 'Jugador de:');
+        let itemsHtml = b.items.map(it => `
+            <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); margin-top:3px; padding-left:2px;">
+                <span style="color:var(--secondary-color); font-size:0.7rem; line-height:1;">•</span>
+                <span style="color:var(--text-main); font-weight:500;">${it}</span>
+            </div>
+        `).join('');
+
+        return `
+            <div style="display:flex; align-items:flex-start; gap: 12px; margin-bottom: 2px;">
+                <div style="margin-top:2px; flex-shrink:0;">
+                    ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`)}
+                </div>
+                <div style="flex:1; text-align:left;">
+                    <div style="font-size: 0.86rem; color: var(--text-main); font-weight: 700;">${title}</div>
+                    <div style="margin-top:2px;">
+                        ${itemsHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Formato estándar para una sola insignia o un solo equipo
+    let text = (b.text || '').replace(/, /g, " - ");
+    return `
+        <div style="display:flex; align-items:center; gap: 12px;">
+            <div style="flex-shrink:0;">
+                ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`)}
+            </div>
+            <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align:left;">${text}</span>
+        </div>
+    `;
+}
+
 // ------------------------------------------------------------------
 // LÓGICA DEL TOOLTIP FLOTANTE PARA MÓVILES
 // ------------------------------------------------------------------
@@ -5570,12 +5608,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
         } else {
             displayBadges.forEach(b => {
-                let text = (b.text || '').replace(/, /g, " - ");
-                badgesHtml += `
-                  <div style="display:flex; align-items:center; gap: 12px;">
-                      ${renderBadgeIcon(b, "badge-icon", "width:24px; height:24px;")}
-                      <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${text}</span>
-                  </div>`;
+                badgesHtml += renderBadgeItemHtml(b, "24px");
             });
         }
 
@@ -5793,13 +5826,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
         } else {
             displayBadges.forEach(b => {
-                let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
-                let text = (b.text || '').replace(/, /g, " - ");
-                badgesHtml += `
-                  <div style="display:flex; align-items:center; gap: 12px;">
-                      ${renderBadgeIcon(b, "badge-icon", "width:24px; height:24px;")}
-                      <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500;">${text}</span>
-                  </div>`;
+                badgesHtml += renderBadgeItemHtml(b, "24px");
             });
         }
         badgesList.innerHTML = badgesHtml;

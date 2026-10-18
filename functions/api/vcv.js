@@ -378,22 +378,28 @@ export async function onRequestPost(context) {
             const lblJug = isF ? "Jugadora" : "Jugador";
             const lblExj = isF ? "Exjugadora VCV" : "Exjugador VCV";
 
-            const addBadge = (type, text) => {
+            const addBadge = (type, text, extra = {}) => {
                 if (!insigniasMap[u].some(badge => badge.type === type && badge.text === text)) {
-                    insigniasMap[u].push({ type, text });
+                    insigniasMap[u].push({ type, text, ...extra });
                 }
             };
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
             if (b["Entrenador de"]) {
                 const entVal = b["Entrenador de"].trim();
-                const entText = entVal.toLowerCase().startsWith(lblEnt.toLowerCase()) ? entVal : `${lblEnt} de ${entVal}`;
-                addBadge('entrenador', entText);
+                const teamsList = entVal.split(',').map(s => s.trim()).filter(Boolean);
+                const entText = teamsList.length > 1 
+                    ? `${lblEnt} de: ${teamsList.join(' | ')}`
+                    : `${lblEnt} de ${teamsList[0] || entVal}`;
+                addBadge('entrenador', entText, { roleTitle: `${lblEnt} de`, items: teamsList });
             }
             if (b["Jugador de"]) {
                 const jugVal = b["Jugador de"].trim();
-                const jugText = jugVal.toLowerCase().startsWith(lblJug.toLowerCase()) ? jugVal : `${lblJug} de ${jugVal}`;
-                addBadge('jugador', jugText);
+                const teamsList = jugVal.split(',').map(s => s.trim()).filter(Boolean);
+                const jugText = teamsList.length > 1
+                    ? `${lblJug} de: ${teamsList.join(' | ')}`
+                    : `${lblJug} de ${teamsList[0] || jugVal}`;
+                addBadge('jugador', jugText, { roleTitle: `${lblJug} de`, items: teamsList });
             }
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
             if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
