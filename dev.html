@@ -1045,7 +1045,7 @@
       cursor: default;
     }
     .mvp-bottom-confirmation-panel {
-      margin-top: 10px;
+      margin-top: 12px;
       padding: 10px 14px;
       background: rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(212, 175, 55, 0.3);
@@ -1054,11 +1054,18 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      animation: mvpFadeSlideUp 0.35s ease-out;
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transform: translateY(6px);
+      transition: opacity 0.35s cubic-bezier(0.25, 1, 0.5, 1), transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), max-height 0.35s ease, margin 0.35s ease, padding 0.35s ease;
+      pointer-events: none;
     }
-    @keyframes mvpFadeSlideUp {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+    .mvp-bottom-confirmation-panel.is-visible {
+      opacity: 1;
+      max-height: 80px;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
   </style>
@@ -6942,28 +6949,25 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
         let headerText = isVoted ? '✨ Tu Voto para el MVP' : '⭐ Elige al MVP del Partido';
 
-        let bottomPanelHtml = '';
-        if (isVoted && votedInfo) {
-            bottomPanelHtml = `
-            <div class="mvp-bottom-confirmation-panel" id="mvp-panel-${idPart}">
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                    <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
-                    <div style="min-width: 0;">
-                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
-                            HAS VOTADO POR
-                        </div>
-                        <div style="font-size: 0.88rem; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo} ${votedInfo.posicion ? '(' + votedInfo.posicion + ')' : ''}
-                        </div>
+        let bottomPanelHtml = `
+        <div class="mvp-bottom-confirmation-panel ${isVoted ? 'is-visible' : ''}" id="mvp-panel-${idPart}">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
+                <div style="min-width: 0;">
+                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+                        HAS VOTADO POR
+                    </div>
+                    <div id="mvp-panel-text-${idPart}" style="font-size: 0.88rem; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${votedInfo ? `${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo} ${votedInfo.posicion ? '(' + votedInfo.posicion + ')' : ''}` : ''}
                     </div>
                 </div>
-            </div>`;
-        }
+            </div>
+        </div>`;
 
         return `
         <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); position:relative;">
             <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span>${headerText}</span>
+                <span id="mvp-header-${idPart}">${headerText}</span>
                 <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación de puntos por MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1;">
                     ?
                 </button>
@@ -6991,11 +6995,15 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         allCards.forEach(c => {
             c.classList.remove('is-dimmed-state');
             c.classList.remove('is-voted-state');
+            const badge = c.querySelector('.mvp-voted-badge');
+            if (badge) badge.remove();
         });
 
-        setTimeout(() => {
-            widget.innerHTML = window.renderMvpWidgetContent(idPart, cands, null);
-        }, 150);
+        const panel = document.getElementById(`mvp-panel-${idPart}`);
+        if (panel) panel.classList.remove('is-visible');
+
+        const header = document.getElementById(`mvp-header-${idPart}`);
+        if (header) header.innerText = '⭐ Elige al MVP del Partido';
 
         if (window.appData && window.appData.mvp_votos) {
             delete window.appData.mvp_votos[idPart];
@@ -7009,12 +7017,12 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         if(!currentUser) { alert("Tu sesión ha expirado."); window.location.reload(); return; }
         if(!idPart || !jugador) return;
 
-        // Si ya ha votado a este mismo jugador, no hacer nada ni saturar la base de datos
+        // Si ya ha votado a este mismo jugador, no hacer nada
         if (window.appData && window.appData.mvp_votos && window.appData.mvp_votos[idPart] === jugador) {
             return;
         }
 
-        // Cooldown de 5 segundos entre cambios de voto por partido para evitar spam a la base de datos
+        // Cooldown de 5 segundos entre cambios de voto por partido para evitar spam
         const now = Date.now();
         const lastVoteTime = window._mvpVoteCooldowns[idPart] || 0;
         const cooldownRemaining = Math.ceil((5000 - (now - lastVoteTime)) / 1000);
@@ -7029,16 +7037,26 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let cands = [];
         try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}
 
+        const info = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(jugador) : { apodo: jugador };
+
         const widget = document.getElementById('mvp-widget-' + idPart);
         if (widget) {
             const allCards = widget.querySelectorAll('.mvp-card-btn');
             allCards.forEach((c, idx) => {
+                let badge = c.querySelector('.mvp-voted-badge');
                 if (idx !== selectedIdx) {
                     c.classList.remove('is-voted-state');
                     c.classList.add('is-dimmed-state');
+                    if (badge) badge.remove();
                 } else {
                     c.classList.remove('is-dimmed-state');
                     c.classList.add('is-voted-state');
+                    if (!badge) {
+                        const newBadge = document.createElement('span');
+                        newBadge.className = 'mvp-voted-badge';
+                        newBadge.innerText = 'TU MVP';
+                        c.appendChild(newBadge);
+                    }
                 }
             });
             
@@ -7057,18 +7075,21 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     }
                 });
             }
+
+            const header = document.getElementById(`mvp-header-${idPart}`);
+            if (header) header.innerText = '✨ Tu Voto para el MVP';
+
+            const panel = document.getElementById(`mvp-panel-${idPart}`);
+            const panelText = document.getElementById(`mvp-panel-text-${idPart}`);
+            if (panel && panelText) {
+                panelText.innerText = `${info.dorsal ? '#' + info.dorsal + ' ' : ''}${info.apodo} ${info.posicion ? '(' + info.posicion + ')' : ''}`;
+                panel.classList.add('is-visible');
+            }
         }
 
-        const finalizeVote = () => {
-            if(!window.appData) window.appData = {};
-            if(!window.appData.mvp_votos) window.appData.mvp_votos = {};
-            window.appData.mvp_votos[idPart] = jugador;
-
-            const w = document.getElementById('mvp-widget-' + idPart);
-            if (w) {
-                w.innerHTML = window.renderMvpWidgetContent(idPart, cands, jugador);
-            }
-        };
+        if(!window.appData) window.appData = {};
+        if(!window.appData.mvp_votos) window.appData.mvp_votos = {};
+        window.appData.mvp_votos[idPart] = jugador;
 
         fetchSeguro(scriptURL, {
             method: 'POST',
@@ -7083,20 +7104,14 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         })
         .then(res => res.json())
         .then(data => {
-            setTimeout(() => {
-                if(data && data.status === 'success') {
-                    mostrarToast("¡Voto MVP registrado!");
-                } else {
-                    mostrarToast("¡Voto MVP registrado (modo pruebas)!");
-                }
-                finalizeVote();
-            }, 300);
+            if(data && data.status === 'success') {
+                mostrarToast("¡Voto MVP registrado!");
+            } else {
+                mostrarToast("¡Voto MVP registrado (modo pruebas)!");
+            }
         })
         .catch(err => {
-            setTimeout(() => {
-                mostrarToast("¡Voto MVP registrado localmente (modo pruebas)!");
-                finalizeVote();
-            }, 300);
+            mostrarToast("¡Voto MVP registrado localmente (modo pruebas)!");
         });
     };
 
