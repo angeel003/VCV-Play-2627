@@ -1467,7 +1467,7 @@ export async function onRequestPost(context) {
             permiso_resultados: (insMap[u.Usuario] && insMap[u.Usuario]["Permiso_Resultados"]) ? insMap[u.Usuario]["Permiso_Resultados"] : ""
         }));
 
-        const { results: rawTeams } = await db.prepare('SELECT DISTINCT "Equipo Local" as e FROM "Ajustes" WHERE "Equipo Local" IS NOT NULL AND "Equipo Local" != \'\' UNION SELECT DISTINCT "Rival" as e FROM "Ajustes" WHERE "Rival" IS NOT NULL AND "Rival" != \'\' ORDER BY e ASC').all();
+        const { results: rawTeams } = await db.prepare('SELECT DISTINCT "Equipo Local" as e FROM "Ajustes" WHERE "Equipo Local" IS NOT NULL AND "Equipo Local" != \'\' ORDER BY e ASC').all();
         const equiposDisponibles = (rawTeams || []).map(r => r.e).filter(Boolean);
 
         return jsonResponse({ status: 'success', usuarios: list, equipos_disponibles: equiposDisponibles });
