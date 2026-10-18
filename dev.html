@@ -2151,9 +2151,6 @@
                     <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
                       👑 Guardar MVP Oficial en BD
                     </button>
-                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación">
-                      Quitar (Volver a Votar)
-                    </button>
                   </div>
                 </div>
 
@@ -3490,11 +3487,13 @@ window.guardarMvpOficial = function(e) {
     }
 
     // Sincronizar en todos los partidos Superliga en memoria
+    let proclamadoNow = (valOficial && valOficial.trim() !== '') ? Date.now() : 0;
     window.appData.equipos.forEach(p => {
         let cat = (p.categoria || '').toLowerCase();
         if (cat.includes('sm2') || cat.includes('superliga')) {
             p.mvp_oficial = valOficial;
             p.mvp_stats = collectedStats;
+            p.mvp_proclamado_ts = proclamadoNow;
             p.visibilidad = "MOSTRAR";
         }
     });
