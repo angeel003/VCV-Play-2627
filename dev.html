@@ -2548,11 +2548,25 @@
 
 // POLYFILL PARA REINTENTOS AUTOMATICOS (Soluciona los errores 500 y timeouts del primer login)
 const fetchSeguro = (url, options, retries = 1) => {
-    const bustUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime(); return fetch(bustUrl, options)
-        .then(res => res.json().then(data => ({ json: () => Promise.resolve(data) })))
+    const bustUrl = url + (url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+    return fetch(bustUrl, options)
+        .then(async res => {
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch(e) {
+                data = { status: 'error', message: text || `HTTP ${res.status} ${res.statusText}` };
+            }
+            if (!res.ok && data && data.message) {
+                // If it's a 4xx or 5xx with a JSON message, resolve it so caller can show d.message or handle it
+                return { json: () => Promise.resolve(data), ok: res.ok, status: res.status };
+            }
+            return { json: () => Promise.resolve(data), ok: res.ok, status: res.status };
+        })
         .catch(err => {
             if (retries > 0) return new Promise(r => setTimeout(r, 1000)).then(() => fetchSeguro(url, options, retries - 1));
-            throw new Error("Tiempo de espera agotado al conectar con el servidor. Comprueba tu conexión o vuelve a pulsar el botón.");
+            throw new Error(err && err.message ? err.message : "Tiempo de espera agotado al conectar con el servidor.");
         });
 };
 
