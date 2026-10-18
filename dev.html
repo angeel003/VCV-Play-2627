@@ -38,9 +38,9 @@
     }
 
     html { scroll-behavior: smooth; }
-    html, body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: auto; }
+    html, body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     a, button, input, select, textarea { touch-action: manipulation; }
-    body { font-family: \'Segoe UI\', Tahoma, sans-serif; background: var(--bg-general); margin: 0; color: var(--vcv-negro); overflow-x: hidden; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-general); margin: 0; color: var(--vcv-negro); overflow-x: hidden; }
 
     /* ---------------------------------------------------
        2. TRANSICIONES Y ANIMACIONES (Fade-in)
@@ -357,7 +357,7 @@
     }
     #appSection > section.active-tab {
         display: block;
-        animation: fadeInTab 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: tabFadeSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     @keyframes fadeInTab {
         from { opacity: 0; transform: translateY(6px); }
@@ -1444,17 +1444,17 @@
     }
     #appSection > section.active-tab {
         display: block;
-        animation: fadeInTabSmooth 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        animation: tabFadeSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         will-change: opacity, transform;
     }
-    @keyframes fadeInTabSmooth {
+    @keyframes tabFadeSlideIn {
         0% {
             opacity: 0;
-            transform: translateY(6px);
+            transform: translateY(14px) scale(0.995);
         }
         100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
     }
 
@@ -6902,14 +6902,17 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
         window.addEventListener('touchmove', function(e) {
             if (!isPulling || isRefreshing) return;
-            // Solo si el usuario ha iniciado sesión
             const appSec = document.getElementById('appSection');
             if (!appSec || appSec.style.display === 'none') return;
 
             touchCurrentY = e.touches[0].clientY;
             let diff = touchCurrentY - touchStartY;
 
+            // Si está tirando hacia abajo desde el top, anular la recarga del navegador (Chrome/Safari)
             if (diff > 0 && window.scrollY <= 2) {
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
                 let pullDistance = Math.min(diff * 0.45, MAX_PULL);
                 if (ptrEl) {
                     ptrEl.classList.add('ptr-active');
@@ -6920,7 +6923,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     }
                 }
             }
-        }, { passive: true });
+        }, { passive: false });
 
         window.addEventListener('touchend', function() {
             if (!isPulling || isRefreshing) return;
