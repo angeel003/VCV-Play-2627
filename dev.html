@@ -2159,11 +2159,8 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                  <button type="button" id="btnPublicarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(true)" style="flex: 1; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.83rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);">
+                  <button type="button" id="btnPublicarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(true)" style="flex: 1; padding: 11px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);">
                     👁️ Publicar / Mostrar Votación
-                  </button>
-                  <button type="button" id="btnOcultarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(false)" style="padding: 10px 14px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.82rem;" title="Ocultar temporalmente la votación si hubo algún error">
-                    🚫 Ocultar Votación
                   </button>
                 </div>
 
@@ -5763,6 +5760,25 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             matchPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
         }
 
+        // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+        let mvpBonusPts = 0;
+        let acertoMvp = false;
+        if (match.mvp_oficial && matchPts > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
+            let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
+            let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+            let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+            let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+            if (dorOf && dorVo && dorOf === dorVo) {
+                acertoMvp = true;
+            } else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) {
+                acertoMvp = true;
+            }
+            if (acertoMvp) {
+                mvpBonusPts = Math.ceil(matchPts * 0.10);
+                matchPts += mvpBonusPts;
+            }
+        }
+
         ptsTotales += matchPts;
         if (acertoGanador && acertoSets && dist <= 2) plenos++;
 
@@ -5775,6 +5791,9 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         if (matchPts > (ptsGanador + ptsSets)) { summaryText = "¡Partidazo! Clavaste la predicción casi perfecta."; colorClass = "var(--success)"; }
         else if (acertoGanador) { summaryText = "Acertaste el ganador del partido."; colorClass = "var(--text-gold)"; }
         else { summaryText = "No hubo suerte en este partido."; colorClass = "var(--vcv-rojo)"; iconType = "x-circle"; }
+        if (acertoMvp && mvpBonusPts > 0) {
+            summaryText += ` <span style="color:var(--secondary-color); font-weight:800;">(⭐ +${mvpBonusPts} pts extra por acertar el MVP)</span>`;
+        }
 
         partidosEvaluados.push(`
         <!-- Tarjeta Historial -->
@@ -6897,15 +6916,23 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         }
 
         return `
-        <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3);">
+        <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); position:relative;">
             <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
                 <span>${headerText}</span>
+                <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación de puntos por MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1;">
+                    ?
+                </button>
             </div>
             <div class="mvp-candidates-grid" id="mvp-grid-${idPart}" style="${cands.length === 2 ? 'justify-content: center; gap: 16px;' : ''}">
                 ${slotsHtml}
             </div>
             ${bottomPanelHtml}
         </div>`;
+    };
+
+    window.mostrarInfoBonusMvp = function(e) {
+        if (e) e.stopPropagation();
+        alert("⭐ Bonificación de MVP ⭐\n\nSi aciertas el MVP oficial de este partido, recibirás un +10% extra de bonificación (redondeado hacia arriba) sobre los puntos que hayas conseguido en tu pronóstico de este partido.");
     };
 
     window.cambiarVotoMvp = function(idPart, candsEncoded, prevVoteEncoded) {
@@ -7172,6 +7199,22 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 if (dist === 0) mPts += ptsDiffExacta;
                 else if (maxDistancia > 0 && dist < maxDistancia) {
                     mPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+                }
+
+                // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+                let mvpBonusPts = 0;
+                if (p.mvp_oficial && mPts > 0 && data.mvp_votos && data.mvp_votos[p.id_partido]) {
+                    let uMvpVote = String(data.mvp_votos[p.id_partido]).trim().toLowerCase();
+                    let mOficial = String(p.mvp_oficial).trim().toLowerCase();
+                    let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                    let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                    let isMvpHit = false;
+                    if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
+                    else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
+                    if (isMvpHit) {
+                        mvpBonusPts = Math.ceil(mPts * 0.10);
+                        mPts += mvpBonusPts;
+                    }
                 }
 
                 // El récord de puntos en un partido se guarda SIN multiplicador derby
@@ -8854,6 +8897,20 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 if (dist === 0) ptsConseguidos += ptsDiffExacta;
                 else if (maxDistancia > 0 && dist < maxDistancia) {
                     ptsConseguidos += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+                }
+            }
+
+            // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+            if (match.mvp_oficial && ptsConseguidos > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
+                let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
+                let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+                let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                let isMvpHit = false;
+                if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
+                else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
+                if (isMvpHit) {
+                    ptsConseguidos += Math.ceil(ptsConseguidos * 0.10);
                 }
             }
 

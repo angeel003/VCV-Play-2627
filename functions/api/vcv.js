@@ -743,11 +743,18 @@ export async function onRequestPost(context) {
             const mapPartidos = {};
             for (const p of partidos) mapPartidos[p.id_partido] = p;
 
+            // Cargar todos los votos de MVP para bonificaciones
+            const { results: allMvpVotes } = await db.prepare('SELECT id_partido, usuario, jugador FROM MVP_Votos').all();
+            const mvpVotesMap = {}; // `${id_partido}_${usuario}` -> jugador
+            for (const mv of allMvpVotes || []) {
+                mvpVotesMap[`${mv.id_partido}_${mv.usuario}`] = mv.jugador;
+            }
+
             for (const pr of allPorras || []) {
                 const p = mapPartidos[pr["ID Partido"]];
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
-                // Si estamos en apag├│n y el partido se jug├│ despu├®s del viernes a las 23:59, NO suma al ranking
+                // Si estamos en apagón y el partido se jugó después del viernes a las 23:59, NO suma al ranking
 
 
 
@@ -773,6 +780,26 @@ export async function onRequestPost(context) {
                 if (dist === 0) pts += ptsDiffExacta;
                 else if (maxDistancia > 0 && dist < maxDistancia) {
                     pts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+                }
+
+                // Bonificación MVP: Si acertó el MVP oficial, suma +10% de los puntos de este partido (redondeado hacia arriba)
+                if (p.mvp_oficial && pts > 0) {
+                    const uMvpVote = mvpVotesMap[`${p.id_partido}_${pr.Usuario}`];
+                    if (uMvpVote) {
+                        const mOficial = String(p.mvp_oficial).trim().toLowerCase();
+                        const mVoted = String(uMvpVote).trim().toLowerCase();
+                        let dorOficial = (mOficial.match(/#(\d+)/) || [])[1];
+                        let dorVoted = (mVoted.match(/#(\d+)/) || [])[1];
+                        let isMvpHit = false;
+                        if (dorOficial && dorVoted && dorOficial === dorVoted) {
+                            isMvpHit = true;
+                        } else if (mOficial === mVoted || mOficial.includes(mVoted) || mVoted.includes(mOficial)) {
+                            isMvpHit = true;
+                        }
+                        if (isMvpHit) {
+                            pts += Math.ceil(pts * 0.10);
+                        }
+                    }
                 }
 
                 const jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
