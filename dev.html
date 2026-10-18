@@ -1444,11 +1444,62 @@
     }
     #appSection > section.active-tab {
         display: block;
-        animation: fadeInTab 0.3s ease;
+        animation: fadeInTabSmooth 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        will-change: opacity, transform;
     }
-    @keyframes fadeInTab {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeInTabSmooth {
+        0% {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* PULL TO REFRESH STYLES (MOBILE) */
+    #ptrIndicator {
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -60px);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2b0e3e 0%, #170522 100%);
+        border: 2px solid var(--secondary-color);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(212, 175, 55, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10002;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+    #ptrIndicator.ptr-active {
+        opacity: 1;
+    }
+    #ptrIndicator.ptr-refreshing {
+        transform: translate(-50%, 20px) !important;
+        opacity: 1;
+    }
+    #ptrSpinner {
+        width: 22px;
+        height: 22px;
+        border: 2.5px solid rgba(212, 175, 55, 0.25);
+        border-top-color: var(--secondary-color);
+        border-right-color: var(--secondary-color);
+        border-radius: 50%;
+        transition: transform 0.1s linear;
+    }
+    #ptrIndicator.ptr-refreshing #ptrSpinner {
+        animation: ptrSpin 0.75s linear infinite;
+    }
+    @keyframes ptrSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 
   
@@ -1811,6 +1862,11 @@
 
     
     
+    <!-- PULL TO REFRESH INDICATOR (MOBILE) -->
+    <div id="ptrIndicator">
+        <div id="ptrSpinner"></div>
+    </div>
+
     <header class="app-header-v2" id="tituloPrincipalSeccion" style="display:none;">
     <div class="header-container-v2">
       <div class="header-brand-v2">
@@ -6763,6 +6819,126 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
     }
+
+    // --- PULL TO REFRESH ENGINE (MOBILE) ---
+    (function initPullToRefresh() {
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        let isPulling = false;
+        let isRefreshing = false;
+        const PULL_THRESHOLD = 75; // Distancia requerida en píxeles para activar
+        const MAX_PULL = 110;
+
+        const ptrEl = document.getElementById('ptrIndicator');
+        const ptrSpinner = document.getElementById('ptrSpinner');
+
+        window.recargarDatosAppSilencioso = async function() {
+            if (!currentUser || !currentPassword) return;
+            if (isRefreshing) return;
+            isRefreshing = true;
+
+            if (ptrEl) {
+                ptrEl.classList.add('ptr-active', 'ptr-refreshing');
+            }
+
+            try {
+                const res = await fetchSeguro(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', usuario: currentUser, password: currentPassword }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    window.appData = data;
+                    if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
+                        try { localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga)); } catch(e) {}
+                    }
+                    if (typeof window.renderCarteleraHTML === 'function') {
+                        window.renderCarteleraHTML(data);
+                    }
+                    if (typeof window.initCalendar === 'function') {
+                        window.initCalendar();
+                    }
+                    if (typeof window.renderHistorialV2 === 'function') {
+                        window.renderHistorialV2(data);
+                    }
+                    if (typeof window.renderRankingV2 === 'function') {
+                        window.renderRankingV2();
+                    }
+                    if (typeof window.updateHeaderStats === 'function') {
+                        window.updateHeaderStats();
+                    }
+                    if (typeof window.renderMyProfileCard === 'function') {
+                        window.renderMyProfileCard();
+                    }
+                    if (typeof mostrarToast === 'function') {
+                        mostrarToast('⚡ Datos actualizados en directo');
+                    }
+                }
+            } catch(e) {
+                console.error("Error al recargar silenciosamente:", e);
+            } finally {
+                setTimeout(() => {
+                    isRefreshing = false;
+                    if (ptrEl) {
+                        ptrEl.classList.remove('ptr-refreshing');
+                        ptrEl.style.transform = '';
+                        setTimeout(() => ptrEl.classList.remove('ptr-active'), 250);
+                    }
+                }, 400);
+            }
+        };
+
+        window.addEventListener('touchstart', function(e) {
+            if (isRefreshing) return;
+            // Solo activar si estamos en el scroll superior absoluto
+            if (window.scrollY <= 2) {
+                touchStartY = e.touches[0].clientY;
+                isPulling = true;
+            } else {
+                isPulling = false;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function(e) {
+            if (!isPulling || isRefreshing) return;
+            // Solo si el usuario ha iniciado sesión
+            const appSec = document.getElementById('appSection');
+            if (!appSec || appSec.style.display === 'none') return;
+
+            touchCurrentY = e.touches[0].clientY;
+            let diff = touchCurrentY - touchStartY;
+
+            if (diff > 0 && window.scrollY <= 2) {
+                let pullDistance = Math.min(diff * 0.45, MAX_PULL);
+                if (ptrEl) {
+                    ptrEl.classList.add('ptr-active');
+                    ptrEl.style.transform = `translate(-50%, ${pullDistance - 50}px)`;
+                    if (ptrSpinner) {
+                        let rot = (pullDistance / PULL_THRESHOLD) * 360;
+                        ptrSpinner.style.transform = `rotate(${rot}deg)`;
+                    }
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', function() {
+            if (!isPulling || isRefreshing) return;
+            isPulling = false;
+            let diff = touchCurrentY - touchStartY;
+
+            if (diff * 0.45 >= PULL_THRESHOLD && window.scrollY <= 2) {
+                window.recargarDatosAppSilencioso();
+            } else {
+                if (ptrEl) {
+                    ptrEl.style.transform = '';
+                    setTimeout(() => ptrEl.classList.remove('ptr-active'), 200);
+                }
+            }
+            touchStartY = 0;
+            touchCurrentY = 0;
+        }, { passive: true });
+    })();
 
     document.addEventListener("DOMContentLoaded", () => {
         // Initialize first tab as active
