@@ -5798,6 +5798,8 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
 
         let oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
         let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
+        let userVotedMvp = (data.mvp_votos && data.mvp_votos[match.id_partido]) ? String(data.mvp_votos[match.id_partido]) : null;
+        let officialMvp = match.mvp_oficial ? String(match.mvp_oficial) : null;
 
         let summaryText = "";
         let colorClass = "var(--text-muted)";
@@ -5822,10 +5824,24 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
               <span style="color: var(--text-muted);">Tu Pronóstico:</span>
               <strong style="color: var(--secondary-color);">${pred.sets} (${uDiffStr} pts local)</strong>
             </div>
+            ${userVotedMvp ? `
+            <div style="display: flex; justify-content: space-between; align-items:center;">
+              <span style="color: var(--text-muted);">Tu Voto MVP:</span>
+              <strong style="color: ${acertoMvp ? '#2ecc71' : 'var(--text-main)'}; font-size: 0.8rem;">
+                ⭐ ${userVotedMvp} ${acertoMvp ? '✓' : ''}
+              </strong>
+            </div>` : ''}
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);">Acta Oficial:</span>
               <strong style="color: var(--text-main);">${match.oficial_sets} (${oDiffStr} pts local)</strong>
             </div>
+            ${officialMvp ? `
+            <div style="display: flex; justify-content: space-between; align-items:center;">
+              <span style="color: var(--text-muted);">MVP Oficial:</span>
+              <strong style="color: var(--vcv-dorado); font-size: 0.8rem;">
+                👑 ${officialMvp}
+              </strong>
+            </div>` : ''}
           </div>
           <div style="margin-top: 10px; font-size: 0.8rem; color: ${colorClass}; display: flex; align-items: center; gap: 6px; font-weight:600;">
             <i data-lucide="${iconType}" style="width: 14px; height: 14px;"></i>
@@ -7262,7 +7278,10 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     predSets: pred.sets,
                     predDiffStr: predDiffStr,
                     realDiffStr: realDiffStr,
-                    dist: dist
+                    dist: dist,
+                    mvpBonusPts: mvpBonusPts,
+                    uMvpVote: (data.mvp_votos && data.mvp_votos[p.id_partido]) ? String(data.mvp_votos[p.id_partido]) : null,
+                    mvpOficial: p.mvp_oficial ? String(p.mvp_oficial) : null
                 });
             });
 
@@ -7283,6 +7302,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                                 <div style="font-size:0.77rem; font-weight:700; color:var(--text-main); line-height:1.25; word-break:break-word;">
                                     🏐 ${m.localName} <span style="font-size:0.68rem; color:var(--text-muted); font-weight:400;">vs</span> ${m.rivalName}
                                     ${m.isDerby ? `<span style="font-size:0.62rem; background:rgba(231,76,60,0.18); color:#ff4757; padding:1px 6px; border-radius:4px; font-weight:800; margin-left:4px;">🔥 Derby x2</span>` : ''}
+                                    ${m.mvpBonusPts > 0 ? `<span style="font-size:0.62rem; background:rgba(212,175,55,0.22); color:var(--vcv-dorado); padding:1px 6px; border-radius:4px; font-weight:800; margin-left:4px;">⭐ MVP +${m.mvpBonusPts}p</span>` : ''}
                                 </div>
                                 <span style="font-weight:800; font-size:0.78rem; color:${m.pts > 0 ? '#4caf50' : 'var(--text-muted)'}; white-space:nowrap; background:${m.pts > 0 ? 'rgba(76, 175, 80, 0.12)' : 'rgba(255,255,255,0.05)'}; padding:2px 7px; border-radius:4px; flex-shrink:0;">
                                     +${m.pts} pts
