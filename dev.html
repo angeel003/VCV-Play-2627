@@ -2072,6 +2072,42 @@
                 <!-- Populated by JS -->
               </div>
 
+              <!-- FORMULARIO PARA AÑADIR NUEVO JUGADOR A LA PLANTILLA -->
+              <details style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(212,175,55,0.4); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+                <summary style="font-size: 0.8rem; font-weight: 800; color: var(--secondary-color); cursor: pointer; user-select: none;">
+                  ➕ Añadir Nuevo Jugador a la Plantilla
+                </summary>
+                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="width: 70px;">
+                      <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Dorsal *</label>
+                      <input type="number" id="nuevoJugadorDorsal" placeholder="Ej: 7" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--secondary-color); font-weight: 800; text-align: center;">
+                    </div>
+                    <div style="flex: 2; min-width: 140px;">
+                      <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Nombre y Apellidos *</label>
+                      <input type="text" id="nuevoJugadorNombre" placeholder="Nombre completo" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 700;">
+                    </div>
+                    <div style="flex: 1; min-width: 90px;">
+                      <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Apodo</label>
+                      <input type="text" id="nuevoJugadorApodo" placeholder="Ej: Samu" style="width: 100%; padding: 6px 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--secondary-color); font-weight: 700;">
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 120px;">
+                      <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Posición</label>
+                      <input type="text" id="nuevoJugadorPosicion" placeholder="Ej: Receptor / Opuesto" style="width: 100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                      <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Usuario Fantasy (opcional)</label>
+                      <input type="text" id="nuevoJugadorUsuario" placeholder="@usuario" style="width: 100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--secondary-color); font-weight: 600;">
+                    </div>
+                  </div>
+                  <button type="button" id="btnAgregarNuevoJugador" onclick="window.agregarJugadorPlantilla()" style="margin-top: 4px; padding: 8px 12px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem;">
+                    ➕ Guardar Jugador en Plantilla
+                  </button>
+                </div>
+              </details>
+
               <!-- CAJA DIRECTA PARA ELEGIR LOS 3 CANDIDATOS MVP -->
               <div id="adminDirectMvpBox" style="margin-top: 14px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
                 <div style="font-weight: 800; font-size: 0.88rem; color: var(--secondary-color); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
@@ -3022,7 +3058,36 @@ window.agregarJugadorPlantilla = function() {
         localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
     } catch(e) {}
     renderAdminPlantillaMvp();
-    if (window.appData.equipos) renderAdminPanel(window.appData.equipos);
+    if (typeof window.populateDirectMvpBoxes === 'function') window.populateDirectMvpBoxes();
+
+    const addBtn = document.getElementById('btnAgregarNuevoJugador');
+    if (addBtn) { addBtn.disabled = true; addBtn.innerText = "⏳ Guardando en base de datos..."; }
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'save_plantilla_superliga',
+            usuario: currentUser,
+            password: currentPassword,
+            jugadores: window.appData.plantilla_superliga
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (addBtn) { addBtn.disabled = false; addBtn.innerText = "➕ Guardar Jugador en Plantilla"; }
+        if (d && d.status === 'success') {
+            mostrarToast("¡Jugador añadido a la plantilla en la base de datos!");
+        } else {
+            mostrarToast(d && d.message ? d.message : "Guardado localmente.");
+        }
+        renderAdminPlantillaMvp();
+        if (typeof window.populateDirectMvpBoxes === 'function') window.populateDirectMvpBoxes();
+    })
+    .catch(err => {
+        if (addBtn) { addBtn.disabled = false; addBtn.innerText = "➕ Guardar Jugador en Plantilla"; }
+        mostrarToast("Jugador guardado localmente.");
+    });
 };
 
 window.eliminarJugadorPlantilla = function(idx) {
@@ -3171,8 +3236,32 @@ window.populateDirectMvpBoxes = function() {
             opt.textContent = `Jornada ${j}`;
             selJor.appendChild(opt);
         });
+        // Determinar automáticamente la jornada activa o la última jugada de Superliga
+        let defaultJor = null;
+        let now = Date.now();
+        // 1. Buscar el último partido de SM2 jugado o cerrado (resultado oficial o con timestamp pasado)
+        let sm2Played = sm2Matches.filter(p => {
+            let hasScore = (p.oficial_sets && p.oficial_sets.trim() !== '') || p.estado === 'FINALIZADO' || p.estado === 'CERRADO';
+            let isPast = p.timestamp && (p.timestamp <= now);
+            return hasScore || isPast;
+        });
+        if (sm2Played.length > 0) {
+            sm2Played.sort((a, b) => (parseInt(b.jornada_eq || b.jornada || '0') - parseInt(a.jornada_eq || a.jornada || '0')) || ((b.timestamp || 0) - (a.timestamp || 0)));
+            defaultJor = String(sm2Played[0].jornada_eq || sm2Played[0].jornada || '');
+        }
+        // 2. Si no hay jugados, buscar según currentJornadaGlobal o el primero disponible
+        if (!defaultJor || !jornadas.includes(defaultJor)) {
+            if (typeof currentJornadaGlobal !== 'undefined' && jornadas.includes(String(currentJornadaGlobal))) {
+                defaultJor = String(currentJornadaGlobal);
+            } else if (jornadas.length > 0) {
+                defaultJor = jornadas[0];
+            }
+        }
+
         if (curJor && (curJor === 'todas' || jornadas.includes(curJor))) {
             selJor.value = curJor;
+        } else if (defaultJor && jornadas.includes(defaultJor)) {
+            selJor.value = defaultJor;
         } else if (jornadas.length > 0) {
             selJor.value = jornadas[0];
         }
