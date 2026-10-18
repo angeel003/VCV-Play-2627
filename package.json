@@ -1,0 +1,57 @@
+{
+  "name": "fantasy-vcv-2627",
+  "version": "1.0.0",
+  "description": "Bienvenido al repositorio oficial de **VCV Play 26/27**, una aplicación web interactiva diseñada para gestionar una liga de pronósticos (porras) de partidos de voleibol, completamente renovada en su versión V2.",
+  "main": "sw.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "bidi-js": "^1.1.0",
+    "css-tree": "^3.2.1",
+    "data-urls": "^7.0.0",
+    "decimal.js": "^10.6.0",
+    "entities": "^8.1.0",
+    "esprima": "^4.0.1",
+    "html-encoding-sniffer": "^7.0.0",
+    "is-potential-custom-element-name": "^1.0.1",
+    "jsdom": "^30.1.1",
+    "lru-cache": "^11.5.3",
+    "mdn-data": "^2.27.1",
+    "parse5": "^8.0.1",
+    "playwright": "^1.63.0",
+    "playwright-core": "^1.63.0",
+    "punycode": "^2.3.1",
+    "require-from-string": "^2.0.2",
+    "saxes": "^6.0.0",
+    "source-map-js": "^1.2.1",
+    "tldts": "^7.4.16",
+    "tldts-core": "^7.4.16",
+    "tough-cookie": "^6.0.2",
+    "tr46": "^6.0.0",
+    "undici": "^8.11.2",
+    "w3c-xmlserializer": "^6.0.0",
+    "web-push": "^3.6.7",
+    "webidl-conversions": "^8.0.1",
+    "whatwg-mimetype": "^5.0.0",
+    "whatwg-url": "^17.1.2",
+    "xml-name-validator": "^5.0.0",
+    "xmlchars": "^2.2.0"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angeel003/Fantasy-VCV-2627.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/angeel003/Fantasy-VCV-2627/issues"
+  },
+  "homepage": "https://github.com/angeel003/Fantasy-VCV-2627#readme"
+}
