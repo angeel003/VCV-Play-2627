@@ -3560,9 +3560,9 @@ let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.
                                         ${catLogoHtml}
                                         ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                                     </div>
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-muted); width:28px; height:28px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                    <div style="display:flex; align-items:center; gap:12px; margin-left:auto; flex-shrink:0;">
+                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.4); color:var(--secondary-color); width:32px; height:32px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='none'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                                         </button>
                                         <div style="text-align: right; color:var(--text-muted); font-size:0.78rem;">
                                             <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
@@ -3627,9 +3627,9 @@ let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.
                                         ${catLogoHtml}
                                         ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.75rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                                     </div>
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:rgba(255,255,255,0.06); border:1px solid var(--border-color); color:var(--text-muted); width:28px; height:28px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                    <div style="display:flex; align-items:center; gap:12px; margin-left:auto; flex-shrink:0;">
+                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.4); color:var(--secondary-color); width:32px; height:32px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; transition:transform 0.15s ease;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='none'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                                         </button>
                                         <div style="text-align: right;">
                                             <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
@@ -6602,46 +6602,109 @@ window.cambiarLigaCompartir = function(nuevaLiga) {
     window.dibujarTarjetaCompartir();
 };
 
-window.dibujarTarjetaCompartir = function() {
+// Helper para cargar imagen asíncrona en Canvas
+function cargarImagenCanvas(src) {
+    return new Promise((resolve) => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
+
+// Helper: Pintar fondo con malla y resplandores dorados/morados
+function pintarFondoEstadioCanvas(ctx, W, H) {
+    // Fondo base degradado profundo
+    const bgGrad = ctx.createRadialGradient(W / 2, H / 3, 50, W / 2, H / 2, Math.max(W, H) * 0.8);
+    bgGrad.addColorStop(0, '#2d1437');
+    bgGrad.addColorStop(0.5, '#190a1e');
+    bgGrad.addColorStop(1, '#0b040e');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Resplandor superior dorado
+    const glowGold = ctx.createRadialGradient(W / 2, 0, 10, W / 2, 0, 500);
+    glowGold.addColorStop(0, 'rgba(212, 175, 55, 0.22)');
+    glowGold.addColorStop(1, 'rgba(212, 175, 55, 0)');
+    ctx.fillStyle = glowGold;
+    ctx.fillRect(0, 0, W, H);
+
+    // Resplandor inferior morado intenso
+    const glowMorado = ctx.createRadialGradient(W / 2, H, 10, W / 2, H, 600);
+    glowMorado.addColorStop(0, 'rgba(123, 51, 130, 0.28)');
+    glowMorado.addColorStop(1, 'rgba(123, 51, 130, 0)');
+    ctx.fillStyle = glowMorado;
+    ctx.fillRect(0, 0, W, H);
+
+    // Líneas diagonales de estilo deportivo (sutil marca de agua)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.lineWidth = 1.5;
+    for (let x = -H; x < W + H; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + H, H);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // Marco exterior Glassmorphism
+    ctx.save();
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(24, 24, W - 48, H - 48, 28);
+    ctx.stroke();
+
+    // Acentos dorados en las 4 esquinas
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 5;
+    const cornerSize = 40;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(24, 24 + cornerSize); ctx.lineTo(24, 24); ctx.lineTo(24 + cornerSize, 24); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(W - 24 - cornerSize, 24); ctx.lineTo(W - 24, 24); ctx.lineTo(W - 24, 24 + cornerSize); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(24, H - 24 - cornerSize); ctx.lineTo(24, H - 24); ctx.lineTo(24 + cornerSize, H - 24); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(W - 24 - cornerSize, H - 24); ctx.lineTo(W - 24, H - 24); ctx.lineTo(W - 24, H - 24 - cornerSize); ctx.stroke();
+    ctx.restore();
+}
+
+window.dibujarTarjetaCompartir = async function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Dimensiones fijas HD (1080 x 1080 px para Stories / Posts)
     const W = 1080;
     const H = 1080;
     canvas.width = W;
     canvas.height = H;
 
-    // Helper: Fondo degradado elegante
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, '#190c1f');
-    grad.addColorStop(0.5, '#271330');
-    grad.addColorStop(1, '#0e0612');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+    pintarFondoEstadioCanvas(ctx, W, H);
 
-    // Borde brillante con cristal y esquinas redondeadas
-    ctx.strokeStyle = '#4c2659';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(20, 20, W - 40, H - 40);
-
-    // Cabecera Oficial
+    // Cabecera Oficial VCV PLAY
     ctx.fillStyle = '#d4af37';
-    ctx.font = '900 44px sans-serif';
+    ctx.font = '900 46px "Space Grotesk", sans-serif, system-ui';
     ctx.textAlign = 'left';
-    ctx.fillText('VCV PLAY', 60, 95);
+    ctx.fillText('VCV PLAY', 70, 95);
 
     ctx.fillStyle = '#b7a4be';
-    ctx.font = '700 24px sans-serif';
-    ctx.fillText('Valladolid Club Voleibol • Temporada 26/27', 60, 130);
+    ctx.font = '700 22px sans-serif';
+    ctx.fillText('VALLADOLID CLUB VOLEIBOL • 2026/2027', 70, 130);
 
-    // Línea separadora dorada suave
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+    // Línea separadora
+    const lineGrad = ctx.createLinearGradient(70, 0, W - 70, 0);
+    lineGrad.addColorStop(0, 'rgba(212, 175, 55, 0.8)');
+    lineGrad.addColorStop(0.5, 'rgba(123, 51, 130, 0.6)');
+    lineGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+    ctx.strokeStyle = lineGrad;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(60, 160);
-    ctx.lineTo(W - 60, 160);
+    ctx.moveTo(70, 155);
+    ctx.lineTo(W - 70, 155);
     ctx.stroke();
 
     const data = window.appData || {};
@@ -6649,19 +6712,30 @@ window.dibujarTarjetaCompartir = function() {
     const nReal = data.nombre_real || uName;
 
     if (window.currentShareMode === 'match') {
-        dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data);
+        await dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data);
     } else {
-        dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data);
+        await dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data);
     }
 
-    // Pie de tarjeta
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.font = '600 22px sans-serif';
+    // Pie de tarjeta limpio
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.font = '700 22px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('Haz tus porras gratis en vcvplay.com', W / 2, H - 55);
+    ctx.fillText('🏐 Juega gratis y pronostica en vcvplay.com', W / 2, H - 55);
 };
 
-function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
+// Helper para dibujar imagen preservando proporciones (object-fit: contain)
+function drawImageContain(ctx, img, x, y, maxW, maxH) {
+    if (!img) return;
+    const ratio = Math.min(maxW / img.width, maxH / img.height);
+    const nw = img.width * ratio;
+    const nh = img.height * ratio;
+    const nx = x + (maxW - nw) / 2;
+    const ny = y + (maxH - nh) / 2;
+    ctx.drawImage(img, nx, ny, nw, nh);
+}
+
+async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const idPart = window.currentShareMatchId;
     let match = null;
     if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
@@ -6670,240 +6744,531 @@ function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
 
     const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
     const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
-    const cat = (match.categoria || '').toUpperCase();
+    const cat = (match.categoria || 'VOLEIBOL').toUpperCase();
     const jNum = match.jornada_eq || match.ronda_global || '-';
 
-    // Badge de Categoría
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+    // Cargar escudos WebP de ambos equipos
+    const safeLoc = locName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const safeVis = visName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const [imgLoc, imgVis] = await Promise.all([
+        cargarImagenCanvas(`files/images/escudos/${safeLoc}.webp`),
+        cargarImagenCanvas(`files/images/escudos/${safeVis}.webp`)
+    ]);
+
+    const yaJugado = (match.estado === 'CERRADO' && match.oficial_sets);
+    const pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : null;
+
+    // --- BARRA SUPERIOR DE METADATOS (Pills redondeadas en una fila equilibrada) ---
+    // Badge 1: Categoría
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(60, 195, 240, 50, 12);
-    ctx.fill();
-    ctx.stroke();
+    ctx.roundRect(70, 180, 240, 46, 12);
+    ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#d4af37';
-    ctx.font = '800 24px sans-serif';
+    ctx.font = '900 20px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(cat || 'VOLEIBOL', 180, 228);
+    ctx.fillText(cat, 190, 210);
 
-    // Jornada
-    ctx.fillStyle = '#b7a4be';
-    ctx.font = '700 26px sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('JORNADA ' + jNum, W - 60, 228);
+    // Badge 2: Derby (si aplica)
+    if (match.es_derby) {
+        ctx.fillStyle = 'rgba(255, 71, 87, 0.2)';
+        ctx.strokeStyle = '#ff4757';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(325, 180, 150, 46, 12);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ff6b81';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🔥 DERBY', 400, 210);
+    }
 
-    // Caja central del partido
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    // Badge 3: Estado de Predicción
+    let statusText = '';
+    let statusColor = '';
+    let statusBg = '';
+    if (yaJugado) {
+        statusText = 'FINALIZADO';
+        statusColor = '#2ecc71';
+        statusBg = 'rgba(46, 204, 113, 0.2)';
+    } else if (match.estado === 'CERRADO') {
+        statusText = '🔒 CERRADA';
+        statusColor = '#ff4757';
+        statusBg = 'rgba(255, 71, 87, 0.2)';
+    } else {
+        statusText = '🟢 ABIERTA';
+        statusColor = '#2ecc71';
+        statusBg = 'rgba(46, 204, 113, 0.2)';
+    }
+    const statusX = match.es_derby ? 490 : 330;
+    const statusW = 200;
+    ctx.fillStyle = statusBg;
+    ctx.strokeStyle = statusColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(60, 275, W - 120, 280, 20);
-    ctx.fill();
-    ctx.stroke();
-
-    // Nombres de equipos
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '800 38px sans-serif';
+    ctx.roundRect(statusX, 180, statusW, 46, 12);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = statusColor;
+    ctx.font = '900 19px sans-serif';
     ctx.textAlign = 'center';
-    
-    // Local
-    ctx.fillText(locName, W / 2 - 240, 390);
-    ctx.fillStyle = '#2ecc71';
-    ctx.font = '800 20px sans-serif';
-    ctx.fillText('LOCAL', W / 2 - 240, 425);
+    ctx.fillText(statusText, statusX + (statusW / 2), 210);
 
-    // VS
-    ctx.fillStyle = '#d4af37';
-    ctx.font = '900 46px sans-serif';
-    ctx.fillText('VS', W / 2, 400);
-
-    // Visitante
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '800 38px sans-serif';
-    ctx.fillText(visName, W / 2 + 240, 390);
+    // Badge 4: Jornada (Extremo derecho)
     ctx.fillStyle = '#b7a4be';
-    ctx.font = '800 20px sans-serif';
-    ctx.fillText('VISITANTE', W / 2 + 240, 425);
+    ctx.font = '800 24px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('JORNADA ' + jNum, W - 70, 210);
 
-    // Resultado Oficial si existe
-    const yaJugado = match.estado === 'CERRADO' && match.oficial_sets;
+    // ========================================================
+    // POSTER CENTRAL UNIFICADO: ENFRENTAMIENTO Y PRONÓSTICO
+    // ========================================================
+    const posterY = 245;
+    const posterH = 730;
+    
+    // Fondo de tarjeta con Glassmorphism profundo
+    const cardGrad = ctx.createLinearGradient(0, posterY, 0, posterY + posterH);
+    cardGrad.addColorStop(0, 'rgba(39, 19, 48, 0.85)');
+    cardGrad.addColorStop(1, 'rgba(20, 10, 26, 0.95)');
+    ctx.fillStyle = cardGrad;
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(70, posterY, W - 140, posterH, 28);
+    ctx.fill(); ctx.stroke();
+
+    // 1. ZONA LOCAL (Mitad Izquierda X = 250)
+    const locCenter = 260;
+    // Círculo suave detrás del escudo
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.beginPath(); ctx.arc(locCenter, posterY + 140, 95, 0, Math.PI * 2); ctx.fill();
+    if (imgLoc) {
+        drawImageContain(ctx, imgLoc, locCenter - 85, posterY + 55, 170, 170);
+    }
+    // Nombre Local
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(locName, locCenter, posterY + 265);
+    // Badge Local
+    ctx.fillStyle = 'rgba(46, 204, 113, 0.15)';
+    ctx.strokeStyle = '#2ecc71';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(locCenter - 55, posterY + 285, 110, 32, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2ecc71';
+    ctx.font = '900 16px sans-serif';
+    ctx.fillText('LOCAL', locCenter, posterY + 307);
+
+    // 2. ZONA CENTRAL (Marcador o VS)
+    const midX = W / 2;
     if (yaJugado) {
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 84px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(match.oficial_sets, midX, posterY + 155);
+
+        if (match.oficial_parciales) {
+            ctx.fillStyle = '#b7a4be';
+            ctx.font = '700 22px sans-serif';
+            ctx.fillText(match.oficial_parciales, midX, posterY + 205);
+        }
+
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.2)';
         ctx.strokeStyle = '#d4af37';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(W / 2 - 130, 465, 260, 60, 14);
-        ctx.fill();
-        ctx.stroke();
+        ctx.roundRect(midX - 80, posterY + 235, 160, 38, 10);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#f3ce5e';
+        ctx.font = '900 17px sans-serif';
+        ctx.fillText('OFICIAL', midX, posterY + 260);
+    } else {
+        ctx.fillStyle = '#d4af37';
+        ctx.font = '900 68px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VS', midX, posterY + 160);
 
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 34px sans-serif';
-        ctx.fillText(match.oficial_sets, W / 2, 508);
+        ctx.fillStyle = '#b7a4be';
+        ctx.font = '700 22px sans-serif';
+        let matchDateStr = match.timestamp ? new Date(match.timestamp).toLocaleDateString() : 'Por disputar';
+        ctx.fillText(matchDateStr, midX, posterY + 215);
     }
 
-    // Pronóstico del Usuario
-    const pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : null;
-
-    // Caja inferior de Mi Pronóstico
-    ctx.fillStyle = 'rgba(106, 44, 112, 0.25)';
-    ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
-    ctx.lineWidth = 3;
+    // 3. ZONA VISITANTE (Mitad Derecha X = W - 260)
+    const visCenter = W - 260;
+    // Círculo suave detrás del escudo
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.beginPath(); ctx.arc(visCenter, posterY + 140, 95, 0, Math.PI * 2); ctx.fill();
+    if (imgVis) {
+        drawImageContain(ctx, imgVis, visCenter - 85, posterY + 55, 170, 170);
+    }
+    // Nombre Visitante
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(visName, visCenter, posterY + 265);
+    // Badge Visitante
+    ctx.fillStyle = 'rgba(183, 164, 190, 0.15)';
+    ctx.strokeStyle = '#b7a4be';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(60, 590, W - 120, 350, 20);
-    ctx.fill();
+    ctx.roundRect(visCenter - 70, posterY + 285, 140, 32, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#b7a4be';
+    ctx.font = '900 16px sans-serif';
+    ctx.fillText('VISITANTE', visCenter, posterY + 307);
+
+    // 4. DIVISIÓN INTERIOR ELEGANTE (Línea con resplandor)
+    const sepY = posterY + 355;
+    const sepGrad = ctx.createLinearGradient(120, 0, W - 120, 0);
+    sepGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
+    sepGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.7)');
+    sepGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+    ctx.strokeStyle = sepGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(120, sepY);
+    ctx.lineTo(W - 120, sepY);
     ctx.stroke();
 
-    ctx.fillStyle = '#d4af37';
-    ctx.font = '800 28px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('🎯 MI PRONÓSTICO', 100, 650);
+    // 5. SECCIÓN INFERIOR: PRONÓSTICO DEL JUGADOR
+    const userBlockY = sepY + 25;
 
-    ctx.fillStyle = '#b7a4be';
-    ctx.font = '600 26px sans-serif';
+    // Header del pronóstico: Icono + Título + Usuario
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '900 24px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🎯 PRONÓSTICO REGISTRADO', 120, userBlockY + 20);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 24px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : ''), W - 100, 650);
+    ctx.fillText('@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : ''), W - 120, userBlockY + 20);
 
     if (pUser && pUser.sets) {
+        // Caja de Sets Pronosticados (Diseño tipo display)
+        const predBoxW = 280;
+        const predBoxH = 105;
+        const predBoxX = midX - (predBoxW / 2);
+        const predBoxY = userBlockY + 50;
+
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.1)';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(predBoxX, predBoxY, predBoxW, predBoxH, 18);
+        ctx.fill(); ctx.stroke();
+
         ctx.fillStyle = '#ffffff';
-        ctx.font = '900 68px sans-serif';
+        ctx.font = '900 78px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(pUser.sets, W / 2, 755);
+        ctx.fillText(pUser.sets, midX, predBoxY + 80);
 
+        // Diferencia de puntos pronosticada
         ctx.fillStyle = '#f3ce5e';
-        ctx.font = '700 30px sans-serif';
-        let signoDesc = pUser.signo || '';
-        if (pUser.puntos !== undefined) {
-            signoDesc = `Diferencia: ${pUser.puntos} pts (${signoDesc})`;
-        }
-        ctx.fillText(signoDesc, W / 2, 810);
+        ctx.font = '700 26px sans-serif';
+        let signoTxt = pUser.signo || '';
+        let diffTxt = pUser.puntos !== undefined ? `Diferencia de sets: ${pUser.puntos} pts (${signoTxt})` : signoTxt;
+        ctx.fillText(diffTxt, midX, predBoxY + 150);
 
+        // Mensaje de Resultado / Puntos
         if (yaJugado) {
-            let ptsGanados = match.puntos_ganados !== undefined ? match.puntos_ganados : '-';
+            let ptsGanador = (data.reglas && data.reglas.ganador) || 3;
+            let ptsSets = (data.reglas && data.reglas.sets) || 5;
+            let ptsDiffExacta = (data.reglas && data.reglas.diff_exacta) || 2;
+            let maxDistancia = (data.reglas && data.reglas.max_dist) || 10;
+
+            let ptsConseguidos = 0;
+            const oSets = match.oficial_sets.split("-");
+            const uSets = pUser.sets.split("-");
+            if (oSets.length === 2 && uSets.length === 2) {
+                const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
+                const uLocalWin = parseInt(uSets[0]) > parseInt(uSets[1]);
+                if (oLocalWin === uLocalWin) ptsConseguidos += ptsGanador;
+                if (pUser.sets === match.oficial_sets) ptsConseguidos += ptsSets;
+            }
+
+            if (match.oficial_parciales) {
+                let oDiff = 0;
+                const setsP = match.oficial_parciales.split(",");
+                for (const sp of setsP) {
+                    const nums = sp.split("-");
+                    if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+                }
+                let uDiff = parseInt(pUser.puntos) || 0;
+                if (pUser.signo && pUser.signo.toLowerCase().includes("en contra")) uDiff = -uDiff;
+                const dist = Math.abs(oDiff - uDiff);
+                if (dist === 0) ptsConseguidos += ptsDiffExacta;
+                else if (maxDistancia > 0 && dist < maxDistancia) {
+                    ptsConseguidos += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+                }
+            }
+
+            // Banner verde de Puntos Ganados
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.16)';
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(140, predBoxY + 185, W - 280, 60, 16);
+            ctx.fill(); ctx.stroke();
+
             ctx.fillStyle = '#2ecc71';
-            ctx.font = '900 36px sans-serif';
-            ctx.fillText('¡Puntos obtenidos: +' + ptsGanados + ' pts!', W / 2, 880);
+            ctx.font = '900 32px sans-serif';
+            ctx.fillText('🔥 ¡Conseguidos +' + ptsConseguidos + ' pts en este partido!', midX, predBoxY + 226);
         } else {
+            // Banner de pronóstico asegurado
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.12)';
+            ctx.strokeStyle = 'rgba(46, 204, 113, 0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(140, predBoxY + 185, W - 280, 56, 16);
+            ctx.fill(); ctx.stroke();
+
             ctx.fillStyle = '#2ecc71';
-            ctx.font = '800 28px sans-serif';
-            ctx.fillText('🔒 Predicción registrada y asegurada', W / 2, 875);
+            ctx.font = '800 24px sans-serif';
+            ctx.fillText('🔒 Predicción registrada • ¡A por los puntos!', midX, predBoxY + 221);
         }
     } else {
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '700 36px sans-serif';
+        ctx.font = '700 30px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Sin predicción registrada aún', W / 2, 770);
+        ctx.fillText('Sin predicción registrada aún para este partido', midX, userBlockY + 120);
+
+        ctx.fillStyle = '#f3ce5e';
+        ctx.font = '700 24px sans-serif';
+        ctx.fillText('¡Entra en vcvplay.com y pronostica antes de que empiece!', midX, userBlockY + 175);
     }
 }
 
-function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
+async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     const liga = window.currentShareLiga || (data.ligas ? data.ligas[0] : '');
     const ranking = (data.clasificaciones && data.clasificaciones[liga]) ? data.clasificaciones[liga] : [];
-    
+
     let pos = '-';
     let pts = 0;
-    let pend = 0;
     const userIndex = ranking.findIndex(r => r.jugador === uName);
     if (userIndex !== -1) {
         pos = '#' + (userIndex + 1);
         pts = ranking[userIndex].puntos || 0;
-        pend = ranking[userIndex].puntos_pendientes || 0;
     }
 
-    // Cabecera de Liga y Jornada
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+    // --- BARRA SUPERIOR DE METADATOS ---
+    // Badge 1: Liga
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(60, 195, 340, 52, 12);
-    ctx.fill();
-    ctx.stroke();
+    ctx.roundRect(70, 180, 360, 46, 12);
+    ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#d4af37';
-    ctx.font = '800 24px sans-serif';
+    ctx.font = '900 20px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('LIGA ' + liga.toUpperCase(), 230, 230);
+    ctx.fillText('LIGA ' + liga.toUpperCase(), 250, 210);
 
+    // Badge 2: Jornada (Derecha)
     ctx.fillStyle = '#b7a4be';
-    ctx.font = '700 26px sans-serif';
+    ctx.font = '800 24px "Space Grotesk", sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('JORNADA ' + (data.jornada || 'ACTUAL'), W - 60, 230);
+    ctx.fillText('JORNADA ' + (data.jornada || 'ACTUAL'), W - 70, 210);
 
-    // Fila de Perfil
+    // ========================================================
+    // POSTER CENTRAL UNIFICADO: RANKING Y ESTADÍSTICAS
+    // ========================================================
+    const posterY = 245;
+    const posterH = 730;
+
+    // Fondo Glassmorphism unificado
+    const cardGrad = ctx.createLinearGradient(0, posterY, 0, posterY + posterH);
+    cardGrad.addColorStop(0, 'rgba(39, 19, 48, 0.85)');
+    cardGrad.addColorStop(1, 'rgba(20, 10, 26, 0.95)');
+    ctx.fillStyle = cardGrad;
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(70, posterY, W - 140, posterH, 28);
+    ctx.fill(); ctx.stroke();
+
+    // 1. ZONA SUPERIOR: PERFIL DE JUGADOR (Avatar grande + Nombre)
+    const midX = W / 2;
+    const avatarY = posterY + 95;
+
+    // Halo circular suave
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
+    ctx.beginPath(); ctx.arc(midX, avatarY, 75, 0, Math.PI * 2); ctx.fill();
+
+    // Círculo Avatar con degradado morado-dorado
+    ctx.save();
+    const avatarGrad = ctx.createLinearGradient(midX - 55, avatarY - 55, midX + 55, avatarY + 55);
+    avatarGrad.addColorStop(0, '#7b3382');
+    avatarGrad.addColorStop(1, '#d4af37');
+    ctx.fillStyle = avatarGrad;
+    ctx.beginPath();
+    ctx.arc(midX, avatarY, 55, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 48px sans-serif';
+    ctx.font = '900 46px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('@' + uName, W / 2, 320);
+    ctx.fillText(uName.substring(0, 2).toUpperCase(), midX, avatarY + 16);
+    ctx.restore();
+
+    // Nombre y Usuario
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 40px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('@' + uName, midX, posterY + 195);
 
     if (nReal && nReal !== uName) {
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '600 28px sans-serif';
-        ctx.fillText(nReal, W / 2, 360);
+        ctx.font = '700 24px sans-serif';
+        ctx.fillText(nReal, midX, posterY + 230);
     }
 
-    // Dos Cajas Grandes: Posición y Puntos Totales
+    // 2. ZONA MEDIA: DOS CAJAS GEMELAS DISPLAY (Posición y Puntos)
+    const statsBoxY = posterY + 265;
+    const halfW = (W - 140 - 70) / 2; // ~400px cada caja
+
     // Caja 1: Posición
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(80, 410, 430, 220, 20);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#b7a4be';
-    ctx.font = '800 24px sans-serif';
-    ctx.fillText('POSICIÓN EN LIGA', 295, 465);
-
-    ctx.fillStyle = '#d4af37';
-    ctx.font = '900 78px sans-serif';
-    ctx.fillText(pos, 295, 560);
-
-    // Caja 2: Puntos
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(570, 410, 430, 220, 20);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#b7a4be';
-    ctx.font = '800 24px sans-serif';
-    ctx.fillText('PUNTOS TOTALES', 785, 465);
-
-    ctx.fillStyle = '#2ecc71';
-    ctx.font = '900 78px sans-serif';
-    ctx.fillText(pts + ' pts', 785, 560);
-
-    // Caja Resumen Estadístico
-    ctx.fillStyle = 'rgba(106, 44, 112, 0.25)';
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.08)';
     ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(80, 670, W - 160, 250, 20);
-    ctx.fill();
-    ctx.stroke();
+    ctx.roundRect(105, statsBoxY, halfW, 170, 20);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#b7a4be';
+    ctx.font = '800 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('POSICIÓN EN LIGA', 105 + (halfW / 2), statsBoxY + 45);
 
     ctx.fillStyle = '#d4af37';
-    ctx.font = '800 26px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('📊 RENDIMIENTO DESTACADO', 120, 725);
+    ctx.font = '900 84px "Space Grotesk", sans-serif';
+    ctx.fillText(pos, 105 + (halfW / 2), statsBoxY + 135);
 
-    // Estadísticas
+    // Caja 2: Puntos
+    ctx.fillStyle = 'rgba(46, 204, 113, 0.08)';
+    ctx.strokeStyle = 'rgba(46, 204, 113, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(W - 105 - halfW, statsBoxY, halfW, 170, 20);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#b7a4be';
+    ctx.font = '800 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PUNTOS TOTALES', (W - 105 - halfW) + (halfW / 2), statsBoxY + 45);
+
+    ctx.fillStyle = '#2ecc71';
+    ctx.font = '900 84px "Space Grotesk", sans-serif';
+    ctx.fillText(pts + ' pts', (W - 105 - halfW) + (halfW / 2), statsBoxY + 135);
+
+    // 3. DIVISIÓN INTERIOR ELEGANTE
+    const sepY = statsBoxY + 205;
+    const sepGrad = ctx.createLinearGradient(120, 0, W - 120, 0);
+    sepGrad.addColorStop(0, 'rgba(212, 175, 55, 0)');
+    sepGrad.addColorStop(0.5, 'rgba(212, 175, 55, 0.7)');
+    sepGrad.addColorStop(1, 'rgba(212, 175, 55, 0)');
+    ctx.strokeStyle = sepGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(120, sepY);
+    ctx.lineTo(W - 120, sepY);
+    ctx.stroke();
+
+    // 4. SECCIÓN INFERIOR: RENDIMIENTO DESTACADO
+    const histY = sepY + 30;
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '900 24px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('📊 RENDIMIENTO DESTACADO', 120, histY + 15);
+
     let stats = (typeof window.calculateUserStatsHelper === 'function') ? window.calculateUserStatsHelper(uName, liga) : null;
     let mPts = stats ? stats.mediaPuntos : '-';
     let mPos = stats ? stats.mediaPos : '-';
     let recJ = stats ? stats.recordJornada : '-';
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 28px sans-serif';
-    ctx.fillText('• Media por jornada: ' + mPts + ' pts', 120, 780);
-    ctx.fillText('• Posición media: #' + mPos, 120, 830);
-    ctx.fillText('• Récord en una jornada: ' + recJ + ' pts', 120, 880);
+    // 3 Pastillas horizontales estilizadas
+    const pW = (W - 240 - 30) / 3;
+    const pY = histY + 45;
+    const pillH = 110;
+
+    const histData = [
+        { label: 'MEDIA / JORNADA', val: mPts + ' pts', col: '#f3ce5e' },
+        { label: 'POSICIÓN MEDIA', val: '#' + mPos, col: '#ffffff' },
+        { label: 'RÉCORD JORNADA', val: recJ + ' pts', col: '#2ecc71' }
+    ];
+
+    histData.forEach((it, idx) => {
+        const px = 120 + idx * (pW + 15);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(px, pY, pW, pillH, 16);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#b7a4be';
+        ctx.font = '800 17px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(it.label, px + (pW / 2), pY + 38);
+
+        ctx.fillStyle = it.col;
+        ctx.font = '900 34px "Space Grotesk", sans-serif';
+        ctx.fillText(it.val, px + (pW / 2), pY + 85);
+    });
 }
 
 window.ejecutarCompartirTarjeta = async function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
+
+    // Construir texto descriptivo y URL según el modo
+    const data = window.appData || {};
+    const uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (data.usuario || 'Jugador');
+    let shareTitle = 'VCV Play 26/27';
+    let shareText = '';
+    const shareUrl = window.location.origin.includes('http') ? window.location.origin : 'https://vcvplay.com';
+
+    if (window.currentShareMode === 'match') {
+        const idPart = window.currentShareMatchId;
+        let match = null;
+        if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+        if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+
+        if (match) {
+            const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
+            const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
+            const pUser = (data.mis_predicciones || {})[match.id_partido];
+            
+            if (pUser && pUser.sets) {
+                shareText = `🏐 ¡Mi pronóstico para el ${locName} vs ${visName} en VCV Play es ${pUser.sets}! ¿Te atreves a competir conmigo? 🏆 Regístrate gratis en:`;
+            } else {
+                shareText = `🏐 ¡Sigue el ${locName} vs ${visName} en VCV Play! Pronostica los resultados de los partidos del club y compite en el ranking:`;
+            }
+            shareTitle = `${locName} vs ${visName} | VCV Play`;
+        } else {
+            shareText = `🏐 ¡Echa un vistazo a mi pronóstico en VCV Play! Únete a la liga y compite con nosotros:`;
+        }
+    } else {
+        const liga = window.currentShareLiga || (data.ligas ? data.ligas[0] : 'General');
+        let pos = '-';
+        let pts = '0';
+        if (data.clasificaciones && data.clasificaciones[liga]) {
+            const row = data.clasificaciones[liga].find(r => r.usuario === uName);
+            if (row) {
+                pos = '#' + row.posicion;
+                pts = row.puntos;
+            }
+        }
+        shareText = `🏆 ¡Voy ${pos} con ${pts} puntos en la Liga ${liga} de VCV Play! ¿Podrás superarme? Entra y juega gratis:`;
+        shareTitle = `Ranking Liga ${liga} | VCV Play`;
+    }
 
     canvas.toBlob(async function(blob) {
         if (!blob) {
@@ -6911,18 +7276,30 @@ window.ejecutarCompartirTarjeta = async function() {
             return;
         }
         const file = new File([blob], 'vcv_play_tarjeta.png', { type: 'image/png' });
+
+        // Comprobar si el navegador soporta compartir archivos
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
                 await navigator.share({
-                    title: 'VCV Play 26/27',
-                    text: '¡Mira mi tarjeta en VCV Play!',
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl,
                     files: [file]
                 });
             } catch(e) {
-                // Cancelado por el usuario o error menor
+                // Cancelado por el usuario o navegador
             }
+        } else if (navigator.share) {
+            // Si el navegador no soporta enviar archivo pero sí texto y URL
+            try {
+                await navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                });
+            } catch(e) {}
         } else {
-            // Fallback: descargar imagen directamente
+            // Fallback en PC / navegador sin Web Share API: descargar imagen directamente
             window.descargarTarjetaCanvas();
         }
     }, 'image/png');
@@ -7069,15 +7446,11 @@ window.descargarTarjetaCanvas = function() {
             <canvas id="shareCardCanvas" style="max-width:100%; height:auto; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
         </div>
 
-        <!-- Botones de Acción -->
-        <div style="display:flex; gap:10px;">
-            <button id="btnShareNative" onclick="window.ejecutarCompartirTarjeta()" class="btn btn-primary" style="flex:1; background:linear-gradient(135deg, var(--primary-color), #8e3c96); border:none; font-weight:800; border-radius:10px; padding:10px 14px; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                Compartir
-            </button>
-            <button id="btnDownloadCard" onclick="window.descargarTarjetaCanvas()" class="btn" style="background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:var(--text-main); font-weight:700; border-radius:10px; padding:10px 14px; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:6px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                Guardar
+        <!-- Botón de Acción Principal -->
+        <div>
+            <button id="btnShareNative" onclick="window.ejecutarCompartirTarjeta()" class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, var(--primary-color), #8e3c96); border:none; font-weight:800; border-radius:12px; padding:12px 16px; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(123,51,130,0.4);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                Compartir Imagen
             </button>
         </div>
     </div>
