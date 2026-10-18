@@ -385,8 +385,16 @@ export async function onRequestPost(context) {
             };
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
-            if (b["Entrenador de"]) addBadge('entrenador', b["Entrenador de"]);
-            if (b["Jugador de"]) addBadge('jugador', b["Jugador de"]);
+            if (b["Entrenador de"]) {
+                const entVal = b["Entrenador de"].trim();
+                const entText = entVal.toLowerCase().startsWith(lblEnt.toLowerCase()) ? entVal : `${lblEnt} de ${entVal}`;
+                addBadge('entrenador', entText);
+            }
+            if (b["Jugador de"]) {
+                const jugVal = b["Jugador de"].trim();
+                const jugText = jugVal.toLowerCase().startsWith(lblJug.toLowerCase()) ? jugVal : `${lblJug} de ${jugVal}`;
+                addBadge('jugador', jugText);
+            }
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
             if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
             if (b.Custom_Badge === "X") {
