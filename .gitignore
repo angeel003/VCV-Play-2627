@@ -7,3 +7,10 @@ datos_prueba/
 *.csv
 *.sql
 temp_*
+backups/
+archivos_desarrollo/
+*.zip
+package-lock.json
+files/images/**/old_backups/
+files/images/mvp_banner_ejemplo.jpg
+
