@@ -12,8 +12,8 @@
 <link rel="icon" type="image/png" href="files/images/logo_vcv_circle.png">
 <link rel="apple-touch-icon" href="files/images/logo_vcv_square_white.png">
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
-<!-- Recuperamos la fuente Golos Text original -->
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 <style>
     /* ---------------------------------------------------
@@ -357,11 +357,21 @@
     }
     #appSection > section.active-tab {
         display: block;
-        animation: fadeInTab 0.3s ease;
+        animation: fadeInTab 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     @keyframes fadeInTab {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes goldGlowPulse {
+        0% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); border-color: var(--border-color); }
+        40% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); border-color: var(--secondary-color); }
+        100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); border-color: var(--border-color); }
+    }
+
+    .save-success-glow {
+        animation: goldGlowPulse 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
 
   
@@ -5121,6 +5131,18 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                         window.appData.predicciones_usuario[idPart] = { sets: s, puntos: p, signo: sig };
                     }
                     if(typeof updateProgressBar === 'function') updateProgressBar();
+
+                    // Micro-animación: Destello dorado y confeti
+                    card.classList.add('save-success-glow');
+                    setTimeout(() => card.classList.remove('save-success-glow'), 1200);
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 45,
+                            spread: 60,
+                            origin: { y: 0.75 },
+                            colors: ['#d4af37', '#7b3382', '#ffffff', '#f3ce5e']
+                        });
+                    }
                 } else {
                     alert('Error al guardar: ' + data.message);
                     card.classList.remove('collapsed');
