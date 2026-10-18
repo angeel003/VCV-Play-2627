@@ -78,9 +78,10 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_proclamado_ts INTEGER").run(); } catch(e) {}
 
-        // Sembrar plantilla inicial si est├í vac├¡a
+        // Sembrar plantilla inicial si está vacía
         try {
-            const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga").first();
+            await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (id INTEGER PRIMARY KEY AUTOINCREMENT, dorsal INTEGER NOT NULL, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT, fecha_alta INTEGER)').run();
+            const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga_2_Masc").first();
             if (!countRow || countRow.c === 0) {
                 const initialPlayers = [
                     [1, "Jorge Alonso Rivas", "Jorge", "Colocador"],
@@ -98,10 +99,8 @@ export async function onRequestPost(context) {
                     [23, "Álvaro García de Castro", "Álvaro G.", "Receptor"],
                     [24, "Kaloyan Biserov Nankov", "Kaloyan", "Central"]
                 ];
-                await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (dorsal INTEGER PRIMARY KEY, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT)').run();
                 for (const [dor, nom, apod, pos] of initialPlayers) {
-                    await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)").bind(dor, nom, apod, pos).run();
-                    await db.prepare("INSERT INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(dorsal) DO UPDATE SET nombre = excluded.nombre, apodo = excluded.apodo, posicion = CASE WHEN Plantilla_Superliga_2_Masc.posicion IS NULL OR Plantilla_Superliga_2_Masc.posicion = '' THEN excluded.posicion ELSE Plantilla_Superliga_2_Masc.posicion END").bind(dor, nom, apod, pos).run();
+                    await db.prepare("INSERT INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario, fecha_alta) VALUES (?, ?, ?, ?, NULL, ?)").bind(dor, nom, apod, pos, Date.now()).run();
                 }
             }
         } catch(e) {}
@@ -848,7 +847,7 @@ export async function onRequestPost(context) {
             }
         } catch(e) {}
         try {
-            const { results: pRows } = await db.prepare('SELECT dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC').all();
+            const { results: pRows } = await db.prepare('SELECT id, dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC, id ASC').all();
             plantillaSuperliga = pRows || [];
         } catch(e) {
             try {
@@ -1230,7 +1229,7 @@ export async function onRequestPost(context) {
 
     // ADMIN: GESTIONAR PLANTILLA SUPERLIGA 2 MASCULINO
     if (action === 'save_plantilla_superliga') {
-        const { jugadores } = body; // Array de { dorsal: number, nombre: string, apodo: string, posicion: string, usuario: string }
+        const { jugadores } = body; // Array de { id?: number, dorsal: number, nombre: string, apodo: string, posicion: string, usuario: string }
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
@@ -1238,8 +1237,21 @@ export async function onRequestPost(context) {
         if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar la plantilla o MVP.' }, 403);
 
         if (Array.isArray(jugadores)) {
-            // Asegurar que la tabla existe
-            await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (dorsal INTEGER PRIMARY KEY, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT)').run();
+            // Asegurar que la tabla existe con id como clave primaria independiente
+            await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (id INTEGER PRIMARY KEY AUTOINCREMENT, dorsal INTEGER NOT NULL, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT, fecha_alta INTEGER)').run();
+            
+            // Si la tabla antigua tenía dorsal como PRIMARY KEY, migrar datos si fuera necesario
+            try {
+                const info = await db.prepare('PRAGMA table_info(Plantilla_Superliga_2_Masc)').all();
+                const hasIdCol = (info.results || []).some(col => col.name === 'id');
+                if (!hasIdCol) {
+                    await db.prepare('ALTER TABLE Plantilla_Superliga_2_Masc RENAME TO _old_plantilla_sm2').run();
+                    await db.prepare('CREATE TABLE Plantilla_Superliga_2_Masc (id INTEGER PRIMARY KEY AUTOINCREMENT, dorsal INTEGER NOT NULL, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT, fecha_alta INTEGER)').run();
+                    await db.prepare('INSERT INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario, fecha_alta) SELECT dorsal, nombre, apodo, posicion, usuario, ? FROM _old_plantilla_sm2').bind(Date.now()).run();
+                    await db.prepare('DROP TABLE IF EXISTS _old_plantilla_sm2').run();
+                }
+            } catch(migErr) {}
+
             await db.prepare('DELETE FROM Plantilla_Superliga_2_Masc').run();
             for (const j of jugadores) {
                 const dor = parseInt(j.dorsal);
@@ -1247,8 +1259,13 @@ export async function onRequestPost(context) {
                 const apod = (j.apodo || '').trim();
                 const pos = (j.posicion || '').trim();
                 const usr = (j.usuario || '').trim() || null;
+                const pId = parseInt(j.id);
                 if (!isNaN(dor) && nom) {
-                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario) VALUES (?, ?, ?, ?, ?)').bind(dor, nom, apod, pos, usr).run();
+                    if (!isNaN(pId) && pId > 0) {
+                        await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga_2_Masc (id, dorsal, nombre, apodo, posicion, usuario, fecha_alta) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(pId, dor, nom, apod, pos, usr, Date.now()).run();
+                    } else {
+                        await db.prepare('INSERT INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario, fecha_alta) VALUES (?, ?, ?, ?, ?, ?)').bind(dor, nom, apod, pos, usr, Date.now()).run();
+                    }
                 }
             }
         }
