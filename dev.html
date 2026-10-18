@@ -6798,9 +6798,6 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                         </div>
                     </div>
                 </div>
-                <button type="button" class="mvp-undo-btn" onclick="cambiarVotoMvp('${idPart}', '${encodeURIComponent(JSON.stringify(cands))}', '${encodeURIComponent(myVote || '')}')" style="flex-shrink: 0;">
-                    ✏️ Cambiar
-                </button>
             </div>`;
         }
 
@@ -6838,10 +6835,29 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         }
     };
 
+    window._mvpVoteCooldowns = window._mvpVoteCooldowns || {};
+
     window.votarMvpPartido = function(idPart, jugador, selectedIdx, candsEncoded) {
         if(window.isGuestMode) { alert("Modo invitado. Inicia sesión para votar."); return; }
         if(!currentUser) { alert("Tu sesión ha expirado."); window.location.reload(); return; }
         if(!idPart || !jugador) return;
+
+        // Si ya ha votado a este mismo jugador, no hacer nada ni saturar la base de datos
+        if (window.appData && window.appData.mvp_votos && window.appData.mvp_votos[idPart] === jugador) {
+            return;
+        }
+
+        // Cooldown de 5 segundos entre cambios de voto por partido para evitar spam a la base de datos
+        const now = Date.now();
+        const lastVoteTime = window._mvpVoteCooldowns[idPart] || 0;
+        const cooldownRemaining = Math.ceil((5000 - (now - lastVoteTime)) / 1000);
+        if (cooldownRemaining > 0) {
+            if (typeof mostrarToast === 'function') {
+                mostrarToast(`Espera ${cooldownRemaining}s para volver a cambiar tu voto`, 2500);
+            }
+            return;
+        }
+        window._mvpVoteCooldowns[idPart] = now;
 
         let cands = [];
         try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}

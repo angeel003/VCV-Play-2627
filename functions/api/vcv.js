@@ -1208,10 +1208,22 @@ export async function onRequestPost(context) {
         const { id_partido, jugador } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
-        if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votaci├│n' }, 400);
+        if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
 
-        await db.prepare('INSERT OR REPLACE INTO MVP_Votos (id_partido, usuario, jugador, timestamp) VALUES (?, ?, ?, ?)').bind(id_partido, usuario, jugador, Date.now()).run();
-        return jsonResponse({ status: 'success', message: '┬íVoto registrado para ' + jugador + '!' });
+        // Protección contra saturación: comprobar si el usuario ya votó hace menos de 3 segundos a este partido
+        const prevVote = await db.prepare('SELECT jugador, timestamp FROM MVP_Votos WHERE id_partido = ? AND usuario = ?').bind(id_partido, usuario).first();
+        const now = Date.now();
+        if (prevVote) {
+            if (prevVote.jugador === jugador) {
+                return jsonResponse({ status: 'success', message: 'Voto ya registrado.' });
+            }
+            if (prevVote.timestamp && (now - prevVote.timestamp) < 3000) {
+                return jsonResponse({ status: 'error', message: 'Por favor, espera unos segundos antes de volver a cambiar tu voto.' }, 429);
+            }
+        }
+
+        await db.prepare('INSERT OR REPLACE INTO MVP_Votos (id_partido, usuario, jugador, timestamp) VALUES (?, ?, ?, ?)').bind(id_partido, usuario, jugador, now).run();
+        return jsonResponse({ status: 'success', message: '¡Voto registrado para ' + jugador + '!' });
     }
 
     // ADMIN: OBTENER RECUENTO DE VOTOS MVP DE UN PARTIDO
