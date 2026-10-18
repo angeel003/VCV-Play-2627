@@ -1467,8 +1467,27 @@ export async function onRequestPost(context) {
             permiso_resultados: (insMap[u.Usuario] && insMap[u.Usuario]["Permiso_Resultados"]) ? insMap[u.Usuario]["Permiso_Resultados"] : ""
         }));
 
-        const { results: rawTeams } = await db.prepare('SELECT DISTINCT "Equipo Local" as e FROM "Ajustes" WHERE "Equipo Local" IS NOT NULL AND "Equipo Local" != \'\' ORDER BY e ASC').all();
-        const equiposDisponibles = (rawTeams || []).map(r => r.e).filter(Boolean);
+        let equiposDisponibles = [];
+        try {
+            const samplePerm = await db.prepare('SELECT * FROM "Permisos_Equipos" LIMIT 1').first();
+            if (samplePerm) {
+                equiposDisponibles = Object.keys(samplePerm).filter(k => k !== "Jugador" && k !== "id").sort();
+            }
+        } catch(e) {}
+        
+        // Fallback a Ligas_Equipos si Permisos_Equipos no estuviera poblada
+        if (equiposDisponibles.length === 0) {
+            try {
+                const { results: ligasEqRows } = await db.prepare('SELECT * FROM "Ligas_Equipos"').all();
+                let teamSet = new Set();
+                for (const row of ligasEqRows || []) {
+                    Object.keys(row).forEach(k => {
+                        if (k !== 'Liga' && k !== 'id') teamSet.add(k);
+                    });
+                }
+                equiposDisponibles = Array.from(teamSet).sort();
+            } catch(e) {}
+        }
 
         return jsonResponse({ status: 'success', usuarios: list, equipos_disponibles: equiposDisponibles });
     }
