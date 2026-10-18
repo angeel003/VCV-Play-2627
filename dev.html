@@ -8992,6 +8992,38 @@ function drawImageContain(ctx, img, x, y, maxW, maxH) {
     ctx.drawImage(img, nx, ny, nw, nh);
 }
 
+// Helper para auto-ajustar tamaño de fuente y que nunca se desborde del ancho máximo permitido
+function drawTextFitted(ctx, text, x, y, maxW, baseFontSize, fontSpec = 'sans-serif', minFontSize = 14) {
+    if (!text) return;
+    let size = baseFontSize;
+    
+    // Extraer peso si viene incluido (ej: '900 sans-serif' o '800 "Space Grotesk"')
+    let weight = 'normal';
+    let family = fontSpec;
+    const parts = fontSpec.trim().split(/\s+/);
+    if (parts.length > 1 && (/^(normal|bold|bolder|lighter|[1-9]00)$/i.test(parts[0]))) {
+        weight = parts[0];
+        family = parts.slice(1).join(' ');
+    }
+
+    ctx.font = `${weight} ${size}px ${family}`;
+    let measured = ctx.measureText(text).width;
+    while (measured > maxW && size > minFontSize) {
+        size -= 1;
+        ctx.font = `${weight} ${size}px ${family}`;
+        measured = ctx.measureText(text).width;
+    }
+    // Si aún con minFontSize sobrepasa, recortar con elipsis
+    let displayText = String(text);
+    if (measured > maxW) {
+        while (displayText.length > 3 && ctx.measureText(displayText + '...').width > maxW) {
+            displayText = displayText.slice(0, -1);
+        }
+        displayText = displayText + '...';
+    }
+    ctx.fillText(displayText, x, y);
+}
+
 async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const idPart = window.currentShareMatchId;
     let match = null;
@@ -9047,9 +9079,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.roundRect(70, 180, 240, 46, 12);
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#d4af37';
-    ctx.font = '900 20px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(cat, 190, 210);
+    drawTextFitted(ctx, cat, 190, 210, 215, 20, '900 "Space Grotesk", sans-serif', 14);
 
     // Badge 2: Partido
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -9059,9 +9090,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.roundRect(325, 180, 360, 46, 12);
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#ffffff';
-    ctx.font = '800 19px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${locName} vs ${visName}`, 505, 210);
+    drawTextFitted(ctx, `${locName} vs ${visName}`, 505, 210, 335, 19, '800 sans-serif', 13);
 
     // Badge 3: Jornada (Derecha)
     ctx.fillStyle = '#b7a4be';
@@ -9092,14 +9122,13 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const topBannerY = posterY + 25;
     let cardTitle = isProclaimed ? '👑 MVP OFICIAL DEL PARTIDO' : (myVote ? '⭐ MI CANDIDATO A MVP' : '⭐ CANDIDATOS A MVP');
     ctx.fillStyle = isProclaimed ? '#ffd700' : '#f3ce5e';
-    ctx.font = '900 30px "Space Grotesk", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(cardTitle, 110, topBannerY + 24);
+    drawTextFitted(ctx, cardTitle, 110, topBannerY + 24, 450, 30, '900 "Space Grotesk", sans-serif', 20);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '800 24px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : ''), W - 110, topBannerY + 24);
+    let userHeaderTxt = '@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : '');
+    drawTextFitted(ctx, userHeaderTxt, W - 110, topBannerY + 24, 380, 24, '800 sans-serif', 16);
 
     // Separador sutil bajo el banner
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
@@ -9170,17 +9199,17 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.textAlign = 'left';
     ctx.fillText(isProclaimed ? 'PROCLAMADO POR EL CLUB' : 'MI ELECCIÓN DESTACADA', infoX, heroY + 30);
 
-    // Apodo en tipografía grande
+    // Apodo en tipografía grande con auto-ajuste
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 52px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
     let displayApodo = primaryInfo ? primaryInfo.apodo : 'Jugador';
-    ctx.fillText(displayApodo, infoX, heroY + 86);
+    drawTextFitted(ctx, displayApodo, infoX, heroY + 86, infoW - 20, 52, '900 "Space Grotesk", sans-serif', 28);
 
-    // Nombre completo
+    // Nombre completo con auto-ajuste
     if (primaryInfo && primaryInfo.nombre && primaryInfo.nombre.toLowerCase() !== displayApodo.toLowerCase()) {
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '700 24px sans-serif';
-        ctx.fillText(primaryInfo.nombre, infoX, heroY + 125);
+        ctx.textAlign = 'left';
+        drawTextFitted(ctx, primaryInfo.nombre, infoX, heroY + 125, infoW - 20, 24, '700 sans-serif', 16);
     }
 
     // Posición
@@ -9193,9 +9222,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = '800 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(primaryInfo.posicion, infoX + 90, heroY + 169);
+        drawTextFitted(ctx, primaryInfo.posicion, infoX + 90, heroY + 169, 160, 18, '800 sans-serif', 13);
     }
 
     // Estadísticas destacadas de MVP (si el partido ya terminó y tiene mvp_stats)
@@ -9213,9 +9241,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.fill(); ctx.stroke();
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '800 17px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('⚡ ' + st, badgeX + 72, stY + 27);
+                drawTextFitted(ctx, '⚡ ' + st, badgeX + 72, stY + 27, 130, 17, '800 sans-serif', 12);
             }
         });
     }
@@ -9223,6 +9250,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     // 4. BANNER DE ESTADO DEL USUARIO (Centro)
     let pctMvpVal = (window.appData && window.appData.reglas && window.appData.reglas.pct_mvp !== undefined) ? window.appData.reglas.pct_mvp : 10;
     const bannerBoxY = heroY + photoBoxH + 28;
+    const bannerMaxW = W - 260; // margen dentro del recuadro
     if (isProclaimed) {
         if (isHit) {
             // Acierto en verde/oro
@@ -9234,9 +9262,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#2ecc71';
-            ctx.font = '900 30px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`🎯 ¡HAS ACERTADO EL MVP! • +${pctMvpVal}% BONUS EN TUS PUNTOS`, midX, bannerBoxY + 44);
+            drawTextFitted(ctx, `🎯 ¡HAS ACERTADO EL MVP! • +${pctMvpVal}% BONUS EN TUS PUNTOS`, midX, bannerBoxY + 44, bannerMaxW, 30, '900 sans-serif', 18);
         } else if (myVote) {
             // Voto por otro candidato
             let vInf = window.parseCandInfo(myVote);
@@ -9248,9 +9275,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#b7a4be';
-            ctx.font = '800 24px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText(`Tu voto fue para ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo} • ¡Buen intento!`, midX, bannerBoxY + 43);
+            drawTextFitted(ctx, `Tu voto fue para ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo} • ¡Buen intento!`, midX, bannerBoxY + 43, bannerMaxW, 24, '800 sans-serif', 16);
         } else {
             ctx.fillStyle = 'rgba(212, 175, 55, 0.1)';
             ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
@@ -9260,9 +9286,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#f3ce5e';
-            ctx.font = '800 24px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('No registraste voto de MVP para este partido', midX, bannerBoxY + 43);
+            drawTextFitted(ctx, 'No registraste voto de MVP para este partido', midX, bannerBoxY + 43, bannerMaxW, 24, '800 sans-serif', 16);
         }
     } else {
         // En votación abierta
@@ -9274,12 +9299,11 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#ffd700';
-        ctx.font = '900 26px sans-serif';
         ctx.textAlign = 'center';
         if (myVote) {
-            ctx.fillText(`🔒 Voto asegurado • ¡Si es elegido ganarás un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43);
+            drawTextFitted(ctx, `🔒 Voto asegurado • ¡Si es elegido ganarás un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43, bannerMaxW, 26, '900 sans-serif', 16);
         } else {
-            ctx.fillText(`⭐ Votación Abierta • ¡Elige tu MVP y gana un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43);
+            drawTextFitted(ctx, `⭐ Votación Abierta • ¡Elige tu MVP y gana un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43, bannerMaxW, 26, '900 sans-serif', 16);
         }
     }
 
@@ -9346,32 +9370,28 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
         // Textos mini card a la derecha de la miniatura
         const mInfoX = mPhotoX + mPhotoSize + 16;
+        const mMaxW = (mx + miniW - 14) - mInfoX;
         ctx.textAlign = 'left';
 
         // Badge indicador (OFICIAL / TU VOTO / NOMINADO)
         if (isOfficialThis) {
             ctx.fillStyle = '#ffd700';
-            ctx.font = '900 16px sans-serif';
-            ctx.fillText('👑 MVP OFICIAL', mInfoX, miniY + 40);
+            drawTextFitted(ctx, '👑 MVP OFICIAL', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
         } else if (isUserVoteThis) {
             ctx.fillStyle = '#f3ce5e';
-            ctx.font = '900 16px sans-serif';
-            ctx.fillText('⭐ TU VOTO', mInfoX, miniY + 40);
+            drawTextFitted(ctx, '⭐ TU VOTO', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
         } else {
             ctx.fillStyle = '#b7a4be';
-            ctx.font = '800 15px sans-serif';
-            ctx.fillText('NOMINADO', mInfoX, miniY + 40);
+            drawTextFitted(ctx, 'NOMINADO', mInfoX, miniY + 40, mMaxW, 15, '800 sans-serif', 12);
         }
 
         // Nombre
         ctx.fillStyle = '#ffffff';
-        ctx.font = '900 24px "Space Grotesk", sans-serif';
-        ctx.fillText((cInf.dorsal ? '#' + cInf.dorsal + ' ' : '') + cInf.apodo, mInfoX, miniY + 75);
+        drawTextFitted(ctx, (cInf.dorsal ? '#' + cInf.dorsal + ' ' : '') + cInf.apodo, mInfoX, miniY + 75, mMaxW, 24, '900 "Space Grotesk", sans-serif', 15);
 
         // Subtítulo (Nombre real o Posición)
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '600 17px sans-serif';
-        ctx.fillText(cInf.posicion || cInf.nombre || '', mInfoX, miniY + 105);
+        drawTextFitted(ctx, cInf.posicion || cInf.nombre || '', mInfoX, miniY + 105, mMaxW, 17, '600 sans-serif', 12);
     }
 }
 
@@ -9486,11 +9506,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     if (imgLoc) {
         drawImageContain(ctx, imgLoc, locCenter - 85, posterY + 55, 170, 170);
     }
-    // Nombre Local
+    // Nombre Local con auto-ajuste para que nunca se desborde ni tape el centro
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(locName, locCenter, posterY + 265);
+    drawTextFitted(ctx, locName, locCenter, posterY + 265, 290, 32, '900 sans-serif', 16);
     // Badge Local
     ctx.fillStyle = 'rgba(46, 204, 113, 0.15)';
     ctx.strokeStyle = '#2ecc71';
@@ -9545,11 +9564,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     if (imgVis) {
         drawImageContain(ctx, imgVis, visCenter - 85, posterY + 55, 170, 170);
     }
-    // Nombre Visitante
+    // Nombre Visitante con auto-ajuste para equipos de nombres largos
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(visName, visCenter, posterY + 265);
+    drawTextFitted(ctx, visName, visCenter, posterY + 265, 290, 32, '900 sans-serif', 16);
     // Badge Visitante
     ctx.fillStyle = 'rgba(183, 164, 190, 0.15)';
     ctx.strokeStyle = '#b7a4be';
@@ -9584,9 +9602,9 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     ctx.fillText('🎯 PRONÓSTICO REGISTRADO', 120, userBlockY + 20);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '800 24px sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText('@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : ''), W - 120, userBlockY + 20);
+    let matchUserHeader = '@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : '');
+    drawTextFitted(ctx, matchUserHeader, W - 120, userBlockY + 20, 380, 24, '800 sans-serif', 16);
 
     if (pUser && pUser.sets) {
         // Caja de Sets Pronosticados (Diseño tipo display)
@@ -9609,10 +9627,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
 
         // Diferencia de puntos pronosticada
         ctx.fillStyle = '#f3ce5e';
-        ctx.font = '700 26px sans-serif';
+        ctx.textAlign = 'center';
         let signoTxt = pUser.signo || '';
         let diffTxt = pUser.puntos !== undefined ? `Diferencia de sets: ${pUser.puntos} pts (${signoTxt})` : signoTxt;
-        ctx.fillText(diffTxt, midX, predBoxY + 150);
+        drawTextFitted(ctx, diffTxt, midX, predBoxY + 150, W - 280, 26, '700 sans-serif', 18);
 
         // Mensaje de Resultado / Puntos
         if (yaJugado) {
@@ -9673,8 +9691,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#2ecc71';
-            ctx.font = '900 30px sans-serif';
-            ctx.fillText('🔥 ¡Conseguidos +' + ptsConseguidos + ' pts en este partido!', midX, predBoxY + 218);
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '🔥 ¡Conseguidos +' + ptsConseguidos + ' pts en este partido!', midX, predBoxY + 218, W - 320, 30, '900 sans-serif', 18);
 
             // Mención MVP si el partido tiene MVP
             if (match.mvp_oficial || (match.mvp_candidatos && match.mvp_candidatos.length > 0)) {
@@ -9703,8 +9721,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                     ctx.fill(); ctx.stroke();
 
                     ctx.fillStyle = '#f3ce5e';
-                    ctx.font = '800 20px sans-serif';
-                    ctx.fillText(mvpTxt, midX, predBoxY + 276);
+                    ctx.textAlign = 'center';
+                    drawTextFitted(ctx, mvpTxt, midX, predBoxY + 276, W - 320, 20, '800 sans-serif', 13);
                 }
             }
         } else {
@@ -9717,8 +9735,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fill(); ctx.stroke();
 
             ctx.fillStyle = '#2ecc71';
-            ctx.font = '800 24px sans-serif';
-            ctx.fillText('🔒 Predicción registrada • ¡A por los puntos!', midX, predBoxY + 216);
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '🔒 Predicción registrada • ¡A por los puntos!', midX, predBoxY + 216, W - 320, 24, '800 sans-serif', 16);
 
             // Mención MVP si el usuario ya votó
             let uVote = data.mvp_votos ? data.mvp_votos[match.id_partido] : null;
@@ -9732,8 +9750,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.fill(); ctx.stroke();
 
                 ctx.fillStyle = '#f3ce5e';
-                ctx.font = '800 20px sans-serif';
-                ctx.fillText(`⭐ Mi candidato a MVP: ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}`, midX, predBoxY + 274);
+                ctx.textAlign = 'center';
+                drawTextFitted(ctx, `⭐ Mi candidato a MVP: ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}`, midX, predBoxY + 274, W - 320, 20, '800 sans-serif', 13);
             }
         }
     } else {
@@ -9769,9 +9787,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     ctx.roundRect(70, 180, 360, 46, 12);
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#d4af37';
-    ctx.font = '900 20px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('LIGA ' + liga.toUpperCase(), 250, 210);
+    drawTextFitted(ctx, 'LIGA ' + liga.toUpperCase(), 250, 210, 335, 20, '900 "Space Grotesk", sans-serif', 14);
 
     // Badge 2: Jornada (Derecha)
     ctx.fillStyle = '#b7a4be';
@@ -9823,16 +9840,15 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     ctx.fillText(uName.substring(0, 2).toUpperCase(), midX, avatarY + 16);
     ctx.restore();
 
-    // Nombre y Usuario
+    // Nombre y Usuario con auto-ajuste
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 40px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('@' + uName, midX, posterY + 195);
+    drawTextFitted(ctx, '@' + uName, midX, posterY + 195, W - 200, 40, '900 sans-serif', 24);
 
     if (nReal && nReal !== uName) {
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '700 24px sans-serif';
-        ctx.fillText(nReal, midX, posterY + 230);
+        ctx.textAlign = 'center';
+        drawTextFitted(ctx, nReal, midX, posterY + 230, W - 200, 24, '700 sans-serif', 16);
     }
 
     // 2. ZONA MEDIA: DOS CAJAS GEMELAS DISPLAY (Posición y Puntos)
@@ -9853,8 +9869,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     ctx.fillText('POSICIÓN EN LIGA', 105 + (halfW / 2), statsBoxY + 45);
 
     ctx.fillStyle = '#d4af37';
-    ctx.font = '900 84px "Space Grotesk", sans-serif';
-    ctx.fillText(pos, 105 + (halfW / 2), statsBoxY + 135);
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, pos, 105 + (halfW / 2), statsBoxY + 135, halfW - 40, 84, '900 "Space Grotesk", sans-serif', 40);
 
     // Caja 2: Puntos
     ctx.fillStyle = 'rgba(46, 204, 113, 0.08)';
@@ -9870,8 +9886,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     ctx.fillText('PUNTOS TOTALES', (W - 105 - halfW) + (halfW / 2), statsBoxY + 45);
 
     ctx.fillStyle = '#2ecc71';
-    ctx.font = '900 84px "Space Grotesk", sans-serif';
-    ctx.fillText(pts + ' pts', (W - 105 - halfW) + (halfW / 2), statsBoxY + 135);
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, pts + ' pts', (W - 105 - halfW) + (halfW / 2), statsBoxY + 135, halfW - 40, 84, '900 "Space Grotesk", sans-serif', 40);
 
     // 3. DIVISIÓN INTERIOR ELEGANTE
     const sepY = statsBoxY + 205;
@@ -9919,19 +9935,17 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#b7a4be';
-        ctx.font = '800 17px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(it.label, px + (pW / 2), pY + 38);
+        drawTextFitted(ctx, it.label, px + (pW / 2), pY + 38, pW - 20, 17, '800 sans-serif', 12);
 
         ctx.fillStyle = it.col;
-        ctx.font = '900 34px "Space Grotesk", sans-serif';
-        ctx.fillText(it.val, px + (pW / 2), pY + 85);
+        ctx.textAlign = 'center';
+        drawTextFitted(ctx, it.val, px + (pW / 2), pY + 85, pW - 20, 34, '900 "Space Grotesk", sans-serif', 20);
     });
 
     // Mención a Bonus MVP si en esta jornada/liga hubo acierto de MVP
     let matchesToCheck = data.equipos || data.todos_partidos || [];
     let mvpHitsInLiga = 0;
-    let mvpBonusTotalPts = 0;
     matchesToCheck.forEach(m => {
         if (m.mvp_oficial && data.mvp_votos && data.mvp_votos[m.id_partido]) {
             let uMvpVote = String(data.mvp_votos[m.id_partido]).trim().toLowerCase();
@@ -9957,9 +9971,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#f3ce5e';
-        ctx.font = '800 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`⭐ Bonus MVP Activo: ¡+${pctMvpVal}% extra sumado a tu puntuación por acertar el MVP!`, W / 2, pY + pillH + 41);
+        drawTextFitted(ctx, `⭐ Bonus MVP Activo: ¡+${pctMvpVal}% extra sumado a tu puntuación por acertar el MVP!`, W / 2, pY + pillH + 41, W - 260, 18, '800 sans-serif', 12);
     }
 }
 
