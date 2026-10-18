@@ -1874,10 +1874,10 @@
         <summary style="padding: 16px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; list-style: none;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert" style="color: #e67e22;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
-            <h3 style="font-size: 1.05rem; font-weight: 800; color: #e67e22; margin:0;">Intranet Administrador</h3>
+            <h3 id="adminMainTitle" style="font-size: 1.05rem; font-weight: 800; color: #e67e22; margin:0;">Intranet Administrador</h3>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
+            <span id="adminRootBadge" style="font-size: 0.7rem; background: #e67e22; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 800;">ROOT</span>
             <span class="admin-main-arrow" style="color: #e67e22; font-size: 0.75rem; transition: transform 0.2s;">▼</span>
           </div>
         </summary>
@@ -2024,8 +2024,26 @@
             </div>
           </details>
 
+          <!-- 5.B Gestión de Permisos Especiales (MVP y Resultados) -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(230, 126, 34, 0.15), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🔑 Concesión de Permisos (MVP y Resultados)</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;">
+                Otorga permisos a usuarios específicos para que puedan gestionar el MVP de Superliga 2 o subir resultados y links de sus equipos, <b>sin darles acceso al resto de la administración</b>.
+              </p>
+              <button type="button" id="btnCargarPermisosUsuarios" class="btn" onclick="window.cargarListaPermisosUsuarios()" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 12px; width: 100%; font-size: 0.82rem;">
+                🔄 Cargar Lista de Usuarios y Permisos
+              </button>
+              <div id="adminListaUsuariosPermisos" style="display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:10px;">Pulsa el botón de arriba para ver y modificar los permisos de los usuarios.</div>
+              </div>
+            </div>
+          </details>
+
           <!-- 6. Subida Rápida de Resultados y Links -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+          <details id="secAdminResultados" class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
               <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
             </summary>
@@ -2036,7 +2054,7 @@
 
           <!-- 7. Optimización y Rendimiento de BD -->
           <!-- 6.B Plantilla Superliga (MVP) -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+          <details id="secAdminMvp" class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
               <span style="display:flex; align-items:center; gap:6px;">⭐ Plantilla Superliga 2 y Nominados MVP</span>
             </summary>
@@ -2098,7 +2116,11 @@
                     </select>
                   </div>
                   <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (Opcional - deja vacío si solo hay 2):</label>
+                    <label style="font-size: 0.72rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (Opcional):</label>
+                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 4px; line-height: 1.35; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 6px; border-left: 2px solid var(--secondary-color);">
+                      • Si seleccionas un jugador aquí, la votación tendrá <b>3 candidatos</b>.<br>
+                      • Si lo dejas en <code>-- Seleccionar Jugador --</code> (vacío), la votación tendrá automáticamente <b>2 candidatos</b>.
+                    </div>
                     <select id="directMvp3" onchange="window.actualizarOpcionesMvpOficial()" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
@@ -2841,8 +2863,18 @@ function renderAdminPanel(equipos) {
         let catL = (eq.categoria || '').toLowerCase();
         let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
 
+        // Comprobar filtro de permisos por equipo para no-admin completo
+        let userPermTeams = window._userPermisoResultados || '';
+        let canUserSeeThisMatch = true;
+        if (userPermTeams && userPermTeams !== 'TODOS' && userPermTeams !== 'X') {
+            let allowedTeams = userPermTeams.toLowerCase().split(',').map(s => s.trim());
+            let eqLocL = (eq.equipo_local || '').toLowerCase();
+            let eqRivL = (eq.rival || '').toLowerCase();
+            canUserSeeThisMatch = allowedTeams.some(t => eqLocL.includes(t) || eqRivL.includes(t));
+        }
+
         // Los partidos de Superliga siempre aparecen para poder configurar el MVP, o todos si se marca el checkbox
-        if (window.adminVerTodosPartidos || isSuperliga || isAvailable || endedRecently) {
+        if (canUserSeeThisMatch && (window.adminVerTodosPartidos || isSuperliga || isAvailable || endedRecently)) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
             
@@ -3980,6 +4012,115 @@ window.crearUsuarioAdmin = function(e) {
     })
     .finally(() => { btn.disabled = false; btn.innerText = "➕ Crear Usuario"; });
 }
+
+// ------------------------------------------------------------------
+// GESTOR DE PERMISOS (MVP Y RESULTADOS POR EQUIPO)
+// ------------------------------------------------------------------
+window.cargarListaPermisosUsuarios = function() {
+    const box = document.getElementById('adminListaUsuariosPermisos');
+    const btn = document.getElementById('btnCargarPermisosUsuarios');
+    if (!box) return;
+    box.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; text-align:center; padding:10px;">⏳ Cargando usuarios y permisos...</div>';
+    if (btn) btn.disabled = true;
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'get_usuarios_permisos',
+            usuario: currentUser,
+            password: currentPassword
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (btn) btn.disabled = false;
+        if (d.status !== 'success' || !Array.isArray(d.usuarios)) {
+            box.innerHTML = `<div style="color:#e74c3c; font-size:0.75rem; padding:8px;">${d.message || 'Error al cargar usuarios.'}</div>`;
+            return;
+        }
+
+        if (d.usuarios.length === 0) {
+            box.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding:8px;">No hay usuarios registrados.</div>';
+            return;
+        }
+
+        let h = '';
+        d.usuarios.forEach((u, idx) => {
+            let isMvp = (u.permiso_mvp === 'X');
+            let resVal = u.permiso_resultados || '';
+            let isRoot = (u.admin_web === 'X');
+
+            h += `
+            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.78rem; display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:var(--secondary-color);">@${u.usuario}</strong>
+                        <span style="font-size:0.72rem; color:var(--text-muted); margin-left:6px;">${u.nombre_real}</span>
+                    </div>
+                    ${isRoot ? '<span style="font-size:0.65rem; background:#e67e22; color:#fff; padding:1px 5px; border-radius:4px; font-weight:800;">ADMIN ROOT</span>' : ''}
+                </div>
+                
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:4px;">
+                    <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; cursor:pointer; margin:0;">
+                        <input type="checkbox" id="perm_mvp_${idx}" ${isMvp ? 'checked' : ''} style="cursor:pointer;">
+                        <span>⭐ Gestor MVP Superliga</span>
+                    </label>
+                </div>
+
+                <div style="display:flex; gap:6px; align-items:center; margin-top:2px;">
+                    <span style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap;">🏐 Equipos Resultados/Links:</span>
+                    <input type="text" id="perm_res_${idx}" value="${resVal}" placeholder="Ej: VCV, Palencia, TODOS (vacío = sin permiso)" style="flex:1; padding:5px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                    <button type="button" class="btn" onclick="window.guardarPermisosUsuarioEspecifico('${u.usuario.replace(/'/g, "\\'")}', ${idx})" style="padding:5px 10px; font-size:0.72rem; background:rgba(230,126,34,0.15); border:1px solid #e67e22; color:#e67e22; font-weight:800; border-radius:6px; cursor:pointer;">
+                        💾 Guardar
+                    </button>
+                </div>
+                <div style="font-size:0.65rem; color:var(--text-muted); font-style:italic;">
+                    Escribe el nombre o parte del equipo al que puede subir resultados (separados por comas), o <b>TODOS</b>.
+                </div>
+            </div>`;
+        });
+
+        box.innerHTML = h;
+    })
+    .catch(err => {
+        if (btn) btn.disabled = false;
+        box.innerHTML = '<div style="color:#e74c3c; font-size:0.75rem; padding:8px;">Error de conexión.</div>';
+    });
+};
+
+window.guardarPermisosUsuarioEspecifico = function(targetUser, idx) {
+    const chkMvp = document.getElementById(`perm_mvp_${idx}`);
+    const inputRes = document.getElementById(`perm_res_${idx}`);
+    if (!chkMvp || !inputRes) return;
+
+    const valMvp = chkMvp.checked ? 'X' : '';
+    const valRes = inputRes.value.trim();
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'save_usuario_permisos',
+            usuario: currentUser,
+            password: currentPassword,
+            target_usuario: targetUser,
+            permiso_mvp: valMvp,
+            permiso_resultados: valRes
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            mostrarToast(d.message || "Permisos guardados con éxito.");
+        } else {
+            alert("Error: " + (d.message || "No se pudieron guardar los permisos."));
+        }
+    })
+    .catch(err => {
+        alert("Error de conexión al guardar permisos.");
+    });
+};
 // ------------------------------------------------------------------
 
 function getCategoryHTML(catName) {
@@ -4544,12 +4685,20 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             let insigniasHeaderHtml = "";
             let insigniasH2Html = "";
             let isAdmin = false;
+            let hasPermisoMvp = false;
+            let hasPermisoResultados = false;
+            let permisoResultadosVal = "";
 
             // Calculate Rank from Global Leaderboard
             if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); } else { setTimeout(() => { if(typeof window.updateHeaderStats === "function") window.updateHeaderStats(); }, 500); }
             let displayMisInsignias = misInsignias.filter(b => b.type !== 'avatar');
             displayMisInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
+                if (b.type === 'permiso_mvp') hasPermisoMvp = true;
+                if (b.type === 'permiso_resultados') {
+                    hasPermisoResultados = true;
+                    permisoResultadosVal = b.text || "";
+                }
                 let cssColorClass = getBadgeCSS(b.type);
                 insigniasHeaderHtml += renderBadgeIcon(b, "badge-header", "width:18px; height:18px; cursor:pointer;").replace(">", ` title="${b.text}" onclick="showMobileTooltip(event, \'${b.text}\')">`);
                 
@@ -4562,66 +4711,116 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             // Render lucide icons in the newly injected HTML
             lucide.createIcons();
             
-            if (isAdmin) {
+            let canAccessIntranet = isAdmin || hasPermisoMvp || hasPermisoResultados;
+            window._userPermisoResultados = isAdmin ? 'TODOS' : (hasPermisoResultados ? permisoResultadosVal : '');
+
+            if (canAccessIntranet) {
                 document.getElementById('adminPanelWrapper').style.display = "block";
-                renderAdminPanel(data.equipos); 
-                
-                // POPULATE LIGAS
-                var ligasContainer = document.getElementById('adminLigasCheckboxes');
-                if (ligasContainer && data.todas_las_ligas) {
-                    ligasContainer.innerHTML = '';
-                    var allLigas = data.todas_las_ligas;
-                    allLigas.forEach(function(liga) {
-                        if (!liga) return; // Skip empty columns
-                        var div = document.createElement('div');
-                        div.innerHTML = '<label style="margin:0; cursor:pointer;"><input type="checkbox" value="' + liga + '" style="margin-right:5px;"> ' + liga + '</label>';
-                        ligasContainer.appendChild(div);
-                    });
+
+                // Personalizar encabezado según rol
+                const titleEl = document.getElementById('adminMainTitle');
+                const badgeEl = document.getElementById('adminRootBadge');
+                if (isAdmin) {
+                    if (titleEl) titleEl.innerText = "Intranet Administrador";
+                    if (badgeEl) { badgeEl.innerText = "ROOT"; badgeEl.style.background = "#e67e22"; }
+                } else if (hasPermisoMvp && hasPermisoResultados) {
+                    if (titleEl) titleEl.innerText = "Gestión de Partidos y MVP";
+                    if (badgeEl) { badgeEl.innerText = "GESTOR"; badgeEl.style.background = "var(--secondary-color)"; badgeEl.style.color = "#000"; }
+                } else if (hasPermisoMvp) {
+                    if (titleEl) titleEl.innerText = "Gestor MVP Superliga 2";
+                    if (badgeEl) { badgeEl.innerText = "MVP"; badgeEl.style.background = "var(--secondary-color)"; badgeEl.style.color = "#000"; }
+                } else if (hasPermisoResultados) {
+                    if (titleEl) titleEl.innerText = "Gestor de Resultados y Enlaces";
+                    if (badgeEl) { badgeEl.innerText = "RESULTADOS"; badgeEl.style.background = "#3498db"; }
                 }
 
-                // POPULATE LIGAS CONGELAR (FINDE)
-                var ligasFreezeContainer = document.getElementById('adminLigasCongelarCheckboxes');
-                if (ligasFreezeContainer && data.todas_las_ligas) {
-                    ligasFreezeContainer.innerHTML = '';
-                    var frozenSet = new Set(data.ligas_congeladas || data.todas_las_ligas);
-                    data.todas_las_ligas.forEach(function(liga) {
-                        if (!liga) return;
-                        var isChecked = frozenSet.has(liga) ? 'checked' : '';
-                        var div = document.createElement('div');
-                        div.innerHTML = '<label style="margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color); display:flex; align-items:center; gap:6px;"><input type="checkbox" class="chk-liga-freeze" value="' + liga + '" ' + isChecked + '> ' + liga + '</label>';
-                        ligasFreezeContainer.appendChild(div);
-                    });
-                }
-
-                // ACTUALIZAR ESTADO VISUAL DE CONGELACIÓN (ADMIN)
-                var freezeBadge = document.getElementById('adminFreezeStatusBadge');
-                var freezeDesc = document.getElementById('adminFreezeStatusDesc');
-                if (freezeBadge && freezeDesc) {
-                    if (data.freeze_override === 'UNFREEZE') {
-                        freezeBadge.innerText = '🔓 DESCONGELADO (MANUAL)';
-                        freezeBadge.style.background = 'rgba(46, 204, 113, 0.2)';
-                        freezeBadge.style.color = '#2ecc71';
-                        freezeBadge.style.borderColor = '#2ecc71';
-                        freezeDesc.innerHTML = 'Has <b>forzado el descongelado</b>. Todo el mundo ve los puntos en vivo. Volverá al ciclo automático al comenzar la siguiente jornada, o pulsa abajo para volver ahora.';
-                    } else if (data.freeze_override === 'FREEZE') {
-                        freezeBadge.innerText = '❄️ CONGELADO (MANUAL)';
-                        freezeBadge.style.background = 'rgba(52, 152, 219, 0.2)';
-                        freezeBadge.style.color = '#3498db';
-                        freezeBadge.style.borderColor = '#3498db';
-                        freezeDesc.innerHTML = 'Has <b>forzado la congelación</b> manualmente. Los puntos permanecen ocultos hasta que pulses Descongelar o restablezcas a Automático.';
+                // Mostrar/Ocultar secciones según permisos
+                const allCollapsibles = document.querySelectorAll('#adminMainDetails > details.admin-collapsible');
+                allCollapsibles.forEach(sec => {
+                    if (isAdmin) {
+                        sec.style.display = "block";
                     } else {
-                        if (data.is_frozen) {
-                            freezeBadge.innerText = '❄️ CONGELADO (AUTOMÁTICO)';
+                        // Para usuarios no-admin, ocultar todo excepto sus secciones autorizadas
+                        if (sec.id === 'secAdminMvp' && hasPermisoMvp) {
+                            sec.style.display = "block";
+                        } else if (sec.id === 'secAdminResultados' && hasPermisoResultados) {
+                            sec.style.display = "block";
+                        } else {
+                            sec.style.display = "none";
+                        }
+                    }
+                });
+
+                // Si tiene acceso a resultados, renderizar la lista de partidos
+                if (isAdmin || hasPermisoResultados) {
+                    renderAdminPanel(data.equipos);
+                }
+
+                // Renderizar plantilla MVP si tiene acceso a MVP
+                if (isAdmin || hasPermisoMvp) {
+                    if (typeof window.renderAdminPlantillaMvp === 'function') window.renderAdminPlantillaMvp();
+                    if (typeof window.poblarSelectPartidosDirectMvp === 'function') window.poblarSelectPartidosDirectMvp();
+                }
+                
+                // Elementos exclusivos de administrador completo
+                if (isAdmin) {
+                    // POPULATE LIGAS
+                    var ligasContainer = document.getElementById('adminLigasCheckboxes');
+                    if (ligasContainer && data.todas_las_ligas) {
+                        ligasContainer.innerHTML = '';
+                        var allLigas = data.todas_las_ligas;
+                        allLigas.forEach(function(liga) {
+                            if (!liga) return;
+                            var div = document.createElement('div');
+                            div.innerHTML = '<label style="margin:0; cursor:pointer;"><input type="checkbox" value="' + liga + '" style="margin-right:5px;"> ' + liga + '</label>';
+                            ligasContainer.appendChild(div);
+                        });
+                    }
+
+                    // POPULATE LIGAS CONGELAR (FINDE)
+                    var ligasFreezeContainer = document.getElementById('adminLigasCongelarCheckboxes');
+                    if (ligasFreezeContainer && data.todas_las_ligas) {
+                        ligasFreezeContainer.innerHTML = '';
+                        var frozenSet = new Set(data.ligas_congeladas || data.todas_las_ligas);
+                        data.todas_las_ligas.forEach(function(liga) {
+                            if (!liga) return;
+                            var isChecked = frozenSet.has(liga) ? 'checked' : '';
+                            var div = document.createElement('div');
+                            div.innerHTML = '<label style="margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:6px 10px; border-radius:6px; border:1px solid var(--border-color); display:flex; align-items:center; gap:6px;"><input type="checkbox" class="chk-liga-freeze" value="' + liga + '" ' + isChecked + '> ' + liga + '</label>';
+                            ligasFreezeContainer.appendChild(div);
+                        });
+                    }
+
+                    // ACTUALIZAR ESTADO VISUAL DE CONGELACIÓN (ADMIN)
+                    var freezeBadge = document.getElementById('adminFreezeStatusBadge');
+                    var freezeDesc = document.getElementById('adminFreezeStatusDesc');
+                    if (freezeBadge && freezeDesc) {
+                        if (data.freeze_override === 'UNFREEZE') {
+                            freezeBadge.innerText = '🔓 DESCONGELADO (MANUAL)';
+                            freezeBadge.style.background = 'rgba(46, 204, 113, 0.2)';
+                            freezeBadge.style.color = '#2ecc71';
+                            freezeBadge.style.borderColor = '#2ecc71';
+                            freezeDesc.innerHTML = 'Has <b>forzado el descongelado</b>. Todo el mundo ve los puntos en vivo. Volverá al ciclo automático al comenzar la siguiente jornada, o pulsa abajo para volver ahora.';
+                        } else if (data.freeze_override === 'FREEZE') {
+                            freezeBadge.innerText = '❄️ CONGELADO (MANUAL)';
                             freezeBadge.style.background = 'rgba(52, 152, 219, 0.2)';
                             freezeBadge.style.color = '#3498db';
                             freezeBadge.style.borderColor = '#3498db';
-                            freezeDesc.innerHTML = 'Siguiendo el horario habitual de fin de semana. Se descongelará solo el lunes a las 18:00 (o pulsa <b>Descongelar Ahora</b> si quieres adelantarlo ya).';
+                            freezeDesc.innerHTML = 'Has <b>forzado la congelación</b> manualmente. Los puntos permanecen ocultos hasta que pulses Descongelar o restablezcas a Automático.';
                         } else {
-                            freezeBadge.innerText = '🟢 DESCONGELADO (AUTOMÁTICO)';
-                            freezeBadge.style.background = 'rgba(46, 204, 113, 0.15)';
-                            freezeBadge.style.color = '#2ecc71';
-                            freezeBadge.style.borderColor = 'rgba(46, 204, 113, 0.4)';
-                            freezeDesc.innerHTML = 'Horario entre semana normal. Los puntos puntúan en directo. Se congelará automáticamente al llegar el fin de semana.';
+                            if (data.is_frozen) {
+                                freezeBadge.innerText = '❄️ CONGELADO (AUTOMÁTICO)';
+                                freezeBadge.style.background = 'rgba(52, 152, 219, 0.2)';
+                                freezeBadge.style.color = '#3498db';
+                                freezeBadge.style.borderColor = '#3498db';
+                                freezeDesc.innerHTML = 'Siguiendo el horario habitual de fin de semana. Se descongelará solo el lunes a las 18:00 (o pulsa <b>Descongelar Ahora</b> si quieres adelantarlo ya).';
+                            } else {
+                                freezeBadge.innerText = '🟢 DESCONGELADO (AUTOMÁTICO)';
+                                freezeBadge.style.background = 'rgba(46, 204, 113, 0.15)';
+                                freezeBadge.style.color = '#2ecc71';
+                                freezeBadge.style.borderColor = 'rgba(46, 204, 113, 0.4)';
+                                freezeDesc.innerHTML = 'Horario entre semana normal. Los puntos puntúan en directo. Se congelará automáticamente al llegar el fin de semana.';
+                            }
                         }
                     }
                 }
