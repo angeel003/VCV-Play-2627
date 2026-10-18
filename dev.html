@@ -2033,10 +2033,13 @@
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;">
                 Otorga permisos a usuarios específicos para que puedan gestionar el MVP de Superliga 2 o subir resultados y links de sus equipos, <b>sin darles acceso al resto de la administración</b>.
               </p>
-              <button type="button" id="btnCargarPermisosUsuarios" class="btn" onclick="window.cargarListaPermisosUsuarios()" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 12px; width: 100%; font-size: 0.82rem;">
+              <button type="button" id="btnCargarPermisosUsuarios" class="btn" onclick="window.cargarListaPermisosUsuarios()" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 8px; width: 100%; font-size: 0.82rem;">
                 🔄 Cargar Lista de Usuarios y Permisos
               </button>
-              <div id="adminListaUsuariosPermisos" style="display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px;">
+              <div id="adminBuscadorPermisosCont" style="display:none; margin-bottom: 10px;">
+                <input type="text" id="filtroPermisosUsuarios" oninput="window.filtrarUsuariosPermisos(this.value)" placeholder="🔍 Buscar por @usuario o nombre real..." style="width: 100%; padding: 8px 12px; font-size: 0.8rem; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+              </div>
+              <div id="adminListaUsuariosPermisos" style="display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 4px;">
                 <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:10px;">Pulsa el botón de arriba para ver y modificar los permisos de los usuarios.</div>
               </div>
             </div>
@@ -3962,7 +3965,9 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
         }
         if(d.status === "success") { 
             mostrarToast("Guardado correctamente"); 
-            cargarPartidos(); 
+            if (window.appData && Array.isArray(window.appData.equipos) && typeof renderAdminPanel === 'function') {
+                renderAdminPanel(window.appData.equipos);
+            }
         } else { 
             mostrarToast(d.message || "Guardado localmente"); 
         }
@@ -4049,6 +4054,11 @@ window.cargarListaPermisosUsuarios = function() {
             return;
         }
 
+        const buscadorCont = document.getElementById('adminBuscadorPermisosCont');
+        if (buscadorCont) buscadorCont.style.display = 'block';
+        const txtFiltro = document.getElementById('filtroPermisosUsuarios');
+        if (txtFiltro) txtFiltro.value = '';
+
         if (d.usuarios.length === 0) {
             box.innerHTML = '<div style="color:var(--text-muted); font-size:0.75rem; padding:8px;">No hay usuarios registrados.</div>';
             return;
@@ -4080,8 +4090,10 @@ window.cargarListaPermisosUsuarios = function() {
                 </label>`;
             }).join('');
 
+            let searchAttr = `${(u.usuario || '').toLowerCase()} ${(u.nombre_real || '').toLowerCase()}`;
+
             h += `
-            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:12px; font-size:0.78rem; display:flex; flex-direction:column; gap:8px;">
+            <div class="user-perm-card" data-search="${searchAttr}" style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:12px; font-size:0.78rem; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <strong style="color:var(--secondary-color); font-size:0.85rem;">@${u.usuario}</strong>
@@ -4128,6 +4140,19 @@ window.cargarListaPermisosUsuarios = function() {
     .catch(err => {
         if (btn) btn.disabled = false;
         box.innerHTML = '<div style="color:#e74c3c; font-size:0.75rem; padding:8px;">Error de conexión.</div>';
+    });
+};
+
+window.filtrarUsuariosPermisos = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.user-perm-card');
+    cards.forEach(card => {
+        const s = card.getAttribute('data-search') || '';
+        if (!q || s.includes(q)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
     });
 };
 
