@@ -861,155 +861,155 @@
     /* PESTAÑA: TOP SECRET */
     
   
-/* MVP VOTING STYLES & ANIMATIONS (BANNER ESTILO REFERENCIA VCV) */
-    .mvp-candidates-grid {
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      align-items: stretch;
-      width: 100%;
-      position: relative;
-    }
-    .mvp-card-slot {
-      flex: 1 1 0;
-      min-width: 0;
-      position: relative;
-      display: flex;
-    }
-    .mvp-card-btn {
-      width: 100%;
-      background: #180922;
-      border: 1.5px solid rgba(212, 175, 55, 0.4);
-      border-radius: 12px;
-      padding: 0 0 10px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      position: relative;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-      box-sizing: border-box;
-      overflow: hidden;
-      will-change: transform, opacity;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .mvp-card-btn:hover {
-      border-color: var(--secondary-color);
-      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
-    }
-    .mvp-card-btn.is-voted-state {
-      border-color: var(--secondary-color);
-      box-shadow: 0 0 20px rgba(212, 175, 55, 0.45);
-      background: linear-gradient(180deg, #250b36 0%, #170724 100%);
-      cursor: default;
-    }
-    .mvp-photo-wrapper {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #110519;
-      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .mvp-photo-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .mvp-dorsal-tag {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      background: var(--secondary-color);
-      color: #000;
-      font-size: 0.72rem;
-      font-weight: 900;
-      padding: 2px 6px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      letter-spacing: -0.2px;
-    }
-    .mvp-name-label {
-      font-family: 'Space Grotesk', -apple-system, sans-serif;
-      font-size: 0.92rem;
-      font-weight: 900;
-      color: #f7e7ce;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      text-align: center;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      padding: 4px 6px 0 6px;
-    }
-    .mvp-sub-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      color: var(--secondary-color);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      padding: 0 6px;
-    }
-    .mvp-voted-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      font-weight: 900;
-      color: #000;
-      background: var(--secondary-color);
-      padding: 3px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-top: 2px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-    .mvp-undo-btn {
-      padding: 6px 12px;
-      font-size: 0.74rem;
-      font-weight: 800;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(212, 175, 55, 0.4);
-      color: var(--secondary-color);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .mvp-undo-btn:hover {
-      background: rgba(212, 175, 55, 0.2);
-      border-color: var(--secondary-color);
-      color: #fff;
-    }
-    .mvp-voted-detail-panel {
-      flex: 2 1 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 8px 14px;
-      background: rgba(0, 0, 0, 0.25);
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      border-radius: 12px;
-      opacity: 0;
-      transform: translateX(10px);
-      transition: opacity 0.35s ease 0.1s, transform 0.35s ease 0.1s;
-    }
-    .mvp-voted-detail-panel.visible {
-      opacity: 1;
-      transform: translateX(0);
+/* MVP VOTING STYLES & ANIMATIONS (BANNER ESTILO REFERENCIA VCV) */
+    .mvp-candidates-grid {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: stretch;
+      width: 100%;
+      position: relative;
+    }
+    .mvp-card-slot {
+      flex: 1 1 0;
+      min-width: 0;
+      position: relative;
+      display: flex;
+    }
+    .mvp-card-btn {
+      width: 100%;
+      background: #180922;
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      padding: 0 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+      overflow: hidden;
+      will-change: transform, opacity;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .mvp-card-btn:hover {
+      border-color: var(--secondary-color);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.35);
+    }
+    .mvp-card-btn.is-voted-state {
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.45);
+      background: linear-gradient(180deg, #250b36 0%, #170724 100%);
+      cursor: default;
+    }
+    .mvp-photo-wrapper {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #110519;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .mvp-photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .mvp-dorsal-tag {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: var(--secondary-color);
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      letter-spacing: -0.2px;
+    }
+    .mvp-name-label {
+      font-family: 'Space Grotesk', -apple-system, sans-serif;
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: #f7e7ce;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      padding: 4px 6px 0 6px;
+    }
+    .mvp-sub-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--secondary-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      padding: 0 6px;
+    }
+    .mvp-voted-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: #000;
+      background: var(--secondary-color);
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .mvp-undo-btn {
+      padding: 6px 12px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: var(--secondary-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mvp-undo-btn:hover {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: var(--secondary-color);
+      color: #fff;
+    }
+    .mvp-voted-detail-panel {
+      flex: 2 1 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8px 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: opacity 0.35s ease 0.1s, transform 0.35s ease 0.1s;
+    }
+    .mvp-voted-detail-panel.visible {
+      opacity: 1;
+      transform: translateX(0);
     }
 
     /* ESTILOS DE TRANSICION, ATENUACION Y CENTRADO DE VOTO */
@@ -2033,132 +2033,133 @@
           </details>
 
           <!-- 7. Optimización y Rendimiento de BD -->
-          <!-- 6.B Plantilla Superliga (MVP) -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">⭐ Plantilla Superliga 2 y Nominados MVP</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
-                Aquí tienes la lista de jugadores disponibles para nominar a MVP. Puedes añadir nuevos jugadores en cualquier momento:
-              </p>
-              <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
-                <!-- Populated by JS -->
-              </div>
-              <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
-                <input type="number" id="nuevoJugadorDorsal" placeholder="Dorsal" style="width: 65px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; text-align: center;">
-                <input type="text" id="nuevoJugadorApodo" placeholder="Apodo (ej: Jorge)" style="width: 110px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorPosicion" placeholder="Posición (ej: Receptor)" style="width: 130px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorNombre" placeholder="Nombre completo" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <button type="button" class="btn" onclick="agregarJugadorPlantilla()" style="padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer;">
-                  + Añadir
-                </button>
-              </div>
-              <button type="button" id="btnGuardarPlantillaMvp" class="btn" onclick="guardarPlantillaSuperligaEnBD(event)" style="width: 100%; padding: 10px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); font-weight: 800; border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
-                💾 Guardar Cambios en Plantilla
-              </button>
-
-              <!-- CAJA DIRECTA PARA ELEGIR LOS 3 CANDIDATOS MVP -->
-              <div id="adminDirectMvpBox" style="margin-top: 14px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
-                <div style="font-weight: 800; font-size: 0.88rem; color: var(--secondary-color); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  🏆 Elegir los 3 Nominados al MVP para la Cartelera
-                </div>
-                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px;">
-                  Selecciona el partido de Superliga 2 y los 3 jugadores que aparecerán en la cartelera para que los aficionados voten:
-                </div>
-                
-                <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-                  <div style="min-width: 110px; flex: 1;">
-                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Jornada:</label>
-                    <select id="directMvpJornadaSelect" onchange="window.onDirectMvpJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div style="flex: 2; min-width: 200px;">
-                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Partido de Superliga 2:</label>
-                    <select id="directMvpPartidoSelect" onchange="window.onDirectMvpPartidoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (los 3 valen igual):</label>
-                    <select id="directMvp1" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (los 3 valen igual):</label>
-                    <select id="directMvp2" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (los 3 valen igual):</label>
-                    <select id="directMvp3" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                </div>
-
-                <button type="button" id="btnGuardarDirectMvp" class="btn" onclick="window.guardarDirectMvp(event)" style="width: 100%; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3); margin-bottom: 8px;">
-                  ⭐ Guardar 3 Nominados en Cartelera
-                </button>
-                <button type="button" class="btn" onclick="probarMvpEnCartelera()" style="width: 100%; padding: 8px; background: rgba(52, 152, 219, 0.15); border: 1px dashed #3498db; color: #3498db; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem; margin-bottom: 12px;">
-                  🧪 Ver/Probar Votación MVP en Cartelera
-                </button>
-
-                <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
-                <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
-                  <div style="font-weight: 800; font-size: 0.85rem; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    👑 Proclamar MVP Oficial del Partido / Jornada
-                  </div>
-                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
-                    Selecciona quién ha sido galardonado definitivamente como el MVP oficial de este partido (se guardará en la base de datos):
-                  </div>
-                  <div style="margin-bottom: 8px;">
-                    <select id="directMvpOficialSelect" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                    </select>
-                  </div>
-                  <!-- ESTADÍSTICAS DESTACADAS DEL MVP (OPCIONALES 1 a 4) -->
-                  <div style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.25);">
-                    <div style="font-size: 0.73rem; font-weight: 800; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-                      <span>📊 Estadísticas del Jugador en el Partido (Opcional, 1 a 4)</span>
-                    </div>
-                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px;">
-                      Ej: <em>Ataques: 15 (65%)</em>, <em>Recepción: 19</em>, <em>Saques directos: 5 (29%)</em>, <em>Bloqueos: 4</em>. Deja vacías las que no uses.
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                      <input type="text" id="mvpStat1" placeholder="Estadística 1 (ej: Ataques: 15 (65%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat2" placeholder="Estadística 2 (ej: Recepción: 19)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat3" placeholder="Estadística 3 (ej: Puntos saque: 5 (29%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat4" placeholder="Estadística 4 (ej: Bloqueos: 4)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                    </div>
-                  </div>
-
-                  <div style="display:flex; gap:6px;">
-                    <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
-                      👑 Guardar MVP Oficial en BD
-                    </button>
-                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación de 3">
-                      Quitar (Volver a Votar)
-                    </button>
-                  </div>
-                </div>
-
-                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
-                <div style="margin-top: 10px; padding: 10px; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición en este partido:</span>
-                    <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
-                      🔄 Consultar Votos
-                    </button>
-                  </div>
-                  <div id="adminRecuentoVotosMvp" style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">
-                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
-
+          <!-- 6.B Plantilla Superliga (MVP) -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">⭐ Plantilla Superliga 2 y Nominados MVP</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
+                Aquí tienes la lista de jugadores disponibles para nominar a MVP. Puedes añadir nuevos jugadores en cualquier momento:
+              </p>
+              <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
+                <!-- Populated by JS -->
+              </div>
+              <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
+                <input type="number" id="nuevoJugadorDorsal" placeholder="Dorsal" style="width: 65px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; text-align: center;">
+                <input type="text" id="nuevoJugadorApodo" placeholder="Apodo (ej: Jorge)" style="width: 110px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+                <input type="text" id="nuevoJugadorPosicion" placeholder="Posición (ej: Receptor)" style="width: 130px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+                <input type="text" id="nuevoJugadorUsuario" placeholder="Usuario (@usuario)" style="width: 120px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--secondary-color); font-weight:600; font-size: 0.85rem;">
+                <input type="text" id="nuevoJugadorNombre" placeholder="Nombre completo" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+                <button type="button" class="btn" onclick="agregarJugadorPlantilla()" style="padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer;">
+                  + Añadir
+                </button>
+              </div>
+              <button type="button" id="btnGuardarPlantillaMvp" class="btn" onclick="guardarPlantillaSuperligaEnBD(event)" style="width: 100%; padding: 10px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); font-weight: 800; border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
+                💾 Guardar Cambios en Plantilla
+              </button>
+
+              <!-- CAJA DIRECTA PARA ELEGIR LOS 3 CANDIDATOS MVP -->
+              <div id="adminDirectMvpBox" style="margin-top: 14px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
+                <div style="font-weight: 800; font-size: 0.88rem; color: var(--secondary-color); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  🏆 Elegir los 3 Nominados al MVP para la Cartelera
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px;">
+                  Selecciona el partido de Superliga 2 y los 3 jugadores que aparecerán en la cartelera para que los aficionados voten:
+                </div>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                  <div style="min-width: 110px; flex: 1;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Jornada:</label>
+                    <select id="directMvpJornadaSelect" onchange="window.onDirectMvpJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                  <div style="flex: 2; min-width: 200px;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Partido de Superliga 2:</label>
+                    <select id="directMvpPartidoSelect" onchange="window.onDirectMvpPartidoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (los 3 valen igual):</label>
+                    <select id="directMvp1" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (los 3 valen igual):</label>
+                    <select id="directMvp2" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (los 3 valen igual):</label>
+                    <select id="directMvp3" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                </div>
+
+                <button type="button" id="btnGuardarDirectMvp" class="btn" onclick="window.guardarDirectMvp(event)" style="width: 100%; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3); margin-bottom: 8px;">
+                  ⭐ Guardar 3 Nominados en Cartelera
+                </button>
+                <button type="button" class="btn" onclick="probarMvpEnCartelera()" style="width: 100%; padding: 8px; background: rgba(52, 152, 219, 0.15); border: 1px dashed #3498db; color: #3498db; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem; margin-bottom: 12px;">
+                  🧪 Ver/Probar Votación MVP en Cartelera
+                </button>
+
+                <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
+                <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
+                  <div style="font-weight: 800; font-size: 0.85rem; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                    👑 Proclamar MVP Oficial del Partido / Jornada
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px;">
+                    Selecciona quién ha sido galardonado definitivamente como el MVP oficial de este partido (se guardará en la base de datos):
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <select id="directMvpOficialSelect" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    </select>
+                  </div>
+                  <!-- ESTADÍSTICAS DESTACADAS DEL MVP (OPCIONALES 1 a 4) -->
+                  <div style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.25);">
+                    <div style="font-size: 0.73rem; font-weight: 800; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                      <span>📊 Estadísticas del Jugador en el Partido (Opcional, 1 a 4)</span>
+                    </div>
+                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px;">
+                      Ej: <em>Ataques: 15 (65%)</em>, <em>Recepción: 19</em>, <em>Saques directos: 5 (29%)</em>, <em>Bloqueos: 4</em>. Deja vacías las que no uses.
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                      <input type="text" id="mvpStat1" placeholder="Estadística 1 (ej: Ataques: 15 (65%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat2" placeholder="Estadística 2 (ej: Recepción: 19)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat3" placeholder="Estadística 3 (ej: Puntos saque: 5 (29%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat4" placeholder="Estadística 4 (ej: Bloqueos: 4)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:6px;">
+                    <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
+                      👑 Guardar MVP Oficial en BD
+                    </button>
+                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación de 3">
+                      Quitar (Volver a Votar)
+                    </button>
+                  </div>
+                </div>
+
+                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
+                <div style="margin-top: 10px; padding: 10px; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición en este partido:</span>
+                    <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
+                      🔄 Consultar Votos
+                    </button>
+                  </div>
+                  <div id="adminRecuentoVotosMvp" style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">
+                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
           
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #27ae60; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2633,6 +2634,9 @@ function renderBadgeIcon(b, sizeClasses, extraStyles) {
     if (b.type === 'lesionado') {
         return `<span style="font-size:${extraStyles.includes('12px') ? '11px' : '20px'}; margin-right:4px; color: #ff3b30; font-weight: 900; line-height: 1;">✚</span>`;
     }
+    if (b.type === 'mvp') {
+        return `<span style="font-size:${extraStyles.includes('12px') ? '13px' : '22px'}; margin-right:4px; color: #f1c40f; filter: drop-shadow(0 0 6px rgba(241,196,15,0.7)); line-height: 1; display:inline-flex; align-items:center; justify-content:center;">⭐</span>`;
+    }
     if (b.type === 'custom') {
         let icon = sanitizeImgUrl(b.emoji || '✨');
         if (icon.toLowerCase().endsWith('.png') || icon.toLowerCase().endsWith('.jpg') || icon.toLowerCase().endsWith('.svg') || icon.toLowerCase().endsWith('.gif')) {
@@ -2771,20 +2775,20 @@ function mostrarToast(mensaje) {
 // PLANTILLA INICIAL SUPERLIGA 2 (DORSAL, APODO, NOMBRE)
 // ------------------------------------------------------------------
 const PLANTILLA_SUPERLIGA_DEFAULT = [
-    { dorsal: 1, apodo: "Jorge", nombre: "Alonso Rivas Jorge", posicion: "Colocador" },
-    { dorsal: 2, apodo: "Samuel", nombre: "Cabañeros Rodríguez Samuel", posicion: "Receptor" },
-    { dorsal: 3, apodo: "Iker", nombre: "de León Rodríguez Iker", posicion: "Central" },
-    { dorsal: 6, apodo: "Alonso", nombre: "Alonso Rivas Sergio", posicion: "Líbero" },
-    { dorsal: 7, apodo: "Álvaro", nombre: "Novella Gutierrez Álvaro", posicion: "Opuesto" },
-    { dorsal: 8, apodo: "Manu", nombre: "Posadas Yenes Manuel", posicion: "Receptor" },
-    { dorsal: 9, apodo: "Alejandro", nombre: "Bertrán Catalina Alejandro", posicion: "Central" },
-    { dorsal: 10, apodo: "Jany Jr", nombre: "González Fernández Alejandro", posicion: "Colocador" },
-    { dorsal: 11, apodo: "Nikola", nombre: "Biserov Nankov Nikola", posicion: "Central" },
-    { dorsal: 16, apodo: "Edu", nombre: "Valverde Lorenzo Eduardo", posicion: "Líbero" },
-    { dorsal: 18, apodo: "Kike", nombre: "Carrasco Alvarado Enrique", posicion: "Receptor" },
-    { dorsal: 21, apodo: "Fabián", nombre: "Corona Mediavilla Fabián", posicion: "Opuesto" },
-    { dorsal: 23, apodo: "Álvaro G.", nombre: "García de Castro Álvaro", posicion: "Receptor" },
-    { dorsal: 24, apodo: "Kaloyan", nombre: "Biserov Nankov Kaloyan", posicion: "Central" }
+    { dorsal: 1, apodo: "Jorge", nombre: "Alonso Rivas Jorge", posicion: "", usuario: null },
+    { dorsal: 2, apodo: "Samuel", nombre: "Cabañeros Rodríguez Samuel", posicion: "", usuario: null },
+    { dorsal: 3, apodo: "Iker", nombre: "de León Rodríguez Iker", posicion: "", usuario: null },
+    { dorsal: 6, apodo: "Alonso", nombre: "Alonso Rivas Sergio", posicion: "", usuario: null },
+    { dorsal: 7, apodo: "Álvaro", nombre: "Novella Gutierrez Álvaro", posicion: "", usuario: null },
+    { dorsal: 8, apodo: "Manu", nombre: "Posadas Yenes Manuel", posicion: "", usuario: null },
+    { dorsal: 9, apodo: "Alejandro", nombre: "Bertrán Catalina Alejandro", posicion: "", usuario: null },
+    { dorsal: 10, apodo: "Jany Jr", nombre: "González Fernández Alejandro", posicion: "", usuario: null },
+    { dorsal: 11, apodo: "Nikola", nombre: "Biserov Nankov Nikola", posicion: "", usuario: null },
+    { dorsal: 16, apodo: "Edu", nombre: "Valverde Lorenzo Eduardo", posicion: "", usuario: null },
+    { dorsal: 18, apodo: "Kike", nombre: "Carrasco Alvarado Enrique", posicion: "", usuario: null },
+    { dorsal: 21, apodo: "Fabián", nombre: "Corona Mediavilla Fabián", posicion: "", usuario: null },
+    { dorsal: 23, apodo: "Álvaro G.", nombre: "García de Castro Álvaro", posicion: "", usuario: null },
+    { dorsal: 24, apodo: "Kaloyan", nombre: "Biserov Nankov Kaloyan", posicion: "", usuario: null }
 ];
 
 window.getPlantillaSuperligaActual = function() {
@@ -2931,20 +2935,42 @@ window.renderAdminPlantillaMvp = function() {
     }
     let h = '';
     plantilla.forEach((j, idx) => {
-        let apodoBadge = j.apodo ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${j.apodo}</span>` : '';
-        let posBadge = j.posicion ? `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); border:1px solid var(--border-color); padding:1px 6px; border-radius:4px; font-size:0.68rem; font-weight:600;">${j.posicion}</span>` : '';
+        let uVal = j.usuario || '';
+        let posVal = j.posicion || '';
+        let apodVal = j.apodo || '';
         h += `
-        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-general); border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; font-size:0.8rem;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <span style="font-weight:900; color:var(--secondary-color); min-width:24px;">#${j.dorsal}</span>
-                <span style="color:var(--text-main); font-weight:600;">${j.nombre}</span>
-                ${apodoBadge}
-                ${posBadge}
+        <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="font-weight:900; color:var(--secondary-color); min-width:24px; font-size:0.9rem;">#${j.dorsal}</span>
+                    <span style="color:var(--text-main); font-weight:700;">${j.nombre}</span>
+                    ${apodVal ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${apodVal}</span>` : ''}
+                </div>
+                <button type="button" onclick="eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-size:1rem; padding:0 4px;" title="Eliminar de la plantilla">&times;</button>
             </div>
-            <button type="button" onclick="eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:0.9rem; padding:0 4px;" title="Eliminar">&times;</button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Posición:</span>
+                    <input type="text" value="${posVal}" onchange="window.actualizarCampoJugador(${idx}, 'posicion', this.value)" placeholder="Ej: Receptor" style="flex:1; padding:4px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                </div>
+                <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Usuario Fantasy:</span>
+                    <input type="text" value="${uVal}" onchange="window.actualizarCampoJugador(${idx}, 'usuario', this.value)" placeholder="@usuario" style="flex:1; padding:4px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); font-weight:600;">
+                </div>
+            </div>
         </div>`;
     });
     cont.innerHTML = h;
+};
+
+window.actualizarCampoJugador = function(idx, field, val) {
+    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
+    if (window.appData.plantilla_superliga[idx]) {
+        window.appData.plantilla_superliga[idx][field] = val.trim();
+        try {
+            localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
+        } catch(e) {}
+    }
 };
 
 window.agregarJugadorPlantilla = function() {
@@ -2952,11 +2978,13 @@ window.agregarJugadorPlantilla = function() {
     const apodInput = document.getElementById('nuevoJugadorApodo');
     const posInput = document.getElementById('nuevoJugadorPosicion');
     const nomInput = document.getElementById('nuevoJugadorNombre');
+    const usrInput = document.getElementById('nuevoJugadorUsuario');
     if (!dorInput || !nomInput) return;
     const dVal = parseInt(dorInput.value);
     const nVal = nomInput.value.trim();
     const aVal = apodInput ? apodInput.value.trim() : "";
     const pVal = posInput ? posInput.value.trim() : "";
+    const uVal = usrInput ? usrInput.value.trim() : "";
     if (isNaN(dVal) || !nVal) {
         alert("Por favor introduce un dorsal numérico y un nombre.");
         return;
@@ -2976,13 +3004,15 @@ window.agregarJugadorPlantilla = function() {
         dorsal: dVal, 
         apodo: aVal || nVal.split(' ')[0], 
         posicion: pVal, 
-        nombre: nVal 
+        nombre: nVal,
+        usuario: uVal || null
     });
     window.appData.plantilla_superliga.sort((a, b) => a.dorsal - b.dorsal);
     dorInput.value = '';
     nomInput.value = '';
     if (apodInput) apodInput.value = '';
     if (posInput) posInput.value = '';
+    if (usrInput) usrInput.value = '';
     try {
         localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
     } catch(e) {}

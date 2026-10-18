@@ -437,6 +437,60 @@ export async function onRequestPost(context) {
             }
         }
 
+        // --- INSIGNIA ESTRELLA MVP PARA JUGADORES DE LA PLANTILLA ASOCIADOS A UN USUARIO ---
+        try {
+            const { results: sm2Players } = await db.prepare('SELECT dorsal, nombre, apodo, usuario FROM Plantilla_Superliga_2_Masc WHERE usuario IS NOT NULL AND usuario != \'\'').all();
+            if (sm2Players && sm2Players.length > 0) {
+                for (const pl of sm2Players) {
+                    const uPlayer = pl.usuario;
+                    if (!uPlayer) continue;
+
+                    // Buscar partidos donde este jugador haya sido el MVP Oficial
+                    const sm2MvpMatches = [];
+                    for (const p of partidos) {
+                        if (!p.mvp_oficial) continue;
+                        const mvpOf = String(p.mvp_oficial).trim().toLowerCase();
+                        const plNombre = String(pl.nombre).trim().toLowerCase();
+                        const plApodo = String(pl.apodo || '').trim().toLowerCase();
+                        const plDorsal = '#' + pl.dorsal;
+
+                        // Coincidencia por dorsal, nombre o apodo
+                        const matchDorsal = mvpOf.includes(plDorsal);
+                        const matchNombre = plNombre && mvpOf.includes(plNombre);
+                        const matchApodo = plApodo && mvpOf.includes(plApodo);
+
+                        if (matchDorsal || matchNombre || matchApodo) {
+                            const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
+                            const jNum = p.jornada_eq || p.ronda_global || '?';
+                            sm2MvpMatches.push({
+                                jornada: jNum,
+                                rival: rivalName,
+                                id_partido: p.id_partido
+                            });
+                        }
+                    }
+
+                    if (sm2MvpMatches.length > 0) {
+                        if (!insigniasMap[uPlayer]) insigniasMap[uPlayer] = [];
+                        const count = sm2MvpMatches.length;
+                        const starText = count === 1 ? `⭐ MVP Superliga 2 (1 vez)` : `⭐ MVP Superliga 2 (${count} veces)`;
+                        const items = sm2MvpMatches.map(m => `J. ${m.jornada} vs ${m.rival}`);
+
+                        insigniasMap[uPlayer].push({
+                            type: 'mvp',
+                            text: starText,
+                            roleTitle: starText,
+                            emoji: '⭐',
+                            count: count,
+                            items: items
+                        });
+                    }
+                }
+            }
+        } catch(e) {
+            console.error("Error calculando insignias MVP:", e);
+        }
+
         // Cartelera y todos_partidos (preservando derbis)
         const cartelera = [];
         const todosPartidos = [];
@@ -764,9 +818,14 @@ export async function onRequestPost(context) {
             }
         } catch(e) {}
         try {
-            const { results: pRows } = await db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
+            const { results: pRows } = await db.prepare('SELECT dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC').all();
             plantillaSuperliga = pRows || [];
-        } catch(e) {}
+        } catch(e) {
+            try {
+                const { results: pRowsOld } = await db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all();
+                plantillaSuperliga = pRowsOld || [];
+            } catch(e2) {}
+        }
 
         // Fetch Notificaciones
         let notificaciones = [];
@@ -1088,27 +1147,30 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: 'success', votos: votos || [] });
     }
 
-    // ADMIN: GESTIONAR PLANTILLA SUPERLIGA
+    // ADMIN: GESTIONAR PLANTILLA SUPERLIGA 2 MASCULINO
     if (action === 'save_plantilla_superliga') {
-        const { jugadores } = body; // Array de { dorsal: number, nombre: string }
+        const { jugadores } = body; // Array de { dorsal: number, nombre: string, apodo: string, posicion: string, usuario: string }
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
 
         if (Array.isArray(jugadores)) {
-            await db.prepare('DELETE FROM Plantilla_Superliga').run();
+            // Asegurar que la tabla existe
+            await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (dorsal INTEGER PRIMARY KEY, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT)').run();
+            await db.prepare('DELETE FROM Plantilla_Superliga_2_Masc').run();
             for (const j of jugadores) {
                 const dor = parseInt(j.dorsal);
                 const nom = (j.nombre || '').trim();
                 const apod = (j.apodo || '').trim();
                 const pos = (j.posicion || '').trim();
+                const usr = (j.usuario || '').trim() || null;
                 if (!isNaN(dor) && nom) {
-                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)').bind(dor, nom, apod, pos).run();
+                    await db.prepare('INSERT OR REPLACE INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario) VALUES (?, ?, ?, ?, ?)').bind(dor, nom, apod, pos, usr).run();
                 }
             }
         }
-        return jsonResponse({ status: 'success', message: 'Plantilla de Superliga actualizada con ├®xito.' });
+        return jsonResponse({ status: 'success', message: 'Plantilla de Superliga 2 Masculino actualizada con éxito.' });
     }
 
     
