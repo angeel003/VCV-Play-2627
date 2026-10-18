@@ -4835,7 +4835,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                 }
 
                 // Mostrar/Ocultar secciones según permisos
-                const allCollapsibles = document.querySelectorAll('#adminMainDetails > details.admin-collapsible');
+                const allCollapsibles = document.querySelectorAll('#adminMainDetails details.admin-collapsible');
                 allCollapsibles.forEach(sec => {
                     if (isAdmin) {
                         sec.style.display = "block";
