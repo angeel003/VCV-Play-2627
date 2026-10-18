@@ -67,6 +67,8 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Permiso_MVP TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Permiso_Resultados TEXT").run(); } catch(e) {}
         try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT, apodo TEXT, posicion TEXT)").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN apodo TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN posicion TEXT").run(); } catch(e) {}
@@ -438,6 +440,8 @@ export async function onRequestPost(context) {
                     insigniasMap[u].push({ type: 'avatar', emoji: b.Avatar_Url });
                 }
             }
+            if (b["Permiso_MVP"] === "X") addBadge('permiso_mvp', 'Gestor MVP');
+            if (b["Permiso_Resultados"] && b["Permiso_Resultados"] !== "") addBadge('permiso_resultados', b["Permiso_Resultados"]);
         }
 
         // --- INSIGNIA ESTRELLA MVP PARA JUGADORES DE LA PLANTILLA ASOCIADOS A UN USUARIO ---
@@ -1102,6 +1106,38 @@ export async function onRequestPost(context) {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
+        const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
+        const hasMvpPerm = adminCheck && adminCheck["Permiso_MVP"] === "X";
+        const resPermStr = (adminCheck && adminCheck["Permiso_Resultados"]) ? adminCheck["Permiso_Resultados"] : "";
+        
+        // Verificar si tiene permiso de resultados para este partido
+        let canEditMatch = isAdmin;
+        if (!canEditMatch && resPermStr) {
+            if (resPermStr === "TODOS" || resPermStr === "X") {
+                canEditMatch = true;
+            } else {
+                // Verificar si coincide con equipo local o rival del partido
+                const matchRow = await db.prepare('SELECT "Equipo Local", "Rival", "Categoria" FROM "Ajustes" WHERE "ID_Partido" = ?').bind(id_partido).first();
+                if (matchRow) {
+                    const eqLoc = (matchRow["Equipo Local"] || "").toLowerCase();
+                    const eqRiv = (matchRow["Rival"] || "").toLowerCase();
+                    const pList = resPermStr.toLowerCase().split(',').map(s => s.trim());
+                    if (pList.some(p => eqLoc.includes(p) || eqRiv.includes(p))) {
+                        canEditMatch = true;
+                    }
+                }
+            }
+        }
+        // Si solo se están tocando candidatos MVP y el usuario tiene Permiso_MVP
+        if (!canEditMatch && hasMvpPerm && mvp_candidatos !== undefined && !sets) {
+            canEditMatch = true;
+        }
+
+        if (!canEditMatch) {
+            return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar los resultados o enlaces de este equipo/partido.' }, 403);
+        }
+
         // Asegurar que la columna mvp_visible existe
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
 
@@ -1148,6 +1184,10 @@ export async function onRequestPost(context) {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
+        const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
+        if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para proclamar el MVP oficial.' }, 403);
+
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
         const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
@@ -1176,8 +1216,9 @@ export async function onRequestPost(context) {
         const { id_partido } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
-        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
-        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
+        if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para ver el recuento de MVP.' }, 403);
 
         const { results: votos } = await db.prepare('SELECT jugador, COUNT(*) as total FROM MVP_Votos WHERE id_partido = ? GROUP BY jugador ORDER BY total DESC').bind(id_partido).all();
         return jsonResponse({ status: 'success', votos: votos || [] });
@@ -1188,8 +1229,9 @@ export async function onRequestPost(context) {
         const { jugadores } = body; // Array de { dorsal: number, nombre: string, apodo: string, posicion: string, usuario: string }
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
-        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
-        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
+        if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar la plantilla o MVP.' }, 403);
 
         if (Array.isArray(jugadores)) {
             // Asegurar que la tabla existe
@@ -1392,13 +1434,55 @@ export async function onRequestPost(context) {
         
         try {
             await db.prepare('UPDATE "Usuarios" SET "Correo" = ? WHERE "Usuario" = ?').bind(email, usuario).run();
-            return jsonResponse({ status: 'success', message: 'Correo guardado con ├®xito.' });
+            return jsonResponse({ status: 'success', message: 'Correo guardado con éxito.' });
         } catch(e) {
             if (e.message && e.message.includes('no such column')) {
-                return jsonResponse({ status: 'error', message: 'Error interno: La columna Correo a├║n no existe en la BD de Cloudflare. Por favor avisa al administrador.' }, 500);
+                return jsonResponse({ status: 'error', message: 'Error interno: La columna Correo aún no existe en la BD de Cloudflare. Por favor avisa al administrador.' }, 500);
             }
             return jsonResponse({ status: 'error', message: 'Error al guardar el correo.' }, 500);
         }
+    }
+
+    // GESTIÓN DE PERMISOS ESPECÍFICOS (MVP Y RESULTADOS/LINKS)
+    if (action === 'get_usuarios_permisos') {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { results: users } = await db.prepare('SELECT "Usuario", "Nombre Real" FROM "Usuarios" ORDER BY "Usuario" ASC').all();
+        const { results: ins } = await db.prepare('SELECT "Usuario", "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias"').all();
+        const insMap = {};
+        for (const i of ins || []) insMap[i.Usuario] = i;
+
+        const list = (users || []).map(u => ({
+            usuario: u.Usuario,
+            nombre_real: u["Nombre Real"] || u.Usuario,
+            admin_web: (insMap[u.Usuario] && insMap[u.Usuario]["Admin Web"] === "X") ? "X" : "",
+            permiso_mvp: (insMap[u.Usuario] && insMap[u.Usuario]["Permiso_MVP"] === "X") ? "X" : "",
+            permiso_resultados: (insMap[u.Usuario] && insMap[u.Usuario]["Permiso_Resultados"]) ? insMap[u.Usuario]["Permiso_Resultados"] : ""
+        }));
+
+        return jsonResponse({ status: 'success', usuarios: list });
+    }
+
+    if (action === 'save_usuario_permisos') {
+        const { target_usuario, permiso_mvp, permiso_resultados } = body;
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        if (!target_usuario) return jsonResponse({ status: 'error', message: 'Usuario objetivo no especificado' }, 400);
+
+        const existIns = await db.prepare('SELECT * FROM "Insignias" WHERE "Usuario" = ?').bind(target_usuario).first();
+        if (!existIns) {
+            await db.prepare('INSERT INTO "Insignias" ("Usuario", "Permiso_MVP", "Permiso_Resultados") VALUES (?, ?, ?)').bind(target_usuario, permiso_mvp || '', permiso_resultados || '').run();
+        } else {
+            await db.prepare('UPDATE "Insignias" SET "Permiso_MVP" = ?, "Permiso_Resultados" = ? WHERE "Usuario" = ?').bind(permiso_mvp || '', permiso_resultados || '', target_usuario).run();
+        }
+
+        return jsonResponse({ status: 'success', message: `Permisos actualizados para @${target_usuario}` });
     }
 
     return jsonResponse({ status: "error", message: `Acci├│n desconocida: ${action}` }, 400);
