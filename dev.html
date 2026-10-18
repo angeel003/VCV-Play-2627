@@ -2959,8 +2959,23 @@ function renderAdminPanel(equipos) {
 }
 
 window.getJugadorPhotoUrl = function(dorsal) {
-    let t = window._imgCacheBust ? `?v=${window._imgCacheBust}` : '';
+    let t = window._imgCacheBust ? `?v=${window._imgCacheBust}` : `?v=${Date.now()}`;
     return `files/images/jugadores/dorsal_${dorsal}.png${t}`;
+};
+
+window.handleJugadorImgError = function(imgEl, dorsal, initials) {
+    if (!imgEl) return;
+    let step = parseInt(imgEl.getAttribute('data-ext-step') || '0');
+    let t = window._imgCacheBust ? `?v=${window._imgCacheBust}` : '';
+    let extList = ['.jpeg', '.jpg', '.webp'];
+    if (step < extList.length) {
+        let nextExt = extList[step];
+        imgEl.setAttribute('data-ext-step', String(step + 1));
+        imgEl.src = `files/images/jugadores/dorsal_${dorsal}${nextExt}${t ? ('?' + t.replace(/^\?/, '')) : ''}`;
+    } else {
+        imgEl.onerror = null;
+        imgEl.outerHTML = `<span style="font-weight:900; color:var(--secondary-color); font-size:1.1rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">${initials || ('#' + dorsal)}</span>`;
+    }
 };
 
 window.renderAdminPlantillaMvp = function() {
@@ -2983,7 +2998,7 @@ window.renderAdminPlantillaMvp = function() {
         <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; gap:10px;">
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
                 <div style="width:34px; height:34px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; color:var(--secondary-color); font-size:0.75rem;\\'>#${j.dorsal}</span>';">
+                    <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="window.handleJugadorImgError(this, ${j.dorsal}, '#${j.dorsal}');">
                 </div>
                 <div style="display:flex; flex-direction:column; gap:2px; min-width:0; overflow:hidden;">
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -6915,7 +6930,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             <div class="mvp-card-slot ${orderClass}" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
                 <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}">
                     <div class="mvp-photo-wrapper">
-                        <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.4rem; color:var(--secondary-color);\\'>${info.initials}</span>';">
+                        <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="window.handleJugadorImgError(this, ${info.dorsal || 0}, '${info.initials}');">
                         ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
                     </div>
                     <div class="mvp-name-label">${info.apodo}</div>
