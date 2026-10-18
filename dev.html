@@ -3488,9 +3488,6 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
             usuario: currentUser,
             password: currentPassword,
             id_partido: idPart,
-            sets: pObj.oficial_sets || '',
-            parciales: pObj.oficial_parciales || '',
-            streaming: pObj.streaming || '',
             mvp_candidatos: hacerVisible ? cands : [],
             mvp_visible: hacerVisible
         }),
@@ -3499,13 +3496,18 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
     .then(r => r.json())
     .then(d => {
         if (btn) { btn.disabled = false; btn.innerText = oldText; }
-        mostrarToast(hacerVisible ? `¡Votación MVP (${cands.length} jugadores) publicada en Cartelera!` : "Votación MVP ocultada de Cartelera.");
+        if (d && d.status === 'success') {
+            mostrarToast(hacerVisible ? `¡Votación MVP (${cands.length} jugadores) publicada en Cartelera!` : "Votación MVP ocultada de Cartelera.");
+        } else {
+            mostrarToast(d && d.message ? ("⚠️ " + d.message) : "Guardado con aviso");
+        }
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
     })
     .catch(err => {
         if (btn) { btn.disabled = false; btn.innerText = oldText; }
+        console.error("Error al cambiar visibilidad MVP:", err);
         mostrarToast(hacerVisible ? `Votación MVP (${cands.length} jugadores) guardada localmente.` : "Votación MVP ocultada localmente.");
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
@@ -4053,37 +4055,70 @@ window.cargarListaPermisosUsuarios = function() {
         }
 
         let h = '';
+        let availableTeams = (Array.isArray(d.equipos_disponibles) && d.equipos_disponibles.length > 0)
+            ? d.equipos_disponibles
+            : ((window.appData && Array.isArray(window.appData.equipos_totales_publicos)) ? window.appData.equipos_totales_publicos : ['VCV', 'CyL Palencia 2028']);
+
+        // Guardar referencia en memoria para el buscador o selección
+        window._adminEquiposDisponibles = availableTeams;
+
         d.usuarios.forEach((u, idx) => {
             let isMvp = (u.permiso_mvp === 'X');
-            let resVal = u.permiso_resultados || '';
+            let resVal = (u.permiso_resultados || '').trim();
             let isRoot = (u.admin_web === 'X');
 
+            // Parsear equipos que ya tiene asignados
+            let assignedList = resVal.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            let hasAll = (resVal === 'TODOS' || resVal === 'X');
+
+            let teamPills = availableTeams.map((team, tIdx) => {
+                let isChecked = hasAll || assignedList.includes(team.toLowerCase());
+                return `
+                <label style="display:inline-flex; align-items:center; gap:4px; background:var(--bg-card); border:1px solid var(--border-color); padding:3px 7px; border-radius:12px; font-size:0.7rem; cursor:pointer; user-select:none;">
+                    <input type="checkbox" class="team_chk_${idx}" value="${team.replace(/"/g, '&quot;')}" ${isChecked ? 'checked' : ''} style="cursor:pointer; width:12px; height:12px;">
+                    <span>${team}</span>
+                </label>`;
+            }).join('');
+
             h += `
-            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.78rem; display:flex; flex-direction:column; gap:6px;">
+            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:12px; font-size:0.78rem; display:flex; flex-direction:column; gap:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong style="color:var(--secondary-color);">@${u.usuario}</strong>
-                        <span style="font-size:0.72rem; color:var(--text-muted); margin-left:6px;">${u.nombre_real}</span>
+                        <strong style="color:var(--secondary-color); font-size:0.85rem;">@${u.usuario}</strong>
+                        <span style="font-size:0.75rem; color:var(--text-muted); margin-left:6px;">${u.nombre_real}</span>
                     </div>
-                    ${isRoot ? '<span style="font-size:0.65rem; background:#e67e22; color:#fff; padding:1px 5px; border-radius:4px; font-weight:800;">ADMIN ROOT</span>' : ''}
+                    ${isRoot ? '<span style="font-size:0.65rem; background:#e67e22; color:#fff; padding:2px 6px; border-radius:4px; font-weight:800;">ADMIN ROOT</span>' : ''}
                 </div>
                 
-                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:4px;">
-                    <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; cursor:pointer; margin:0;">
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; cursor:pointer; margin:0; background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); padding:4px 8px; border-radius:6px;">
                         <input type="checkbox" id="perm_mvp_${idx}" ${isMvp ? 'checked' : ''} style="cursor:pointer;">
-                        <span>⭐ Gestor MVP Superliga</span>
+                        <span>⭐ <b>Gestor MVP Superliga</b> (candidatos y oficial)</span>
                     </label>
                 </div>
 
-                <div style="display:flex; gap:6px; align-items:center; margin-top:2px;">
-                    <span style="font-size:0.7rem; color:var(--text-muted); white-space:nowrap;">🏐 Equipos Resultados/Links:</span>
-                    <input type="text" id="perm_res_${idx}" value="${resVal}" placeholder="Ej: VCV, Palencia, TODOS (vacío = sin permiso)" style="flex:1; padding:5px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-                    <button type="button" class="btn" onclick="window.guardarPermisosUsuarioEspecifico('${u.usuario.replace(/'/g, "\\'")}', ${idx})" style="padding:5px 10px; font-size:0.72rem; background:rgba(230,126,34,0.15); border:1px solid #e67e22; color:#e67e22; font-weight:800; border-radius:6px; cursor:pointer;">
-                        💾 Guardar
-                    </button>
+                <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span style="font-size:0.72rem; font-weight:700; color:var(--text-main);">🏐 Equipos para Resultados y Links:</span>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" onclick="window.toggleAllUserTeams(${idx}, true)" class="btn" style="padding:2px 6px; font-size:0.65rem; background:transparent; border:1px solid var(--border-color); border-radius:4px; cursor:pointer; color:var(--text-muted);">
+                                Marcar Todos
+                            </button>
+                            <button type="button" onclick="window.toggleAllUserTeams(${idx}, false)" class="btn" style="padding:2px 6px; font-size:0.65rem; background:transparent; border:1px solid var(--border-color); border-radius:4px; cursor:pointer; color:var(--text-muted);">
+                                Desmarcar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; max-height:130px; overflow-y:auto; padding:6px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:6px;">
+                        ${teamPills}
+                    </div>
                 </div>
-                <div style="font-size:0.65rem; color:var(--text-muted); font-style:italic;">
-                    Escribe el nombre o parte del equipo al que puede subir resultados (separados por comas), o <b>TODOS</b>.
+
+                <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                    <button type="button" id="btn_save_perm_${idx}" class="btn" onclick="window.guardarPermisosUsuarioEspecifico('${u.usuario.replace(/'/g, "\\'")}', ${idx})" style="padding:6px 14px; font-size:0.75rem; background:rgba(230,126,34,0.15); border:1px solid #e67e22; color:#e67e22; font-weight:800; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                        💾 Guardar Permisos
+                    </button>
                 </div>
             </div>`;
         });
@@ -4096,13 +4131,33 @@ window.cargarListaPermisosUsuarios = function() {
     });
 };
 
+window.toggleAllUserTeams = function(idx, checkAll) {
+    const cbs = document.querySelectorAll(`.team_chk_${idx}`);
+    cbs.forEach(cb => { cb.checked = Boolean(checkAll); });
+};
+
 window.guardarPermisosUsuarioEspecifico = function(targetUser, idx) {
     const chkMvp = document.getElementById(`perm_mvp_${idx}`);
-    const inputRes = document.getElementById(`perm_res_${idx}`);
-    if (!chkMvp || !inputRes) return;
+    const btn = document.getElementById(`btn_save_perm_${idx}`);
+    if (!chkMvp) return;
 
     const valMvp = chkMvp.checked ? 'X' : '';
-    const valRes = inputRes.value.trim();
+
+    // Recoger equipos seleccionados
+    const cbs = document.querySelectorAll(`.team_chk_${idx}:checked`);
+    const allCbs = document.querySelectorAll(`.team_chk_${idx}`);
+    let valRes = '';
+    
+    if (cbs.length > 0) {
+        if (allCbs.length > 0 && cbs.length === allCbs.length) {
+            valRes = 'TODOS';
+        } else {
+            valRes = Array.from(cbs).map(cb => cb.value.trim()).join(', ');
+        }
+    }
+
+    const oldBtnText = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando..."; }
 
     fetchSeguro(scriptURL, {
         method: 'POST',
@@ -4118,6 +4173,7 @@ window.guardarPermisosUsuarioEspecifico = function(targetUser, idx) {
     })
     .then(r => r.json())
     .then(d => {
+        if (btn) { btn.disabled = false; btn.innerHTML = oldBtnText; }
         if (d.status === 'success') {
             mostrarToast(d.message || "Permisos guardados con éxito.");
         } else {
@@ -4125,6 +4181,7 @@ window.guardarPermisosUsuarioEspecifico = function(targetUser, idx) {
         }
     })
     .catch(err => {
+        if (btn) { btn.disabled = false; btn.innerHTML = oldBtnText; }
         alert("Error de conexión al guardar permisos.");
     });
 };

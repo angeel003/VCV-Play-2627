@@ -1110,7 +1110,7 @@ export async function onRequestPost(context) {
 
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
-        const hasMvpPerm = adminCheck && adminCheck["Permiso_MVP"] === "X";
+        const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
         const resPermStr = (adminCheck && adminCheck["Permiso_Resultados"]) ? adminCheck["Permiso_Resultados"] : "";
         
         // Verificar si tiene permiso de resultados para este partido
@@ -1131,13 +1131,15 @@ export async function onRequestPost(context) {
                 }
             }
         }
-        // Si solo se están tocando candidatos MVP y el usuario tiene Permiso_MVP
-        if (!canEditMatch && hasMvpPerm && mvp_candidatos !== undefined && !sets) {
+        
+        // Si tiene permiso de MVP y se está modificando candidatos o visibilidad de MVP
+        const isMvpAction = (mvp_candidatos !== undefined || mvp_visible !== undefined || mvp_oficial !== undefined);
+        if (!canEditMatch && hasMvpPerm && isMvpAction) {
             canEditMatch = true;
         }
 
         if (!canEditMatch) {
-            return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar los resultados o enlaces de este equipo/partido.' }, 403);
+            return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar los resultados o datos de este equipo/partido.' }, 403);
         }
 
         // Asegurar que la columna mvp_visible existe
@@ -1465,7 +1467,10 @@ export async function onRequestPost(context) {
             permiso_resultados: (insMap[u.Usuario] && insMap[u.Usuario]["Permiso_Resultados"]) ? insMap[u.Usuario]["Permiso_Resultados"] : ""
         }));
 
-        return jsonResponse({ status: 'success', usuarios: list });
+        const { results: rawTeams } = await db.prepare('SELECT DISTINCT "Equipo Local" as e FROM "Ajustes" WHERE "Equipo Local" IS NOT NULL AND "Equipo Local" != \'\' UNION SELECT DISTINCT "Rival" as e FROM "Ajustes" WHERE "Rival" IS NOT NULL AND "Rival" != \'\' ORDER BY e ASC').all();
+        const equiposDisponibles = (rawTeams || []).map(r => r.e).filter(Boolean);
+
+        return jsonResponse({ status: 'success', usuarios: list, equipos_disponibles: equiposDisponibles });
     }
 
     if (action === 'save_usuario_permisos') {
