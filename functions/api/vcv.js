@@ -505,15 +505,22 @@ export async function onRequestPost(context) {
         const todosPartidos = [];
         const idsEnCartelera = {};
 
+        // Comprobar si el usuario es Admin o Gestor MVP para asegurar que reciba los partidos de Superliga
+        const userInsignia = (allInsignias || []).find(i => i.Usuario === usuario);
+        const isUserAdmin = userInsignia && (userInsignia["Admin Web"] === "X");
+        const isUserGestorMvp = userInsignia && (userInsignia["Permiso_MVP"] === "X");
+
         for (const p of partidos) {
-            // SI EST├ü OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
+            // SI ESTÁ OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
             if (p.visibilidad === "OCULTAR") continue;
 
             const esLoc = misPermisos[p.equipo_local] === true;
             const esRiv = misPermisos[p.rival] === true;
+            const catL = (p.categoria || '').toLowerCase();
+            const isSm2 = catL.includes('sm2') || catL.includes('superliga');
 
-            // SOLO PROCESAR SI EL USUARIO TIENE PERMISO PARA ALGUNO DE LOS DOS EQUIPOS
-            if (esLoc || esRiv) {
+            // Procesar si tiene permiso para el equipo, o si es Gestor MVP/Admin y el partido es de Superliga 2
+            if (esLoc || esRiv || isUserAdmin || (isUserGestorMvp && isSm2)) {
                 const pCopy = { ...p };
                 pCopy.permitido = true;
                 if (esLoc && esRiv) pCopy.es_derby = true;
