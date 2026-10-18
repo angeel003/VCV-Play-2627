@@ -2938,6 +2938,11 @@ function renderAdminPanel(equipos) {
     }
 }
 
+window.getJugadorPhotoUrl = function(dorsal) {
+    let t = window._imgCacheBust ? `?v=${window._imgCacheBust}` : '';
+    return `files/images/jugadores/dorsal_${dorsal}.png${t}`;
+};
+
 window.renderAdminPlantillaMvp = function() {
     const cont = document.getElementById('adminListaPlantillaMvp');
     if (!cont) return;
@@ -2951,7 +2956,7 @@ window.renderAdminPlantillaMvp = function() {
         let uVal = j.usuario || '';
         let posVal = j.posicion || '';
         let apodVal = j.apodo || '';
-        let photoPath = `files/images/jugadores/dorsal_${j.dorsal}.png`;
+        let photoPath = window.getJugadorPhotoUrl(j.dorsal);
         h += `
         <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -3064,6 +3069,13 @@ window.guardarPlantillaSuperligaEnBD = function(e) {
         localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
     } catch(err) {}
 
+    let onDone = function() {
+        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
+        window._imgCacheBust = Date.now();
+        if (typeof window.renderAdminPlantillaMvp === 'function') window.renderAdminPlantillaMvp();
+        if (typeof window.renderCarteleraHTML === 'function' && window.appData) window.renderCarteleraHTML(window.appData);
+    };
+
     fetchSeguro(scriptURL, {
         method: 'POST',
         body: JSON.stringify({
@@ -3076,17 +3088,17 @@ window.guardarPlantillaSuperligaEnBD = function(e) {
     })
     .then(r => r.json())
     .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
+        onDone();
         if (d.status === 'success') {
-            mostrarToast("Plantilla actualizada en base de datos con éxito");
+            mostrarToast("Plantilla y fotos actualizadas en base de datos con éxito");
         } else {
             // Si el backend remoto aún no tiene la acción activa, guardado local para pruebas
-            mostrarToast("Plantilla guardada (modo pruebas)");
+            mostrarToast("Plantilla y fotos actualizadas (modo pruebas)");
         }
     })
     .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
-        mostrarToast("Plantilla guardada localmente (modo pruebas)");
+        onDone();
+        mostrarToast("Plantilla y fotos actualizadas localmente (modo pruebas)");
     });
 };
 
@@ -6450,7 +6462,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         if (!nombre) nombre = apodo;
         
         let dorKey = dorsal || 0;
-        let photoSrc = `files/images/jugadores/dorsal_${dorKey}.png`;
+        let photoSrc = (typeof window.getJugadorPhotoUrl === 'function') ? window.getJugadorPhotoUrl(dorKey) : `files/images/jugadores/dorsal_${dorKey}.png`;
         let initials = apodo.substring(0, 2).toUpperCase();
 
         return { dorsal, nombre, apodo, posicion, photoSrc, initials, raw: candStr };
