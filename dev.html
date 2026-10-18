@@ -2717,9 +2717,9 @@ function getBadgeCSS(type) {
 }
 
 function renderBadgeItemHtml(b, iconSize = "24px") {
-    // Si la insignia contiene una lista estructurada de varios equipos
-    if (b.items && Array.isArray(b.items) && b.items.length > 1) {
-        let title = b.roleTitle || ((b.type === 'entrenador') ? 'Entrenador de:' : 'Jugador de:');
+    // Si la insignia contiene una lista estructurada de varios partidos o equipos
+    if (b.items && Array.isArray(b.items) && b.items.length > 0) {
+        let title = b.roleTitle || b.text || ((b.type === 'entrenador') ? 'Entrenador de:' : (b.type === 'mvp' ? 'MVP de:' : 'Jugador de:'));
         let itemsHtml = b.items.map(it => `
             <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); margin-top:3px; padding-left:2px;">
                 <span style="color:var(--secondary-color); font-size:0.7rem; line-height:1;">•</span>
