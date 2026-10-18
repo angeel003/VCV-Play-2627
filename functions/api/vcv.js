@@ -185,6 +185,7 @@ export async function onRequestPost(context) {
             mvp_oficial: oRes.mvp_oficial || "",
             mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : [],
             mvp_proclamado_ts: oRes.mvp_proclamado_ts ? parseInt(oRes.mvp_proclamado_ts) : 0,
+            mvp_votos_recuento: oRes.mvp_votos_recuento ? (function(){ try { return JSON.parse(oRes.mvp_votos_recuento); } catch(e){ return []; } })() : [],
             mvp_visible: oRes.mvp_visible !== undefined ? (oRes.mvp_visible === 1 || oRes.mvp_visible === '1' || oRes.mvp_visible === true || oRes.mvp_visible === 'true' || oRes.mvp_visible === 'SI') : true
         };
     }
@@ -1220,14 +1221,28 @@ export async function onRequestPost(context) {
 
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
         const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
+
+        // Asegurar que la columna mvp_votos_recuento existe en Resultados_Oficiales
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_votos_recuento" TEXT').run(); } catch(e) {}
+
+        // Obtener el recuento definitivo de votos para congelarlo en el resultado oficial
+        let recuentoJson = '[]';
+        try {
+            const { results: votosList } = await db.prepare('SELECT jugador, COUNT(*) as total FROM MVP_Votos WHERE id_partido = ? GROUP BY jugador ORDER BY total DESC').bind(id_partido).all();
+            if (votosList && votosList.length > 0) recuentoJson = JSON.stringify(votosList);
+        } catch(e) {}
+
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ?, "mvp_proclamado_ts" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, proclamadoTs, id_partido).run();
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ?, "mvp_proclamado_ts" = ?, "mvp_votos_recuento" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, proclamadoTs, recuentoJson, id_partido).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats", "mvp_proclamado_ts") VALUES (?, ?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr, proclamadoTs).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats", "mvp_proclamado_ts", "mvp_votos_recuento") VALUES (?, ?, ?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr, proclamadoTs, recuentoJson).run();
         }
 
-        return jsonResponse({ status: 'success', message: 'MVP Oficial y estadísticas guardadas con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs });
+        // Invalidar caché de clasificaciones y estadísticas para reflejar el +10% de bonus de inmediato
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
+
+        return jsonResponse({ status: 'success', message: 'MVP Oficial, estadísticas y recuento de votos guardados con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs, recuento: JSON.parse(recuentoJson) });
     }
 
     // VOTAR MVP DE PARTIDO
