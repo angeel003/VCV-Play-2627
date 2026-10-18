@@ -4798,6 +4798,7 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             
 
             if(data.reglas) {
+                let pctMvpVal = (data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
                 let listaReglas = document.getElementById('listaReglasPuntuacion');
                 if(listaReglas) {
                     listaReglas.innerHTML = `
@@ -4805,12 +4806,22 @@ document.getElementById('btnLogin').addEventListener('click', function() {
                         <li>Acertar el <b>Ganador del partido</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${data.reglas.ganador} pts</span></li>
                         <li>Acertar la <b>Diferencia de puntos exacta</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${data.reglas.diff_exacta} pts</span> extra</li>
                         <li>Aproximarse a la diferencia (margen de ${data.reglas.max_dist} pts): <span style="color:var(--vcv-rojo); font-weight:bold;">Bonus proporcional</span></li>
+                        <li>Acertar el <b>MVP Oficial</b>: <span style="color:var(--secondary-color); font-weight:bold;">+${pctMvpVal}% bonus extra</span> sobre los puntos del partido</li>
                     `;
                 }
                 const pExact = document.getElementById('puntosExactosModal');
                 const pMargen = document.getElementById('puntosMargenModal');
                 if (pExact) pExact.innerText = data.reglas.diff_exacta;
                 if (pMargen) pMargen.innerText = data.reglas.max_dist;
+
+                // Actualizar textos dinámicos del modal de información de MVP
+                const elMvpPctModal = document.getElementById('infoMvpBonusPct');
+                if (elMvpPctModal) elMvpPctModal.innerText = `+${pctMvpVal}%`;
+                const elMvpEjemploModal = document.getElementById('infoMvpBonusEjemplo');
+                if (elMvpEjemploModal) {
+                    let bonusEj = Math.ceil(12 * (pctMvpVal / 100));
+                    elMvpEjemploModal.innerText = `El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas +${bonusEj} pts extra (total ${12 + bonusEj} pts).`;
+                }
 
                 const ejCont = document.getElementById('ejemploProporcionalModal');
                 if(ejCont && data.reglas.diff_exacta && data.reglas.max_dist) {
@@ -5647,12 +5658,13 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     const container = document.getElementById('historialContentV2');
     if (!container || !data) return;
 
-    let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10;
+    let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
     if (data.reglas) {
         ptsGanador = data.reglas.ganador || ptsGanador;
         ptsSets = data.reglas.sets || ptsSets;
         ptsDiffExacta = data.reglas.diff_exacta || ptsDiffExacta;
         maxDistancia = data.reglas.max_dist || maxDistancia;
+        if (data.reglas.pct_mvp !== undefined) pctMvp = data.reglas.pct_mvp;
     }
 
     const todosPartidosMap = {};
@@ -5828,10 +5840,10 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             matchPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
         }
 
-        // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+        // Bonificación MVP (+pctMvp% redondeado hacia arriba si acertó el MVP oficial)
         let mvpBonusPts = 0;
         let acertoMvp = false;
-        if (match.mvp_oficial && matchPts > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
+        if (match.mvp_oficial && matchPts > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
             let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
             let mOficial = String(match.mvp_oficial).trim().toLowerCase();
             let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
@@ -5842,7 +5854,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
                 acertoMvp = true;
             }
             if (acertoMvp) {
-                mvpBonusPts = Math.ceil(matchPts * 0.10);
+                mvpBonusPts = Math.ceil(matchPts * (pctMvp / 100));
                 matchPts += mvpBonusPts;
             }
         }
@@ -7017,6 +7029,15 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     window.mostrarInfoBonusMvp = function(e) {
         if (e) e.stopPropagation();
+        const data = window.appData || {};
+        let pctMvpVal = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
+        const elMvpPctModal = document.getElementById('infoMvpBonusPct');
+        if (elMvpPctModal) elMvpPctModal.innerText = `+${pctMvpVal}%`;
+        const elMvpEjemploModal = document.getElementById('infoMvpBonusEjemplo');
+        if (elMvpEjemploModal) {
+            let bonusEj = Math.ceil(12 * (pctMvpVal / 100));
+            elMvpEjemploModal.innerHTML = `El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas <b>+${bonusEj} pts extra</b> (total ${12 + bonusEj} pts).`;
+        }
         const m = document.getElementById('infoMvpBonusModal');
         if (m) m.style.display = 'flex';
     };
@@ -7214,12 +7235,13 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
         // 1. Si es el propio usuario logueado y se permite ver partidos: desglose completo por jornada y partido
         if (!isViewingOther && targetUser === loggedUser && data.predicciones_usuario && (data.todos_partidos || data.equipos)) {
-            let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10;
+            let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
             if (data.reglas) {
                 ptsGanador = data.reglas.ganador || ptsGanador;
                 ptsSets = data.reglas.sets || ptsSets;
                 ptsDiffExacta = data.reglas.diff_exacta || ptsDiffExacta;
                 maxDistancia = data.reglas.max_dist || maxDistancia;
+                if (data.reglas.pct_mvp !== undefined) pctMvp = data.reglas.pct_mvp;
             }
 
             let pMap = {};
@@ -7298,9 +7320,9 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     mPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
-                // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+                // Bonificación MVP (+pctMvp% redondeado hacia arriba si acertó el MVP oficial)
                 let mvpBonusPts = 0;
-                if (p.mvp_oficial && mPts > 0 && data.mvp_votos && data.mvp_votos[p.id_partido]) {
+                if (p.mvp_oficial && mPts > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[p.id_partido]) {
                     let uMvpVote = String(data.mvp_votos[p.id_partido]).trim().toLowerCase();
                     let mOficial = String(p.mvp_oficial).trim().toLowerCase();
                     let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
@@ -7309,7 +7331,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
                     else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
                     if (isMvpHit) {
-                        mvpBonusPts = Math.ceil(mPts * 0.10);
+                        mvpBonusPts = Math.ceil(mPts * (pctMvp / 100));
                         mPts += mvpBonusPts;
                     }
                 }
@@ -8970,6 +8992,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     }
 
     // 4. BANNER DE ESTADO DEL USUARIO (Centro)
+    let pctMvpVal = (window.appData && window.appData.reglas && window.appData.reglas.pct_mvp !== undefined) ? window.appData.reglas.pct_mvp : 10;
     const bannerBoxY = heroY + photoBoxH + 28;
     if (isProclaimed) {
         if (isHit) {
@@ -8984,7 +9007,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fillStyle = '#2ecc71';
             ctx.font = '900 30px sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('🎯 ¡HAS ACERTADO EL MVP! • +10% BONUS EN TUS PUNTOS', midX, bannerBoxY + 44);
+            ctx.fillText(`🎯 ¡HAS ACERTADO EL MVP! • +${pctMvpVal}% BONUS EN TUS PUNTOS`, midX, bannerBoxY + 44);
         } else if (myVote) {
             // Voto por otro candidato
             let vInf = window.parseCandInfo(myVote);
@@ -9025,9 +9048,9 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.font = '900 26px sans-serif';
         ctx.textAlign = 'center';
         if (myVote) {
-            ctx.fillText('🔒 Voto asegurado • ¡Si es elegido ganarás un +10% de bonus!', midX, bannerBoxY + 43);
+            ctx.fillText(`🔒 Voto asegurado • ¡Si es elegido ganarás un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43);
         } else {
-            ctx.fillText('⭐ Votación Abierta • ¡Elige tu MVP y gana un +10% de bonus!', midX, bannerBoxY + 43);
+            ctx.fillText(`⭐ Votación Abierta • ¡Elige tu MVP y gana un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43);
         }
     }
 
@@ -9368,6 +9391,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             let ptsSets = (data.reglas && data.reglas.sets) || 5;
             let ptsDiffExacta = (data.reglas && data.reglas.diff_exacta) || 2;
             let maxDistancia = (data.reglas && data.reglas.max_dist) || 10;
+            let pctMvp = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
 
             let ptsConseguidos = 0;
             const oSets = match.oficial_sets.split("-");
@@ -9395,10 +9419,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 }
             }
 
-            // Bonificación MVP (+10% redondeado hacia arriba si acertó el MVP oficial)
+            // Bonificación MVP (+pctMvp% redondeado hacia arriba si acertó el MVP oficial)
             let isMvpHit = false;
             let bonusMvpVal = 0;
-            if (match.mvp_oficial && ptsConseguidos > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
+            if (match.mvp_oficial && ptsConseguidos > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
                 let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
                 let mOficial = String(match.mvp_oficial).trim().toLowerCase();
                 let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
@@ -9406,7 +9430,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
                 else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
                 if (isMvpHit) {
-                    bonusMvpVal = Math.ceil(ptsConseguidos * 0.10);
+                    bonusMvpVal = Math.ceil(ptsConseguidos * (pctMvp / 100));
                     ptsConseguidos += bonusMvpVal;
                 }
             }
@@ -9694,6 +9718,7 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         }
     });
 
+    let pctMvpVal = (window.appData && window.appData.reglas && window.appData.reglas.pct_mvp !== undefined) ? window.appData.reglas.pct_mvp : 10;
     if (mvpHitsInLiga > 0) {
         ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
         ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
@@ -9705,7 +9730,7 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = '#f3ce5e';
         ctx.font = '800 18px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`⭐ Bonus MVP Activo: ¡+10% extra sumado a tu puntuación por acertar el MVP!`, W / 2, pY + pillH + 41);
+        ctx.fillText(`⭐ Bonus MVP Activo: ¡+${pctMvpVal}% extra sumado a tu puntuación por acertar el MVP!`, W / 2, pY + pillH + 41);
     }
 }
 
@@ -9719,6 +9744,7 @@ window.ejecutarCompartirTarjeta = async function() {
     let shareTitle = 'VCV Play 26/27';
     let shareText = '';
     const shareUrl = window.location.origin.includes('http') ? window.location.origin : 'https://vcvplay.com';
+    let pctMvpVal = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
 
     if (window.currentShareMode === 'match') {
         const idPart = window.currentShareMatchId;
@@ -9761,7 +9787,7 @@ window.ejecutarCompartirTarjeta = async function() {
             else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isHit = true;
 
             if (isHit) {
-                shareText = `👑 ¡Acerté el MVP del partido ${locName} vs ${visName}! El ganador oficial ha sido ${oInf.apodo} (+10% bonus ganado). ¡Juega tú también en VCV Play!`;
+                shareText = `👑 ¡Acerté el MVP del partido ${locName} vs ${visName}! El ganador oficial ha sido ${oInf.apodo} (+${pctMvpVal}% bonus ganado). ¡Juega tú también en VCV Play!`;
             } else {
                 shareText = `👑 El MVP oficial del partido ${locName} vs ${visName} es ${oInf.apodo}. ¡Descubre todas las estadísticas y compite en VCV Play!`;
             }
@@ -9771,7 +9797,7 @@ window.ejecutarCompartirTarjeta = async function() {
             shareText = `⭐ ¡Mi candidato a MVP en el ${locName} vs ${visName} es ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}! ¿Cuál es el tuyo? Vota en VCV Play:`;
             shareTitle = `Mi Voto MVP: ${vInf.apodo} | VCV Play`;
         } else {
-            shareText = `⭐ ¡Vota al MVP del partido ${locName} vs ${visName} en VCV Play y llévate un +10% de bonus en tus puntos! Regístrate gratis en:`;
+            shareText = `⭐ ¡Vota al MVP del partido ${locName} vs ${visName} en VCV Play y llévate un +${pctMvpVal}% de bonus en tus puntos! Regístrate gratis en:`;
             shareTitle = `Vota al MVP | ${locName} vs ${visName}`;
         }
     } else {
@@ -9870,11 +9896,11 @@ window.descargarTarjetaCanvas = function() {
             <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Bonificación MVP</h3>
         </div>
         <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px;">
-            Si aciertas el <b>MVP oficial</b> de este partido, recibirás un <b style="color:var(--secondary-color);">+10% extra</b> de bonificación sobre todos los puntos que hayas conseguido con tu pronóstico del partido.
+            Si aciertas el <b>MVP oficial</b> de este partido, recibirás un <b style="color:var(--secondary-color);"><span id="infoMvpBonusPct">+10%</span> extra</b> de bonificación sobre todos los puntos que hayas conseguido con tu pronóstico del partido.
         </p>
         <div style="background:var(--bg-surface); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:10px 12px; font-size:0.82rem; color:var(--text-main); line-height:1.4;">
             <span style="color:var(--secondary-color); font-weight:800;">💡 Redondeo a tu favor:</span><br>
-            El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas <b>+2 pts extra</b> (total 14 pts).
+            <span id="infoMvpBonusEjemplo">El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas <b>+2 pts extra</b> (total 14 pts).</span>
         </div>
     </div>
 </div>

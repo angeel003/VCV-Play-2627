@@ -627,16 +627,27 @@ export async function onRequestPost(context) {
             }
         }
 
-        // Reglas de puntuaci├│n
+        // Reglas de puntuación
         const { results: regRows } = await db.prepare('SELECT * FROM "Reglas_Puntuacion"').all();
-        let ptsSets = 5, ptsGanador = 3, ptsDiffExacta = 2, maxDistancia = 10;
+        let ptsSets = 5, ptsGanador = 3, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
+        let hasMvpRuleInDb = false;
         for (const r of regRows || []) {
             const reg = (r.Regla || "").toLowerCase();
-            const val = parseInt(r.Puntos) || 0;
-            if (reg.includes("sets")) ptsSets = val;
-            else if (reg.includes("ganador")) ptsGanador = val;
-            else if (reg.includes("exacta")) ptsDiffExacta = val;
-            else if (reg.includes("distancia") || reg.includes("max")) maxDistancia = val;
+            const val = parseFloat(r.Puntos) || 0;
+            if (reg.includes("sets")) ptsSets = Math.round(val);
+            else if (reg.includes("ganador")) ptsGanador = Math.round(val);
+            else if (reg.includes("exacta")) ptsDiffExacta = Math.round(val);
+            else if (reg.includes("distancia") || reg.includes("max")) maxDistancia = Math.round(val);
+            else if (reg.includes("mvp")) {
+                pctMvp = val;
+                hasMvpRuleInDb = true;
+            }
+        }
+        // Si no existía la regla de MVP en Reglas_Puntuacion, insertarla por defecto para permitir editarla
+        if (!hasMvpRuleInDb) {
+            try {
+                await db.prepare('INSERT OR IGNORE INTO "Reglas_Puntuacion" ("Regla", "Puntos") VALUES (\'Porcentaje Extra MVP\', 10)').run();
+            } catch(e) {}
         }
 
         // Nombres reales map
@@ -790,8 +801,8 @@ export async function onRequestPost(context) {
                     pts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
-                // Bonificación MVP: Si acertó el MVP oficial, suma +10% de los puntos de este partido (redondeado hacia arriba)
-                if (p.mvp_oficial && pts > 0) {
+                // Bonificación MVP: Si acertó el MVP oficial, suma +pctMvp% de los puntos de este partido (redondeado hacia arriba)
+                if (p.mvp_oficial && pts > 0 && pctMvp > 0) {
                     const uMvpVote = mvpVotesMap[`${p.id_partido}_${pr.Usuario}`];
                     if (uMvpVote) {
                         const mOficial = String(p.mvp_oficial).trim().toLowerCase();
@@ -805,7 +816,7 @@ export async function onRequestPost(context) {
                             isMvpHit = true;
                         }
                         if (isMvpHit) {
-                            pts += Math.ceil(pts * 0.10);
+                            pts += Math.ceil(pts * (pctMvp / 100));
                         }
                     }
                 }
@@ -931,7 +942,8 @@ export async function onRequestPost(context) {
                 sets: ptsSets,
                 ganador: ptsGanador,
                 diff_exacta: ptsDiffExacta,
-                max_dist: maxDistancia
+                max_dist: maxDistancia,
+                pct_mvp: pctMvp
             }
         });
     }
