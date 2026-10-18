@@ -6981,7 +6981,8 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     window.mostrarInfoBonusMvp = function(e) {
         if (e) e.stopPropagation();
-        alert("⭐ Bonificación de MVP ⭐\n\nSi aciertas el MVP oficial de este partido, recibirás un +10% extra de bonificación (redondeado hacia arriba) sobre los puntos que hayas conseguido en tu pronóstico de este partido.");
+        const m = document.getElementById('infoMvpBonusModal');
+        if (m) m.style.display = 'flex';
     };
 
     window.cambiarVotoMvp = function(idPart, candsEncoded, prevVoteEncoded) {
@@ -9308,6 +9309,26 @@ window.descargarTarjetaCanvas = function() {
         <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
             Los puntos que consigas en este partido valdrán el <b>DOBLE</b> en todas las clasificaciones donde aparezcan ambos equipos. ¡Aprovecha la oportunidad!
         </p>
+    </div>
+</div>
+
+<!-- MODAL INFO BONUS MVP -->
+<div id="infoMvpBonusModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:350px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1.5px solid rgba(212,175,55,0.4);">
+        <button onclick="document.getElementById('infoMvpBonusModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; color:var(--secondary-color);">
+            <span style="font-size:1.4rem;">⭐</span>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Bonificación MVP</h3>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px;">
+            Si aciertas el <b>MVP oficial</b> de este partido, recibirás un <b style="color:var(--secondary-color);">+10% extra</b> de bonificación sobre todos los puntos que hayas conseguido con tu pronóstico del partido.
+        </p>
+        <div style="background:var(--bg-surface); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:10px 12px; font-size:0.82rem; color:var(--text-main); line-height:1.4;">
+            <span style="color:var(--secondary-color); font-weight:800;">💡 Redondeo a tu favor:</span><br>
+            El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas <b>+2 pts extra</b> (total 14 pts).
+        </div>
     </div>
 </div>
 
