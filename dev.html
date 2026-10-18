@@ -2071,19 +2071,6 @@
               <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 250px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
                 <!-- Populated by JS -->
               </div>
-              <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
-                <input type="number" id="nuevoJugadorDorsal" placeholder="Dorsal" style="width: 65px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; text-align: center;">
-                <input type="text" id="nuevoJugadorApodo" placeholder="Apodo (ej: Jorge)" style="width: 110px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorPosicion" placeholder="Posición (ej: Receptor)" style="width: 130px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorUsuario" placeholder="Usuario (@usuario)" style="width: 120px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--secondary-color); font-weight:600; font-size: 0.85rem;">
-                <input type="text" id="nuevoJugadorNombre" placeholder="Nombre completo" style="flex: 1; min-width: 140px; padding: 8px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                <button type="button" class="btn" onclick="agregarJugadorPlantilla()" style="padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer;">
-                  + Añadir
-                </button>
-              </div>
-              <button type="button" id="btnGuardarPlantillaMvp" class="btn" onclick="guardarPlantillaSuperligaEnBD(event)" style="width: 100%; padding: 10px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); font-weight: 800; border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
-                💾 Guardar Cambios en Plantilla
-              </button>
 
               <!-- CAJA DIRECTA PARA ELEGIR LOS 3 CANDIDATOS MVP -->
               <div id="adminDirectMvpBox" style="margin-top: 14px; padding: 14px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
@@ -2912,42 +2899,7 @@ function renderAdminPanel(equipos) {
                     <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
-                ${(function() {
-                    let catL = (eq.categoria || '').toLowerCase();
-                    if (!catL.includes('sm2') && !catL.includes('superliga')) return '';
-                    let cands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos : [];
-                    let c1 = cands[0] || '';
-                    let c2 = cands[1] || '';
-                    let c3 = cands[2] || '';
-                    
-                    let opts = '<option value="">-- Seleccionar Jugador --</option>';
-                    let plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
-                    plantilla.forEach(pj => {
-                        let posPart = pj.posicion ? ` [${pj.posicion}]` : '';
-                        let apodoPart = pj.apodo ? ` (${pj.apodo})` : '';
-                        let valStr = `#${pj.dorsal} ${pj.nombre}${apodoPart}${posPart}`;
-                        opts += `<option value="${valStr}">#${pj.dorsal} ${pj.apodo || pj.nombre}${posPart} - ${pj.nombre}</option>`;
-                    });
 
-                    return `
-                    <!-- SECCIÓN NOMINADOS MVP (SUPERLIGA) -->
-                    <div style="margin-bottom: 10px; border-left: 2px solid var(--secondary-color); padding-left: 8px; background: rgba(212, 175, 55, 0.05); padding: 8px; border-radius: 6px;">
-                        <label style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 800; display: flex; align-items: center; gap: 4px; margin-bottom: 6px;">
-                            ⭐ 3 Candidatos MVP del Partido (Superliga 2 - los 3 valen igual)
-                        </label>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
-                            <select id="adm_mvp1_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c1}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                            <select id="adm_mvp2_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c2}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                            <select id="adm_mvp3_${eq.id_partido}" class="form-control select-mvp-candidato" data-sel="${c3}" style="width:100%; padding: 6px 8px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
-                                ${opts}
-                            </select>
-                        </div>
-                    </div>`;
-                })()}
 
                 <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
                     Guardar Cambios
@@ -2959,17 +2911,7 @@ function renderAdminPanel(equipos) {
     const container = document.getElementById('adminListaPartidos');
     if (container) container.innerHTML = html;
 
-    // Restaurar valores seleccionados en los dropdowns de MVP de forma segura
-    document.querySelectorAll('.select-mvp-candidato').forEach(sel => {
-        let val = sel.getAttribute('data-sel');
-        if (val) {
-            if (typeof window.setSelectValueSafely === 'function') {
-                window.setSelectValueSafely(sel, val);
-            } else {
-                sel.value = val;
-            }
-        }
-    });
+
 
     renderAdminPlantillaMvp();
     if (typeof window.populateDirectMvpBoxes === 'function') {
@@ -2991,7 +2933,7 @@ window.renderAdminPlantillaMvp = function() {
         return;
     }
     let h = '';
-    plantilla.forEach((j, idx) => {
+    plantilla.forEach((j) => {
         let dorVal = j.dorsal || '';
         let nomVal = j.nombre || '';
         let uVal = j.usuario || '';
@@ -2999,33 +2941,20 @@ window.renderAdminPlantillaMvp = function() {
         let apodVal = j.apodo || '';
         let photoPath = window.getJugadorPhotoUrl(j.dorsal);
         h += `
-        <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                    <div style="width:36px; height:36px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                        <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; color:var(--secondary-color); font-size:0.75rem;\\'>#${j.dorsal}</span>';">
-                    </div>
-                    <div style="display:flex; gap:6px; flex:1; align-items:center; flex-wrap:wrap;">
-                        <div style="display:flex; align-items:center; gap:3px;">
-                            <span style="font-weight:900; color:var(--secondary-color); font-size:0.85rem;">#</span>
-                            <input type="number" value="${dorVal}" onchange="window.actualizarCampoJugador(${idx}, 'dorsal', this.value)" style="width:48px; padding:3px 4px; font-size:0.8rem; font-weight:800; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); text-align:center;">
-                        </div>
-                        <input type="text" value="${nomVal}" onchange="window.actualizarCampoJugador(${idx}, 'nombre', this.value)" placeholder="Nombre Completo" style="flex:2; min-width:130px; padding:3px 6px; font-size:0.78rem; font-weight:700; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-                        <input type="text" value="${apodVal}" onchange="window.actualizarCampoJugador(${idx}, 'apodo', this.value)" placeholder="Apodo" style="width:80px; padding:3px 6px; font-size:0.75rem; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); font-weight:700;">
-                    </div>
+        <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:8px 12px; font-size:0.8rem; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                <div style="width:34px; height:34px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; color:var(--secondary-color); font-size:0.75rem;\\'>#${j.dorsal}</span>';">
                 </div>
-                <button type="button" onclick="window.eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-size:0.85rem; padding:4px 6px;" title="Eliminar de plantilla">
-                    🗑️
-                </button>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
-                    <span style="font-size:0.7rem; color:var(--text-muted);">Posición:</span>
-                    <input type="text" value="${posVal}" onchange="window.actualizarCampoJugador(${idx}, 'posicion', this.value)" placeholder="Ej: Receptor" style="flex:1; padding:4px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-                </div>
-                <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
-                    <span style="font-size:0.7rem; color:var(--text-muted);">Usuario Fantasy:</span>
-                    <input type="text" value="${uVal}" onchange="window.actualizarCampoJugador(${idx}, 'usuario', this.value)" placeholder="@usuario" style="flex:1; padding:4px 8px; font-size:0.75rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); font-weight:600;">
+                <div style="display:flex; flex-direction:column; gap:2px; min-width:0; overflow:hidden;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <span style="font-weight:900; color:var(--secondary-color); font-size:0.85rem;">#${dorVal}</span>
+                        <span style="font-weight:700; color:var(--text-main); font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${nomVal}${apodVal && apodVal !== nomVal ? ' <span style=\"color:var(--text-muted); font-size:0.75rem; font-weight:normal;\">(' + apodVal + ')</span>' : ''}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.72rem; color:var(--text-muted); flex-wrap:wrap;">
+                        ${posVal ? `<span style="background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:4px; border:1px solid var(--border-color);">${posVal}</span>` : ''}
+                        ${uVal ? `<span style="color:var(--secondary-color); font-weight:600;">@${uVal.replace(/^@/, '')}</span>` : '<span style="font-style:italic; opacity:0.6;">Sin usuario vinculado</span>'}
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -3933,15 +3862,6 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     }
     const parc = elParc ? elParc.value.trim() : "";
     const stream = elStream ? elStream.value.trim() : "";
-    
-    // Leer candidatos MVP si existen los selects
-    const m1 = document.getElementById(`adm_mvp1_${idPart}`);
-    const m2 = document.getElementById(`adm_mvp2_${idPart}`);
-    const m3 = document.getElementById(`adm_mvp3_${idPart}`);
-    const cands = [];
-    if (m1 && m1.value) cands.push(m1.value);
-    if (m2 && m2.value && !cands.includes(m2.value)) cands.push(m2.value);
-    if (m3 && m3.value && !cands.includes(m3.value)) cands.push(m3.value);
 
     btn.disabled = true; btn.innerText = "Subiendo...";
     
@@ -3954,8 +3874,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             id_partido: idPart, 
             sets: sets, 
             parciales: parc, 
-            streaming: stream,
-            mvp_candidatos: cands
+            streaming: stream
         }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
@@ -3965,7 +3884,6 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
         if(window.appData && Array.isArray(window.appData.equipos)) {
             let eq = window.appData.equipos.find(p => p.id_partido === idPart);
             if (eq) {
-                if (cands.length > 0) eq.mvp_candidatos = cands;
                 if (sets) eq.oficial_sets = sets;
                 if (parc) eq.oficial_parciales = parc;
                 if (stream) eq.streaming = stream;
