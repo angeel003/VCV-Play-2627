@@ -2038,11 +2038,13 @@
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
               <span style="display:flex; align-items:center; gap:6px;">⭐ Plantilla Superliga 2 y Nominados MVP</span>
             </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
-              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
-                Aquí tienes la lista de jugadores disponibles para nominar a MVP. Puedes añadir nuevos jugadores en cualquier momento:
-              </p>
-              <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
+              <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(212,175,55,0.35); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.74rem; color: var(--text-muted); line-height: 1.45;">
+                <b style="color: var(--secondary-color);">📸 Formato de Fotos MVP (1:1 cuadradas):</b><br>
+                Guarda la foto cuadrada de cada jugador en la carpeta <code>files/images/jugadores/</code> nombrada como <code>dorsal_{DORSAL}.png</code> (o .jpg / .webp).<br>
+                <span style="color: #4caf50;">✔ Ejemplo:</span> Para el dorsal <b>#8</b>, la imagen debe ser <code>files/images/jugadores/dorsal_8.png</code>.<br>
+                <i>(La eliminación de jugadores se gestiona de forma segura exclusivamente desde la base de datos).</i>
+              </div>
+              <div id="adminListaPlantillaMvp" style="display: flex; flex-direction: column; gap: 6px; max-height: 250px; overflow-y: auto; margin-bottom: 12px; padding-right: 4px;">
                 <!-- Populated by JS -->
               </div>
               <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
@@ -2938,15 +2940,25 @@ window.renderAdminPlantillaMvp = function() {
         let uVal = j.usuario || '';
         let posVal = j.posicion || '';
         let apodVal = j.apodo || '';
+        let photoPath = `files/images/jugadores/dorsal_${j.dorsal}.png`;
         h += `
-        <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <span style="font-weight:900; color:var(--secondary-color); min-width:24px; font-size:0.9rem;">#${j.dorsal}</span>
-                    <span style="color:var(--text-main); font-weight:700;">${j.nombre}</span>
-                    ${apodVal ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${apodVal}</span>` : ''}
+        <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px; height:34px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; color:var(--secondary-color); font-size:0.75rem;\\'>#${j.dorsal}</span>';">
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-weight:900; color:var(--secondary-color); font-size:0.9rem;">#${j.dorsal}</span>
+                            <span style="color:var(--text-main); font-weight:700;">${j.nombre}</span>
+                            ${apodVal ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${apodVal}</span>` : ''}
+                        </div>
+                        <div style="font-size:0.68rem; color:var(--text-muted); font-family:monospace; margin-top:2px;">
+                            📷 ${photoPath}
+                        </div>
+                    </div>
                 </div>
-                <button type="button" onclick="eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-size:1rem; padding:0 4px;" title="Eliminar de la plantilla">&times;</button>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
