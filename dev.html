@@ -2058,6 +2058,13 @@
               <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
             </summary>
             <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px; border:1px solid rgba(230,126,34,0.2);">
+                <span style="font-size:0.75rem; color:var(--text-muted);">Por defecto se muestran partidos pendientes de resultado o recientes.</span>
+                <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; color:var(--secondary-color); cursor:pointer; user-select:none; margin:0;">
+                  <input type="checkbox" id="chkAdminVerTodosPartidos" onchange="window.adminToggleVerTodosPartidos(this.checked)" style="cursor:pointer;">
+                  Ver todos los partidos
+                </label>
+              </div>
               <div id="adminListaPartidos"></div>
             </div>
           </details>
@@ -2904,6 +2911,7 @@ function renderAdminPanel(equipos) {
         let isAvailable = eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR";
         let endedRecently = (eq.estado === "FINALIZADO" || eq.estado === "BLOQUEADO" || eq.estado === "CERRADO") && (now - (eq.timestamp_bloqueo || ts)) < 48 * 60 * 60 * 1000;
         let catL = (eq.categoria || '').toLowerCase();
+        let yaTieneResultado = !!(eq.oficial_sets && String(eq.oficial_sets).trim() !== "");
         let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
 
         // Comprobar filtro de permisos por equipo para no-admin completo
@@ -2916,8 +2924,18 @@ function renderAdminPanel(equipos) {
             canUserSeeThisMatch = allowedTeams.some(t => eqLocL.includes(t) || eqRivL.includes(t));
         }
 
-        // Los partidos de Superliga siempre aparecen para poder configurar el MVP, o todos si se marca el checkbox
-        if (canUserSeeThisMatch && (window.adminVerTodosPartidos || isSuperliga || isAvailable || endedRecently)) {
+        // Si el partido ya tiene resultado subido, desaparece de la vista rápida salvo que se marque "Ver todos los partidos"
+        let shouldShow = false;
+        if (window.adminVerTodosPartidos) {
+            shouldShow = true;
+        } else {
+            // Mostrar si está abierto o en cartelera o finalizado recientemente sin resultado oficial subido aún
+            if (!yaTieneResultado) {
+                shouldShow = isAvailable || endedRecently || (ts < now && (now - ts) < 7 * 24 * 60 * 60 * 1000);
+            }
+        }
+
+        if (canUserSeeThisMatch && shouldShow) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
             
@@ -4000,7 +4018,10 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
         if(window.appData && Array.isArray(window.appData.equipos)) {
             let eq = window.appData.equipos.find(p => p.id_partido === idPart);
             if (eq) {
-                if (sets) eq.oficial_sets = sets;
+                if (sets) {
+                    eq.oficial_sets = sets;
+                    eq.estado = 'CERRADO';
+                }
                 if (parc) eq.oficial_parciales = parc;
                 if (stream) eq.streaming = stream;
             }
@@ -4018,18 +4039,24 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
         }
     })
     .catch(err => {
+        console.error("Error al guardar resultado:", err);
         btn.disabled = false; btn.innerText = "Guardar Cambios";
         if(window.appData && Array.isArray(window.appData.equipos)) {
             let eq = window.appData.equipos.find(p => p.id_partido === idPart);
             if (eq) {
-                if (cands.length > 0) eq.mvp_candidatos = cands;
-                if (sets) eq.oficial_sets = sets;
+                if (sets) {
+                    eq.oficial_sets = sets;
+                    eq.estado = 'CERRADO';
+                }
                 if (parc) eq.oficial_parciales = parc;
                 if (stream) eq.streaming = stream;
             }
         }
         if (typeof window.renderCarteleraHTML === 'function' && window.appData) {
             window.renderCarteleraHTML(window.appData);
+        }
+        if (window.appData && Array.isArray(window.appData.equipos) && typeof renderAdminPanel === 'function') {
+            renderAdminPanel(window.appData.equipos);
         }
         mostrarToast("Guardado localmente");
     });
