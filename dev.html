@@ -191,19 +191,36 @@
     }
     #toastNotification {
         position: fixed;
-        bottom: 160px;
-        right: 25px;
-        background: var(--vcv-morado);
-        color: var(--vcv-blanco);
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-weight: bold;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        bottom: 85px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(18, 5, 28, 0.92);
+        color: #ffffff;
+        padding: 12px 24px;
+        border-radius: 9999px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 20px rgba(212, 175, 55, 0.25);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        visibility: hidden;
+        transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
         pointer-events: none;
-        z-index: 9998;
-        border: 1px solid var(--vcv-dorado);
+        z-index: 10005;
+        border: 1px solid rgba(212, 175, 55, 0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        max-width: 90vw;
+        text-align: center;
+    }
+    #toastNotification.show-toast {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
     }
 
     /* ---------------------------------------------------
@@ -1463,27 +1480,32 @@
         position: fixed;
         top: 0;
         left: 50%;
-        transform: translate(-50%, -60px);
+        transform: translate3d(-50%, -65px, 0);
         width: 44px;
         height: 44px;
         border-radius: 50%;
         background: linear-gradient(135deg, #2b0e3e 0%, #170522 100%);
         border: 2px solid var(--secondary-color);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(212, 175, 55, 0.35);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px rgba(212, 175, 55, 0.35);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10002;
-        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
         opacity: 0;
         pointer-events: none;
+        will-change: transform, opacity;
+        transition: opacity 0.2s ease;
     }
     #ptrIndicator.ptr-active {
         opacity: 1;
     }
     #ptrIndicator.ptr-refreshing {
-        transform: translate(-50%, 20px) !important;
+        transform: translate3d(-50%, 20px, 0) !important;
         opacity: 1;
+        transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s ease;
+    }
+    #ptrIndicator.ptr-releasing {
+        transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.25s ease;
     }
     #ptrSpinner {
         width: 22px;
@@ -1492,7 +1514,7 @@
         border-top-color: var(--secondary-color);
         border-right-color: var(--secondary-color);
         border-radius: 50%;
-        transition: transform 0.1s linear;
+        will-change: transform;
     }
     #ptrIndicator.ptr-refreshing #ptrSpinner {
         animation: ptrSpin 0.75s linear infinite;
@@ -2634,7 +2656,12 @@ const fetchSeguro = (url, options, retries = 1) => {
   }
 
 // Nueva API ultrarrápida conectada a Cloudflare D1
-const scriptURL = (window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port !== '') ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv';
+// Si estamos en producción o en wrangler pages dev local con funciones, usa /api/vcv.
+// Si estamos en un servidor local (VS Code Live Server, python http.server, etc.), apunta a la API remota de Cloudflare Pages para que todo funcione sin configurar nada más.
+const isLocalStaticServer = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '' && window.location.port !== '8788';
+const scriptURL = (isLocalStaticServer)
+    ? 'https://vcv-play-2627.pages.dev/api/vcv'
+    : ((window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') || window.location.port === '8788') ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv');
 
 // Pre-calentar la API en segundo plano mientras el usuario escribe sus credenciales
 try {
@@ -2901,11 +2928,16 @@ document.addEventListener('click', function(e) {
     hideMobileTooltip();
 });
 
-function mostrarToast(mensaje) {
+let _toastTimer = null;
+function mostrarToast(mensaje, duracion = 2500) {
     const toast = document.getElementById('toastNotification');
-    toast.innerText = mensaje;
-    toast.style.opacity = "1";
-    setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+    if (!toast) return;
+    toast.innerHTML = mensaje;
+    toast.classList.add('show-toast');
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+        toast.classList.remove('show-toast');
+    }, duracion);
 }
 
 // ------------------------------------------------------------------
@@ -6889,12 +6921,18 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             }
         };
 
+        let rafId = null;
+
         window.addEventListener('touchstart', function(e) {
             if (isRefreshing) return;
             // Solo activar si estamos en el scroll superior absoluto
             if (window.scrollY <= 2) {
                 touchStartY = e.touches[0].clientY;
+                touchCurrentY = touchStartY;
                 isPulling = true;
+                if (ptrEl) {
+                    ptrEl.classList.remove('ptr-releasing');
+                }
             } else {
                 isPulling = false;
             }
@@ -6913,19 +6951,28 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 if (e.cancelable) {
                     e.preventDefault();
                 }
-                let pullDistance = Math.min(diff * 0.45, MAX_PULL);
-                if (ptrEl) {
-                    ptrEl.classList.add('ptr-active');
-                    ptrEl.style.transform = `translate(-50%, ${pullDistance - 50}px)`;
-                    if (ptrSpinner) {
-                        let rot = (pullDistance / PULL_THRESHOLD) * 360;
-                        ptrSpinner.style.transform = `rotate(${rot}deg)`;
-                    }
+                if (!rafId) {
+                    rafId = requestAnimationFrame(() => {
+                        let pullDistance = Math.min((touchCurrentY - touchStartY) * 0.45, MAX_PULL);
+                        if (ptrEl) {
+                            ptrEl.classList.add('ptr-active');
+                            ptrEl.style.transform = `translate3d(-50%, ${pullDistance - 55}px, 0)`;
+                            if (ptrSpinner) {
+                                let rot = (pullDistance / PULL_THRESHOLD) * 360;
+                                ptrSpinner.style.transform = `rotate(${rot}deg)`;
+                            }
+                        }
+                        rafId = null;
+                    });
                 }
             }
         }, { passive: false });
 
         window.addEventListener('touchend', function() {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
             if (!isPulling || isRefreshing) return;
             isPulling = false;
             let diff = touchCurrentY - touchStartY;
@@ -6934,8 +6981,11 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 window.recargarDatosAppSilencioso();
             } else {
                 if (ptrEl) {
-                    ptrEl.style.transform = '';
-                    setTimeout(() => ptrEl.classList.remove('ptr-active'), 200);
+                    ptrEl.classList.add('ptr-releasing');
+                    ptrEl.style.transform = 'translate3d(-50%, -65px, 0)';
+                    setTimeout(() => {
+                        ptrEl.classList.remove('ptr-active', 'ptr-releasing');
+                    }, 250);
                 }
             }
             touchStartY = 0;
