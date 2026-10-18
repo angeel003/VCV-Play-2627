@@ -179,7 +179,8 @@ export async function onRequestPost(context) {
             streaming: oRes.Streaming || "",
             mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [],
             mvp_oficial: oRes.mvp_oficial || "",
-            mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : []
+            mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : [],
+            mvp_visible: oRes.mvp_visible !== undefined ? (oRes.mvp_visible === 1 || oRes.mvp_visible === '1' || oRes.mvp_visible === true || oRes.mvp_visible === 'true' || oRes.mvp_visible === 'SI') : true
         };
     }
 
@@ -1078,8 +1079,13 @@ export async function onRequestPost(context) {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
+        // Asegurar que la columna mvp_visible existe
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
+
         const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
+        const { mvp_visible } = body;
+        const visibleVal = (mvp_visible === false || mvp_visible === 0 || mvp_visible === '0' || mvp_visible === 'OCULTAR') ? 0 : 1;
 
         // Update Resultados_Oficiales
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
@@ -1094,11 +1100,15 @@ export async function onRequestPost(context) {
                 sql += ', "mvp_stats" = ?';
                 params.push(statsStr);
             }
+            if (mvp_visible !== undefined) {
+                sql += ', "mvp_visible" = ?';
+                params.push(visibleVal);
+            }
             sql += ' WHERE "ID Partido" = ?';
             params.push(id_partido);
             await db.prepare(sql).bind(...params).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible") VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal).run();
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }

@@ -909,9 +909,9 @@
       aspect-ratio: 1 / 1;
       position: relative;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
-      background: #110519;
+      background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.22) 0%, rgba(93, 23, 137, 0.35) 60%, rgba(17, 5, 25, 0.85) 100%);
       border-bottom: 2px solid rgba(212, 175, 55, 0.3);
       overflow: hidden;
       flex-shrink: 0;
@@ -919,8 +919,10 @@
     .mvp-photo-img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
+      object-position: bottom center;
       display: block;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
     }
     .mvp-dorsal-tag {
       position: absolute;
@@ -2086,28 +2088,36 @@
 
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
                   <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (los 3 valen igual):</label>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 1 (Obligatorio):</label>
                     <select id="directMvp1" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                   <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (los 3 valen igual):</label>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 2 (Obligatorio):</label>
                     <select id="directMvp2" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                   <div>
-                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (los 3 valen igual):</label>
+                    <label style="font-size: 0.7rem; color: var(--secondary-color); display: block; margin-bottom: 2px; font-weight: 700;">Nominado MVP 3 (Opcional - deja vacío si solo hay 2):</label>
                     <select id="directMvp3" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                 </div>
 
-                <button type="button" id="btnGuardarDirectMvp" class="btn" onclick="window.guardarDirectMvp(event)" style="width: 100%; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3); margin-bottom: 8px;">
-                  ⭐ Guardar 3 Nominados en Cartelera
-                </button>
-                <button type="button" class="btn" onclick="probarMvpEnCartelera()" style="width: 100%; padding: 8px; background: rgba(52, 152, 219, 0.15); border: 1px dashed #3498db; color: #3498db; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem; margin-bottom: 12px;">
-                  🧪 Ver/Probar Votación MVP en Cartelera
-                </button>
+                <!-- ESTADO ACTUAL DE LA VOTACIÓN EN ESTE PARTIDO -->
+                <div id="adminMvpEstadoBanner" style="margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted);">
+                  <span>Estado actual en cartelera:</span>
+                  <span id="adminMvpEstadoBadge" style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid #e74c3c;">OCULTO / NO PUBLICADO</span>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                  <button type="button" id="btnPublicarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(true)" style="flex: 1; padding: 10px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.83rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);">
+                    👁️ Publicar / Mostrar Votación
+                  </button>
+                  <button type="button" id="btnOcultarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(false)" style="padding: 10px 14px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.82rem;" title="Ocultar temporalmente la votación si hubo algún error">
+                    🚫 Ocultar Votación
+                  </button>
+                </div>
 
                 <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
                 <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
@@ -2137,17 +2147,14 @@
                     </div>
                   </div>
 
-                  <div style="display:flex; gap:6px; margin-bottom: 6px;">
+                  <div style="display:flex; gap:6px;">
                     <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 9px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
                       👑 Guardar MVP Oficial en BD
                     </button>
-                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación de 3">
+                    <button type="button" class="btn" onclick="window.quitarMvpOficial(event)" style="padding: 9px 12px; background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Quitar MVP Oficial para volver a mostrar la votación">
                       Quitar (Volver a Votar)
                     </button>
                   </div>
-                  <button type="button" class="btn" onclick="window.probarMvpOficialEnCarteleraYPerfil()" style="width: 100%; padding: 8px; background: rgba(46, 204, 113, 0.15); border: 1px dashed #2ecc71; color: #2ecc71; font-weight: 800; border-radius: 8px; cursor: pointer; font-size: 0.78rem;" title="Simular que el candidato seleccionado ha ganado el MVP y ver su estrella ⭐">
-                    🧪 Probar Proclamación y Ver Insignia ⭐ en Perfil
-                  </button>
                 </div>
 
                 <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
@@ -3083,291 +3090,7 @@ window.guardarPlantillaSuperligaEnBD = function(e) {
     });
 };
 
-window.probarMvpEnCartelera = function() {
-    if (!window.appData) window.appData = {};
-    if (!window.appData.equipos) window.appData.equipos = [];
-    
-    // Buscar si ya hay un partido de Superliga en data.equipos o en todos_partidos
-    let partidosList = window.appData.equipos;
-    let pSm2 = partidosList.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-    
-    if (!pSm2 && window.appData.todos_partidos) {
-        let foundInAll = window.appData.todos_partidos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-        if (foundInAll) {
-            pSm2 = { ...foundInAll };
-            partidosList.unshift(pSm2);
-        }
-    }
-    
-    if (!pSm2) {
-        // Crear un partido simulado de Superliga para pruebas
-        pSm2 = {
-            id_partido: "DEMO_SM2_MVP",
-            equipo_local: "Voleibol Club Valladolid",
-            rival: "CyL Palencia 2028",
-            abrev_local: "VCV",
-            abrev_rival: "PAL",
-            categoria: "SM2",
-            jornada_eq: "1",
-            ubicacion: "LOCAL",
-            estado: "CERRADO",
-            visibilidad: "MOSTRAR",
-            permitido: true,
-            timestamp: Date.now() - 3600000,
-            pabellon: "Polideportivo Pisuerga",
-            oficial_sets: "3-1",
-            oficial_parciales: "25-21, 23-25, 25-18, 25-20"
-        };
-        partidosList.unshift(pSm2);
-    }
-    
-    // Forzar estado cerrado y visibilidad
-    pSm2.estado = "CERRADO";
-    pSm2.visibilidad = "MOSTRAR";
-    pSm2.permitido = true;
-    pSm2.mvp_oficial = ''; // Para que se muestren las 3 tarjetas de votación
-    if (!pSm2.oficial_sets) pSm2.oficial_sets = "3-1";
-    if (!pSm2.oficial_parciales) pSm2.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-    
-    // Respetar los candidatos seleccionados en la intranet o ya guardados
-    const s1 = document.getElementById('directMvp1');
-    const s2 = document.getElementById('directMvp2');
-    const s3 = document.getElementById('directMvp3');
-    const m1 = s1 ? s1.value : '';
-    const m2 = s2 ? s2.value : '';
-    const m3 = s3 ? s3.value : '';
-    
-    if (m1 && m2 && m3) {
-        pSm2.mvp_candidatos = [m1, m2, m3];
-    } else if (!Array.isArray(pSm2.mvp_candidatos) || pSm2.mvp_candidatos.length < 3) {
-        let plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
-        if (plantilla.length >= 3) {
-            pSm2.mvp_candidatos = [
-                `#${plantilla[0].dorsal} ${plantilla[0].nombre}${plantilla[0].apodo ? ' (' + plantilla[0].apodo + ')' : ''}${plantilla[0].posicion ? ' [' + plantilla[0].posicion + ']' : ''}`,
-                `#${plantilla[1].dorsal} ${plantilla[1].nombre}${plantilla[1].apodo ? ' (' + plantilla[1].apodo + ')' : ''}${plantilla[1].posicion ? ' [' + plantilla[1].posicion + ']' : ''}`,
-                `#${plantilla[2].dorsal} ${plantilla[2].nombre}${plantilla[2].apodo ? ' (' + plantilla[2].apodo + ')' : ''}${plantilla[2].posicion ? ' [' + plantilla[2].posicion + ']' : ''}`
-            ];
-        }
-    }
-    
-    // Añadir una predicción de prueba para este usuario si no tenía
-    if (!window.appData.predicciones_usuario) window.appData.predicciones_usuario = {};
-    if (!window.appData.predicciones_usuario[pSm2.id_partido]) {
-        window.appData.predicciones_usuario[pSm2.id_partido] = {
-            sets: "3-1",
-            puntos: "12",
-            signo: "A favor"
-        };
-    }
-    
-    // Resetear voto local de este partido para que pueda votar
-    if (window.appData.mvp_votos) delete window.appData.mvp_votos[pSm2.id_partido];
-    
-    // Re-renderizar cartelera con el nuevo método limpio
-    if (typeof window.renderCarteleraHTML === 'function') {
-        window.renderCarteleraHTML(window.appData);
-    }
-    
-    // Resetear filtro de categoría a 'all' si existe para asegurar que se vea
-    const btnAll = document.querySelector('.cat-filter-btn[data-filter="all"]');
-    if (btnAll) btnAll.click();
-    
-    // Navegar a la pestaña de Partidos
-    const navBtn = document.querySelector('.nav-item-v2[onclick*="carteleraSection"]');
-    if (typeof switchTabV2 === 'function') {
-        switchTabV2('carteleraSection', navBtn);
-    } else if (typeof showTabV2 === 'function') {
-        showTabV2('carteleraSection', navBtn);
-    }
-    
-    mostrarToast("Partido de prueba cargado en Partidos. ¡Ya puedes probar a votar!");
-};
 
-// Función para recalcular en caliente las insignias MVP en memoria
-window.recalcularInsigniasMvpLocal = function() {
-    if (!window.appData) return;
-    if (!window.appData.insignias) window.appData.insignias = {};
-    
-    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
-    const partidos = (window.appData.equipos || []).concat(window.appData.todos_partidos || []);
-    
-    // Limpiar insignias tipo 'mvp' anteriores
-    Object.keys(window.appData.insignias).forEach(u => {
-        if (Array.isArray(window.appData.insignias[u])) {
-            window.appData.insignias[u] = window.appData.insignias[u].filter(b => b.type !== 'mvp');
-        }
-    });
-
-    plantilla.forEach(pl => {
-        const uPlayer = pl.usuario ? pl.usuario.trim() : '';
-        if (!uPlayer) return;
-
-        const sm2MvpMatches = [];
-        const seenPartidos = new Set();
-        
-        partidos.forEach(p => {
-            if (!p.mvp_oficial || seenPartidos.has(p.id_partido)) return;
-            seenPartidos.add(p.id_partido);
-            
-            const mvpOf = String(p.mvp_oficial).trim().toLowerCase();
-            const plNombre = String(pl.nombre).trim().toLowerCase();
-            const plApodo = String(pl.apodo || '').trim().toLowerCase();
-            const plDorsal = '#' + pl.dorsal;
-
-            const matchDorsal = mvpOf.includes(plDorsal);
-            const matchNombre = plNombre && mvpOf.includes(plNombre);
-            const matchApodo = plApodo && mvpOf.includes(plApodo);
-
-            if (matchDorsal || matchNombre || matchApodo) {
-                const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
-                const jNum = p.jornada_eq || p.ronda_global || '1';
-                sm2MvpMatches.push({
-                    jornada: jNum,
-                    rival: rivalName,
-                    id_partido: p.id_partido
-                });
-            }
-        });
-
-        if (sm2MvpMatches.length > 0) {
-            if (!window.appData.insignias[uPlayer]) window.appData.insignias[uPlayer] = [];
-            const count = sm2MvpMatches.length;
-            const starText = count === 1 ? `⭐ MVP Superliga 2 (1 vez)` : `⭐ MVP Superliga 2 (${count} veces)`;
-            const items = sm2MvpMatches.map(m => `J. ${m.jornada} vs ${m.rival}`);
-
-            window.appData.insignias[uPlayer].push({
-                type: 'mvp',
-                text: starText,
-                roleTitle: starText,
-                emoji: '⭐',
-                count: count,
-                items: items
-            });
-        }
-    });
-
-    // Refrescar tarjeta de perfil propio
-    if (typeof window.renderMyProfileCard === 'function') {
-        window.renderMyProfileCard();
-    }
-    // Refrescar clasificaciones si están visibles
-    if (typeof window.renderClasificacion === 'function') {
-        window.renderClasificacion();
-    }
-};
-
-window.probarMvpOficialEnCarteleraYPerfil = function() {
-    if (!window.appData) window.appData = {};
-    if (!window.appData.equipos) window.appData.equipos = [];
-
-    // 1. Obtener o crear partido Superliga demo
-    let pSm2 = window.appData.equipos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-    if (!pSm2 && window.appData.todos_partidos) {
-        let foundInAll = window.appData.todos_partidos.find(p => (p.categoria || '').toLowerCase().includes('sm2') || (p.categoria || '').toLowerCase().includes('superliga'));
-        if (foundInAll) {
-            pSm2 = { ...foundInAll };
-            window.appData.equipos.unshift(pSm2);
-        }
-    }
-    if (!pSm2) {
-        pSm2 = {
-            id_partido: "DEMO_SM2_MVP",
-            equipo_local: "Voleibol Club Valladolid",
-            rival: "CyL Palencia 2028",
-            abrev_local: "VCV",
-            abrev_rival: "PAL",
-            categoria: "SM2",
-            jornada_eq: "1",
-            ubicacion: "LOCAL",
-            estado: "CERRADO",
-            visibilidad: "MOSTRAR",
-            permitido: true,
-            timestamp: Date.now() - 3600000,
-            pabellon: "Polideportivo Pisuerga",
-            oficial_sets: "3-1",
-            oficial_parciales: "25-21, 23-25, 25-18, 25-20"
-        };
-        window.appData.equipos.unshift(pSm2);
-    }
-
-    // 2. Jugador a proclamar
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    let elegido = selOficial ? selOficial.value : '';
-
-    const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : (window.appData.plantilla_superliga || []);
-
-    if (!elegido && plantilla.length > 0) {
-        // Si no seleccionó ninguno, buscar si el usuario actual está asociado a algún jugador
-        let myPlayer = plantilla.find(pl => pl.usuario && pl.usuario.toLowerCase() === (currentUser || '').toLowerCase());
-        if (!myPlayer) myPlayer = plantilla[0];
-        let posPart = myPlayer.posicion ? ` [${myPlayer.posicion}]` : '';
-        let apodoPart = myPlayer.apodo ? ` (${myPlayer.apodo})` : '';
-        elegido = `#${myPlayer.dorsal} ${myPlayer.nombre}${apodoPart}${posPart}`;
-        if (selOficial) window.setSelectValueSafely(selOficial, elegido);
-    }
-
-    if (!elegido) {
-        alert("Por favor selecciona un jugador en el desplegable de MVP Oficial.");
-        return;
-    }
-
-    // 3. Estadísticas
-    let stats = [];
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el && el.value.trim()) stats.push(el.value.trim());
-    }
-    if (stats.length === 0) {
-        stats = ["Ataques: 18 (62%)", "Bloqueos: 4", "Saques directos: 3", "Recepción: 16"];
-    }
-
-    // 4. Asignar en partido
-    pSm2.mvp_oficial = elegido;
-    pSm2.mvp_stats = stats;
-    pSm2.estado = "CERRADO";
-    pSm2.visibilidad = "MOSTRAR";
-    pSm2.permitido = true;
-    if (!pSm2.mvp_candidatos || pSm2.mvp_candidatos.length < 3) {
-        if (plantilla.length >= 3) {
-            pSm2.mvp_candidatos = [
-                `#${plantilla[0].dorsal} ${plantilla[0].nombre}${plantilla[0].apodo ? ' (' + plantilla[0].apodo + ')' : ''}`,
-                `#${plantilla[1].dorsal} ${plantilla[1].nombre}${plantilla[1].apodo ? ' (' + plantilla[1].apodo + ')' : ''}`,
-                `#${plantilla[2].dorsal} ${plantilla[2].nombre}${plantilla[2].apodo ? ' (' + plantilla[2].apodo + ')' : ''}`
-            ];
-        }
-    }
-
-    // Sincronizar en todos los partidos Superliga en memoria
-    window.appData.equipos.forEach(p => {
-        let cat = (p.categoria || '').toLowerCase();
-        if (cat.includes('sm2') || cat.includes('superliga')) {
-            p.mvp_oficial = elegido;
-            p.mvp_stats = stats;
-            p.visibilidad = "MOSTRAR";
-            p.permitido = true;
-        }
-    });
-
-    // 5. Recalcular insignias
-    if (typeof window.recalcularInsigniasMvpLocal === 'function') {
-        window.recalcularInsigniasMvpLocal();
-    }
-
-    // 6. Re-renderizar cartelera
-    if (typeof window.renderCarteleraHTML === 'function') {
-        window.renderCarteleraHTML(window.appData);
-    }
-
-    mostrarToast(`¡${elegido} proclamado MVP de prueba! Revisa la Cartelera y tu Perfil.`);
-
-    // Navegar a Cartelera para ver el widget oficial
-    const navBtn = document.querySelector('.nav-item-v2[onclick*="carteleraSection"]');
-    if (typeof switchTabV2 === 'function') {
-        switchTabV2('carteleraSection', navBtn);
-    } else if (typeof showTabV2 === 'function') {
-        showTabV2('carteleraSection', navBtn);
-    }
-};
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -3557,17 +3280,42 @@ window.onDirectMvpPartidoChange = function(idPart) {
         window.setSelectValueSafely(sOficial, (matchObj && matchObj.mvp_oficial) || '');
     }
 
-    // Cargar estadísticas si ya existían para este partido
-    let stats = (matchObj && Array.isArray(matchObj.mvp_stats)) ? matchObj.mvp_stats : [];
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el) el.value = stats[k - 1] || '';
+    // Actualizar banner de estado visual de este partido
+    window.actualizarBannerEstadoMvp(matchObj);
+};
+
+window.actualizarBannerEstadoMvp = function(matchObj) {
+    const badge = document.getElementById('adminMvpEstadoBadge');
+    if (!badge) return;
+    
+    let isVisible = matchObj && matchObj.mvp_visible !== false && matchObj.mvp_visible !== 'OCULTAR';
+    let cands = (matchObj && Array.isArray(matchObj.mvp_candidatos)) ? matchObj.mvp_candidatos.filter(Boolean) : [];
+    let hasOficial = Boolean(matchObj && matchObj.mvp_oficial);
+    
+    if (hasOficial) {
+        badge.innerText = '👑 MVP OFICIAL PUBLICADO';
+        badge.style.background = 'rgba(46, 204, 113, 0.2)';
+        badge.style.color = '#2ecc71';
+        badge.style.border = '1px solid #2ecc71';
+    } else if (isVisible && (cands.length === 2 || cands.length === 3)) {
+        badge.innerText = `🟢 PUBLICADO (${cands.length} CANDIDATOS)`;
+        badge.style.background = 'rgba(46, 204, 113, 0.2)';
+        badge.style.color = '#2ecc71';
+        badge.style.border = '1px solid #2ecc71';
+    } else if (!isVisible && (cands.length === 2 || cands.length === 3)) {
+        badge.innerText = '🚫 OCULTO POR EL ADMIN';
+        badge.style.background = 'rgba(231, 76, 60, 0.2)';
+        badge.style.color = '#e74c3c';
+        badge.style.border = '1px solid #e74c3c';
+    } else {
+        badge.innerText = '⚪ NO PUBLICADO / SIN CANDIDATOS';
+        badge.style.background = 'rgba(255, 255, 255, 0.1)';
+        badge.style.color = 'var(--text-muted)';
+        badge.style.border = '1px solid var(--border-color)';
     }
 };
 
-window.guardarDirectMvp = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const btn = document.getElementById('btnGuardarDirectMvp');
+window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
     const selPart = document.getElementById('directMvpPartidoSelect');
     const idPart = selPart ? selPart.value : '';
     if (!idPart) {
@@ -3581,18 +3329,20 @@ window.guardarDirectMvp = function(e) {
     const m2 = s2 ? s2.value : '';
     const m3 = s3 ? s3.value : '';
     
-    if (!m1 || !m2 || !m3) {
-        alert("Debes seleccionar los 3 nominados al MVP. Por favor elige un jugador en cada desplegable.");
-        return;
+    if (hacerVisible) {
+        if (!m1 || !m2) {
+            alert("Debes seleccionar al menos 2 nominados (Nominado 1 y Nominado 2) para publicar la votación.");
+            return;
+        }
+        if (m1 === m2 || (m3 && (m1 === m3 || m2 === m3))) {
+            alert("Los nominados deben ser jugadores diferentes. No puedes repetir al mismo jugador.");
+            return;
+        }
     }
-    if (m1 === m2 || m1 === m3 || m2 === m3) {
-        alert("Los 3 nominados deben ser jugadores diferentes. No puedes repetir al mismo jugador.");
-        return;
-    }
-    
-    const cands = [m1, m2, m3];
-    
-    // Buscar el partido en window.appData.equipos o crearlo si era el demo
+
+    let cands = [m1, m2];
+    if (m3) cands.push(m3);
+
     if (!window.appData) window.appData = {};
     if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];
     
@@ -3621,31 +3371,39 @@ window.guardarDirectMvp = function(e) {
         };
         window.appData.equipos.unshift(pObj);
     }
-    
-    pObj.mvp_candidatos = cands;
-    pObj.visibilidad = "MOSTRAR";
-    pObj.permitido = true;
-    if (pObj.estado !== "CERRADO" && pObj.estado !== "FINALIZADO") {
-        pObj.estado = "CERRADO";
+
+    if (hacerVisible) {
+        pObj.mvp_candidatos = cands;
+        pObj.mvp_visible = true;
+        pObj.visibilidad = "MOSTRAR";
+        pObj.permitido = true;
+        if (pObj.estado !== "CERRADO" && pObj.estado !== "FINALIZADO") pObj.estado = "CERRADO";
+        if (!pObj.oficial_sets) pObj.oficial_sets = "3-1";
+        if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
+    } else {
+        pObj.mvp_visible = false;
     }
-    if (!pObj.oficial_sets) pObj.oficial_sets = "3-1";
-    if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-    
-    // Asegurar que cualquier partido de Superliga en cartelera tenga estos candidatos sincronizados
+
+    // Sincronizar en todos los partidos Superliga en memoria
     window.appData.equipos.forEach(p => {
         let cat = (p.categoria || '').toLowerCase();
         if (cat.includes('sm2') || cat.includes('superliga')) {
-            p.mvp_candidatos = cands;
-            p.visibilidad = "MOSTRAR";
-            p.permitido = true;
+            if (hacerVisible) {
+                p.mvp_candidatos = cands;
+                p.mvp_visible = true;
+            } else {
+                p.mvp_visible = false;
+            }
         }
     });
 
-    // Resetear voto local de este partido para poder probar a votar
-    if (window.appData.mvp_votos) delete window.appData.mvp_votos[idPart];
-    
+    // Actualizar indicador de estado en el panel
+    window.actualizarBannerEstadoMvp(pObj);
+
+    const btn = document.getElementById(hacerVisible ? 'btnPublicarMvp' : 'btnOcultarMvp');
+    const oldText = btn ? btn.innerText : '';
     if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando..."; }
-    
+
     fetchSeguro(scriptURL, {
         method: 'POST',
         body: JSON.stringify({
@@ -3656,24 +3414,22 @@ window.guardarDirectMvp = function(e) {
             sets: pObj.oficial_sets || '',
             parciales: pObj.oficial_parciales || '',
             streaming: pObj.streaming || '',
-            mvp_candidatos: cands
+            mvp_candidatos: hacerVisible ? cands : [],
+            mvp_visible: hacerVisible
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
     .then(r => r.json())
     .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "⭐ Guardar 3 Nominados en Cartelera"; }
-        mostrarToast("¡3 Nominados MVP guardados con éxito!");
+        if (btn) { btn.disabled = false; btn.innerText = oldText; }
+        mostrarToast(hacerVisible ? `¡Votación MVP (${cands.length} jugadores) publicada en Cartelera!` : "Votación MVP ocultada de Cartelera.");
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
-        if (window.appData && window.appData.equipos) {
-            renderAdminPanel(window.appData.equipos);
-        }
     })
     .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "⭐ Guardar 3 Nominados en Cartelera"; }
-        mostrarToast("Guardado localmente. ¡Ya puedes verlo en Cartelera!");
+        if (btn) { btn.disabled = false; btn.innerText = oldText; }
+        mostrarToast(hacerVisible ? `Votación MVP (${cands.length} jugadores) guardada localmente.` : "Votación MVP ocultada localmente.");
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
@@ -3752,6 +3508,9 @@ window.guardarMvpOficial = function(e) {
         if (typeof window.recalcularInsigniasMvpLocal === 'function') {
             window.recalcularInsigniasMvpLocal();
         }
+        if (typeof window.actualizarBannerEstadoMvp === 'function') {
+            window.actualizarBannerEstadoMvp(pObj);
+        }
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
@@ -3761,6 +3520,9 @@ window.guardarMvpOficial = function(e) {
         mostrarToast("MVP Oficial guardado localmente");
         if (typeof window.recalcularInsigniasMvpLocal === 'function') {
             window.recalcularInsigniasMvpLocal();
+        }
+        if (typeof window.actualizarBannerEstadoMvp === 'function') {
+            window.actualizarBannerEstadoMvp(pObj);
         }
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
@@ -3774,7 +3536,9 @@ window.quitarMvpOficial = function(e) {
     const idPart = selPart ? selPart.value : '';
     if (!idPart) return;
     
+    let pObj = null;
     if (window.appData && Array.isArray(window.appData.equipos)) {
+        pObj = window.appData.equipos.find(p => p.id_partido === idPart);
         window.appData.equipos.forEach(p => {
             let cat = (p.categoria || '').toLowerCase();
             if (cat.includes('sm2') || cat.includes('superliga')) {
@@ -3807,6 +3571,9 @@ window.quitarMvpOficial = function(e) {
     mostrarToast("MVP Oficial retirado. ¡Vuelve a mostrarse la votación!");
     if (typeof window.recalcularInsigniasMvpLocal === 'function') {
         window.recalcularInsigniasMvpLocal();
+    }
+    if (typeof window.actualizarBannerEstadoMvp === 'function') {
+        window.actualizarBannerEstadoMvp(pObj);
     }
     if (typeof window.renderCarteleraHTML === 'function') {
         window.renderCarteleraHTML(window.appData);
@@ -4946,16 +4713,17 @@ let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.
                             let mvpOficial = eq.mvp_oficial || '';
 
                             // Widget de Votación MVP o Proclamación Oficial
-                            // REGLA: Visible si y solo si hay exactamente 3 candidatos o MVP oficial proclamado
+                            // REGLA: Visible si hay MVP oficial proclamado o si hay 2 o 3 candidatos y no está ocultado
                             let mvpHtml = '';
-                            if (isSuperliga && mvpOficial) {
+                            let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
+                            if (isSuperliga && mvpOficial && isMvpVisible) {
                                 let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
                                 let myVoteNote = myMvpVote ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">Tu voto en la jornada fue para: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
                                 mvpHtml = `
                                 <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden;">
-                                            <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
+                                        <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
+                                            <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
                                         </div>
                                         <div>
                                             <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 4px;">
@@ -4982,7 +4750,7 @@ let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.
                                         🏆
                                     </div>
                                 </div>`;
-                            } else if (isSuperliga && mvpCands.length === 3) {
+                            } else if (isSuperliga && isMvpVisible && mvpCands.length >= 2 && mvpCands.length <= 3) {
                                 if (typeof window.renderMvpWidgetContent === 'function') {
                                     mvpHtml = `
                                     <div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">
@@ -6689,7 +6457,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
     };
 
     window.renderMvpWidgetContent = function(idPart, cands, myVote) {
-        if (!Array.isArray(cands) || cands.length !== 3) return '';
+        if (!Array.isArray(cands) || cands.length < 2 || cands.length > 3) return '';
         
         let votedIdx = -1;
         if (myVote) {
@@ -6715,24 +6483,35 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             let displayPos = (info.posicion && info.posicion.toLowerCase() !== 'jugador') ? info.posicion : '';
             let isThisVoted = (idx === votedIdx);
             
-            let orderClass = 'mvp-slot-order-2';
+            let orderClass = '';
             let cardStateClass = '';
             
-            if (isVoted) {
-                if (isThisVoted) {
-                    orderClass = 'mvp-slot-order-2'; // Se desplaza al centro
-                    cardStateClass = 'is-voted-state';
+            if (cands.length === 3) {
+                if (isVoted) {
+                    if (isThisVoted) {
+                        orderClass = 'mvp-slot-order-2'; // Se desplaza al centro
+                        cardStateClass = 'is-voted-state';
+                    } else {
+                        orderClass = (nonVotedCounter === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3';
+                        nonVotedCounter++;
+                        cardStateClass = 'is-dimmed-state'; // Atenuada y reducida
+                    }
                 } else {
-                    orderClass = (nonVotedCounter === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3';
-                    nonVotedCounter++;
-                    cardStateClass = 'is-dimmed-state'; // Atenuada y reducida
+                    orderClass = (idx === 0) ? 'mvp-slot-order-1' : ((idx === 1) ? 'mvp-slot-order-2' : 'mvp-slot-order-3');
                 }
             } else {
-                orderClass = (idx === 0) ? 'mvp-slot-order-1' : ((idx === 1) ? 'mvp-slot-order-2' : 'mvp-slot-order-3');
+                // 2 candidatos
+                if (isVoted) {
+                    if (isThisVoted) {
+                        cardStateClass = 'is-voted-state';
+                    } else {
+                        cardStateClass = 'is-dimmed-state';
+                    }
+                }
             }
 
             return `
-            <div class="mvp-card-slot ${orderClass}" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}">
+            <div class="mvp-card-slot ${orderClass}" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
                 <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}">
                     <div class="mvp-photo-wrapper">
                         <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.4rem; color:var(--secondary-color);\\'>${info.initials}</span>';">
@@ -6773,7 +6552,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
                 <span>${headerText}</span>
             </div>
-            <div class="mvp-candidates-grid" id="mvp-grid-${idPart}">
+            <div class="mvp-candidates-grid" id="mvp-grid-${idPart}" style="${cands.length === 2 ? 'justify-content: center; gap: 16px;' : ''}">
                 ${slotsHtml}
             </div>
             ${bottomPanelHtml}
@@ -6823,19 +6602,21 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 }
             });
             
-            let nonVotedIdx = 1;
-            cands.forEach((_, idx) => {
-                const slot = document.getElementById(`mvp-slot-${idPart}-${idx}`);
-                if (slot) {
-                    slot.classList.remove('mvp-slot-order-1', 'mvp-slot-order-2', 'mvp-slot-order-3');
-                    if (idx === selectedIdx) {
-                        slot.classList.add('mvp-slot-order-2');
-                    } else {
-                        slot.classList.add((nonVotedIdx === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3');
-                        nonVotedIdx++;
+            if (cands.length === 3) {
+                let nonVotedIdx = 1;
+                cands.forEach((_, idx) => {
+                    const slot = document.getElementById(`mvp-slot-${idPart}-${idx}`);
+                    if (slot) {
+                        slot.classList.remove('mvp-slot-order-1', 'mvp-slot-order-2', 'mvp-slot-order-3');
+                        if (idx === selectedIdx) {
+                            slot.classList.add('mvp-slot-order-2');
+                        } else {
+                            slot.classList.add((nonVotedIdx === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3');
+                            nonVotedIdx++;
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         const finalizeVote = () => {
