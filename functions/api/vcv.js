@@ -74,6 +74,7 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_candidatos TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_oficial TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_proclamado_ts INTEGER").run(); } catch(e) {}
 
         // Sembrar plantilla inicial si est├í vac├¡a
         try {
@@ -180,6 +181,7 @@ export async function onRequestPost(context) {
             mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [],
             mvp_oficial: oRes.mvp_oficial || "",
             mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : [],
+            mvp_proclamado_ts: oRes.mvp_proclamado_ts ? parseInt(oRes.mvp_proclamado_ts) : 0,
             mvp_visible: oRes.mvp_visible !== undefined ? (oRes.mvp_visible === 1 || oRes.mvp_visible === '1' || oRes.mvp_visible === true || oRes.mvp_visible === 'true' || oRes.mvp_visible === 'SI') : true
         };
     }
@@ -513,11 +515,32 @@ export async function onRequestPost(context) {
                 // 1. Calendario: Entran todos los permitidos
                 todosPartidos.push(pCopy);
 
-                // 2. Cartelera: Solo los que est├ín a <= 7 d├¡as, que tengan fecha, y que no hayan pasado m├ís de 36h desde el inicio
+                // 2. Cartelera:
+                // - Si el partido tiene votación/sección de MVP asignada:
+                //   * Permanece mientras no sea definitivo (mientras esté abierta la votación o no haya MVP oficial)
+                //   * Una vez proclamado el ganador (MVP oficial), aguanta 48 horas desde dicha publicación
+                // - Para el resto de partidos normales: los que estén a <= 7 días y no hayan pasado más de 36h desde el inicio
                 const pCartelera = { ...pCopy };
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
-                let isTooOld = pCartelera.timestamp && (Date.now() - pCartelera.timestamp > 36 * 60 * 60 * 1000);
+                
+                let hasMvpAssignment = (Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial);
+                let isTooOld = false;
+
+                if (hasMvpAssignment) {
+                    if (pCartelera.mvp_oficial) {
+                        // Ya es definitivo (hay ganador). Aguanta 48 horas desde la publicación del ganador
+                        let baseTime = pCartelera.mvp_proclamado_ts || pCartelera.timestamp || 0;
+                        if (baseTime && (Date.now() - baseTime > 48 * 60 * 60 * 1000)) {
+                            isTooOld = true;
+                        }
+                    } else {
+                        // Mientras no sea definitivo (no hay ganador todavía), el partido permanece activo en la cartelera
+                        isTooOld = false;
+                    }
+                } else {
+                    isTooOld = pCartelera.timestamp && (Date.now() - pCartelera.timestamp > 36 * 60 * 60 * 1000);
+                }
                 
                 if (noTimestamp || isTooFarFuture || isTooOld) {
                     pCartelera.visibilidad = "OCULTAR";
@@ -1093,8 +1116,9 @@ export async function onRequestPost(context) {
             let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
             let params = [sets || '', parciales || '', streaming || '', candStr];
             if (mvp_oficial !== undefined) {
-                sql += ', "mvp_oficial" = ?';
+                sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
                 params.push(mvp_oficial || '');
+                params.push((mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0);
             }
             if (mvp_stats !== undefined) {
                 sql += ', "mvp_stats" = ?';
@@ -1108,7 +1132,8 @@ export async function onRequestPost(context) {
             params.push(id_partido);
             await db.prepare(sql).bind(...params).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible") VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal).run();
+            const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs).run();
         }
         
         if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
@@ -1124,14 +1149,15 @@ export async function onRequestPost(context) {
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
+        const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, id_partido).run();
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_oficial" = ?, "mvp_stats" = ?, "mvp_proclamado_ts" = ? WHERE "ID Partido" = ?').bind(mvp_oficial || '', statsStr, proclamadoTs, id_partido).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats") VALUES (?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_oficial", "mvp_stats", "mvp_proclamado_ts") VALUES (?, ?, ?, ?)').bind(id_partido, mvp_oficial || '', statsStr, proclamadoTs).run();
         }
 
-        return jsonResponse({ status: 'success', message: 'MVP Oficial y estad├¡sticas guardadas con ├®xito en la base de datos' });
+        return jsonResponse({ status: 'success', message: 'MVP Oficial y estadísticas guardadas con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs });
     }
 
     // VOTAR MVP DE PARTIDO
