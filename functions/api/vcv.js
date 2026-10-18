@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: /api/vcv
 // Backend nativo conectado 1:1 a las tablas exactas de Cloudflare D1
 
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, cacheControl = "no-store") {
     return new Response(JSON.stringify(data), {
         status,
         headers: {
@@ -9,7 +9,7 @@ function jsonResponse(data, status = 200) {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
-            "Cache-Control": "no-store"
+            "Cache-Control": cacheControl
         }
     });
 }
