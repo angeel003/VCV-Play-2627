@@ -137,10 +137,31 @@ export async function onRequestPost(context) {
             'CREATE INDEX IF NOT EXISTS idx_plantilla_dorsal ON "Plantilla_Superliga_2_Masc"("dorsal")',
             'CREATE INDEX IF NOT EXISTS idx_plantilla_usuario ON "Plantilla_Superliga_2_Masc"("usuario")'
         ];
+        const created = [];
+        const errors = [];
         for (const iq of indexQueries) {
-            try { await db.prepare(iq).run(); } catch(e) {}
+            try { 
+                await db.prepare(iq).run(); 
+                const match = iq.match(/INDEX IF NOT EXISTS\s+([^\s]+)/i);
+                if (match) created.push(match[1]);
+            } catch(e) {
+                errors.push(e.message);
+            }
         }
-        return jsonResponse({status: 'success', message: 'Migración e índices optimizados aplicados con éxito.'});
+
+        // Obtener lista real de índices existentes en sqlite_master
+        let existingIndexes = [];
+        try {
+            const { results: idxRows } = await db.prepare("SELECT name, tbl_name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'").all();
+            existingIndexes = idxRows || [];
+        } catch(e) {}
+
+        return jsonResponse({
+            status: 'success', 
+            message: `¡Base de datos totalmente optimizada! (${existingIndexes.length} índices activos en D1).`,
+            indices_activos: existingIndexes.length,
+            lista: existingIndexes
+        });
     }
     if (action === "ping") {
         try {
