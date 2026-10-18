@@ -2992,6 +2992,8 @@ window.renderAdminPlantillaMvp = function() {
     }
     let h = '';
     plantilla.forEach((j, idx) => {
+        let dorVal = j.dorsal || '';
+        let nomVal = j.nombre || '';
         let uVal = j.usuario || '';
         let posVal = j.posicion || '';
         let apodVal = j.apodo || '';
@@ -2999,21 +3001,22 @@ window.renderAdminPlantillaMvp = function() {
         h += `
         <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; font-size:0.8rem; display:flex; flex-direction:column; gap:8px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:34px; height:34px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                    <div style="width:36px; height:36px; border-radius:8px; overflow:hidden; background:var(--bg-card-alt); border:1px solid rgba(212,175,55,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                         <img loading="lazy" src="${photoPath}" alt="#${j.dorsal}" style="width:100%; height:100%; object-fit:cover;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; color:var(--secondary-color); font-size:0.75rem;\\'>#${j.dorsal}</span>';">
                     </div>
-                    <div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span style="font-weight:900; color:var(--secondary-color); font-size:0.9rem;">#${j.dorsal}</span>
-                            <span style="color:var(--text-main); font-weight:700;">${j.nombre}</span>
-                            ${apodVal ? `<span style="background:rgba(212,175,55,0.18); color:var(--secondary-color); padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:800;">${apodVal}</span>` : ''}
+                    <div style="display:flex; gap:6px; flex:1; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:3px;">
+                            <span style="font-weight:900; color:var(--secondary-color); font-size:0.85rem;">#</span>
+                            <input type="number" value="${dorVal}" onchange="window.actualizarCampoJugador(${idx}, 'dorsal', this.value)" style="width:48px; padding:3px 4px; font-size:0.8rem; font-weight:800; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); text-align:center;">
                         </div>
-                        <div style="font-size:0.68rem; color:var(--text-muted); font-family:monospace; margin-top:2px;">
-                            📷 ${photoPath}
-                        </div>
+                        <input type="text" value="${nomVal}" onchange="window.actualizarCampoJugador(${idx}, 'nombre', this.value)" placeholder="Nombre Completo" style="flex:2; min-width:130px; padding:3px 6px; font-size:0.78rem; font-weight:700; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                        <input type="text" value="${apodVal}" onchange="window.actualizarCampoJugador(${idx}, 'apodo', this.value)" placeholder="Apodo" style="width:80px; padding:3px 6px; font-size:0.75rem; border-radius:5px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--secondary-color); font-weight:700;">
                     </div>
                 </div>
+                <button type="button" onclick="window.eliminarJugadorPlantilla(${idx})" style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-size:0.85rem; padding:4px 6px;" title="Eliminar de plantilla">
+                    🗑️
+                </button>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <div style="flex:1; min-width:130px; display:flex; align-items:center; gap:4px;">
@@ -3033,7 +3036,11 @@ window.renderAdminPlantillaMvp = function() {
 window.actualizarCampoJugador = function(idx, field, val) {
     if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
     if (window.appData.plantilla_superliga[idx]) {
-        window.appData.plantilla_superliga[idx][field] = val.trim();
+        if (field === 'dorsal') {
+            window.appData.plantilla_superliga[idx][field] = parseInt(val) || 0;
+        } else {
+            window.appData.plantilla_superliga[idx][field] = val.trim();
+        }
         try {
             localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
         } catch(e) {}
@@ -3061,13 +3068,15 @@ window.agregarJugadorPlantilla = function() {
         window.appData.plantilla_superliga = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : [];
     }
     
-    // Comprobar si dorsal ya existe
-    const exists = window.appData.plantilla_superliga.some(p => p.dorsal === dVal);
-    if (exists) {
-        alert("Ya existe un jugador con el dorsal #" + dVal);
-        return;
-    }
+    // Generar un ID único autoincrementado en el cliente para el nuevo jugador
+    let maxId = 0;
+    window.appData.plantilla_superliga.forEach(p => {
+        let pId = parseInt(p.id);
+        if (!isNaN(pId) && pId > maxId) maxId = pId;
+    });
+
     window.appData.plantilla_superliga.push({ 
+        id: maxId + 1,
         dorsal: dVal, 
         apodo: aVal || nVal.split(' ')[0], 
         posicion: pVal, 
@@ -3089,6 +3098,8 @@ window.agregarJugadorPlantilla = function() {
 
 window.eliminarJugadorPlantilla = function(idx) {
     if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
+    let pj = window.appData.plantilla_superliga[idx];
+    if (!confirm(`¿Eliminar a #${pj.dorsal} ${pj.nombre} de la plantilla?`)) return;
     window.appData.plantilla_superliga.splice(idx, 1);
     try {
         localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
