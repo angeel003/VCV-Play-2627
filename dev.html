@@ -4030,35 +4030,18 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             window.renderCarteleraHTML(window.appData);
         }
         if(d.status === "success") { 
-            mostrarToast("Guardado correctamente"); 
+            mostrarToast("Guardado correctamente en la BD"); 
             if (window.appData && Array.isArray(window.appData.equipos) && typeof renderAdminPanel === 'function') {
                 renderAdminPanel(window.appData.equipos);
             }
         } else { 
-            mostrarToast(d.message || "Guardado localmente"); 
+            mostrarToast("⚠️ " + (d.message || "Error al guardar en el servidor")); 
         }
     })
     .catch(err => {
         console.error("Error al guardar resultado:", err);
         btn.disabled = false; btn.innerText = "Guardar Cambios";
-        if(window.appData && Array.isArray(window.appData.equipos)) {
-            let eq = window.appData.equipos.find(p => p.id_partido === idPart);
-            if (eq) {
-                if (sets) {
-                    eq.oficial_sets = sets;
-                    eq.estado = 'CERRADO';
-                }
-                if (parc) eq.oficial_parciales = parc;
-                if (stream) eq.streaming = stream;
-            }
-        }
-        if (typeof window.renderCarteleraHTML === 'function' && window.appData) {
-            window.renderCarteleraHTML(window.appData);
-        }
-        if (window.appData && Array.isArray(window.appData.equipos) && typeof renderAdminPanel === 'function') {
-            renderAdminPanel(window.appData.equipos);
-        }
-        mostrarToast("Guardado localmente");
+        mostrarToast("❌ Error de red: " + (err.message || "No se pudo conectar"));
     });
 }
 window.crearUsuarioAdmin = function(e) {
