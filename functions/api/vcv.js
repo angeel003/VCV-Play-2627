@@ -1344,13 +1344,16 @@ export async function onRequestPost(context) {
             if (newU) {
                 const tables = [
                     "Usuarios", "Porras", "Ligas", "Permisos_Equipos", 
-                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas"
+                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", "Plantilla_Superliga_2_Masc"
                 ];
                 
                 for (const table of tables) {
                     let col = (table === "Ligas" || table === "Permisos_Equipos") ? "Jugador" : "Usuario";
+                    if (table === "Plantilla_Superliga_2_Masc") col = "usuario";
                     stmts.push(db.prepare(`UPDATE OR IGNORE "${table}" SET "${col}" = ? WHERE "${col}" = ?`).bind(newU, oldU));
-                    stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
+                    if (table !== "Plantilla_Superliga_2_Masc") {
+                        stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
+                    }
                 }
             }
             
