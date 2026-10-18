@@ -5210,18 +5210,19 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 let pred = data.predicciones_usuario[p.id_partido];
                 if (!pred || !pred.sets) return;
 
+                let hasLocalInLiga = false;
+                let hasRivalInLiga = false;
                 if (equiposDeEstaLiga) {
                     let lEq = (p.equipo_local || "").trim().toLowerCase();
                     let rEq = (p.rival || "").trim().toLowerCase();
-                    let matchFound = false;
                     for (let team of equiposDeEstaLiga) {
-                        if (lEq.includes(team) || team.includes(lEq) || rEq.includes(team) || team.includes(rEq)) {
-                            matchFound = true;
-                            break;
-                        }
+                        if (lEq.includes(team) || team.includes(lEq)) hasLocalInLiga = true;
+                        if (rEq.includes(team) || team.includes(rEq)) hasRivalInLiga = true;
                     }
-                    if (!matchFound) return;
+                    if (!hasLocalInLiga && !hasRivalInLiga) return;
                 }
+
+                let isDerbyInLiga = Boolean(equiposDeEstaLiga && hasLocalInLiga && hasRivalInLiga && p.es_derby);
 
                 let jNum = parseInt(p.ronda_global);
                 if (isNaN(jNum) || jNum <= 0) jNum = parseInt(p.jornada_eq) || 1;
@@ -5250,10 +5251,14 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     mPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
                 }
 
+                // El récord de puntos en un partido se guarda SIN multiplicador derby
                 if (mPts > maxMatchPts) maxMatchPts = mPts;
 
-                if (!jMap[jNum]) jMap[jNum] = { totalPts: 0, matches: [] };
-                jMap[jNum].totalPts += mPts;
+                const mPtsApplied = isDerbyInLiga ? (mPts * 2) : mPts;
+
+                if (!jMap[jNum]) jMap[jNum] = { totalPts: 0, basePts: 0, matches: [] };
+                jMap[jNum].totalPts += mPtsApplied;
+                jMap[jNum].basePts += mPts; // Para récord de jornada sin multiplicador derby
                 let localName = (p.ubicacion === 'LOCAL') ? p.equipo_local : p.rival;
                 let rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
 
@@ -5270,7 +5275,9 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     rival: `${localName} vs ${rivalName}`,
                     localName: localName,
                     rivalName: rivalName,
-                    pts: mPts,
+                    pts: mPtsApplied,
+                    basePts: mPts,
+                    isDerby: isDerbyInLiga,
                     res: p.oficial_sets,
                     predSets: pred.sets,
                     predDiffStr: predDiffStr,
@@ -5287,13 +5294,15 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 jKeys.forEach(j => {
                     let jData = jMap[j];
                     tot += jData.totalPts;
-                    if (jData.totalPts > maxJornadaPts) maxJornadaPts = jData.totalPts;
+                    // El récord de jornada se evalúa sobre los puntos base sin duplicar
+                    if (jData.basePts > maxJornadaPts) maxJornadaPts = jData.basePts;
 
                     let matchesDetails = jData.matches.map(m => `
                         <div style="padding: 7px 10px; border-left: 3px solid rgba(212,175,55,0.4); background: rgba(255,255,255,0.03); border-radius: 6px; margin-top: 6px;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                                 <div style="font-size:0.77rem; font-weight:700; color:var(--text-main); line-height:1.25; word-break:break-word;">
                                     🏐 ${m.localName} <span style="font-size:0.68rem; color:var(--text-muted); font-weight:400;">vs</span> ${m.rivalName}
+                                    ${m.isDerby ? `<span style="font-size:0.62rem; background:rgba(231,76,60,0.18); color:#ff4757; padding:1px 6px; border-radius:4px; font-weight:800; margin-left:4px;">🔥 Derby x2</span>` : ''}
                                 </div>
                                 <span style="font-weight:800; font-size:0.78rem; color:${m.pts > 0 ? '#4caf50' : 'var(--text-muted)'}; white-space:nowrap; background:${m.pts > 0 ? 'rgba(76, 175, 80, 0.12)' : 'rgba(255,255,255,0.05)'}; padding:2px 7px; border-radius:4px; flex-shrink:0;">
                                     +${m.pts} pts

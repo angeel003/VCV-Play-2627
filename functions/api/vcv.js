@@ -592,8 +592,8 @@ export async function onRequestPost(context) {
             console.error("Error Ligas_Config:", e);
         }
 
-        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
-        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN' : 'statsLigas';
+        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN_v2' : 'userPointsInLiga_v2';
+        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN_v2' : 'statsLigas_v2';
 
         let userPointsInLiga = {};
         let statsLigas = {};
@@ -610,6 +610,20 @@ export async function onRequestPost(context) {
             userPointsInLiga = {};
             statsLigas = {};
             const { results: allPorras } = await db.prepare('SELECT * FROM "Porras"').all();
+
+            // Cargar permisos de equipos de todos los usuarios para calcular derbis
+            const { results: allPermRows } = await db.prepare('SELECT * FROM "Permisos_Equipos"').all();
+            const mapUserPerms = {};
+            for (const r of allPermRows || []) {
+                if (!r.Jugador) continue;
+                mapUserPerms[r.Jugador] = {};
+                for (const col in r) {
+                    if (col !== "Jugador" && r[col] && r[col].toString().toUpperCase() === "X") {
+                        mapUserPerms[r.Jugador][col] = true;
+                    }
+                }
+            }
+
             for (const u of allUsers || []) {
                 userPointsInLiga[u.Usuario] = {};
                 statsLigas[u.Usuario] = {};
@@ -626,9 +640,6 @@ export async function onRequestPost(context) {
                 const p = mapPartidos[pr["ID Partido"]];
                 if (!p || !p.oficial_sets || !p.oficial_parciales || !pr.Sets) continue;
                 if (!userPointsInLiga[pr.Usuario]) continue;
-                // Si estamos en apagón y el partido se jugó después del viernes a las 23:59, NO suma al ranking
-
-
 
                 const oSets = p.oficial_sets.split("-");
                 const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
@@ -656,16 +667,25 @@ export async function onRequestPost(context) {
 
                 const jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
 
+                // Comprobar si para este usuario es derby (tiene permisos para ambos equipos)
+                const uPerms = mapUserPerms[pr.Usuario] || {};
+                const isUserDerby = Boolean(uPerms[p.equipo_local] && uPerms[p.rival]);
+
                 if (isFrozen && p.timestamp >= freezeCutoff) {
                     for (const lName in ligasMap) {
-                        if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
+                        const hasLocal = ligasMap[lName].includes(p.equipo_local);
+                        const hasRival = ligasMap[lName].includes(p.rival);
+                        if (hasLocal || hasRival) {
+                            const isLigaDerby = hasLocal && hasRival && isUserDerby;
+                            const ptsToAdd = isLigaDerby ? (pts * 2) : pts;
+
                             if (ligasCongeladasSet.has(lName)) {
                                 const pendKey = "_pendientes_" + lName;
-                                userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + pts;
+                                userPointsInLiga[pr.Usuario][pendKey] = (userPointsInLiga[pr.Usuario][pendKey] || 0) + ptsToAdd;
                             } else {
-                                userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
+                                userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + ptsToAdd;
                                 if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
-                                    statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
+                                    statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + ptsToAdd;
                                 }
                             }
                         }
@@ -673,10 +693,15 @@ export async function onRequestPost(context) {
                     continue;
                 }
                 for (const lName in ligasMap) {
-                    if (ligasMap[lName].includes(p.equipo_local) || ligasMap[lName].includes(p.rival)) {
-                        userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + pts;
+                    const hasLocal = ligasMap[lName].includes(p.equipo_local);
+                    const hasRival = ligasMap[lName].includes(p.rival);
+                    if (hasLocal || hasRival) {
+                        const isLigaDerby = hasLocal && hasRival && isUserDerby;
+                        const ptsToAdd = isLigaDerby ? (pts * 2) : pts;
+
+                        userPointsInLiga[pr.Usuario][lName] = (userPointsInLiga[pr.Usuario][lName] || 0) + ptsToAdd;
                         if (statsLigas[pr.Usuario] && statsLigas[pr.Usuario][lName]) {
-                            statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + pts;
+                            statsLigas[pr.Usuario][lName].porJornada[jNum] = (statsLigas[pr.Usuario][lName].porJornada[jNum] || 0) + ptsToAdd;
                         }
                     }
                 }
