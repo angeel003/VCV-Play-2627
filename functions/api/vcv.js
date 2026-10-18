@@ -1167,7 +1167,7 @@ export async function onRequestPost(context) {
         }
         
         // Si tiene permiso de MVP y se está modificando candidatos o visibilidad de MVP
-        const isMvpAction = (mvp_candidatos !== undefined || mvp_visible !== undefined || mvp_oficial !== undefined);
+        const isMvpAction = (mvp_candidatos !== undefined || body.mvp_visible !== undefined || mvp_oficial !== undefined);
         if (!canEditMatch && hasMvpPerm && isMvpAction) {
             canEditMatch = true;
         }
@@ -1176,48 +1176,62 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: 'error', message: 'No tienes permisos para modificar los resultados o datos de este equipo/partido.' }, 403);
         }
 
-        // Asegurar que las columnas existen en Resultados_Oficiales
-        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_candidatos" TEXT').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_oficial" TEXT').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_stats" TEXT').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_proclamado_ts" INTEGER').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
-
         const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
         const { mvp_visible } = body;
         const visibleVal = (mvp_visible === false || mvp_visible === 0 || mvp_visible === '0' || mvp_visible === 'OCULTAR') ? 0 : 1;
 
         try {
-            // Update Resultados_Oficiales preservando siempre datos existentes de sets, parciales y streaming si no se envían
             const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
-            if (exist) {
-                let finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
-                let finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
-                let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
-                let finalCand = (mvp_candidatos !== undefined) ? candStr : (exist["mvp_candidatos"] || '');
-
-                let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
-                let params = [finalSets, finalParc, finalStream, finalCand];
-                if (mvp_oficial !== undefined) {
-                    sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
-                    params.push(mvp_oficial || '');
-                    params.push((mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0);
+            
+            // Si solo se están guardando datos estándar de partido (sets, parciales, streaming)
+            if (!isMvpAction) {
+                if (exist) {
+                    let finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
+                    let finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
+                    let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
+                    await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ? WHERE "ID Partido" = ?')
+                        .bind(finalSets, finalParc, finalStream, id_partido).run();
+                } else {
+                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)')
+                        .bind(id_partido, sets || '', parciales || '', streaming || '').run();
                 }
-                if (mvp_stats !== undefined) {
-                    sql += ', "mvp_stats" = ?';
-                    params.push(statsStr);
-                }
-                if (mvp_visible !== undefined) {
-                    sql += ', "mvp_visible" = ?';
-                    params.push(visibleVal);
-                }
-                sql += ' WHERE "ID Partido" = ?';
-                params.push(id_partido);
-                await db.prepare(sql).bind(...params).run();
             } else {
-                const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
-                await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs).run();
+                // Se están guardando datos de MVP: asegurar que las columnas existen silenciosamente si hace falta
+                try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_candidatos" TEXT').run(); } catch(e) {}
+                try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_oficial" TEXT').run(); } catch(e) {}
+                try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_stats" TEXT').run(); } catch(e) {}
+                try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_proclamado_ts" INTEGER').run(); } catch(e) {}
+                try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
+
+                if (exist) {
+                    let finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
+                    let finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
+                    let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
+                    let finalCand = (mvp_candidatos !== undefined) ? candStr : (exist["mvp_candidatos"] || '');
+
+                    let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
+                    let params = [finalSets, finalParc, finalStream, finalCand];
+                    if (mvp_oficial !== undefined) {
+                        sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
+                        params.push(mvp_oficial || '');
+                        params.push((mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0);
+                    }
+                    if (mvp_stats !== undefined) {
+                        sql += ', "mvp_stats" = ?';
+                        params.push(statsStr);
+                    }
+                    if (mvp_visible !== undefined) {
+                        sql += ', "mvp_visible" = ?';
+                        params.push(visibleVal);
+                    }
+                    sql += ' WHERE "ID Partido" = ?';
+                    params.push(id_partido);
+                    await db.prepare(sql).bind(...params).run();
+                } else {
+                    const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
+                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs).run();
+                }
             }
             
             if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
