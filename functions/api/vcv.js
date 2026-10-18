@@ -83,23 +83,25 @@ export async function onRequestPost(context) {
             const countRow = await db.prepare("SELECT COUNT(*) as c FROM Plantilla_Superliga").first();
             if (!countRow || countRow.c === 0) {
                 const initialPlayers = [
-                    [1, "Alonso Rivas Jorge", "Jorge", "Colocador"],
-                    [2, "Caba├▒eros Rodr├¡guez Samuel", "Samuel", "Receptor"],
-                    [3, "de Le├│n Rodr├¡guez Iker", "Iker", "Central"],
-                    [6, "Alonso Rivas Sergio", "Alonso", "L├¡bero"],
-                    [7, "Novella Gutierrez ├ülvaro", "├ülvaro", "Opuesto"],
-                    [8, "Posadas Yenes Manuel", "Manu", "Receptor"],
-                    [9, "Bertr├ín Catalina Alejandro", "Alejandro", "Central"],
-                    [10, "Gonz├ílez Fern├índez Alejandro", "Jany Jr", "Colocador"],
-                    [11, "Biserov Nankov Nikola", "Nikola", "Central"],
-                    [16, "Valverde Lorenzo Eduardo", "Edu", "L├¡bero"],
-                    [18, "Carrasco Alvarado Enrique", "Kike", "Receptor"],
-                    [21, "Corona Mediavilla Fabi├ín", "Fabi├ín", "Opuesto"],
-                    [23, "Garc├¡a de Castro ├ülvaro", "├ülvaro G.", "Receptor"],
-                    [24, "Biserov Nankov Kaloyan", "Kaloyan", "Central"]
+                    [1, "Jorge Alonso Rivas", "Jorge", "Colocador"],
+                    [2, "Samuel Cabañeros Rodríguez", "Samuel", "Receptor"],
+                    [3, "Iker de León Rodríguez", "Iker", "Central"],
+                    [6, "Sergio Alonso Rivas", "Alonso", "Líbero"],
+                    [7, "Álvaro Novella Gutiérrez", "Álvaro", "Opuesto"],
+                    [8, "Manuel Posadas Yenes", "Manu", "Receptor"],
+                    [9, "Alejandro Bertrán Catalina", "Alejandro", "Central"],
+                    [10, "Alejandro González Fernández", "Jany Jr", "Colocador"],
+                    [11, "Nikola Biserov Nankov", "Nikola", "Central"],
+                    [16, "Eduardo Valverde Lorenzo", "Edu", "Líbero"],
+                    [18, "Enrique Carrasco Alvarado", "Kike", "Receptor"],
+                    [21, "Fabián Corona Mediavilla", "Fabián", "Opuesto"],
+                    [23, "Álvaro García de Castro", "Álvaro G.", "Receptor"],
+                    [24, "Kaloyan Biserov Nankov", "Kaloyan", "Central"]
                 ];
+                await db.prepare('CREATE TABLE IF NOT EXISTS Plantilla_Superliga_2_Masc (dorsal INTEGER PRIMARY KEY, nombre TEXT NOT NULL, apodo TEXT, posicion TEXT, usuario TEXT)').run();
                 for (const [dor, nom, apod, pos] of initialPlayers) {
                     await db.prepare("INSERT OR REPLACE INTO Plantilla_Superliga (dorsal, nombre, apodo, posicion) VALUES (?, ?, ?, ?)").bind(dor, nom, apod, pos).run();
+                    await db.prepare("INSERT INTO Plantilla_Superliga_2_Masc (dorsal, nombre, apodo, posicion, usuario) VALUES (?, ?, ?, ?, NULL) ON CONFLICT(dorsal) DO UPDATE SET nombre = excluded.nombre, apodo = excluded.apodo, posicion = CASE WHEN Plantilla_Superliga_2_Masc.posicion IS NULL OR Plantilla_Superliga_2_Masc.posicion = '' THEN excluded.posicion ELSE Plantilla_Superliga_2_Masc.posicion END").bind(dor, nom, apod, pos).run();
                 }
             }
         } catch(e) {}
