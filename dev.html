@@ -2138,113 +2138,7 @@
 
 <footer><p>© VCV Play 2026-2027</p></footer>
 
-
-<!-- MODAL INFO DERBY -->
-<div id="infoDerbyModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
-    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('infoDerbyModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:#ff4757;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
-            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Puntuación Doble</h3>
-        </div>
-        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
-            Al estar asignado a ambos equipos de este partido, se considera un <b>Derby</b> para ti.
-        </p>
-        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
-            Los puntos que consigas en este partido valdrán el <b>DOBLE</b> en todas las clasificaciones donde aparezcan ambos equipos. ¡Aprovecha la oportunidad!
-        </p>
-    </div>
-</div>
-
-<!-- MODAL AYUDA RANKING -->
-<div id="ayudaRankingModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
-    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('ayudaRankingModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:var(--secondary-color);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">¿Sabías qué?</h3>
-        </div>
-        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
-            Si <b>pulsas sobre el nombre de cualquier jugador</b> en la clasificación, podrás ver su ficha detallada.
-        </p>
-        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
-            En su ficha encontrarás sus <b>estadísticas históricas</b> (media de puntos, posición promedio, récord en una jornada) y el significado de todas las <b>insignias</b> que ha conseguido.
-        </p>
-    </div>
-</div>
-
-<!-- MODAL PERFIL JUGADOR -->
-<div id="playerInfoModal" onclick="if(event.target === this) closePlayerInfo()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-right, 0px) + 16px) calc(env(safe-area-inset-bottom, 0px) + 24px) calc(env(safe-area-inset-left, 0px) + 16px); box-sizing:border-box; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); overscroll-behavior: contain;">
-    <div style="background:var(--bg-card); width:100%; max-width:360px; max-height:min(78dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 64px)); max-height:min(78vh, calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 64px)); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior: contain; border-radius:18px; padding:24px 20px 20px; box-shadow:0 12px 48px rgba(0,0,0,0.6); position:relative; border: 1px solid var(--border-color); text-align: center; box-sizing:border-box;">
-        <button onclick="closePlayerInfo()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.45); border:none; color:var(--text-main); cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-        <div style="width:84px; height:84px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2rem; font-weight: 900; color: #fff; overflow:hidden;" id="playerInfoInitials">
-            ...
-        </div>
-        <h3 id="playerInfoName" style="margin:0 0 4px; font-size:1.2rem; color:var(--text-main);">@username</h3>
-        <div id="playerInfoRole" style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 16px;">Rol</div>
-        
-        <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 14px;">
-            <h4 style="margin: 0 0 10px; font-size: 0.85rem; color: var(--vcv-dorado); text-transform: uppercase; letter-spacing: 0.5px;">Insignias Conseguidas</h4>
-            <div id="playerInfoBadgesList" style="display:flex; flex-direction:column; gap: 10px;">
-                <!-- Lista de insignias -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL NOTIFICACIONES -->
-<div id="notificacionesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
-    <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('notificacionesModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
-        
-        <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones y Avisos
-        </h3>
-        
-        <div id="notificacionesContainer" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:20px; text-align:left; color:var(--text-muted); display:flex; flex-direction:column; gap:16px; max-height:60vh; overflow-y:auto;">
-            <div style="text-align:center; padding: 20px 0;"><i data-lucide="loader-2" class="spin" style="width:24px;height:24px;"></i> Cargando...</div>
-        </div>
-        
-        <button onclick="document.getElementById('notificacionesModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>
-    </div>
-</div>
-
-<!-- MODAL GUIA -->
-<div id="guiaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
-    <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
-        <button onclick="document.getElementById('guiaModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
-        <h3 style="margin-top:0; margin-bottom:15px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="info" style="width:20px; height:20px;"></i> Sistema de Puntos
-        </h3>
-        <div style="background:var(--bg-input); border:1px dashed var(--border-color); border-radius:12px; padding:20px 15px; font-size: 0.9rem; color:var(--text-muted); max-height:60vh; overflow-y:auto; line-height:1.5;">
-            
-            <p style="margin-bottom: 10px;">La <b>diferencia de puntos</b> se calcula como la suma de las diferencias de puntos de todos y cada uno de los sets de un partido.</p>
-            <div style="background: var(--bg-card-alt); padding: 10px; border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 12px; font-size: 0.85rem;">
-                <b>Ejemplo real:</b> Si el VCV juega en casa y el partido termina <i>25-20, 23-25, 25-15, 25-22</i>.<br>
-                • Set 1: VCV gana de +5<br>
-                • Set 2: VCV pierde de -2<br>
-                • Set 3: VCV gana de +10<br>
-                • Set 4: VCV gana de +3<br>
-                La diferencia total es: <code>5 - 2 + 10 + 3 = 16</code>. Tendrías que escribir <b>16</b> en la casilla numérica y seleccionar el signo a favor del <b>VCV (LOCAL)</b>.
-            </div>
-            <p style="margin-bottom: 0;"><b>¿Qué gano con esto?</b> Acertar la diferencia exacta te suma <span style="color:var(--secondary-color); font-weight:bold;">+<span id="puntosExactosModal">...</span> pts</span> de golpe. Si fallas, el sistema te otorga puntos <b>proporcionales</b>: por cada punto de error que te alejes del resultado real ganarás un poco menos, hasta llegar al límite de <b><span id="puntosMargenModal">...</span> puntos de error</b>, donde ya no ganarías bonus.
-            <div id="ejemploProporcionalModal" style="background: var(--bg-card); padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 0.8rem; border: 1px dashed var(--border-color); color: var(--text-muted);">
-                <!-- Dynamic Content injected via JS -->
-            </div></p>
-        </div>
-        <button onclick="document.getElementById('guiaModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>
-    </div>
-</div>
-
 <script>
-// === FILE: src/legacy_script_0.js ===
-
 
 // POLYFILL PARA REINTENTOS AUTOMATICOS (Soluciona los errores 500 y timeouts del primer login)
 const fetchSeguro = (url, options, retries = 1) => {
@@ -4685,10 +4579,12 @@ function renderizarHistorial() {
     container.style.display = "block";
     iniciarRelojes(); 
 }
+</script>
 
-;
-// === FILE: src/legacy_script_1.js ===
 
+
+
+    <script>
         // Registrar Service Worker para PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -4972,10 +4868,19 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
 
 
+</script>
 
-;
-// === FILE: src/legacy_script_2.js ===
 
+
+
+    
+    
+    
+
+
+
+
+<script>
     // --- V2 INTERACTIVE LOGIC ---
     document.addEventListener("DOMContentLoaded", () => {
         if(window.lucide) lucide.createIcons();
@@ -6617,10 +6522,117 @@ document.getElementById('btnRequestInsignias').addEventListener('click', functio
     .finally(() => { btn.disabled = false; });
 });
 
+</script>
 
-;
-// === FILE: src/legacy_script_3.js ===
 
+
+
+
+
+<!-- MODAL INFO DERBY -->
+<div id="infoDerbyModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('infoDerbyModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:#ff4757;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Puntuación Doble</h3>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+            Al estar asignado a ambos equipos de este partido, se considera un <b>Derby</b> para ti.
+        </p>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
+            Los puntos que consigas en este partido valdrán el <b>DOBLE</b> en todas las clasificaciones donde aparezcan ambos equipos. ¡Aprovecha la oportunidad!
+        </p>
+    </div>
+</div>
+
+<!-- MODAL AYUDA RANKING -->
+<div id="ayudaRankingModal" onclick="if(event.target === this) this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:340px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('ayudaRankingModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:var(--secondary-color);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">¿Sabías qué?</h3>
+        </div>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5;">
+            Si <b>pulsas sobre el nombre de cualquier jugador</b> en la clasificación, podrás ver su ficha detallada.
+        </p>
+        <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:0;">
+            En su ficha encontrarás sus <b>estadísticas históricas</b> (media de puntos, posición promedio, récord en una jornada) y el significado de todas las <b>insignias</b> que ha conseguido.
+        </p>
+    </div>
+</div>
+
+<!-- MODAL PERFIL JUGADOR -->
+<div id="playerInfoModal" onclick="if(event.target === this) closePlayerInfo()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:calc(env(safe-area-inset-top, 0px) + 24px) calc(env(safe-area-inset-right, 0px) + 16px) calc(env(safe-area-inset-bottom, 0px) + 24px) calc(env(safe-area-inset-left, 0px) + 16px); box-sizing:border-box; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); overscroll-behavior: contain;">
+    <div style="background:var(--bg-card); width:100%; max-width:360px; max-height:min(78dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 64px)); max-height:min(78vh, calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 64px)); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior: contain; border-radius:18px; padding:24px 20px 20px; box-shadow:0 12px 48px rgba(0,0,0,0.6); position:relative; border: 1px solid var(--border-color); text-align: center; box-sizing:border-box;">
+        <button onclick="closePlayerInfo()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.45); border:none; color:var(--text-main); cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; z-index:10; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <div style="width:84px; height:84px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2rem; font-weight: 900; color: #fff; overflow:hidden;" id="playerInfoInitials">
+            ...
+        </div>
+        <h3 id="playerInfoName" style="margin:0 0 4px; font-size:1.2rem; color:var(--text-main);">@username</h3>
+        <div id="playerInfoRole" style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 16px;">Rol</div>
+        
+        <div style="text-align: left; background: rgba(0,0,0,0.2); padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 14px;">
+            <h4 style="margin: 0 0 10px; font-size: 0.85rem; color: var(--vcv-dorado); text-transform: uppercase; letter-spacing: 0.5px;">Insignias Conseguidas</h4>
+            <div id="playerInfoBadgesList" style="display:flex; flex-direction:column; gap: 10px;">
+                <!-- Lista de insignias -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NOTIFICACIONES -->
+<div id="notificacionesModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('notificacionesModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
+        
+        <h3 style="margin-top:0; margin-bottom:20px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="bell" style="width:20px; height:20px;"></i> Notificaciones y Avisos
+        </h3>
+        
+        <div id="notificacionesContainer" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:12px; padding:20px; text-align:left; color:var(--text-muted); display:flex; flex-direction:column; gap:16px; max-height:60vh; overflow-y:auto;">
+            <div style="text-align:center; padding: 20px 0;"><i data-lucide="loader-2" class="spin" style="width:24px;height:24px;"></i> Cargando...</div>
+        </div>
+        
+        <button onclick="document.getElementById('notificacionesModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>
+    </div>
+</div>
+
+<!-- MODAL GUIA -->
+<div id="guiaModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+    <div style="background:var(--bg-card); width:90%; max-width:400px; border-radius:16px; padding:24px; box-shadow:0 10px 40px rgba(0,0,0,0.5); position:relative; border: 1px solid var(--border-color);">
+        <button onclick="document.getElementById('guiaModal').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:var(--text-muted); font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
+        <h3 style="margin-top:0; margin-bottom:15px; color:var(--text-main); font-weight:800; font-family:'Space Grotesk', sans-serif; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="info" style="width:20px; height:20px;"></i> Sistema de Puntos
+        </h3>
+        <div style="background:var(--bg-input); border:1px dashed var(--border-color); border-radius:12px; padding:20px 15px; font-size: 0.9rem; color:var(--text-muted); max-height:60vh; overflow-y:auto; line-height:1.5;">
+            
+            <p style="margin-bottom: 10px;">La <b>diferencia de puntos</b> se calcula como la suma de las diferencias de puntos de todos y cada uno de los sets de un partido.</p>
+            <div style="background: var(--bg-card-alt); padding: 10px; border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom: 12px; font-size: 0.85rem;">
+                <b>Ejemplo real:</b> Si el VCV juega en casa y el partido termina <i>25-20, 23-25, 25-15, 25-22</i>.<br>
+                • Set 1: VCV gana de +5<br>
+                • Set 2: VCV pierde de -2<br>
+                • Set 3: VCV gana de +10<br>
+                • Set 4: VCV gana de +3<br>
+                La diferencia total es: <code>5 - 2 + 10 + 3 = 16</code>. Tendrías que escribir <b>16</b> en la casilla numérica y seleccionar el signo a favor del <b>VCV (LOCAL)</b>.
+            </div>
+            <p style="margin-bottom: 0;"><b>¿Qué gano con esto?</b> Acertar la diferencia exacta te suma <span style="color:var(--secondary-color); font-weight:bold;">+<span id="puntosExactosModal">...</span> pts</span> de golpe. Si fallas, el sistema te otorga puntos <b>proporcionales</b>: por cada punto de error que te alejes del resultado real ganarás un poco menos, hasta llegar al límite de <b><span id="puntosMargenModal">...</span> puntos de error</b>, donde ya no ganarías bonus.
+            <div id="ejemploProporcionalModal" style="background: var(--bg-card); padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 0.8rem; border: 1px dashed var(--border-color); color: var(--text-muted);">
+                <!-- Dynamic Content injected via JS -->
+            </div></p>
+        </div>
+        <button onclick="document.getElementById('guiaModal').style.display='none'" class="btn btn-primary btn-block mt-4" style="background:var(--primary-color); border:none; font-weight:bold; border-radius:8px;">Entendido</button>
+    </div>
+</div>
+
+<script>
 if(document.getElementById('btnAdminClearCache')){
     document.getElementById('btnAdminClearCache').addEventListener('click', function(e) {
         e.preventDefault();
@@ -6645,10 +6657,9 @@ if(document.getElementById('btnAdminClearCache')){
         });
     });
 }
+</script>
 
-;
-// === FILE: src/legacy_script_4.js ===
-
+<script>
 window.guardarAjusteLigasFreeze = async function(e) {
     if(e) e.preventDefault();
     const btn = document.getElementById('btnSaveLigasFreeze');
@@ -6804,7 +6815,6 @@ window.aplicarIndicesBD = async function(e) {
         }
     }, true);
 })();
-
 </script>
 </body>
 
