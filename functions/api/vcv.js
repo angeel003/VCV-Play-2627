@@ -265,7 +265,7 @@ export async function onRequestPost(context) {
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
                 
-                let hasMvpAssignment = (Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial);
+                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial)) && pCartelera.mvp_visible !== false;
                 let isTooOld = false;
 
                 if (hasMvpAssignment) {
@@ -572,14 +572,21 @@ export async function onRequestPost(context) {
                     for (const p of partidos) {
                         if (!p.mvp_oficial) continue;
                         const mvpOf = String(p.mvp_oficial).trim().toLowerCase();
-                        const plNombre = String(pl.nombre).trim().toLowerCase();
+                        const plNombre = String(pl.nombre || '').trim().toLowerCase();
                         const plApodo = String(pl.apodo || '').trim().toLowerCase();
-                        const plDorsal = '#' + pl.dorsal;
+                        const plDorsal = pl.dorsal ? '#' + pl.dorsal : '';
 
-                        // Coincidencia por dorsal, nombre o apodo
-                        const matchDorsal = mvpOf.includes(plDorsal);
-                        const matchNombre = plNombre && mvpOf.includes(plNombre);
-                        const matchApodo = plApodo && mvpOf.includes(plApodo);
+                        // Coincidencia estricta y segura (evitar strings vacíos):
+                        // 1. Por dorsal exacto delimitado (ej: "#21 " o "#21)")
+                        let matchDorsal = false;
+                        if (plDorsal) {
+                            const dorRegex = new RegExp('(^|\\s|#)' + pl.dorsal + '(\\s|\\[|\\(|$)');
+                            matchDorsal = dorRegex.test(mvpOf) || mvpOf.includes(plDorsal);
+                        }
+                        // 2. Por nombre completo exacto si tiene más de 3 letras
+                        const matchNombre = Boolean(plNombre && plNombre.length >= 3 && mvpOf.includes(plNombre));
+                        // 3. Por apodo si tiene más de 2 letras y coincide entre paréntesis o como palabra completa
+                        const matchApodo = Boolean(plApodo && plApodo.length >= 2 && (mvpOf.includes('(' + plApodo + ')') || mvpOf.includes(' ' + plApodo + ' ')));
 
                         if (matchDorsal || matchNombre || matchApodo) {
                             const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
@@ -595,7 +602,7 @@ export async function onRequestPost(context) {
                     if (sm2MvpMatches.length > 0) {
                         if (!insigniasMap[uPlayer]) insigniasMap[uPlayer] = [];
                         const count = sm2MvpMatches.length;
-                        const starText = count === 1 ? `⭐ MVP Superliga 2 (1 vez)` : `⭐ MVP Superliga 2 (${count} veces)`;
+                        const starText = count === 1 ? `⭐ MVP VALCYL Superliga 2 (1 vez)` : `⭐ MVP VALCYL Superliga 2 (${count} veces)`;
                         const items = sm2MvpMatches.map(m => `J. ${m.jornada} vs ${m.rival}`);
 
                         insigniasMap[uPlayer].push({
@@ -650,7 +657,7 @@ export async function onRequestPost(context) {
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
                 
-                let hasMvpAssignment = (Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial);
+                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial)) && pCartelera.mvp_visible !== false;
                 let isTooOld = false;
 
                 if (hasMvpAssignment) {

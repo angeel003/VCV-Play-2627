@@ -2668,9 +2668,9 @@
                     <i data-lucide="award" style="width: 22px; height: 22px; color: #e67e22;"></i>
                 </div>
                 <div style="text-align: left; flex: 1;">
-                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Votación de MVP Superliga 2</h3>
+                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Votación MVP VALCYL Superliga 2</h3>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.35;">
-                        Elige al jugador más destacado en los partidos de Superliga 2 y consigue un bonus del 10% adicional sobre tu puntuación.
+                        Elige al MVP VALCYL más destacado en los partidos de Superliga 2 y consigue un bonus del 10% adicional sobre tu puntuación.
                     </p>
                 </div>
             </div>
@@ -2932,7 +2932,9 @@ function renderBadgeIcon(b, sizeClasses, extraStyles) {
         return `<span style="font-size:${extraStyles.includes('12px') ? '11px' : '20px'}; margin-right:4px; color: #ff3b30; font-weight: 900; line-height: 1;">✚</span>`;
     }
     if (b.type === 'mvp') {
-        return `<span style="font-size:${extraStyles.includes('12px') ? '13px' : '22px'}; margin-right:4px; color: #f1c40f; filter: drop-shadow(0 0 6px rgba(241,196,15,0.7)); line-height: 1; display:inline-flex; align-items:center; justify-content:center;">⭐</span>`;
+        let isSmall = extraStyles.includes('12px') || extraStyles.includes('14px') || extraStyles.includes('16px');
+        let sz = isSmall ? '12px' : '16px';
+        return `<span style="font-size:${sz}; margin-right:3px; color: #f1c40f; line-height: 1; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;">⭐</span>`;
     }
     if (b.type === 'custom') {
         let icon = sanitizeImgUrl(b.emoji || '✨');
@@ -4783,7 +4785,7 @@ window.renderCarteleraHTML = function(data) {
                                 </div>
                                 <div>
                                     <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 4px;">
-                                        👑 MVP OFICIAL DEL PARTIDO
+                                        👑 MVP VALCYL OFICIAL DEL PARTIDO
                                     </div>
                                     <div style="font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                         <span>${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
@@ -7197,12 +7199,12 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     <div class="mvp-name-label" title="${info.nombre || info.apodo}">${info.apodo}</div>
                     ${info.nombre && info.nombre.toLowerCase() !== info.apodo.toLowerCase() ? `<div style="font-size:0.67rem; color:var(--text-muted); text-align:center; line-height:1.2; word-break:normal; overflow-wrap:normal; width:100%; box-sizing:border-box; padding:0 8px; font-weight:600;">${info.nombre}</div>` : ''}
                     ${displayPos ? `<div class="mvp-sub-label">${displayPos}</div>` : ''}
-                    ${isThisVoted ? '<span class="mvp-voted-badge">TU MVP</span>' : ''}
+                    ${isThisVoted ? '<span class="mvp-voted-badge">TU MVP VALCYL</span>' : ''}
                 </div>
             </div>`;
         }).join('');
 
-        let headerText = isVoted ? '✨ Tu Voto para el MVP' : '⭐ Elige al MVP del Partido';
+        let headerText = isVoted ? '✨ Tu Voto para el MVP VALCYL' : '⭐ Elige al MVP VALCYL del Partido';
 
         let bottomPanelHtml = `
         <div class="mvp-bottom-confirmation-panel ${isVoted ? 'is-visible' : ''}" id="mvp-panel-${idPart}">
@@ -7210,7 +7212,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
                 <div style="min-width: 0; flex: 1;">
                     <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
-                        HAS VOTADO POR
+                        HAS VOTADO POR (MVP VALCYL)
                     </div>
                     <div id="mvp-panel-text-${idPart}" style="font-size: 0.88rem; font-weight: 800; color: #fff; line-height: 1.25; word-break: break-word;">
                         ${votedInfo ? `${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo && votedInfo.nombre && votedInfo.apodo.toLowerCase() !== votedInfo.nombre.toLowerCase() ? `${votedInfo.apodo} - ${votedInfo.nombre}` : (votedInfo.nombre || votedInfo.apodo)} ${votedInfo.posicion ? `(${votedInfo.posicion})` : ''}` : ''}
@@ -7271,7 +7273,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         if (panel) panel.classList.remove('is-visible');
 
         const header = document.getElementById(`mvp-header-${idPart}`);
-        if (header) header.innerText = '⭐ Elige al MVP del Partido';
+        if (header) header.innerText = '⭐ Elige al MVP VALCYL del Partido';
 
         if (window.appData && window.appData.mvp_votos) {
             delete window.appData.mvp_votos[idPart];
@@ -7322,14 +7324,14 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                     if (!badge) {
                         const newBadge = document.createElement('span');
                         newBadge.className = 'mvp-voted-badge';
-                        newBadge.innerText = 'TU MVP';
+                        newBadge.innerText = 'TU MVP VALCYL';
                         c.appendChild(newBadge);
                     }
                 }
             });
             
             const header = document.getElementById(`mvp-header-${idPart}`);
-            if (header) header.innerText = '✨ Tu Voto para el MVP';
+            if (header) header.innerText = '✨ Tu Voto para el MVP VALCYL';
 
             const panel = document.getElementById(`mvp-panel-${idPart}`);
             const panelText = document.getElementById(`mvp-panel-text-${idPart}`);
@@ -9088,7 +9090,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     // 2. ENCABEZADO DE LA CARD (Título y Usuario)
     const topBannerY = posterY + 25;
-    let cardTitle = isProclaimed ? '👑 MVP OFICIAL DEL PARTIDO' : (myVote ? '⭐ MI CANDIDATO A MVP' : '⭐ CANDIDATOS A MVP');
+    let cardTitle = isProclaimed ? '👑 MVP VALCYL OFICIAL' : (myVote ? '⭐ MI VOTO MVP VALCYL' : '⭐ CANDIDATOS MVP VALCYL');
     ctx.fillStyle = isProclaimed ? '#ffd700' : '#f3ce5e';
     ctx.textAlign = 'left';
     drawTextFitted(ctx, cardTitle, 110, topBannerY + 24, 450, 30, '900 "Space Grotesk", sans-serif', 20);
@@ -9231,7 +9233,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
             ctx.fillStyle = '#2ecc71';
             ctx.textAlign = 'center';
-            drawTextFitted(ctx, `🎯 ¡HAS ACERTADO EL MVP! • +${pctMvpVal}% BONUS EN TUS PUNTOS`, midX, bannerBoxY + 44, bannerMaxW, 30, '900 sans-serif', 18);
+            drawTextFitted(ctx, `🎯 ¡HAS ACERTADO EL MVP VALCYL! • +${pctMvpVal}% BONUS EN TUS PUNTOS`, midX, bannerBoxY + 44, bannerMaxW, 30, '900 sans-serif', 18);
         } else if (myVote) {
             // Voto por otro candidato
             let vInf = window.parseCandInfo(myVote);
@@ -9255,7 +9257,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
             ctx.fillStyle = '#f3ce5e';
             ctx.textAlign = 'center';
-            drawTextFitted(ctx, 'No registraste voto de MVP para este partido', midX, bannerBoxY + 43, bannerMaxW, 24, '800 sans-serif', 16);
+            drawTextFitted(ctx, 'No registraste voto de MVP VALCYL para este partido', midX, bannerBoxY + 43, bannerMaxW, 24, '800 sans-serif', 16);
         }
     } else {
         // En votación abierta
@@ -9271,7 +9273,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         if (myVote) {
             drawTextFitted(ctx, `🔒 Voto asegurado • ¡Si es elegido ganarás un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43, bannerMaxW, 26, '900 sans-serif', 16);
         } else {
-            drawTextFitted(ctx, `⭐ Votación Abierta • ¡Elige tu MVP y gana un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43, bannerMaxW, 26, '900 sans-serif', 16);
+            drawTextFitted(ctx, `⭐ Votación Abierta • ¡Elige tu MVP VALCYL y gana un +${pctMvpVal}% de bonus!`, midX, bannerBoxY + 43, bannerMaxW, 26, '900 sans-serif', 16);
         }
     }
 
@@ -9344,7 +9346,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         // Badge indicador (OFICIAL / TU VOTO / NOMINADO)
         if (isOfficialThis) {
             ctx.fillStyle = '#ffd700';
-            drawTextFitted(ctx, '👑 MVP OFICIAL', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
+            drawTextFitted(ctx, '👑 MVP VALCYL', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
         } else if (isUserVoteThis) {
             ctx.fillStyle = '#f3ce5e';
             drawTextFitted(ctx, '⭐ TU VOTO', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
@@ -9669,16 +9671,16 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 if (match.mvp_oficial) {
                     let oInf = window.parseCandInfo(match.mvp_oficial);
                     if (isMvpHit) {
-                        mvpTxt = `👑 MVP: ${oInf.apodo} • ¡Acertaste tu voto! (+${bonusMvpVal} pts bonus)`;
+                        mvpTxt = `👑 MVP VALCYL: ${oInf.apodo} • ¡Acertaste tu voto! (+${bonusMvpVal} pts bonus)`;
                     } else if (uVote) {
                         let vInf = window.parseCandInfo(uVote);
-                        mvpTxt = `👑 MVP: ${oInf.apodo} • Votaste por ${vInf.apodo}`;
+                        mvpTxt = `👑 MVP VALCYL: ${oInf.apodo} • Votaste por ${vInf.apodo}`;
                     } else {
-                        mvpTxt = `👑 MVP Oficial: ${oInf.apodo}`;
+                        mvpTxt = `👑 MVP VALCYL Oficial: ${oInf.apodo}`;
                     }
                 } else if (uVote) {
                     let vInf = window.parseCandInfo(uVote);
-                    mvpTxt = `⭐ Mi voto a MVP: ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}`;
+                    mvpTxt = `⭐ Mi voto a MVP VALCYL: ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}`;
                 }
                 if (mvpTxt) {
                     ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
@@ -9997,18 +9999,18 @@ window.ejecutarCompartirTarjeta = async function() {
             else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isHit = true;
 
             if (isHit) {
-                shareText = `👑 ¡Acerté el MVP del partido ${locName} vs ${visName}! El ganador oficial ha sido ${oInf.apodo} (+${pctMvpVal}% bonus ganado). ¡Juega tú también en VCV Play!`;
+                shareText = `👑 ¡Acerté el MVP VALCYL del partido ${locName} vs ${visName}! El ganador oficial ha sido ${oInf.apodo} (+${pctMvpVal}% bonus ganado). ¡Juega tú también en VCV Play!`;
             } else {
-                shareText = `👑 El MVP oficial del partido ${locName} vs ${visName} es ${oInf.apodo}. ¡Descubre todas las estadísticas y compite en VCV Play!`;
+                shareText = `👑 El MVP VALCYL oficial del partido ${locName} vs ${visName} es ${oInf.apodo}. ¡Descubre todas las estadísticas y compite en VCV Play!`;
             }
-            shareTitle = `MVP: ${oInf.apodo} | ${locName} vs ${visName}`;
+            shareTitle = `MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
         } else if (uVote) {
             let vInf = window.parseCandInfo(uVote);
-            shareText = `⭐ ¡Mi candidato a MVP en el ${locName} vs ${visName} es ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}! ¿Cuál es el tuyo? Vota en VCV Play:`;
-            shareTitle = `Mi Voto MVP: ${vInf.apodo} | VCV Play`;
+            shareText = `⭐ ¡Mi candidato a MVP VALCYL en el ${locName} vs ${visName} es ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}! ¿Cuál es el tuyo? Vota en VCV Play:`;
+            shareTitle = `Mi Voto MVP VALCYL: ${vInf.apodo} | VCV Play`;
         } else {
-            shareText = `⭐ ¡Vota al MVP del partido ${locName} vs ${visName} en VCV Play y llévate un +${pctMvpVal}% de bonus en tus puntos! Regístrate gratis en:`;
-            shareTitle = `Vota al MVP | ${locName} vs ${visName}`;
+            shareText = `⭐ ¡Vota al MVP VALCYL del partido ${locName} vs ${visName} en VCV Play y llévate un +${pctMvpVal}% de bonus en tus puntos! Regístrate gratis en:`;
+            shareTitle = `Vota al MVP VALCYL | ${locName} vs ${visName}`;
         }
     } else {
         const liga = window.currentShareLiga || (data.ligas ? data.ligas[0] : 'General');
@@ -10103,14 +10105,14 @@ window.descargarTarjetaCanvas = function() {
         </button>
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; color:var(--secondary-color);">
             <span style="font-size:1.4rem;">⭐</span>
-            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Bonificación MVP</h3>
+            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Bonificación MVP VALCYL</h3>
         </div>
         <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.5; margin-bottom:10px;">
-            Si aciertas el <b>MVP oficial</b> de este partido, recibirás un <b style="color:var(--secondary-color);"><span id="infoMvpBonusPct">+10%</span> extra</b> de bonificación sobre todos los puntos que hayas conseguido con tu pronóstico del partido.
+            Si aciertas el <b>MVP VALCYL oficial</b> de este partido, recibirás un <b style="color:var(--secondary-color);"><span id="infoMvpBonusPct">+10%</span> extra</b> de bonificación sobre todos los puntos que hayas conseguido con tu pronóstico del partido.
         </p>
         <div style="background:var(--bg-surface); border:1px solid rgba(212,175,55,0.25); border-radius:8px; padding:10px 12px; font-size:0.82rem; color:var(--text-main); line-height:1.4;">
             <span style="color:var(--secondary-color); font-weight:800;">💡 Redondeo a tu favor:</span><br>
-            <span id="infoMvpBonusEjemplo">El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas <b>+2 pts extra</b> (total 14 pts).</span>
+            <span id="infoMvpBonusEjemplo">El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP VALCYL, ganas <b>+2 pts extra</b> (total 14 pts).</span>
         </div>
     </div>
 </div>
