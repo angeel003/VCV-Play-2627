@@ -571,24 +571,27 @@ export async function onRequestPost(context) {
                     const sm2MvpMatches = [];
                     for (const p of partidos) {
                         if (!p.mvp_oficial) continue;
-                        const mvpOf = String(p.mvp_oficial).trim().toLowerCase();
-                        const plNombre = String(pl.nombre || '').trim().toLowerCase();
-                        const plApodo = String(pl.apodo || '').trim().toLowerCase();
-                        const plDorsal = pl.dorsal ? '#' + pl.dorsal : '';
+                        const mvpOf = String(p.mvp_oficial).trim();
+                        
+                        // Extraer el dorsal exacto del string oficial del MVP (ej: "#21 ...")
+                        const dorMatch = mvpOf.match(/#(\d+)/);
+                        const officialDorsal = dorMatch ? parseInt(dorMatch[1]) : null;
+                        const plDorsal = parseInt(pl.dorsal) || null;
 
-                        // Coincidencia estricta y segura (evitar strings vacíos):
-                        // 1. Por dorsal exacto delimitado (ej: "#21 " o "#21)")
-                        let matchDorsal = false;
-                        if (plDorsal) {
-                            const dorRegex = new RegExp('(^|\\s|#)' + pl.dorsal + '(\\s|\\[|\\(|$)');
-                            matchDorsal = dorRegex.test(mvpOf) || mvpOf.includes(plDorsal);
+                        let isMatch = false;
+                        if (officialDorsal !== null && plDorsal !== null) {
+                            // Coincidencia exacta por número de dorsal
+                            isMatch = (officialDorsal === plDorsal);
+                        } else {
+                            // Si no hay dorsal en el MVP oficial, comparar por nombre completo
+                            const plNombre = String(pl.nombre || '').trim().toLowerCase();
+                            const cleanedMvp = mvpOf.replace(/#\d+\s*/, '').replace(/\s*\([^)]+\)/, '').replace(/\s*\[[^\]]+\]/, '').trim().toLowerCase();
+                            if (plNombre && cleanedMvp && (cleanedMvp === plNombre || cleanedMvp.startsWith(plNombre) || plNombre.startsWith(cleanedMvp))) {
+                                isMatch = true;
+                            }
                         }
-                        // 2. Por nombre completo exacto si tiene más de 3 letras
-                        const matchNombre = Boolean(plNombre && plNombre.length >= 3 && mvpOf.includes(plNombre));
-                        // 3. Por apodo si tiene más de 2 letras y coincide entre paréntesis o como palabra completa
-                        const matchApodo = Boolean(plApodo && plApodo.length >= 2 && (mvpOf.includes('(' + plApodo + ')') || mvpOf.includes(' ' + plApodo + ' ')));
 
-                        if (matchDorsal || matchNombre || matchApodo) {
+                        if (isMatch) {
                             const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
                             const jNum = p.jornada_eq || p.ronda_global || '?';
                             sm2MvpMatches.push({
