@@ -2259,7 +2259,10 @@
 
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                   <button type="button" id="btnPublicarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(true)" style="flex: 1; padding: 11px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; box-shadow: 0 3px 8px rgba(212, 175, 55, 0.3);">
-                    👁️ Publicar / Mostrar Votación
+                    👁️ Publicar / Mostrar
+                  </button>
+                  <button type="button" id="btnOcultarMvp" class="btn" onclick="window.cambiarVisibilidadVotacionMvp(false)" style="flex: 1; padding: 11px; background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: 800; border: 1px solid rgba(231, 76, 60, 0.4); border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
+                    🙈 Ocultar Votación
                   </button>
                 </div>
 
@@ -3761,18 +3764,21 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
         if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
     } else {
         pObj.mvp_visible = false;
+        // Mantener los candidatos existentes para que no se pierdan al volver a mostrar
+        if (cands.length >= 2) {
+            pObj.mvp_candidatos = cands;
+        }
     }
 
-    // Sincronizar en todos los partidos Superliga en memoria
-    window.appData.equipos.forEach(p => {
-        let cat = (p.categoria || '').toLowerCase();
-        if (cat.includes('sm2') || cat.includes('superliga')) {
-            if (hacerVisible) {
-                p.mvp_candidatos = cands;
-                p.mvp_visible = true;
-            } else {
-                p.mvp_visible = false;
-            }
+    // Sincronizar en memoria en equipos y todos_partidos
+    [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
+        if (Array.isArray(arr)) {
+            arr.forEach(p => {
+                if (p.id_partido === idPart) {
+                    p.mvp_visible = hacerVisible;
+                    if (cands.length >= 2) p.mvp_candidatos = cands;
+                }
+            });
         }
     });
 
@@ -3792,7 +3798,7 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
             id_partido: idPart,
             sets: pObj ? (pObj.oficial_sets || undefined) : undefined,
             parciales: pObj ? (pObj.oficial_parciales || undefined) : undefined,
-            mvp_candidatos: hacerVisible ? cands : [],
+            mvp_candidatos: (cands.length >= 2 ? cands : (pObj.mvp_candidatos || [])),
             mvp_visible: hacerVisible
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -3801,7 +3807,7 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
     .then(d => {
         if (btn) { btn.disabled = false; btn.innerText = oldText; }
         if (d && d.status === 'success') {
-            mostrarToast(hacerVisible ? `¡Votación MVP (${cands.length} jugadores) publicada en Cartelera!` : "Votación MVP ocultada de Cartelera.");
+            mostrarToast(hacerVisible ? `¡Votación MVP (${cands.length} jugadores) publicada en Cartelera!` : "Votación MVP ocultada de Cartelera (votos conservados).");
         } else {
             mostrarToast(d && d.message ? ("⚠️ " + d.message) : "Guardado con aviso");
         }
@@ -3812,7 +3818,7 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
     .catch(err => {
         if (btn) { btn.disabled = false; btn.innerText = oldText; }
         console.error("Error al cambiar visibilidad MVP:", err);
-        mostrarToast(hacerVisible ? `Votación MVP (${cands.length} jugadores) guardada localmente.` : "Votación MVP ocultada localmente.");
+        mostrarToast(hacerVisible ? `Votación MVP (${cands.length} jugadores) guardada localmente.` : "Votación MVP ocultada localmente (votos conservados).");
         if (typeof window.renderCarteleraHTML === 'function') {
             window.renderCarteleraHTML(window.appData);
         }
@@ -9118,40 +9124,6 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.beginPath();
     ctx.roundRect(photoX, photoY, photoBoxW, photoBoxH, 22);
     ctx.fill();
-
-    ctx.strokeStyle = '#d4af37';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    // Dibujar foto o iniciales
-    if (mainImg) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8, 18);
-        ctx.clip();
-        drawImageContain(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
-        ctx.restore();
-    } else if (primaryInfo) {
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 80px "Space Grotesk", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(primaryInfo.initials, photoX + (photoBoxW / 2), photoY + (photoBoxH / 2) + 28);
-    }
-    ctx.restore();
-
-    // Dorsal Badge flotante sobre la foto
-    if (primaryInfo && primaryInfo.dorsal) {
-        ctx.fillStyle = '#d4af37';
-        ctx.beginPath();
-        ctx.roundRect(photoX + 14, photoY + 14, 62, 38, 10);
-        ctx.fill();
-        ctx.fillStyle = '#170624';
-        ctx.font = '900 22px "Space Grotesk", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('#' + primaryInfo.dorsal, photoX + 45, photoY + 41);
-    }
-
-    
 
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 3;
