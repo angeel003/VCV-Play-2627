@@ -1780,6 +1780,10 @@
             <i data-lucide="user"></i>
             <span>Perfil</span>
           </button>
+          <button class="nav-item-v2" id="navItemGuestInfo" onclick="switchTabV2('guestInfoSection', this)" style="display:none;">
+            <i data-lucide="sparkles"></i>
+            <span>¡Únete!</span>
+          </button>
         </nav>
     </div>
 
@@ -1820,8 +1824,8 @@
           </button>
         </div>
 
-        <button id="btnGuest" class="btn-outline-v2" style="width: 100%; margin-top: 10px; opacity: 0.5; cursor: not-allowed;" disabled>
-          👀 Entrar como invitado (Próximamente)
+        <button id="btnGuest" class="btn-outline-v2" style="width: 100%; margin-top: 10px;">
+          👀 Entrar como invitado
         </button>
         
         <div id="loginMessage" class="alert-box" style="margin-top:10px; display:none; background-color:#ff4444; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold;"></div>
@@ -2605,6 +2609,124 @@
                 <div id="contenedorPrediccionesTotales"></div>
             </div>
         </details>
+    </section>
+
+    <!-- SECCIÓN DESCUBRE VCV PLAY / MODO INVITADO -->
+    <section id="guestInfoSection" style="padding-bottom: 40px;">
+        <!-- Hero Card -->
+        <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(93, 23, 137, 0.6) 0%, rgba(26, 11, 38, 0.95) 100%); border: 1.5px solid var(--secondary-color); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2); text-align: center; padding: 26px 18px; margin-bottom: 18px;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 12px; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--secondary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);">
+                <i data-lucide="sparkles" style="width: 32px; height: 32px; color: var(--secondary-color);"></i>
+            </div>
+            <span style="display: inline-block; background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); font-weight: 800; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); margin-bottom: 8px;">
+                Comunidad Oficial VCV
+            </span>
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: #fff; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+                Vive el Voleibol como Nunca
+            </h2>
+            <p style="font-size: 0.88rem; color: #d1c4e9; margin: 0; line-height: 1.5; max-width: 480px; margin-left: auto; margin-right: auto;">
+                <strong>VCV Play</strong> es la plataforma interactiva del <strong>Valladolid Club Voleibol</strong> donde jugadores, cantera, técnicos y aficionados compiten cada fin de semana.
+            </p>
+        </div>
+
+        <!-- Ventajas Grid / Showcase -->
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <!-- Ventaja 1 -->
+            <div class="vcv-card-v2" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; margin-bottom: 0;">
+                <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.35); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="target" style="width: 22px; height: 22px; color: var(--secondary-color);"></i>
+                </div>
+                <div style="text-align: left; flex: 1;">
+                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Pronósticos en Directo</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.35;">
+                        Predice sets y diferencias de puntos de los equipos sénior y cantera. ¡Gana puntos cada jornada acertando marcadores!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ventaja 2 -->
+            <div class="vcv-card-v2" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; margin-bottom: 0;">
+                <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(52, 152, 219, 0.15); border: 1px solid rgba(52, 152, 219, 0.35); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="trophy" style="width: 22px; height: 22px; color: #3498db;"></i>
+                </div>
+                <div style="text-align: left; flex: 1;">
+                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Rankings y Ligas Privadas</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.35;">
+                        Compite en la clasificación general y crea ligas privadas con tus compañeros de equipo, familiares o amigos para ver quién sabe más de voleibol.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ventaja 3 -->
+            <div class="vcv-card-v2" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; margin-bottom: 0;">
+                <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(230, 126, 34, 0.15); border: 1px solid rgba(230, 126, 34, 0.35); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="award" style="width: 22px; height: 22px; color: #e67e22;"></i>
+                </div>
+                <div style="text-align: left; flex: 1;">
+                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Votación de MVP Superliga 2</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.35;">
+                        Elige al jugador más destacado en los partidos de Superliga 2 y consigue un bonus del 10% adicional sobre tu puntuación.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Ventaja 4 -->
+            <div class="vcv-card-v2" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; margin-bottom: 0;">
+                <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(155, 89, 182, 0.15); border: 1px solid rgba(155, 89, 182, 0.35); display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="shield-check" style="width: 22px; height: 22px; color: #9b59b6;"></i>
+                </div>
+                <div style="text-align: left; flex: 1;">
+                    <h3 style="font-size: 0.98rem; font-weight: 800; color: var(--text-main); margin: 0 0 3px 0;">Insignias y Perfil Exclusivo</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.35;">
+                        Luce insignias oficiales de Jugador, Técnico, Árbitro o Aficionado del club, personaliza tu foto y consulta tu historial completo.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pasos para registrarse / CTA -->
+        <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(93, 23, 137, 0.25) 100%); border: 1.5px solid var(--secondary-color); padding: 22px 18px; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--secondary-color); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 900;">
+                    <i data-lucide="user-plus" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.15rem; font-weight: 900; color: var(--text-main); margin: 0;">¿Cómo conseguir tu cuenta?</h3>
+                    <span style="font-size: 0.76rem; color: var(--secondary-color); font-weight: 700;">¡100% Gratuito para toda la afición!</span>
+                </div>
+            </div>
+
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 16px 0;">
+                Para mantener la seguridad de las clasificaciones y ligas del club, el registro se valida de forma directa. Puedes solicitar tu cuenta en 1 minuto de cualquiera de estas dos formas:
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <div style="background: var(--bg-card); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; align-items: flex-start; gap: 10px;">
+                    <span style="background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); font-weight: 800; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 1px;">1</span>
+                    <span style="font-size: 0.82rem; color: var(--text-main); line-height: 1.35;">
+                        <strong>Desde la pantalla de inicio:</strong> Pulsa en <em>"¿No tienes cuenta? Solicita una aquí"</em> y completa tu nombre y usuario deseado.
+                    </span>
+                </div>
+                <div style="background: var(--bg-card); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); display: flex; align-items: flex-start; gap: 10px;">
+                    <span style="background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); font-weight: 800; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 1px;">2</span>
+                    <span style="font-size: 0.82rem; color: var(--text-main); line-height: 1.35;">
+                        <strong>O escribe directamente al administrador:</strong> Envía un email a <code style="color:var(--secondary-color); background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px; font-size:0.8rem;">adminfantasyvcv@gmail.com</code> indicando tu nombre y equipo o vinculación con el VCV.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="mailto:adminfantasyvcv@gmail.com?subject=Solicitud%20de%20Cuenta%20VCV%20Play&body=Hola!%20Me%20gustar%C3%ADa%20solicitar%20una%20cuenta%20en%20VCV%20Play.%0A%0ANombre%20completo:%0AUsuario%20deseado:%0AVinculaci%C3%B3n%20con%20el%20club%20(equipo,%20aficionado,%20etc.):" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; background: var(--secondary-color); color: #000; text-decoration: none; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35); text-align: center;">
+                    <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
+                    <span>Contactar con el Administrador</span>
+                </a>
+                <button type="button" onclick="window.cerrarSesionApp()" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.85rem; cursor: pointer;">
+                    <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
+                    <span>Volver al formulario de inicio de sesión</span>
+                </button>
+            </div>
+        </div>
     </section>
 
 
@@ -4503,19 +4625,433 @@ document.getElementById('btnReqName').addEventListener('click', function(e) {
 // ------------------------------------------------------------------
 // LOGICA DE BOTON VOLVER ATRAS / SALIR
 // ------------------------------------------------------------------
-document.getElementById('btnLogout').addEventListener('click', function() {
+window.cerrarSesionApp = function() {
     localStorage.removeItem('vcv_cache_data');
     localStorage.removeItem('vcv_cache_type');
     localStorage.removeItem('vcv_cache_creds');
     sessionStorage.setItem('vcv_slide_left', 'true');
     
-    document.getElementById('appSection').classList.add('slide-out-right');
-    this.style.transform = 'translateY(-50%) translateX(-100%)';
+    const appSec = document.getElementById('appSection');
+    if (appSec) appSec.classList.add('slide-out-right');
+    const btnL = document.getElementById('btnLogout');
+    if (btnL) btnL.style.transform = 'translateY(-50%) translateX(-100%)';
     
     setTimeout(() => {
         window.location.href = window.location.pathname + '?v=' + new Date().getTime();
     }, 280);
-});
+};
+
+document.getElementById('btnLogout').addEventListener('click', window.cerrarSesionApp);
+
+// ------------------------------------------------------------------
+// LOGICA DE RENDERIZADO GLOBAL DE CARTELERA V2
+// ------------------------------------------------------------------
+window.renderCarteleraHTML = function(data) {
+    if (!data || !data.equipos) return;
+
+    data.equipos.sort((a, b) => {
+        let tsA = a.timestamp || Infinity; 
+        let tsB = b.timestamp || Infinity;
+        return tsA - tsB; 
+    });
+    
+    equiposTotalesInfo = data.equipos;
+
+    let htmlPartidos = ``;
+    let equiposPermitidos = 0;
+    let equiposCerrados = 0;
+    let nowMs = new Date().getTime();
+    
+    data.equipos.forEach(eq => {
+        if ((eq.permitido || window.isGuestMode) && eq.visibilidad === "MOSTRAR") {
+            equiposPermitidos++;
+            
+            let isPredicted = false;
+            let pSets = "", pPts = "", pSig = "";
+            let ptsText = "", formStr = "";
+            let savedLocalName = "", savedVisitName = "", formattedSets = "";
+            
+            if (data.predicciones_usuario && data.predicciones_usuario[eq.id_partido]) {
+                isPredicted = true;
+                pSets = data.predicciones_usuario[eq.id_partido].sets || "";
+                pPts = data.predicciones_usuario[eq.id_partido].puntos || "";
+                pSig = data.predicciones_usuario[eq.id_partido].signo || "";
+                savedLocalName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
+                savedVisitName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
+                let winnerName = "";
+                if (pSig.toLowerCase().includes('a favor')) winnerName = savedLocalName;
+                else if (pSig.toLowerCase().includes('en contra')) winnerName = savedVisitName;
+                formStr = winnerName ? `(+${pPts} pts para ${winnerName})` : `(${pPts} pts)`;
+                if(pPts == 0) formStr = `(0 pts)`;
+                formattedSets = String(pSets).replace('-', ' - ');
+            }
+            let valJornada = String(eq.jornada_eq || "").trim();
+            let infoJornadaEq = "";
+            if(valJornada) {
+                infoJornadaEq = isNaN(valJornada) ? ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`;
+            }
+            
+            let iconoLoc = eq.ubicacion === "CASA" ? "🏠" : (eq.ubicacion === "FUERA" ? "✈️" : "");
+            let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
+            let infoLocFecha = (iconoLoc || eq.timestamp) ? `<div style="font-size:0.9rem; color:#555; margin-bottom:4px; font-weight:bold;">${iconoLoc} ${formatFecha(eq.timestamp)}${streamIcon}</div>` : (streamIcon ? `<div style="margin-bottom:4px;">${streamIcon}</div>` : "");
+            
+            let categoryHtml = getCategoryHTML(eq.categoria);
+            let destacadoHtml = "";
+
+            if (eq.estado === "ABIERTO" || eq.estado === "CERRADO") {
+                let dt = new Date(eq.timestamp);
+                let fechaFormateada = isNaN(dt) ? "" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+
+                let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
+                let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
+                
+                let abrevLocalRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_local : eq.abrev_rival;
+                let abrevVisitRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_rival : eq.abrev_local;
+                
+                let localAbrev = (abrevLocalRaw || localTeamName.substring(0,3)).toUpperCase();
+                let visitAbrev = (abrevVisitRaw || visitTeamName.substring(0,3)).toUpperCase();
+
+                let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=2" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=2" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                
+                let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; word-break:break-word; overflow-wrap:break-word; line-height:1.25;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> <span>${eq.pabellon}</span></div>` : '';
+
+                let btnStreaming = eq.streaming 
+                    ? `<a href="${eq.streaming}" target="_blank" class="btn-streaming-v2 active" style="text-decoration:none;"><i data-lucide="play" style="width:14px;height:14px;"></i> Streaming</a>` 
+                    : `<button class="btn-streaming-v2 disabled" disabled><i data-lucide="play-square" style="width:14px;height:14px;"></i> Sin enlace</button>`;
+
+                let catFilename = eq.categoria + ".svg";
+                let catLower = (eq.categoria || "").toLowerCase();
+                let isFvcl = false;
+                if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
+                else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+                else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
+                else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+                else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
+                else if (catLower.includes("segunda") || catLower.includes("2")) {
+                    catFilename = "fvcl.png";
+                    isFvcl = true;
+                }
+
+                let catLogoHtml = "";
+                if (isFvcl) {
+                    catLogoHtml = `
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <img loading="lazy" src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                            <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
+                              ${eq.categoria.toUpperCase()}
+                            </span>
+                        </div>`;
+                } else {
+                    catLogoHtml = `
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                            <img loading="lazy" src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                            <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
+                              ${eq.categoria.toUpperCase()}
+                            </span>
+                        </div>`;
+                }
+
+                if (eq.estado === "CERRADO") {
+                    let catL = (eq.categoria || '').toLowerCase();
+                    let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
+                    let mvpCands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
+                    let myMvpVote = (window.appData && window.appData.mvp_votos) ? window.appData.mvp_votos[eq.id_partido] : null;
+                    let mvpOficial = eq.mvp_oficial || '';
+
+                    let mvpHtml = '';
+                    let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
+                    if (isSuperliga && mvpOficial && isMvpVisible) {
+                        let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
+                        let myVoteNote = myMvpVote ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">Tu voto en la jornada fue para: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
+                        mvpHtml = `
+                        <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
+                                    <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 4px;">
+                                        👑 MVP OFICIAL DEL PARTIDO
+                                    </div>
+                                    <div style="font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        <span>${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
+                                        ${oInfo.posicion ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">${oInfo.posicion}</span>` : ''}
+                                    </div>
+                                    ${(function() {
+                                        let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
+                                        if (statsList.length === 0) return '';
+                                        let badges = statsList.map(st => `
+                                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.35); padding:2px 7px; border-radius:6px;">
+                                                <span style="color:var(--secondary-color);">⚡</span> ${st}
+                                            </span>
+                                        `).join('');
+                                        return `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;">${badges}</div>`;
+                                    })()}
+                                    ${myVoteNote}
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
+                                <div style="font-size: 1.8rem; filter: drop-shadow(0 0 10px rgba(212,175,55,0.7));">
+                                    🏆
+                                </div>
+                                <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                    Compartir
+                                </button>
+                            </div>
+                        </div>`;
+                    } else if (isSuperliga && isMvpVisible && mvpCands.length >= 2 && mvpCands.length <= 3) {
+                        if (typeof window.renderMvpWidgetContent === 'function') {
+                            mvpHtml = `
+                            <div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">
+                                ${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}
+                            </div>`;
+                        } else {
+                            mvpHtml = `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;"></div>`;
+                        }
+                    }
+
+                    let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : (window.isGuestMode ? 'Solo lectura' : 'Sin datos');
+                    let miPronDetalle = window.isGuestMode ? '<span>Modo Invitado</span>' : 'Sin predicción';
+                    if (isPredicted) {
+                        let isWinnerLocal = pSig.toLowerCase().includes('a favor');
+                        let isWinnerVisit = pSig.toLowerCase().includes('en contra');
+                        let winnerSafe = isWinnerLocal ? safeLocalName : (isWinnerVisit ? safeVisitName : '');
+                        let winnerAbrev = isWinnerLocal ? localAbrev : (isWinnerVisit ? visitAbrev : '');
+
+                        if (pPts == 0) {
+                            miPronDetalle = `<span>Empate en puntos (0 pts)</span>`;
+                        } else if (winnerSafe) {
+                            miPronDetalle = `
+                            <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+                                <span>+${pPts} pts</span>
+                                <picture style="display:inline-flex; vertical-align:middle;">
+                                    <source srcset="files/images/escudos/${winnerSafe}.webp" type="image/webp">
+                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=2" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
+                                </picture>
+                            </div>`;
+                        } else {
+                            miPronDetalle = `<span>Dif: ${pPts} pts</span>`;
+                        }
+                    }
+
+                    let cajaTuPronosticoHtml = window.isGuestMode ? `
+                        <div style="background: var(--bg-card-alt); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                                MODO INVITADO
+                            </div>
+                            <div style="font-size: 0.85rem; font-weight: 800; color: var(--secondary-color);">
+                                🔒 ¡Únete!
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                                Regístrate para puntuar
+                            </div>
+                        </div>` : `
+                        <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                            <div style="font-size: 0.68rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px;"></i> TU PREDICCIÓN
+                            </div>
+                            <div style="font-size: 1.25rem; font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
+                                ${miPronSets}
+                            </div>
+                            <div style="font-size: 0.75rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${miPronDetalle}
+                            </div>
+                        </div>`;
+
+                    htmlPartidos += `
+                    <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${eq.es_derby ? 'box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);' : ''}">
+                        <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+                                ${catLogoHtml}
+                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                            </div>
+                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-left:auto; flex:1; min-width:0;">
+                                <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                </button>
+                                <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; min-width:0; max-width:100%; word-break:break-word;">
+                                    <div style="white-space:nowrap;"><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}</div>
+                                    ${infoPabellon}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
+                            <div class="team-box-v2">
+                                <div class="team-avatar-v2">${localLogo}</div>
+                                <span class="team-name-v2">${localTeamName}</span>
+                                <span class="team-role-v2" style="color: var(--success); font-weight:800;">LOCAL</span>
+                            </div>
+                            <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                                <div style="font-size: 0.85rem; font-weight:900; color:var(--text-muted);">VS</div>
+                                ${btnStreaming}
+                            </div>
+                            <div class="team-box-v2">
+                                <div class="team-avatar-v2">${visitLogo}</div>
+                                <span class="team-name-v2">${visitTeamName}</span>
+                                <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">VISITANTE</span>
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                                <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+                                    RESULTADO OFICIAL
+                                </div>
+                                <div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
+                                    ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
+                                </div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.oficial_parciales || ''}">
+                                    ${eq.oficial_parciales || 'Parciales pendientes'}
+                                </div>
+                            </div>
+                            ${cajaTuPronosticoHtml}
+                        </div>
+                        ${mvpHtml}
+                    </div>`;
+                } else {
+                    // PARTIDO ABIERTO / PROXIMO
+                    let inputsControlHtml = "";
+                    if (window.isGuestMode) {
+                        inputsControlHtml = `
+                        <div style="text-align:center; padding: 12px; background: rgba(212, 175, 55, 0.08); border: 1px dashed rgba(212, 175, 55, 0.35); border-radius: 12px; margin-top: 10px;">
+                            <span style="font-size: 0.82rem; color: var(--secondary-color); font-weight: 800; display: block; margin-bottom: 2px;">🔒 Pronósticos disponibles para usuarios registrados</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">Pásate por la pestaña <b>¡Únete!</b> para solicitar tu cuenta gratuita.</span>
+                        </div>`;
+                    } else {
+                        inputsControlHtml = `
+                        <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
+                            <div id="summary-text-${eq.id_partido}">
+                            ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
+                            </div>
+                        </div>
+
+                        <!-- HIDDEN INPUTS -->
+                        <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
+                        <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
+                        <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
+
+                        <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
+                            <div class="sets-grid-label-v2">
+                              <span>Resultado</span>
+                            </div>
+                            <div class="sets-selector-grid-v2">
+                                <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
+                                <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
+                                <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
+                                <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
+                                <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
+                                <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
+                            </div>
+
+                            <div class="points-diff-container-v2">
+                              <div class="points-header-v2">
+                                <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
+                              </div>
+                              <div class="points-controls-row-v2">
+                                <div class="stepper-container-v2">
+                                  <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
+                                  <div class="stepper-value-v2">
+                                    <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
+                                    <small>PTS</small>
+                                  </div>
+                                  <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
+                                </div>
+                                <div class="sign-selector-v2">
+                                  <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
+                                    <span style="font-size:0.7rem;">${localTeamName}</span>
+                                  </button>
+                                  <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
+                                    <span style="font-size:0.7rem;">${visitTeamName}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
+                            ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
+                        </button>`;
+                    }
+
+                    htmlPartidos += `
+                    <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
+                        <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
+                                ${catLogoHtml}
+                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                            </div>
+                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-left:auto; flex:1; min-width:0;">
+                                <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                </button>
+                                <div style="text-align: right; min-width:0; max-width:100%; word-break:break-word;">
+                                    <div style="white-space:nowrap;"><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}</div>
+                                    ${infoPabellon}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="teams-versus-container-v2">
+                            <div class="team-box-v2">
+                              <div class="team-avatar-v2">${localLogo}</div>
+                              <span class="team-name-v2">${localTeamName}</span>
+                              <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
+                            </div>
+                            <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
+                              <div>VS</div>
+                              ${btnStreaming}
+                            </div>
+                            <div class="team-box-v2">
+                              <div class="team-avatar-v2">${visitLogo}</div>
+                              <span class="team-name-v2">${visitTeamName}</span>
+                              <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+                            <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
+                        </div>
+
+                        ${inputsControlHtml}
+                        ${destacadoHtml}
+                    </div>`;
+                }
+            }
+        }
+    });
+
+    if (equiposPermitidos === 0) {
+        htmlPartidos = `<div class="alert-box alert-warning" style="display:block;">No hay partidos pendientes de predecir o en curso en este momento.</div>`;
+        const bSub = document.getElementById('btnSubmit');
+        if (bSub) bSub.style.display = "none";
+    } else if (equiposPermitidos === equiposCerrados || window.isGuestMode) {
+        const bSub = document.getElementById('btnSubmit');
+        if (bSub) bSub.style.display = "none";
+    }
+    
+    if (window.isGuestMode) {
+        htmlPartidos += `
+        <div style="text-align:center; margin-top:24px; padding:16px 12px; border-top:1px dashed var(--border-color);">
+            <button type="button" onclick="window.cerrarSesionApp()" style="background:transparent; color:var(--text-muted); border:1px solid var(--border-color); padding:10px 18px; border-radius:12px; font-size:0.85rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Volver al inicio de sesión</span>
+            </button>
+        </div>`;
+    }
+
+    document.getElementById('contenedorPartidos').innerHTML = htmlPartidos;
+    const appMsg = document.getElementById('appMessage');
+    if (appMsg && window.isGuestMode) appMsg.style.display = 'none';
+    if(window.updateCategoryFilter) window.updateCategoryFilter();
+    if(typeof iniciarRelojes === 'function') iniciarRelojes();
+    if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
+};
 
 // LOGICA MODO INVITADO
 document.getElementById('btnGuest').addEventListener('click', function(e) {
@@ -4531,209 +5067,148 @@ document.getElementById('btnGuest').addEventListener('click', function(e) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            
-            isGuestMode = true;
-            // --- NOTIFICACIONES ---
-            if (data.notificaciones) {
-                const notifBadge = document.querySelector('.header-bell-badge');
-                const notifContainer = document.getElementById('notificacionesContainer');
-                
-                if (data.notificaciones.length > 0) {
-                    if (notifBadge) {
-                        notifBadge.style.display = 'flex';
-                        notifBadge.innerText = data.notificaciones.length;
-                        const hasHigh = data.notificaciones.some(n => n.Importancia === 'ALTA');
-                        notifBadge.style.animation = hasHigh ? 'pulse-badge 2s infinite' : 'none';
-                    }
+            window.isGuestMode = true;
+            currentUser = "Invitado";
+            currentPassword = "";
+
+            // Filter matches for Guest using:
+            // 1) Permissions assigned to user 'Invitado' (Universidad de Valladolid VCV, VALCYL VCV, Valladolid CV Vacceas, VCV Maria Molina, VCV Meseta)
+            // 2) The EXACT same time window as registered users (<= 7 days future, <= 36h past or <= 48h after proclaimed MVP)
+            if (data.equipos && Array.isArray(data.equipos)) {
+                const now = Date.now();
+                // Teams permitted for 'Invitado'
+                const guestAllowedTeams = Array.isArray(data.mis_equipos_siguiendo) && data.mis_equipos_siguiendo.length > 0
+                    ? data.mis_equipos_siguiendo
+                    : [
+                        'Universidad de Valladolid VCV',
+                        'VALCYL VCV',
+                        'Valladolid CV Vacceas',
+                        'VCV Maria Molina',
+                        'VCV Meseta'
+                    ];
+
+                const guestMatches = data.equipos.filter(p => {
+                    if (p.visibilidad === "OCULTAR") return false;
+
+                    // Strictly check if Invitado has permission for local or rival team
+                    const esLoc = guestAllowedTeams.includes(p.equipo_local);
+                    const esRiv = guestAllowedTeams.includes(p.rival);
+                    if (!esLoc && !esRiv) return false;
+
+                    if (esLoc && esRiv) p.es_derby = true;
+
+                    let noTimestamp = !p.timestamp;
+                    let isTooFarFuture = p.timestamp && (p.timestamp - now > 7 * 24 * 60 * 60 * 1000);
                     
-                    if (notifContainer) {
-                        let html = '';
-                        data.notificaciones.forEach((n, idx) => {
-                            const iconColor = n.Tipo === 'Aviso' ? '#e67e22' : 'var(--primary-color)';
-                            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
-                            const isLast = idx === data.notificaciones.length - 1;
-                            
-                            html += `
-                            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                                <i data-lucide="${iconType}" style="width: 20px; height: 20px; color: ${iconColor}; flex-shrink: 0; margin-top: 2px;"></i>
-                                <div>
-                                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">${n.Titulo}</strong>
-                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">${n.Mensaje}</p>
-                                </div>
-                            </div>`;
-                            
-                            if (!isLast) {
-                                html += `<div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>`;
+                    let hasMvpAssignment = (Array.isArray(p.mvp_candidatos) && p.mvp_candidatos.length > 0) || Boolean(p.mvp_oficial);
+                    let isTooOld = false;
+
+                    if (hasMvpAssignment) {
+                        if (p.mvp_oficial) {
+                            let baseTime = p.mvp_proclamado_ts || p.timestamp || 0;
+                            if (baseTime && (now - baseTime > 48 * 60 * 60 * 1000)) {
+                                isTooOld = true;
                             }
-                        });
-                        notifContainer.innerHTML = html;
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    }
-                } else {
-                    if (notifBadge) notifBadge.style.display = 'none';
-                    if (notifContainer) notifContainer.innerHTML = '<div style="text-align:center; padding: 20px 0;">No hay notificaciones nuevas.</div>';
-                }
-            }
-            window.appData = data;
-            if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
-                try { localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga)); } catch(e) {}
-            }
-            if(window.initCalendar) window.initCalendar();
-            if(window.loadInsigniasUI) window.loadInsigniasUI();
-            if(window.renderHistorialV2) window.renderHistorialV2(data);
-            let nameEl = document.getElementById('h2-user-name'); if(nameEl) nameEl.innerText = "Modo Invitado";
-            let handleEl = document.getElementById('h2-user-handle'); if(handleEl) handleEl.innerText = "@lectura";
-            let badgesEl = document.getElementById('h2-user-badges'); if(badgesEl) badgesEl.innerHTML = "";
-            document.getElementById('tituloPrincipalSeccion').style.display = 'none';
-            
-            document.getElementById('appSection').style.display = "block";
-            
-            document.getElementById('btnLogout').style.display = "block";
-            document.querySelector('#prediccionForm > div').style.display = "none"; 
-            document.getElementById('adminPanelWrapper').style.display = "none";
-            
-            document.getElementById('btnSubmit').style.display = "none";
-            document.getElementById('warningPredicciones').style.display = "none";
-            
-            
-            
-            
-            
-            // Mostrar banner promo de invitados
-            let promoDiv = document.getElementById('guestPromoBanner');
-            if (!promoDiv) {
-                promoDiv = document.createElement('div');
-                promoDiv.id = 'guestPromoBanner';
-                promoDiv.style = "background: linear-gradient(135deg, var(--vcv-morado), #1565c0); color: white; padding: 25px 20px; border-radius: 12px; margin-top: 30px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid var(--vcv-dorado);";
-                promoDiv.innerHTML = `
-                    <h3 style="color: var(--vcv-dorado); font-weight: bold; margin-bottom: 15px;">¿Quieres ver más? 🏐</h3>
-                    <p style="font-size: 1.05rem; margin-bottom: 15px;">Si quieres acceder a toda la información detallada, <b>resultados pasados</b>, <b>calendario completo de próximos partidos</b> de tus equipos favoritos y <b>jugar en la liga de pronósticos</b>, ¡tienes que registrarte!</p>
-                    <p style="font-size: 1rem; margin-bottom: 5px;">Envíanos un correo a <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--vcv-dorado); font-weight: bold; text-decoration: underline;">adminfantasyvcv@gmail.com</a> con:</p>
-                    <ul style="padding-left: 25px; margin-bottom: 15px; font-weight: bold; font-size: 0.95rem;">
-                        <li>Nombre de usuario (ej: juan_vcv)</li>
-                        <li>Contraseña deseada</li>
-                        <li>Tu relación con el club (ej: jugador/entrenador, indicando de qué equipo y categoría) para añadir insignias a tu perfil.</li>
-                        <li>Qué equipos te gustaría seguir.</li>
-                        <li style="margin-top:8px; font-weight:normal;"><i>(Opcional)</i> <b>Liga Privada:</b> Puedes tener una clasificación privada con tus amigos. Escribe en el correo los nombres de usuario de todos los que os queráis unir y qué equipos puntuarán en vuestra clasificación.</li>
-                    </ul>
-                    <p style="font-size: 0.95rem; opacity: 0.9;"><i>Te crearemos la cuenta y te avisaremos enseguida para que puedas acceder al VCV Play.</i></p>
-                `;
-                document.getElementById('prediccionForm').parentNode.appendChild(promoDiv);
-            }
-            promoDiv.style.display = "block";
-
-
-            
-            // FILTRO MODO INVITADO
-            let nowTime = new Date().getTime();
-            let limitTime = nowTime + (10 * 24 * 60 * 60 * 1000); // 10 days
-            
-            // Agrupar pasados por equipo para coger solo el más reciente
-            let pasadosPorEquipo = {};
-            let proximosFiltrados = [];
-            
-            data.equipos.forEach(eq => {
-                let esPasado = eq.oficial_sets && eq.oficial_sets.includes("-");
-                
-                if (esPasado) {
-                    if (!pasadosPorEquipo[eq.equipo_local]) {
-                        pasadosPorEquipo[eq.equipo_local] = eq;
-                    } else {
-                        // Keep the most recent (highest timestamp that is past, or just highest timestamp if multiple)
-                        let currentTs = pasadosPorEquipo[eq.equipo_local].timestamp || 0;
-                        let newTs = eq.timestamp || 0;
-                        if (newTs > currentTs) {
-                            pasadosPorEquipo[eq.equipo_local] = eq;
+                        } else {
+                            isTooOld = false;
                         }
+                    } else {
+                        isTooOld = p.timestamp && (now - p.timestamp > 36 * 60 * 60 * 1000);
                     }
-                } else {
-                    // Es Próximo. Solo incluir si es en los próximos 10 días
-                    if (eq.timestamp && eq.timestamp <= limitTime) {
-                        proximosFiltrados.push(eq);
-                    } else if (!eq.timestamp) {
-                        // Si no tiene fecha, lo mostramos? El user dijo "que se vayan a jugar en los proximos 10 dias".
-                        // Lo ocultamos por si acaso, o lo mostramos? Mejor lo ocultamos si no hay fecha.
-                    }
-                }
+
+                    return !(noTimestamp || isTooFarFuture || isTooOld);
+                });
+
+                guestMatches.forEach(eq => {
+                    eq.permitido = true;
+                    eq.visibilidad = "MOSTRAR";
+                });
+
+                data.equipos = guestMatches;
+                data.todos_partidos = guestMatches;
+            }
+
+            window.appData = data;
+
+            // Header User chip for guest
+            const rankEl = document.getElementById('h2-user-rank');
+            if (rankEl) rankEl.innerText = "Modo";
+            const ptsEl = document.getElementById('h2-user-pts');
+            if (ptsEl) ptsEl.innerText = "Invitado";
+
+            // Hide totals prediction section completely for guest
+            const secTotales = document.getElementById('prediccionesTotalesSection');
+            if (secTotales) {
+                secTotales.classList.remove('active-tab');
+                secTotales.style.display = 'none';
+            }
+
+            // Setup simplified 2-tab bottom nav for Guest (Partidos & ¡Únete!)
+            const navItems = document.querySelectorAll('#bottomNavV2 .nav-item-v2');
+            navItems.forEach(b => {
+                b.style.display = 'none';
+                b.classList.remove('active');
             });
-            
-            let pasadosFiltrados = Object.values(pasadosPorEquipo);
-            data.equipos = proximosFiltrados.concat(pasadosFiltrados);
+            if (navItems[0]) {
+                navItems[0].style.display = 'flex';
+                navItems[0].classList.add('active');
+                navItems[0].style.width = '50%';
+            }
+            const navGuest = document.getElementById('navItemGuestInfo');
+            if (navGuest) {
+                navGuest.style.display = 'flex';
+                navGuest.style.width = '50%';
+            }
 
-            data.equipos.sort((a, b) => {
-
-                let tsA = a.timestamp || Infinity; 
-                let tsB = b.timestamp || Infinity;
-                return tsA - tsB; 
-            });
-
-            let htmlProximos = "";
-            let htmlPasados = "";
-
-            data.equipos.forEach(eq => {
-                let valJornada = String(eq.jornada_eq || "").trim();
-                let infoJornadaEq = valJornada ? (isNaN(valJornada) ? ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`) : "";
-                let iconoLoc = eq.ubicacion === "CASA" ? "🏠" : (eq.ubicacion === "FUERA" ? "✈️" : "");
-                let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
-                  let infoLocFecha = (iconoLoc || eq.timestamp) ? `<div style="font-size:0.9rem; color:#555; margin-bottom:4px; font-weight:bold;">${iconoLoc} ${formatFecha(eq.timestamp)}${streamIcon}</div>` : (streamIcon ? `<div style="margin-bottom:4px;">${streamIcon}</div>` : "");
-                let infoPabellon = eq.pabellon ? `<div style="font-size:0.85rem; color:#777; margin-bottom:10px;">📍 ${eq.pabellon}</div>` : "<div style='margin-bottom:10px;'></div>";
-
-                let infoAdicional = "";
-                let esPasado = false;
-
-                if (eq.oficial_sets && eq.oficial_sets.includes("-")) {
-                    esPasado = true;
-                    let sL = parseInt(eq.oficial_sets.split("-")[0]);
-                    let sV = parseInt(eq.oficial_sets.split("-")[1]);
-                    let textoRes = sL > sV ? `<span style="color:#28a745; font-weight:bold; margin-left:5px;">🟢 Ganado</span>` : `<span style="color:var(--vcv-rojo); font-weight:bold; margin-left:5px;">🔴 Perdido</span>`;
-                    
-                    infoAdicional = `
-                    <div style="margin-top:10px; background:var(--bg-general); border-left:4px solid var(--vcv-morado); padding:10px; border-radius:4px;">
-                        <span style="font-size:0.85rem; color:#666; text-transform:uppercase; letter-spacing:0.5px;">Resultado Oficial</span><br>
-                        <b style="font-size:1.1rem; color:var(--vcv-negro);">${eq.oficial_sets}</b> ${textoRes} <br>
-                        <span style="font-size:0.9rem; color:#555;">(${eq.oficial_parciales})</span>
-                    </div>`;
-                } else if (eq.estado === "CERRADO" || eq.visibilidad === "OCULTAR") {
-                    esPasado = true;
-                    infoAdicional = `<div style="margin-top:10px;"><span style="background-color:#e2e3e5; color:#383d41; padding:6px 12px; border-radius:20px; font-weight:bold; font-size:0.85rem;"> Partido finalizado</span></div>`;
-                } else {
-                    infoAdicional = `<div style="margin-top:10px;"><span style="background-color:#d4edda; color:#155724; padding:6px 12px; border-radius:20px; font-weight:bold; font-size:0.85rem;">🟢 Próximamente</span>${eq.timestamp ? `<div class="reloj-partido" data-ts="${eq.timestamp}" style="font-size:0.85rem; font-weight:bold; padding:4px 8px; background:#fff3cd; color:#856404; border-radius:4px; display:inline-block; margin-left:10px;">Calculando tiempo...</div>` : ""}</div>`;
-                }
-                
-                let categoryHtml = getCategoryHTML(eq.categoria);
-
-                let cardHtml = `
-                <div class="p-3 mb-3 card-match" style="background: var(--vcv-blanco); border-radius: 8px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    ${categoryHtml}
-                    <h5 style="margin-bottom: 5px; color:var(--vcv-morado); font-weight:bold; padding-right: 90px;">🏐 ${eq.equipo_local} vs ${eq.rival}${infoJornadaEq}</h5>
-                      ${eq.es_derby ? `<div style="margin-bottom:10px; background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:6px 10px; border-radius:8px; font-size:0.85rem; font-weight:900; display:inline-flex; align-items:center; gap:8px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 ¡DERBY! <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:20px; height:20px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ""}
-                    ${infoLocFecha}
-                    ${infoPabellon}
-                    
-                    ${infoAdicional}
+            // Top greeting for guest
+            const pTop = document.getElementById('perfilUsuarioTop');
+            if (pTop) {
+                pTop.innerHTML = `
+                <div style="padding: 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(93, 23, 137, 0.4), var(--bg-card)); border: 1px solid var(--border-color); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color); letter-spacing:0.5px; text-transform:uppercase;">Explorador Oficial</span>
+                        <h2 style="font-size: 1.35rem; font-weight: 900; color: var(--text-main); margin: 2px 0 0 0;">Modo Invitado</h2>
+                    </div>
+                    <button type="button" onclick="switchTabV2('guestInfoSection', document.getElementById('navItemGuestInfo'))" style="background:var(--secondary-color); color:#000; font-weight:800; border:none; padding:8px 14px; border-radius:10px; font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                        <span>¡Únete!</span> ✨
+                    </button>
                 </div>`;
+            }
 
-                if (esPasado) { htmlPasados = cardHtml + htmlPasados; } 
-                else { htmlProximos += cardHtml; }
-            });
+            // Hide other UI sections not meant for guests
+            const admPanel = document.getElementById('adminPanelWrapper');
+            if (admPanel) admPanel.style.display = 'none';
+            const btnSub = document.getElementById('btnSubmit');
+            if (btnSub) btnSub.style.display = 'none';
+            const titSec = document.getElementById('tituloPrincipalSeccion');
+            if (titSec) titSec.style.display = 'block';
 
-            let finalHtml = "";
-            if(htmlProximos !== "") finalHtml += `<h4 style="color:var(--vcv-morado); margin-bottom:15px; text-align:left; border-bottom:2px solid var(--vcv-dorado); padding-bottom:5px;">Partidos en los próximos 10 días</h4>` + htmlProximos;
-            if(htmlPasados !== "") finalHtml += `<h4 style="color:var(--vcv-morado); margin-top:30px; margin-bottom:15px; text-align:left; border-bottom:2px solid var(--vcv-dorado); padding-bottom:5px;">Últimos Resultados</h4>` + htmlPasados;
-            
-            if(finalHtml === "") finalHtml = `<div class="alert-box alert-info" style="display:block;">No hay partidos públicos disponibles en este momento.</div>`;
+            // Render modern match cards
+            window.renderCarteleraHTML(data);
 
-            document.getElementById('contenedorPartidos').innerHTML = finalHtml;
-            if(window.updateCategoryFilter) window.updateCategoryFilter();
+            // Notifications
+            if (data.notificaciones && data.notificaciones.length > 0) {
+                const notifBadge = document.querySelector('.header-bell-badge');
+                if (notifBadge) {
+                    notifBadge.style.display = 'flex';
+                    notifBadge.innerText = data.notificaciones.length;
+                }
+            }
+
+            // Activate cartelera tab
             document.getElementById('loginSection').style.display = "none";
-            if(typeof iniciarRelojes === 'function') iniciarRelojes();
+            document.getElementById('appSection').style.display = "block";
+            const firstNavBtn = navItems[0] || null;
+            switchTabV2('carteleraSection', firstNavBtn);
         } else {
-            msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error cargando modo invitado."; msgBox.style.display = "block";
-          updateProgressBar();
+            msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message || "Error cargando modo invitado."; msgBox.style.display = "block";
+            if (typeof updateProgressBar === 'function') updateProgressBar();
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
-          updateProgressBar(); })
+    .catch(err => { 
+        msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message; msgBox.style.display = "block";
+        if (typeof updateProgressBar === 'function') updateProgressBar();
+    })
     .finally(() => { 
         btn.innerText = "👀 Entrar como invitado"; 
         btn.disabled = false; 
@@ -5102,383 +5577,8 @@ document.getElementById('btnLogin').addEventListener('click', function() {
 
              document.getElementById('tituloPrincipalSeccion').style.display = 'block';
 
-            data.equipos.sort((a, b) => {
-                let tsA = a.timestamp || Infinity; 
-                let tsB = b.timestamp || Infinity;
-                return tsA - tsB; 
-            });
-            
-            equiposTotalesInfo = data.equipos;
-
-            let htmlPartidos = ``;
-            let equiposPermitidos = 0;
-            let equiposCerrados = 0;
-            let nowMs = new Date().getTime();
-            
-            data.equipos.forEach(eq => {
-                if (eq.permitido && eq.visibilidad === "MOSTRAR") {
-                    equiposPermitidos++;
-                    
-                let isPredicted = false;
-                let pSets = "", pPts = "", pSig = "";
-                let ptsText = "", formStr = "";
-                let savedLocalName = "", savedVisitName = "", formattedSets = "";
-                
-                console.log('Preds para ' + eq.id_partido + ':', data.predicciones_usuario ? data.predicciones_usuario[eq.id_partido] : 'none');
-                if (data.predicciones_usuario && data.predicciones_usuario[eq.id_partido]) {
-                    isPredicted = true;
-                    pSets = data.predicciones_usuario[eq.id_partido].sets || "";
-                    pPts = data.predicciones_usuario[eq.id_partido].puntos || "";
-                    pSig = data.predicciones_usuario[eq.id_partido].signo || "";
-                    savedLocalName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
-                    savedVisitName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
-                    let winnerName = "";
-                    if (pSig.toLowerCase().includes('a favor')) winnerName = savedLocalName;
-                    else if (pSig.toLowerCase().includes('en contra')) winnerName = savedVisitName;
-                    formStr = winnerName ? `(+${pPts} pts para ${winnerName})` : `(${pPts} pts)`;
-                    if(pPts == 0) formStr = `(0 pts)`;
-                    formattedSets = String(pSets).replace('-', ' - ');
-                }
-                let valJornada = String(eq.jornada_eq || "").trim();
-                    let infoJornadaEq = "";
-                    if(valJornada) {
-                        infoJornadaEq = isNaN(valJornada) ? ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.9rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`;
-                    }
-                    
-                    let iconoLoc = eq.ubicacion === "CASA" ? "🏠" : (eq.ubicacion === "FUERA" ? "✈️" : "");
-                    let streamIcon = eq.streaming ? ` <a href="${eq.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
-                    let infoLocFecha = (iconoLoc || eq.timestamp) ? `<div style="font-size:0.9rem; color:#555; margin-bottom:4px; font-weight:bold;">${iconoLoc} ${formatFecha(eq.timestamp)}${streamIcon}</div>` : (streamIcon ? `<div style="margin-bottom:4px;">${streamIcon}</div>` : "");
-                    let infoPabellon = eq.pabellon ? `<div style="font-size:0.85rem; color:#777; margin-bottom:10px;">📍 ${eq.pabellon}</div>` : "<div style='margin-bottom:10px;'></div>";
-                    
-                    let categoryHtml = getCategoryHTML(eq.categoria);
-
-                    // --- LOGICA JUGADOR DESTACADO ---
-                      let destacadoHtml = "";
-                      // --- FIN LOGICA JUGADOR DESTACADO ---
-
-                    if (eq.estado === "ABIERTO" || eq.estado === "CERRADO") {
-                        let dt = new Date(eq.timestamp);
-                        let fechaFormateada = isNaN(dt) ? "" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
-
-                        
-
-                        let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
-                        let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
-                        
-                        let abrevLocalRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_local : eq.abrev_rival;
-                        let abrevVisitRaw = (eq.ubicacion === 'LOCAL') ? eq.abrev_rival : eq.abrev_local;
-                        
-                        let localAbrev = (abrevLocalRaw || localTeamName.substring(0,3)).toUpperCase();
-                        let visitAbrev = (abrevVisitRaw || visitTeamName.substring(0,3)).toUpperCase();
-
-                        let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=2" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=2" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-                        
-                        let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; word-break:break-word; overflow-wrap:break-word; line-height:1.25;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> <span>${eq.pabellon}</span></div>` : '';
-
-                        let btnStreaming = eq.streaming 
-                            ? `<a href="${eq.streaming}" target="_blank" class="btn-streaming-v2 active" style="text-decoration:none;"><i data-lucide="play" style="width:14px;height:14px;"></i> Streaming</a>` 
-                            : `<button class="btn-streaming-v2 disabled" disabled><i data-lucide="play-square" style="width:14px;height:14px;"></i> Sin enlace</button>`;
-
-                        
-                        let catFilename = eq.categoria + ".svg";
-    let catLower = eq.categoria.toLowerCase();
-    let isFvcl = false;
-    if (catLower.includes("sm2") || catLower.includes("superliga 2")) catFilename = "SM2.svg";
-    else if (catLower.includes("primera") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
-    else if (catLower.includes("1") && catLower.includes("masc")) catFilename = "1DIV_MASC.svg";
-    else if (catLower.includes("primera") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
-    else if (catLower.includes("1") && catLower.includes("fem")) catFilename = "1DIV_FEM.svg";
-    else if (catLower.includes("segunda") || catLower.includes("2")) {
-        catFilename = "fvcl.png";
-        isFvcl = true;
-    }
-
-    let catLogoHtml = "";
-    if (isFvcl) {
-        catLogoHtml = `
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
-                <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
-                  ${eq.categoria.toUpperCase()}
-                </span>
-            </div>`;
-    } else {
-        catLogoHtml = `
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                <img loading="lazy" src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
-                <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
-                  ${eq.categoria.toUpperCase()}
-                </span>
-            </div>`;
-    }
-                        if (eq.estado === "CERRADO") {
-                            // --- PARTIDO CERRADO: DISEÑO COMPACTO Y SIMÉTRICO (OFICIAL VS TU PRONÓSTICO) ---
-                                                        let catL = (eq.categoria || '').toLowerCase();
-                            let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
-                            let mvpCands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
-                            let myMvpVote = (window.appData && window.appData.mvp_votos) ? window.appData.mvp_votos[eq.id_partido] : null;
-                            let mvpOficial = eq.mvp_oficial || '';
-
-                            // Widget de Votación MVP o Proclamación Oficial
-                            // REGLA: Visible si hay MVP oficial proclamado o si hay 2 o 3 candidatos y no está ocultado
-                            let mvpHtml = '';
-                            let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
-                            if (isSuperliga && mvpOficial && isMvpVisible) {
-                                let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
-                                let myVoteNote = myMvpVote ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">Tu voto en la jornada fue para: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
-                                mvpHtml = `
-                                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
-                                            <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
-                                        </div>
-                                        <div>
-                                            <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 4px;">
-                                                👑 MVP OFICIAL DEL PARTIDO
-                                            </div>
-                                            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                                <span>${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
-                                                ${oInfo.posicion ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">${oInfo.posicion}</span>` : ''}
-                                            </div>
-                                            ${(function() {
-                                                let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
-                                                if (statsList.length === 0) return '';
-                                                let badges = statsList.map(st => `
-                                                    <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.35); padding:2px 7px; border-radius:6px;">
-                                                        <span style="color:var(--secondary-color);">⚡</span> ${st}
-                                                    </span>
-                                                `).join('');
-                                                return `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;">${badges}</div>`;
-                                            })()}
-                                            ${myVoteNote}
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
-                                        <div style="font-size: 1.8rem; filter: drop-shadow(0 0 10px rgba(212,175,55,0.7));">
-                                            🏆
-                                        </div>
-                                        <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                                            Compartir
-                                        </button>
-                                    </div>
-                                </div>`;
-                            } else if (isSuperliga && isMvpVisible && mvpCands.length >= 2 && mvpCands.length <= 3) {
-                                if (typeof window.renderMvpWidgetContent === 'function') {
-                                    mvpHtml = `
-                                    <div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">
-                                        ${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}
-                                    </div>`;
-                                } else {
-                                    mvpHtml = `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;"></div>`;
-                                }
-                            }
-let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : 'Sin datos';
-                            let miPronDetalle = 'Sin predicción';
-                            if (isPredicted) {
-                                let isWinnerLocal = pSig.toLowerCase().includes('a favor');
-                                let isWinnerVisit = pSig.toLowerCase().includes('en contra');
-                                let winnerSafe = isWinnerLocal ? safeLocalName : (isWinnerVisit ? safeVisitName : '');
-                                let winnerAbrev = isWinnerLocal ? localAbrev : (isWinnerVisit ? visitAbrev : '');
-
-                                if (pPts == 0) {
-                                    miPronDetalle = `<span>Empate en puntos (0 pts)</span>`;
-                                } else if (winnerSafe) {
-                                    miPronDetalle = `
-                                    <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-                                        <span>+${pPts} pts</span>
-                                        <picture style="display:inline-flex; vertical-align:middle;">
-                                            <source srcset="files/images/escudos/${winnerSafe}.webp" type="image/webp">
-                                            <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=2" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
-                                        </picture>
-                                    </div>`;
-                                } else {
-                                    miPronDetalle = `<span>Dif: ${pPts} pts</span>`;
-                                }
-                            }
-
-                            htmlPartidos += `
-                            <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${eq.es_derby ? 'box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);' : ''}">
-                                <!-- Header completo con Fecha, Jornada y Pabellón/Lugar -->
-                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                                        ${catLogoHtml}
-                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                    </div>
-                                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-left:auto; flex:1; min-width:0;">
-                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                                        </button>
-                                        <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; min-width:0; max-width:100%; word-break:break-word;">
-                                            <div style="white-space:nowrap;"><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}</div>
-                                            ${infoPabellon}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Fila de Equipos con Escudos Grandes -->
-                                <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
-                                    <div class="team-box-v2">
-                                        <div class="team-avatar-v2">${localLogo}</div>
-                                        <span class="team-name-v2">${localTeamName}</span>
-                                        <span class="team-role-v2" style="color: var(--success); font-weight:800;">LOCAL</span>
-                                    </div>
-                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                        <div style="font-size: 0.85rem; font-weight:900; color:var(--text-muted);">VS</div>
-                                        ${btnStreaming}
-                                    </div>
-                                    <div class="team-box-v2">
-                                        <div class="team-avatar-v2">${visitLogo}</div>
-                                        <span class="team-name-v2">${visitTeamName}</span>
-                                        <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">VISITANTE</span>
-                                    </div>
-                                </div>
-
-                                <!-- Comparativa Visual Gemela: Resultado Oficial vs Tu Predicción -->
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                                    <!-- Caja Resultado Oficial -->
-                                    <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
-                                            RESULTADO OFICIAL
-                                        </div>
-                                        <div style="font-size: 1.25rem; font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
-                                            ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
-                                        </div>
-                                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.oficial_parciales || ''}">
-                                            ${eq.oficial_parciales || 'Parciales pendientes'}
-                                        </div>
-                                    </div>
-
-                                    <!-- Caja Tu Predicción -->
-                                    <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                                            <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px;"></i> TU PREDICCIÓN
-                                        </div>
-                                        <div style="font-size: 1.25rem; font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
-                                            ${miPronSets}
-                                        </div>
-                                        <div style="font-size: 0.75rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                            ${miPronDetalle}
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Votación MVP (solo si hay 3 candidatos u oficial) -->
-                                ${mvpHtml}
-                            </div>`;
-                        } else {
-                            // --- PARTIDO ABIERTO / EN CURSO ---
-                            htmlPartidos += `
-                            <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
-                                <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
-                                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                                        ${catLogoHtml}
-                                        ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                    </div>
-                                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-left:auto; flex:1; min-width:0;">
-                                        <button onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                                        </button>
-                                        <div style="text-align: right; min-width:0; max-width:100%; word-break:break-word;">
-                                            <div style="white-space:nowrap;"><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}</div>
-                                            ${infoPabellon}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="teams-versus-container-v2">
-                                    <div class="team-box-v2">
-                                      <div class="team-avatar-v2">${localLogo}</div>
-                                      <span class="team-name-v2">${localTeamName}</span>
-                                      <span class="team-role-v2" style="color: var(--success)">LOCAL</span>
-                                    </div>
-                                    <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
-                                      <div style="font-size:0.75rem; color:var(--text-muted); font-weight:800; background:var(--bg-general); padding:2px 8px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:-4px; white-space:nowrap;">J. ${eq.jornada_eq}</div>
-                                      <div>VS</div>
-                                      ${btnStreaming}
-                                    </div>
-                                    <div class="team-box-v2">
-                                      <div class="team-avatar-v2">${visitLogo}</div>
-                                      <span class="team-name-v2">${visitTeamName}</span>
-                                      <span class="team-role-v2" style="color: var(--text-muted)">VISITANTE</span>
-                                    </div>
-                                </div>
-                                <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-                                    <div class="reloj-partido" data-ts="${eq.timestamp}" data-eq="${eq.id_partido}" style="display:inline-block;"></div>
-                                </div>
-
-                                <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
-                                    <div id="summary-text-${eq.id_partido}">
-                                    ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
-                                    </div>
-                                </div>
-
-                                <!-- HIDDEN INPUTS -->
-                                <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
-                                <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
-                                <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
-
-                                <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
-                                    <div class="sets-grid-label-v2">
-                                      <span>Resultado</span>
-                                    </div>
-                                    <div class="sets-selector-grid-v2">
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
-                                        <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
-                                    </div>
-
-                                    <div class="points-diff-container-v2">
-                                      <div class="points-header-v2">
-                                        <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
-                                      </div>
-                                      <div class="points-controls-row-v2">
-                                        <div class="stepper-container-v2">
-                                          <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
-                                          <div class="stepper-value-v2">
-                                            <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
-                                            <small>PTS</small>
-                                          </div>
-                                          <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
-                                        </div>
-                                        <div class="sign-selector-v2">
-                                          <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
-                                            <span style="font-size:0.7rem;">${localTeamName}</span>
-                                          </button>
-                                          <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
-                                            <span style="font-size:0.7rem;">${visitTeamName}</span>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
-                                    ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
-                                </button>
-                                
-                                ${destacadoHtml}
-                            </div>`;
-                        }
-                    }
-                }
-            });
-
-            if (equiposPermitidos === 0) {
-                htmlPartidos = `<div class="alert-box alert-warning" style="display:block;">No hay partidos pendientes de predecir o en curso en este momento.</div>`;
-                document.getElementById('btnSubmit').style.display = "none";
-            } else if (equiposPermitidos === equiposCerrados) { document.getElementById('btnSubmit').style.display = "none"; }
-            
-            document.getElementById('contenedorPartidos').innerHTML = htmlPartidos;
-            if(window.updateCategoryFilter) window.updateCategoryFilter();
-            iniciarRelojes();
-            if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
+            // Render match cards with unified function
+            window.renderCarteleraHTML(data);
 
             
             if(data.ligas && data.ligas.length > 0) {
@@ -6825,7 +6925,7 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
 
     function switchTabV2(sectionId, btn) {
         // Hide all sections in appSection
-        const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'prediccionesTotalesSection'];
+        const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'prediccionesTotalesSection', 'guestInfoSection'];
         sections.forEach(s => {
             const el = document.getElementById(s);
             if (el) el.classList.remove('active-tab');
@@ -6833,13 +6933,15 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         
         // Show target section
         const target = document.getElementById(sectionId);
-        if (target) target.classList.add('active-tab');
+        if (target) {
+            target.classList.add('active-tab');
+        }
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
         
-        // If historial, also show prediccionesTotalesSection right below it (if they were separate)
-        if (sectionId === 'carteleraSection') {
+        // If cartelera, also show prediccionesTotalesSection right below it (only for normal registered users, never for guest)
+        if (sectionId === 'carteleraSection' && !window.isGuestMode) {
             const extra = document.getElementById('prediccionesTotalesSection');
-            if (extra) extra.classList.add('active-tab');
+            if (extra && extra.style.display !== 'none') extra.classList.add('active-tab');
         }
 
         // Update active button state
@@ -6850,8 +6952,10 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
             window.renderMyProfileCard();
         }
         
+        if (window.lucide) setTimeout(() => lucide.createIcons(), 30);
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
     }
+    window.switchTabV2 = switchTabV2;
 
     // --- PULL TO REFRESH ENGINE (MOBILE) ---
     (function initPullToRefresh() {
@@ -7904,7 +8008,10 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         }
 
         container.innerHTML = `
-            <div style="background:var(--bg-card); border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.25); border: 1px solid var(--border-color); text-align: center;">
+            <div style="background:var(--bg-card); border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.25); border: 1px solid var(--border-color); text-align: center; position: relative;">
+                <button type="button" onclick="window.cerrarSesionApp()" title="Cerrar sesión" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff6b81; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 71, 87, 0.25)';" onmouseout="this.style.background='rgba(255, 71, 87, 0.12)';">
+                    <i data-lucide="log-out" style="width: 17px; height: 17px;"></i>
+                </button>
                 <div style="width:96px; height:96px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2.2rem; font-weight: 900; color: #fff; overflow:hidden;">
                     ${avatarHtml}
                 </div>

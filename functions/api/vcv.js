@@ -230,8 +230,88 @@ export async function onRequestPost(context) {
         const resMap = {};
         for (const ro of resOf || []) resMap[ro["ID Partido"]] = ro;
 
-        const equipos = (rawPartidos || []).map(r => formatMatch(r, resMap));
-        return jsonResponse({ status: "success", equipos });
+        const partidos = (rawPartidos || []).map(r => formatMatch(r, resMap));
+
+        // Permisos Equipos del usuario 'Invitado'
+        const rowPerm = await db.prepare('SELECT * FROM "Permisos_Equipos" WHERE lower("Jugador") = \'invitado\'').first();
+        const misPermisos = {};
+        if (rowPerm) {
+            for (const col in rowPerm) {
+                if (col !== "Jugador" && rowPerm[col] && rowPerm[col].toString().toUpperCase() === "X") {
+                    misPermisos[col] = true;
+                }
+            }
+        }
+
+        // Cartelera y todos los partidos permitidos para el usuario Invitado
+        const cartelera = [];
+        const todosPartidos = [];
+        const idsEnCartelera = {};
+
+        for (const p of partidos) {
+            if (p.visibilidad === "OCULTAR") continue;
+
+            const esLoc = misPermisos[p.equipo_local] === true;
+            const esRiv = misPermisos[p.rival] === true;
+
+            if (esLoc || esRiv) {
+                const pCopy = { ...p };
+                pCopy.permitido = true;
+                if (esLoc && esRiv) pCopy.es_derby = true;
+
+                todosPartidos.push(pCopy);
+
+                const pCartelera = { ...pCopy };
+                let noTimestamp = !pCartelera.timestamp;
+                let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
+                
+                let hasMvpAssignment = (Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial);
+                let isTooOld = false;
+
+                if (hasMvpAssignment) {
+                    if (pCartelera.mvp_oficial) {
+                        let baseTime = pCartelera.mvp_proclamado_ts || pCartelera.timestamp || 0;
+                        if (baseTime && (Date.now() - baseTime > 48 * 60 * 60 * 1000)) {
+                            isTooOld = true;
+                        }
+                    } else {
+                        isTooOld = false;
+                    }
+                } else {
+                    isTooOld = pCartelera.timestamp && (Date.now() - pCartelera.timestamp > 36 * 60 * 60 * 1000);
+                }
+                
+                if (noTimestamp || isTooFarFuture || isTooOld) {
+                    pCartelera.visibilidad = "OCULTAR";
+                } else {
+                    pCartelera.visibilidad = "MOSTRAR";
+                }
+
+                if (pCartelera.visibilidad === "MOSTRAR") {
+                    if (!idsEnCartelera[pCartelera.id_partido]) {
+                        cartelera.push(pCartelera);
+                        idsEnCartelera[pCartelera.id_partido] = pCartelera;
+                    }
+                }
+            }
+        }
+
+        // Notificaciones públicas
+        let notificaciones = [];
+        try {
+            const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
+            notificaciones = results || [];
+        } catch (e) {}
+
+        return jsonResponse({
+            status: "success",
+            usuario: "Invitado",
+            nombre_real: "Modo Invitado",
+            equipos: cartelera,
+            todos_partidos: todosPartidos,
+            mis_equipos_siguiendo: Object.keys(misPermisos),
+            notificaciones: notificaciones
+        });
     }
 
     // 3. CAMBIO DE CONTRASE├æA
