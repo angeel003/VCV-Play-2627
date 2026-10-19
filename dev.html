@@ -957,32 +957,36 @@
     }
     .mvp-name-label {
       font-family: 'Space Grotesk', -apple-system, sans-serif;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       font-weight: 900;
       color: #f7e7ce;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.35px;
       text-align: center;
-      line-height: 1.2;
+      line-height: 1.18;
       white-space: normal;
-      overflow-wrap: break-word;
-      word-break: break-word;
+      overflow-wrap: normal;
+      word-break: normal;
+      hyphens: none;
       width: 100%;
-      padding: 4px 4px 0 4px;
+      box-sizing: border-box;
+      padding: 4px 8px 0 8px;
     }
     .mvp-sub-label {
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       font-weight: 700;
       color: var(--secondary-color);
       text-transform: uppercase;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
       text-align: center;
-      line-height: 1.25;
+      line-height: 1.2;
       white-space: normal;
-      overflow-wrap: break-word;
-      word-break: break-word;
+      overflow-wrap: normal;
+      word-break: normal;
+      hyphens: none;
       width: 100%;
-      padding: 0 4px;
+      box-sizing: border-box;
+      padding: 0 8px;
     }
     .mvp-voted-badge {
       display: inline-flex;
@@ -1890,10 +1894,7 @@
 
     
     
-    <!-- PULL TO REFRESH INDICATOR (MOBILE) -->
-    <div id="ptrIndicator">
-        <div id="ptrSpinner"></div>
-    </div>
+
 
     <header class="app-header-v2" id="tituloPrincipalSeccion" style="display:none;">
     <div class="header-container-v2">
@@ -6958,146 +6959,33 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
     }
     window.switchTabV2 = switchTabV2;
 
-    // --- PULL TO REFRESH ENGINE (MOBILE) ---
-    (function initPullToRefresh() {
-        let touchStartY = 0;
-        let touchCurrentY = 0;
-        let isPulling = false;
-        let isRefreshing = false;
-        const PULL_THRESHOLD = 75; // Distancia requerida en píxeles para activar
-        const MAX_PULL = 110;
-
-        const ptrEl = document.getElementById('ptrIndicator');
-        const ptrSpinner = document.getElementById('ptrSpinner');
-
-        window.recargarDatosAppSilencioso = async function() {
-            if (!currentUser || !currentPassword) return;
-            if (isRefreshing) return;
-            isRefreshing = true;
-
-            if (ptrEl) {
-                ptrEl.classList.add('ptr-active', 'ptr-refreshing');
-            }
-
-            try {
-                const res = await fetchSeguro(scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'login', usuario: currentUser, password: currentPassword }),
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-                });
-                const data = await res.json();
-                if (data && data.status === 'success') {
-                    window.appData = data;
-                    if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
-                        try { localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga)); } catch(e) {}
-                    }
-                    if (typeof window.renderCarteleraHTML === 'function') {
-                        window.renderCarteleraHTML(data);
-                    }
-                    if (typeof window.initCalendar === 'function') {
-                        window.initCalendar();
-                    }
-                    if (typeof window.renderHistorialV2 === 'function') {
-                        window.renderHistorialV2(data);
-                    }
-                    if (typeof window.renderRankingV2 === 'function') {
-                        window.renderRankingV2();
-                    }
-                    if (typeof window.updateHeaderStats === 'function') {
-                        window.updateHeaderStats();
-                    }
-                    if (typeof window.renderMyProfileCard === 'function') {
-                        window.renderMyProfileCard();
-                    }
-                    if (typeof mostrarToast === 'function') {
-                        mostrarToast('✓ Datos actualizados', 1800);
-                    }
+    // --- PULL TO REFRESH ENGINE (DESACTIVADO) ---
+    window.recargarDatosAppSilencioso = async function() {
+        if (!currentUser || !currentPassword) return;
+        try {
+            const res = await fetchSeguro(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'login', usuario: currentUser, password: currentPassword }),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            });
+            const data = await res.json();
+            if (data && data.status === 'success') {
+                window.appData = data;
+                if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
+                    try { localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga)); } catch(e) {}
                 }
-            } catch(e) {
-                console.error("Error al recargar silenciosamente:", e);
-            } finally {
-                setTimeout(() => {
-                    isRefreshing = false;
-                    if (ptrEl) {
-                        ptrEl.classList.remove('ptr-refreshing');
-                        ptrEl.style.transform = '';
-                        setTimeout(() => ptrEl.classList.remove('ptr-active'), 250);
-                    }
-                }, 400);
+                if (typeof window.renderCarteleraHTML === 'function') window.renderCarteleraHTML(data);
+                if (typeof window.initCalendar === 'function') window.initCalendar();
+                if (typeof window.renderHistorialV2 === 'function') window.renderHistorialV2(data);
+                if (typeof window.renderRankingV2 === 'function') window.renderRankingV2();
+                if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
+                if (typeof window.renderMyProfileCard === 'function') window.renderMyProfileCard();
+                if (typeof mostrarToast === 'function') mostrarToast('✓ Datos actualizados', 1800);
             }
-        };
-
-        let rafId = null;
-
-        window.addEventListener('touchstart', function(e) {
-            if (isRefreshing) return;
-            // Solo activar si estamos en el scroll superior absoluto
-            if (window.scrollY <= 2) {
-                touchStartY = e.touches[0].clientY;
-                touchCurrentY = touchStartY;
-                isPulling = true;
-                if (ptrEl) {
-                    ptrEl.classList.remove('ptr-releasing');
-                }
-            } else {
-                isPulling = false;
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchmove', function(e) {
-            if (!isPulling || isRefreshing) return;
-            const appSec = document.getElementById('appSection');
-            if (!appSec || appSec.style.display === 'none') return;
-
-            touchCurrentY = e.touches[0].clientY;
-            let diff = touchCurrentY - touchStartY;
-
-            // Si está tirando hacia abajo desde el top, anular la recarga del navegador (Chrome/Safari)
-            if (diff > 0 && window.scrollY <= 2) {
-                if (e.cancelable) {
-                    e.preventDefault();
-                }
-                if (!rafId) {
-                    rafId = requestAnimationFrame(() => {
-                        let pullDistance = Math.min((touchCurrentY - touchStartY) * 0.45, MAX_PULL);
-                        if (ptrEl) {
-                            ptrEl.classList.add('ptr-active');
-                            ptrEl.style.transform = `translate3d(-50%, ${pullDistance - 55}px, 0)`;
-                            if (ptrSpinner) {
-                                let rot = (pullDistance / PULL_THRESHOLD) * 360;
-                                ptrSpinner.style.transform = `rotate(${rot}deg)`;
-                            }
-                        }
-                        rafId = null;
-                    });
-                }
-            }
-        }, { passive: false });
-
-        window.addEventListener('touchend', function() {
-            if (rafId) {
-                cancelAnimationFrame(rafId);
-                rafId = null;
-            }
-            if (!isPulling || isRefreshing) return;
-            isPulling = false;
-            let diff = touchCurrentY - touchStartY;
-
-            if (diff * 0.45 >= PULL_THRESHOLD && window.scrollY <= 2) {
-                window.recargarDatosAppSilencioso();
-            } else {
-                if (ptrEl) {
-                    ptrEl.classList.add('ptr-releasing');
-                    ptrEl.style.transform = 'translate3d(-50%, -65px, 0)';
-                    setTimeout(() => {
-                        ptrEl.classList.remove('ptr-active', 'ptr-releasing');
-                    }, 250);
-                }
-            }
-            touchStartY = 0;
-            touchCurrentY = 0;
-        }, { passive: true });
-    })();
+        } catch(e) {
+            console.error("Error al recargar silenciosamente:", e);
+        }
+    };
 
     document.addEventListener("DOMContentLoaded", () => {
         // Initialize first tab as active
@@ -7278,49 +7166,30 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
         let votedCand = isVoted ? cands[votedIdx] : null;
         let votedInfo = votedCand ? window.parseCandInfo(votedCand) : null;
 
-        let nonVotedCounter = 1;
-
         let slotsHtml = cands.map((cand, idx) => {
             let info = window.parseCandInfo(cand);
             let displayPos = (info.posicion && info.posicion.toLowerCase() !== 'jugador') ? info.posicion : '';
             let isThisVoted = (idx === votedIdx);
             
-            let orderClass = '';
             let cardStateClass = '';
             
-            if (cands.length === 3) {
-                if (isVoted) {
-                    if (isThisVoted) {
-                        orderClass = 'mvp-slot-order-2'; // Se desplaza al centro
-                        cardStateClass = 'is-voted-state';
-                    } else {
-                        orderClass = (nonVotedCounter === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3';
-                        nonVotedCounter++;
-                        cardStateClass = 'is-dimmed-state'; // Atenuada y reducida
-                    }
+            if (isVoted) {
+                if (isThisVoted) {
+                    cardStateClass = 'is-voted-state';
                 } else {
-                    orderClass = (idx === 0) ? 'mvp-slot-order-1' : ((idx === 1) ? 'mvp-slot-order-2' : 'mvp-slot-order-3');
-                }
-            } else {
-                // 2 candidatos
-                if (isVoted) {
-                    if (isThisVoted) {
-                        cardStateClass = 'is-voted-state';
-                    } else {
-                        cardStateClass = 'is-dimmed-state';
-                    }
+                    cardStateClass = 'is-dimmed-state';
                 }
             }
 
             return `
-            <div class="mvp-card-slot ${orderClass}" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
+            <div class="mvp-card-slot" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
                 <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}">
                     <div class="mvp-photo-wrapper">
                         <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="window.handleJugadorImgError(this, ${info.dorsal || 0}, '${info.initials}');">
                         ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
                     </div>
                     <div class="mvp-name-label" title="${info.nombre || info.apodo}">${info.apodo}</div>
-                    ${info.nombre && info.nombre.toLowerCase() !== info.apodo.toLowerCase() ? `<div style="font-size:0.67rem; color:var(--text-muted); text-align:center; line-height:1.2; word-break:break-word; width:100%; padding:0 4px; font-weight:600;">${info.nombre}</div>` : ''}
+                    ${info.nombre && info.nombre.toLowerCase() !== info.apodo.toLowerCase() ? `<div style="font-size:0.67rem; color:var(--text-muted); text-align:center; line-height:1.2; word-break:normal; overflow-wrap:normal; width:100%; box-sizing:border-box; padding:0 8px; font-weight:600;">${info.nombre}</div>` : ''}
                     ${displayPos ? `<div class="mvp-sub-label">${displayPos}</div>` : ''}
                     ${isThisVoted ? '<span class="mvp-voted-badge">TU MVP</span>' : ''}
                 </div>
@@ -7453,22 +7322,6 @@ document.getElementById('calendarSearchInput').addEventListener('input', window.
                 }
             });
             
-            if (cands.length === 3) {
-                let nonVotedIdx = 1;
-                cands.forEach((_, idx) => {
-                    const slot = document.getElementById(`mvp-slot-${idPart}-${idx}`);
-                    if (slot) {
-                        slot.classList.remove('mvp-slot-order-1', 'mvp-slot-order-2', 'mvp-slot-order-3');
-                        if (idx === selectedIdx) {
-                            slot.classList.add('mvp-slot-order-2');
-                        } else {
-                            slot.classList.add((nonVotedIdx === 1) ? 'mvp-slot-order-1' : 'mvp-slot-order-3');
-                            nonVotedIdx++;
-                        }
-                    }
-                });
-            }
-
             const header = document.getElementById(`mvp-header-${idPart}`);
             if (header) header.innerText = '✨ Tu Voto para el MVP';
 
@@ -9265,6 +9118,40 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.beginPath();
     ctx.roundRect(photoX, photoY, photoBoxW, photoBoxH, 22);
     ctx.fill();
+
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Dibujar foto o iniciales
+    if (mainImg) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8, 18);
+        ctx.clip();
+        drawImageContain(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
+        ctx.restore();
+    } else if (primaryInfo) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 80px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(primaryInfo.initials, photoX + (photoBoxW / 2), photoY + (photoBoxH / 2) + 28);
+    }
+    ctx.restore();
+
+    // Dorsal Badge flotante sobre la foto
+    if (primaryInfo && primaryInfo.dorsal) {
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.roundRect(photoX + 14, photoY + 14, 62, 38, 10);
+        ctx.fill();
+        ctx.fillStyle = '#170624';
+        ctx.font = '900 22px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('#' + primaryInfo.dorsal, photoX + 45, photoY + 41);
+    }
+
+    
 
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 3;
