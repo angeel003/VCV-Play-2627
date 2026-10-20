@@ -557,7 +557,7 @@ export async function onRequestPost(context) {
             const isF = b["Genero"] === "F";
             const lblEnt = isF ? "Entrenadora" : "Entrenador";
             const lblJug = isF ? "Jugadora" : "Jugador";
-            const lblExj = isF ? "Exjugadora VCV" : "Exjugador VCV";
+            const lblExj = isF ? "Exjugadora de VCV" : "Exjugador de VCV";
 
             const addBadge = (type, text, extra = {}) => {
                 if (!insigniasMap[u].some(badge => badge.type === type && badge.text === text)) {
