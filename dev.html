@@ -3679,6 +3679,8 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
     }
     if (pObj) {
         pObj.mvp_publicacion_ts = targetPubTs;
+        pObj.mvp_visible = true;
+        pObj.visibilidad = 'MOSTRAR';
     }
     if (Array.isArray(window.appData.todos_partidos)) {
         window.appData.todos_partidos.forEach(p => {

@@ -272,7 +272,7 @@ export async function onRequestPost(context) {
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
                 
-                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial)) && pCartelera.mvp_visible !== false;
+                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial) || Boolean(pCartelera.mvp_publicacion_ts > 0)) && pCartelera.mvp_visible !== false;
                 let isTooOld = false;
 
                 if (hasMvpAssignment) {
@@ -281,6 +281,8 @@ export async function onRequestPost(context) {
                         if (baseTime && (Date.now() - baseTime > 48 * 60 * 60 * 1000)) {
                             isTooOld = true;
                         }
+                    } else if (pCartelera.mvp_publicacion_ts && pCartelera.mvp_publicacion_ts > Date.now()) {
+                        isTooOld = false;
                     } else {
                         isTooOld = false;
                     }
@@ -668,7 +670,7 @@ export async function onRequestPost(context) {
                 let noTimestamp = !pCartelera.timestamp;
                 let isTooFarFuture = pCartelera.timestamp && (pCartelera.timestamp - Date.now() > 7 * 24 * 60 * 60 * 1000);
                 
-                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial)) && pCartelera.mvp_visible !== false;
+                let hasMvpAssignment = ((Array.isArray(pCartelera.mvp_candidatos) && pCartelera.mvp_candidatos.length > 0) || Boolean(pCartelera.mvp_oficial) || Boolean(pCartelera.mvp_publicacion_ts > 0)) && pCartelera.mvp_visible !== false;
                 let isTooOld = false;
 
                 if (hasMvpAssignment) {
@@ -678,6 +680,8 @@ export async function onRequestPost(context) {
                         if (baseTime && (Date.now() - baseTime > 48 * 60 * 60 * 1000)) {
                             isTooOld = true;
                         }
+                    } else if (pCartelera.mvp_publicacion_ts && pCartelera.mvp_publicacion_ts > Date.now()) {
+                        isTooOld = false;
                     } else {
                         // Mientras no sea definitivo (no hay ganador todavía), el partido permanece activo en la cartelera
                         isTooOld = false;
@@ -1407,12 +1411,15 @@ export async function onRequestPost(context) {
         const pubTs = parseInt(mvp_publicacion_ts) || 0;
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER').run(); } catch(e) {}
 
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
+
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_publicacion_ts" = ? WHERE "ID Partido" = ?').bind(pubTs, id_partido).run();
+            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_publicacion_ts" = ?, "mvp_visible" = 1 WHERE "ID Partido" = ?').bind(pubTs, id_partido).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_publicacion_ts") VALUES (?, ?)').bind(id_partido, pubTs).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_publicacion_ts", "mvp_visible") VALUES (?, ?, 1)').bind(id_partido, pubTs).run();
         }
+        try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
         return jsonResponse({ status: 'success', message: 'Hora de publicación guardada con éxito', mvp_publicacion_ts: pubTs });
     }
