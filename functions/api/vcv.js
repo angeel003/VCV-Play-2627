@@ -62,6 +62,21 @@ export async function onRequestPost(context) {
     const usuario = (body.usuario || "").trim();
     const password = (body.password || "").trim();
 
+    // --- MIGRACIÓN / RETROACTIVO: ASEGURAR COLUMNA fecha_hora Y LLENAR VOTOS PREVIOS ---
+    try {
+        await db.prepare('ALTER TABLE MVP_Votos ADD COLUMN fecha_hora TEXT').run();
+    } catch(e) {}
+    try {
+        const { results: pendingVotes } = await db.prepare("SELECT id_partido, usuario, timestamp FROM MVP_Votos WHERE (fecha_hora IS NULL OR fecha_hora = '') AND timestamp IS NOT NULL AND timestamp > 0").all();
+        if (pendingVotes && pendingVotes.length > 0) {
+            const formatter = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            for (const v of pendingVotes) {
+                const fStr = formatter.format(new Date(v.timestamp));
+                await db.prepare('UPDATE MVP_Votos SET fecha_hora = ? WHERE id_partido = ? AND usuario = ?').bind(fStr, v.id_partido, v.usuario).run();
+            }
+        }
+    } catch(e) {}
+
     // 1. PING & MIGRACIONES / ├ìNDICES
     if (action === 'migrate_db' || action === 'apply_indexes') {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
