@@ -632,10 +632,11 @@ export async function onRequestPost(context) {
         const userInsignia = (allInsignias || []).find(i => i.Usuario === usuario);
         const isUserAdmin = userInsignia && (userInsignia["Admin Web"] === "X");
         const isUserGestorMvp = userInsignia && (userInsignia["Permiso_MVP"] === "X");
+        const hasPermisoResultados = userInsignia && Boolean(userInsignia["Permiso_Resultados"]);
 
         for (const p of partidos) {
             // SI ESTÁ OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
-            if (p.visibilidad === "OCULTAR") continue;
+            if (p.visibilidad === "OCULTAR" && !isUserAdmin && !hasPermisoResultados) continue;
 
             const esLoc = misPermisos[p.equipo_local] === true;
             const esRiv = misPermisos[p.rival] === true;
