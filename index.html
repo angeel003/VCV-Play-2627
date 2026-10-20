@@ -4086,16 +4086,19 @@ window.guardarMvpOficial = function(e) {
         }
     }
 
-    // Sincronizar en todos los partidos Superliga en memoria
+    // Sincronizar únicamente en el partido seleccionado en memoria
     let proclamadoNow = (valOficial && valOficial.trim() !== '') ? Date.now() : 0;
-    window.appData.equipos.forEach(p => {
-        let cat = (p.categoria || '').toLowerCase();
-        if (cat.includes('sm2') || cat.includes('superliga')) {
-            p.mvp_oficial = valOficial;
-            p.mvp_stats = collectedStats;
-            p.mvp_proclamado_ts = proclamadoNow;
-            p.mvp_publicacion_ts = targetPubTs;
-            p.visibilidad = "MOSTRAR";
+    [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
+        if (Array.isArray(arr)) {
+            arr.forEach(p => {
+                if (p.id_partido === idPart) {
+                    p.mvp_oficial = valOficial;
+                    p.mvp_stats = collectedStats;
+                    p.mvp_proclamado_ts = proclamadoNow;
+                    p.mvp_publicacion_ts = targetPubTs;
+                    p.visibilidad = "MOSTRAR";
+                }
+            });
         }
     });
     
