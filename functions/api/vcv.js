@@ -559,15 +559,42 @@ export async function onRequestPost(context) {
             const lblJug = isF ? "Jugadora" : "Jugador";
             const lblExj = isF ? "Exjugadora VCV" : "Exjugador VCV";
 
-            const addBadge = (type, text) => {
+            const addBadge = (type, text, extra = {}) => {
                 if (!insigniasMap[u].some(badge => badge.type === type && badge.text === text)) {
-                    insigniasMap[u].push({ type, text });
+                    insigniasMap[u].push({ type, text, ...extra });
                 }
             };
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
-            if (b["Entrenador de"]) addBadge('entrenador', b["Entrenador de"]);
-            if (b["Jugador de"]) addBadge('jugador', b["Jugador de"]);
+            
+            // Entrenador / Entrenadora de
+            if (b["Entrenador de"]) {
+                const rawEnt = String(b["Entrenador de"]).trim();
+                const teamsEnt = rawEnt.split(',').map(item => item.trim()).filter(Boolean);
+                if (teamsEnt.length > 1) {
+                    addBadge('entrenador', `${lblEnt} de ${teamsEnt.join(' - ')}`, {
+                        roleTitle: `${lblEnt} de:`,
+                        items: teamsEnt
+                    });
+                } else if (teamsEnt.length === 1) {
+                    addBadge('entrenador', `${lblEnt} de ${teamsEnt[0]}`);
+                }
+            }
+
+            // Jugador / Jugadora de
+            if (b["Jugador de"]) {
+                const rawJug = String(b["Jugador de"]).trim();
+                const teamsJug = rawJug.split(',').map(item => item.trim()).filter(Boolean);
+                if (teamsJug.length > 1) {
+                    addBadge('jugador', `${lblJug} de ${teamsJug.join(' - ')}`, {
+                        roleTitle: `${lblJug} de:`,
+                        items: teamsJug
+                    });
+                } else if (teamsJug.length === 1) {
+                    addBadge('jugador', `${lblJug} de ${teamsJug[0]}`);
+                }
+            }
+
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
             if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
             if (b.Custom_Badge === "X") {
