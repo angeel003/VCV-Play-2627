@@ -2100,12 +2100,23 @@
               <span style="display:flex; align-items:center; gap:6px;">🏐 Subir Resultados y Enlaces</span>
             </summary>
             <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:8px; border:1px solid rgba(230,126,34,0.2);">
-                <span style="font-size:0.75rem; color:var(--text-muted);">Por defecto se muestran partidos pendientes de resultado o recientes.</span>
-                <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; color:var(--secondary-color); cursor:pointer; user-select:none; margin:0;">
-                  <input type="checkbox" id="chkAdminVerTodosPartidos" onchange="window.adminToggleVerTodosPartidos(this.checked)" style="cursor:pointer;">
-                  Ver todos los partidos
-                </label>
+              <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; background:rgba(255,255,255,0.03); padding:10px 12px; border-radius:8px; border:1px solid rgba(230,126,34,0.2);">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                  <span style="font-size:0.75rem; color:var(--text-muted);">Por defecto se muestran partidos pendientes de resultado o recientes.</span>
+                  <span style="font-size:0.7rem; color:var(--text-muted); opacity:0.8;">Activa "Ver todos" para seleccionar cualquier jornada de la temporada.</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <div id="adminContenedorFiltroJornada" style="display:none; align-items:center; gap:6px;">
+                    <label for="adminFiltroJornada" style="font-size:0.75rem; color:var(--text-muted); margin:0; font-weight:700;">Jornada:</label>
+                    <select id="adminFiltroJornada" onchange="window.adminCambiarFiltroJornada(this.value)" style="background:var(--bg-input); color:var(--text-main); border:1px solid rgba(230,126,34,0.5); border-radius:6px; padding:4px 8px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
+                      <option value="todas">Todas las Jornadas</option>
+                    </select>
+                  </div>
+                  <label style="display:flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; color:var(--secondary-color); cursor:pointer; user-select:none; margin:0;">
+                    <input type="checkbox" id="chkAdminVerTodosPartidos" onchange="window.adminToggleVerTodosPartidos(this.checked)" style="cursor:pointer;">
+                    Ver todos los partidos
+                  </label>
+                </div>
               </div>
               <div id="adminListaPartidos"></div>
             </div>
@@ -3085,17 +3096,66 @@ window.getPlantillaSuperligaActual = function() {
 // FUNCIONES INTRANET ADMINISTRADOR
 // ------------------------------------------------------------------
 window.adminVerTodosPartidos = false;
+window.adminFiltroJornadaActual = 'todas';
+
 window.adminToggleVerTodosPartidos = function(checked) {
     window.adminVerTodosPartidos = !!checked;
-    if (window.appData && window.appData.equipos) {
-        renderAdminPanel(window.appData.equipos);
+    const contFiltro = document.getElementById('adminContenedorFiltroJornada');
+    if (contFiltro) {
+        contFiltro.style.display = window.adminVerTodosPartidos ? 'flex' : 'none';
     }
+    renderAdminPanel();
 };
 
-function renderAdminPanel(equipos) {
+window.adminCambiarFiltroJornada = function(val) {
+    window.adminFiltroJornadaActual = val || 'todas';
+    renderAdminPanel();
+};
+
+function renderAdminPanel(equiposParam) {
+    // Tomar la fuente adecuada: si 'Ver todos' está activo, usar todos_partidos para tener toda la temporada
+    let pool = (window.adminVerTodosPartidos && window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
+        ? window.appData.todos_partidos
+        : ((equiposParam && Array.isArray(equiposParam)) ? equiposParam : (window.appData && window.appData.equipos ? window.appData.equipos : []));
+
+    // Si está activo ver todos los partidos, asegurar poblar el selector de Jornada
+    const selJor = document.getElementById('adminFiltroJornada');
+    const contFiltro = document.getElementById('adminContenedorFiltroJornada');
+    if (contFiltro) {
+        contFiltro.style.display = window.adminVerTodosPartidos ? 'flex' : 'none';
+    }
+
+    if (selJor && window.adminVerTodosPartidos) {
+        let allPool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
+            ? window.appData.todos_partidos
+            : pool;
+        
+        let jornadasSet = new Set();
+        allPool.forEach(p => {
+            let jVal = p.jornada_eq || p.ronda_global;
+            if (jVal !== undefined && jVal !== null && String(jVal).trim() !== '') {
+                jornadasSet.add(String(jVal).trim());
+            }
+        });
+
+        let sortedJornadas = Array.from(jornadasSet).sort((a, b) => {
+            let numA = parseInt(a), numB = parseInt(b);
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return a.localeCompare(b);
+        });
+
+        let curSelected = window.adminFiltroJornadaActual || selJor.value || 'todas';
+        let jorHtml = '<option value="todas">Todas las Jornadas</option>';
+        sortedJornadas.forEach(j => {
+            jorHtml += `<option value="${j}" ${curSelected === j ? 'selected' : ''}>Jornada ${j}</option>`;
+        });
+        selJor.innerHTML = jorHtml;
+    }
+
     let html = "";
     let now = new Date().getTime();
-    equipos.forEach(eq => {
+
+    pool.forEach(eq => {
         let ts = eq.timestamp || Infinity;
         let isAvailable = eq.estado === "ABIERTO" && eq.visibilidad === "MOSTRAR";
         let endedRecently = (eq.estado === "FINALIZADO" || eq.estado === "BLOQUEADO" || eq.estado === "CERRADO") && (now - (eq.timestamp_bloqueo || ts)) < 48 * 60 * 60 * 1000;
@@ -3117,6 +3177,13 @@ function renderAdminPanel(equipos) {
         let shouldShow = false;
         if (window.adminVerTodosPartidos) {
             shouldShow = true;
+            // Filtro por jornada si no está en 'todas'
+            if (window.adminFiltroJornadaActual && window.adminFiltroJornadaActual !== 'todas') {
+                let eqJornada = String(eq.jornada_eq || eq.ronda_global || '').trim();
+                if (eqJornada !== String(window.adminFiltroJornadaActual).trim()) {
+                    shouldShow = false;
+                }
+            }
         } else {
             // Mostrar si está abierto o en cartelera o finalizado recientemente sin resultado oficial subido aún
             if (!yaTieneResultado) {
@@ -3127,17 +3194,22 @@ function renderAdminPanel(equipos) {
         if (canUserSeeThisMatch && shouldShow) {
             let adminLocal = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
             let adminVisit = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
+            let jornadaBadge = (eq.jornada_eq || eq.ronda_global) ? `J.${eq.jornada_eq || eq.ronda_global}` : '';
+            let visBadge = eq.visibilidad === "OCULTAR" ? `<span style="font-size:0.65rem; padding:1px 5px; border-radius:4px; background:rgba(231,76,60,0.2); color:#ff4757; font-weight:bold; margin-left:4px;">Oculto</span>` : '';
             
             html += `
             <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center;">
-                    <span>${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit}</span>
-                    <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-card-alt); color:var(--secondary-color); font-weight:800;">${eq.categoria}</span>
+                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+                    <span>${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit} ${visBadge}</span>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        ${jornadaBadge ? `<span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:rgba(230,126,34,0.15); color:#e67e22; font-weight:800;">${jornadaBadge}</span>` : ''}
+                        <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-card-alt); color:var(--secondary-color); font-weight:800;">${eq.categoria || ''}</span>
+                    </div>
                 </div>
                 
                 <!-- SECCIÓN RESULTADOS -->
                 <div style="margin-bottom: 8px; border-left: 2px solid var(--vcv-morado); padding-left: 8px;">
-                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Resultado Final</label>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Resultado Final (Sets)</label>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
                         <span style="color: var(--text-muted);">-</span>
@@ -3152,19 +3224,21 @@ function renderAdminPanel(equipos) {
                     <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
-
-
                 <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
                     Guardar Cambios
                 </button>
             </div>`;
         }
     });
-    if (html === "") html = "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:10px;'>No hay partidos disponibles recientemente. Marca 'Ver todos' para mostrar todos los partidos de la temporada.</div>";
+
+    if (html === "") {
+        html = window.adminVerTodosPartidos
+            ? "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:12px;'>No se han encontrado partidos con los filtros seleccionados.</div>"
+            : "<div style='color:var(--text-muted); font-size:0.8rem; text-align:center; padding:12px;'>No hay partidos pendientes de resultado recientemente. Marca 'Ver todos los partidos' para buscar o corregir cualquier jornada de la temporada.</div>";
+    }
+
     const container = document.getElementById('adminListaPartidos');
     if (container) container.innerHTML = html;
-
-
 
     renderAdminPlantillaMvp();
     if (typeof window.populateDirectMvpBoxes === 'function') {
@@ -4207,16 +4281,20 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     .then(res => res.json())
     .then(d => {
         btn.disabled = false; btn.innerText = "Guardar Cambios";
-        if(window.appData && Array.isArray(window.appData.equipos)) {
-            let eq = window.appData.equipos.find(p => p.id_partido === idPart);
-            if (eq) {
-                if (sets) {
-                    eq.oficial_sets = sets;
-                    eq.estado = 'CERRADO';
+        if(window.appData) {
+            ['equipos', 'todos_partidos'].forEach(arrKey => {
+                if (Array.isArray(window.appData[arrKey])) {
+                    let eq = window.appData[arrKey].find(p => p.id_partido === idPart);
+                    if (eq) {
+                        if (sets) {
+                            eq.oficial_sets = sets;
+                            eq.estado = 'CERRADO';
+                        }
+                        if (parc) eq.oficial_parciales = parc;
+                        if (stream) eq.streaming = stream;
+                    }
                 }
-                if (parc) eq.oficial_parciales = parc;
-                if (stream) eq.streaming = stream;
-            }
+            });
         }
         if (typeof window.renderCarteleraHTML === 'function' && window.appData) {
             window.renderCarteleraHTML(window.appData);
