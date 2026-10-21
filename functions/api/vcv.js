@@ -79,6 +79,9 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_proclamado_ts INTEGER").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_publicacion_ts INTEGER").run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
 
         // Sembrar plantilla inicial si está vacía
         try {
@@ -221,6 +224,9 @@ export async function onRequestPost(context) {
             oficial_sets: oRes["Sets Oficial"] || "",
             oficial_parciales: oRes["Parciales Oficial"] || "",
             streaming: oRes.Streaming || "",
+            actualizado_por: oRes.actualizado_por || "",
+            actualizado_ts: oRes.actualizado_ts ? parseInt(oRes.actualizado_ts) : 0,
+            actualizado_fecha: oRes.actualizado_fecha || "",
             mvp_candidatos: oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [],
             mvp_oficial: oRes.mvp_oficial || "",
             mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : [],
@@ -1357,6 +1363,11 @@ export async function onRequestPost(context) {
         const visibleVal = (mvp_visible === false || mvp_visible === 0 || mvp_visible === '0' || mvp_visible === 'OCULTAR') ? 0 : 1;
 
         try {
+            try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
+            const nowTs = Date.now();
+            const nowFechaHora = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
             const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
             
             // Si solo se están guardando datos estándar de partido (sets, parciales, streaming)
@@ -1365,11 +1376,11 @@ export async function onRequestPost(context) {
                     let finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
                     let finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
                     let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
-                    await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ? WHERE "ID Partido" = ?')
-                        .bind(finalSets, finalParc, finalStream, id_partido).run();
+                    await db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
+                        .bind(finalSets, finalParc, finalStream, usuario, nowTs, nowFechaHora, id_partido).run();
                 } else {
-                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming") VALUES (?, ?, ?, ?)')
-                        .bind(id_partido, sets || '', parciales || '', streaming || '').run();
+                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?)')
+                        .bind(id_partido, sets || '', parciales || '', streaming || '', usuario, nowTs, nowFechaHora).run();
                 }
             } else {
                 // Se están guardando datos de MVP: asegurar que las columnas existen silenciosamente si hace falta
@@ -1385,8 +1396,8 @@ export async function onRequestPost(context) {
                     let finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
                     let finalCand = (mvp_candidatos !== undefined) ? candStr : (exist["mvp_candidatos"] || '');
 
-                    let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?';
-                    let params = [finalSets, finalParc, finalStream, finalCand];
+                    let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ?';
+                    let params = [finalSets, finalParc, finalStream, finalCand, usuario, nowTs, nowFechaHora];
                     if (mvp_oficial !== undefined) {
                         sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
                         params.push(mvp_oficial || '');
@@ -1412,7 +1423,7 @@ export async function onRequestPost(context) {
                     try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER').run(); } catch(e) {}
                     const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
                     const pubTs = (mvp_publicacion_ts !== undefined) ? (parseInt(mvp_publicacion_ts) || 0) : 0;
-                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_publicacion_ts") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, pubTs).run();
+                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, pubTs, usuario, nowTs, nowFechaHora).run();
                 }
             }
             
@@ -1646,14 +1657,15 @@ export async function onRequestPost(context) {
             if (newU) {
                 const tables = [
                     "Usuarios", "Porras", "Ligas", "Permisos_Equipos", 
-                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", "Plantilla_Superliga_2_Masc"
+                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", "Plantilla_Superliga_2_Masc", "Resultados_Oficiales"
                 ];
                 
                 for (const table of tables) {
                     let col = (table === "Ligas" || table === "Permisos_Equipos") ? "Jugador" : "Usuario";
                     if (table === "Plantilla_Superliga_2_Masc") col = "usuario";
+                    if (table === "Resultados_Oficiales") col = "actualizado_por";
                     stmts.push(db.prepare(`UPDATE OR IGNORE "${table}" SET "${col}" = ? WHERE "${col}" = ?`).bind(newU, oldU));
-                    if (table !== "Plantilla_Superliga_2_Masc") {
+                    if (table !== "Plantilla_Superliga_2_Masc" && table !== "Resultados_Oficiales") {
                         stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
                     }
                 }

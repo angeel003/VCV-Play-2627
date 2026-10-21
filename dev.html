@@ -3273,6 +3273,10 @@ function renderAdminPanel(equiposParam) {
                     <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
+${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+                    <i class="fas fa-user-edit" style="color:#e67e22;"></i>
+                    <span>Resultado anotado por <strong style="color:var(--text-main);">@${eq.actualizado_por}</strong>${eq.actualizado_fecha ? ` (${eq.actualizado_fecha})` : ''}</span>
+                </div>` : ''}
                 <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
                     Guardar Cambios
                 </button>
@@ -4485,6 +4489,8 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                         }
                         if (parc) eq.oficial_parciales = parc;
                         if (stream) eq.streaming = stream;
+                        eq.actualizado_por = currentUser;
+                        eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
                     }
                 }
             });
