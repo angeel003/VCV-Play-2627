@@ -165,6 +165,8 @@
         }
         
         if (window.lucide) setTimeout(() => lucide.createIcons(), 30);
+        if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 40);
+        if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 40);
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
     }
     window.switchTabV2 = switchTabV2;
@@ -1054,11 +1056,15 @@
         let desgloseHtml = statsResult.desgloseHtml;
 
         let displayBadges = uBadges.filter(b => b.type !== 'avatar');
+        let podioBadges = (typeof window.getPodioBadgesForUser === 'function')
+            ? window.getPodioBadgesForUser(jugador, ligaName)
+            : [];
+        let allBadges = [...podioBadges, ...displayBadges];
         let badgesHtml = "";
-        if(displayBadges.length === 0) {
+        if(allBadges.length === 0) {
             badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
         } else {
-            displayBadges.forEach(b => {
+            allBadges.forEach(b => {
                 badgesHtml += renderBadgeItemHtml(b, "24px");
             });
         }
@@ -1123,7 +1129,355 @@
     };
 
     
-    window.closePlayerInfo = function() {
+    // --- CALCULADOR DE INSIGNIAS TEMPORALES DE PODIO (ORO, PLATA, BRONCE), CUCHARA (🥄) Y DIANA (🎯) ---
+// Pre-calculador optimizado con memoización en memoria del podio y dianas por liga
+function getLeaguePodioCache(l, data) {
+    if (!data) return null;
+    if (!data._podioLeagueCache) data._podioLeagueCache = {};
+    if (data._podioLeagueCache[l]) return data._podioLeagueCache[l];
+
+    const rankingLiga = data.clasificaciones && data.clasificaciones[l];
+    if (!rankingLiga || !Array.isArray(rankingLiga)) return null;
+
+    const sorted = [...rankingLiga].sort((a, b) => (b.puntos || 0) - (a.puntos || 0));
+    const active = sorted.filter(x => (x.puntos || 0) > 0);
+    const userSummary = {};
+
+    if (active.length > 0) {
+        const topPts = active[0].puntos || 0;
+        const tiedTop = active.filter(x => x.puntos === topPts).length > 1;
+        active.filter(x => x.puntos === topPts).forEach(x => {
+            if (!userSummary[x.jugador]) userSummary[x.jugador] = {};
+            userSummary[x.jugador].oro = { pts: topPts, tied: tiedTop };
+        });
+
+        // 2º puesto
+        const p2 = active.find(x => x.puntos < topPts);
+        if (p2) {
+            const pts2 = p2.puntos;
+            const tied2 = active.filter(x => x.puntos === pts2).length > 1;
+            active.filter(x => x.puntos === pts2).forEach(x => {
+                if (!userSummary[x.jugador]) userSummary[x.jugador] = {};
+                userSummary[x.jugador].plata = { pts: pts2, tied: tied2 };
+            });
+
+            // 3º puesto
+            const p3 = active.find(x => x.puntos < pts2);
+            if (p3) {
+                const pts3 = p3.puntos;
+                const tied3 = active.filter(x => x.puntos === pts3).length > 1;
+                active.filter(x => x.puntos === pts3).forEach(x => {
+                    if (!userSummary[x.jugador]) userSummary[x.jugador] = {};
+                    userSummary[x.jugador].bronce = { pts: pts3, tied: tied3 };
+                });
+            }
+        }
+
+        // Cuchara de madera (mínimo 3 jugadores activos y puntuación inferior al líder)
+        if (active.length >= 3) {
+            const minPts = active[active.length - 1].puntos || 0;
+            if (topPts > minPts) {
+                const tiedLast = active.filter(x => x.puntos === minPts).length > 1;
+                active.filter(x => x.puntos === minPts).forEach(x => {
+                    if (!userSummary[x.jugador]) userSummary[x.jugador] = {};
+                    userSummary[x.jugador].cuchara = { pts: minPts, tied: tiedLast };
+                });
+            }
+        }
+    }
+
+    // Diana de jornada (estrictamente temporal: última jornada disputada por miembros de esta liga)
+    if (data.stats_ligas) {
+        const leagueUsers = new Set(rankingLiga.map(r => r.jugador));
+        const jornadasSet = new Set();
+        leagueUsers.forEach(u => {
+            if (data.stats_ligas[u] && data.stats_ligas[u][l] && data.stats_ligas[u][l].porJornada) {
+                Object.keys(data.stats_ligas[u][l].porJornada).forEach(j => {
+                    const jNum = Number(j);
+                    if (!isNaN(jNum)) jornadasSet.add(jNum);
+                });
+            }
+        });
+
+        const jornadasList = Array.from(jornadasSet).sort((a, b) => a - b);
+        if (jornadasList.length > 0) {
+            const lastJ = jornadasList[jornadasList.length - 1];
+            let maxPtsInJ = 0;
+            let winnersInJ = [];
+            leagueUsers.forEach(u => {
+                if (data.stats_ligas[u] && data.stats_ligas[u][l] && data.stats_ligas[u][l].porJornada) {
+                    const ptsJ = data.stats_ligas[u][l].porJornada[lastJ] || 0;
+                    if (ptsJ > maxPtsInJ) {
+                        maxPtsInJ = ptsJ;
+                        winnersInJ = [u];
+                    } else if (ptsJ === maxPtsInJ && maxPtsInJ > 0) {
+                        winnersInJ.push(u);
+                    }
+                }
+            });
+
+            if (maxPtsInJ > 0) {
+                winnersInJ.forEach(w => {
+                    if (!userSummary[w]) userSummary[w] = {};
+                    userSummary[w].diana = { pts: maxPtsInJ, jornada: lastJ, tied: winnersInJ.length > 1 };
+                });
+            }
+        }
+    }
+
+    data._podioLeagueCache[l] = userSummary;
+    return userSummary;
+}
+
+window.getPodioBadgesForUser = function(targetUser, currentLigaContext = null) {
+    if (!window.appData || !window.appData.clasificaciones || !targetUser) return [];
+    const data = window.appData;
+    let viewerUser = (data && data.usuario) || (typeof currentUser !== 'undefined' ? currentUser : '') || window.currentUser || '';
+    if (!viewerUser) {
+        try {
+            const saved = localStorage.getItem('vcv_saved_user');
+            if (saved) viewerUser = saved;
+        } catch(e) {}
+    }
+    if (!viewerUser) viewerUser = 'Invitado';
+
+    // Ligas a las que pertenece el visor (el usuario que está usando la app)
+    const viewerLigas = new Set(data.ligas || []);
+    if (data.clasificaciones) {
+        for (const l in data.clasificaciones) {
+            if (viewerUser && data.clasificaciones[l].some(r => r.jugador === viewerUser)) {
+                viewerLigas.add(l);
+            }
+        }
+    }
+    // Si el usuario es invitado o sus ligas están vacías, permitir ver las clasificaciones globales y la activa
+    if (viewerUser === 'Invitado' || viewerLigas.size === 0) {
+        if (data.clasificaciones['Global']) viewerLigas.add('Global');
+        if (data.clasificaciones['General']) viewerLigas.add('General');
+        (data.ligas || []).forEach(l => viewerLigas.add(l));
+        if (currentLigaContext && data.clasificaciones[currentLigaContext]) {
+            viewerLigas.add(currentLigaContext);
+        }
+    }
+    if (currentLigaContext && data.clasificaciones[currentLigaContext]) {
+        if (currentLigaContext === 'Global' || currentLigaContext === 'General' || viewerUser === 'Invitado' || viewerLigas.has(currentLigaContext)) {
+            viewerLigas.add(currentLigaContext);
+        }
+    }
+
+    const ligasEvaluadas = [];
+    if (currentLigaContext && viewerLigas.has(currentLigaContext)) {
+        ligasEvaluadas.push(currentLigaContext);
+    }
+    viewerLigas.forEach(l => {
+        if (!ligasEvaluadas.includes(l)) ligasEvaluadas.push(l);
+    });
+
+    const oroEntries = [];
+    const plataEntries = [];
+    const bronceEntries = [];
+    const cucharaEntries = [];
+    const dianaEntries = [];
+
+    // Consulta O(1) ultra-rápida desde la memoria caché por liga
+    ligasEvaluadas.forEach(l => {
+        const leagueCache = getLeaguePodioCache(l, data);
+        if (!leagueCache) return;
+        const uSummary = leagueCache[targetUser];
+        if (!uSummary) return;
+
+        if (uSummary.oro) oroEntries.push({ liga: l, ...uSummary.oro });
+        if (uSummary.plata) plataEntries.push({ liga: l, ...uSummary.plata });
+        if (uSummary.bronce) bronceEntries.push({ liga: l, ...uSummary.bronce });
+        if (uSummary.cuchara) cucharaEntries.push({ liga: l, ...uSummary.cuchara });
+        if (uSummary.diana) dianaEntries.push({ liga: l, ...uSummary.diana });
+    });
+
+    const podioBadges = [];
+
+    // --- AGRUPACIÓN ORO (🥇) ---
+    if (oroEntries.length === 1) {
+        const e = oroEntries[0];
+        const tieSuffix = e.tied ? ' (Empate)' : '';
+        const tieDesc = e.tied ? ' (compartido)' : '';
+        podioBadges.push({
+            type: 'podio_oro',
+            subType: 'oro',
+            pos: 1,
+            liga: e.liga,
+            emoji: '🥇',
+            roleTitle: `1º Puesto - Oro${tieSuffix} - Liga ${e.liga}`,
+            text: `Líder actual${tieDesc} de la Liga ${e.liga} (${e.pts} pts)`,
+            title: `1º Puesto - Oro${tieSuffix} (${e.liga})`,
+            desc: `Líder actual${tieDesc} de la Liga ${e.liga} con ${e.pts} pts`,
+            border: 'rgba(255, 215, 0, 0.45)',
+            bg: 'rgba(255, 215, 0, 0.1)',
+            color: '#ffd700'
+        });
+    } else if (oroEntries.length > 1) {
+        const leaguesListStr = oroEntries.map(e => `Liga ${e.liga}`).join(', ');
+        podioBadges.push({
+            type: 'podio_oro',
+            subType: 'oro',
+            pos: 1,
+            emoji: '🥇',
+            roleTitle: `1º Puesto - Oro (${oroEntries.length} ligas):`,
+            text: `Líder actual en ${leaguesListStr}`,
+            title: `1º Puesto - Oro (${oroEntries.length} ligas)`,
+            desc: `Líder actual en ${leaguesListStr}`,
+            items: oroEntries.map(e => `Liga ${e.liga} (${e.pts} pts${e.tied ? ' - Empate' : ''})`),
+            border: 'rgba(255, 215, 0, 0.45)',
+            bg: 'rgba(255, 215, 0, 0.1)',
+            color: '#ffd700'
+        });
+    }
+
+    // --- AGRUPACIÓN PLATA (🥈) ---
+    if (plataEntries.length === 1) {
+        const e = plataEntries[0];
+        const tieSuffix = e.tied ? ' (Empate)' : '';
+        const tieDesc = e.tied ? ' (compartido)' : '';
+        podioBadges.push({
+            type: 'podio_plata',
+            subType: 'plata',
+            pos: 2,
+            liga: e.liga,
+            emoji: '🥈',
+            roleTitle: `2º Puesto - Plata${tieSuffix} - Liga ${e.liga}`,
+            text: `2º clasificado${tieDesc} en Liga ${e.liga} (${e.pts} pts)`,
+            title: `2º Puesto - Plata${tieSuffix} (${e.liga})`,
+            desc: `2º clasificado${tieDesc} en Liga ${e.liga} con ${e.pts} pts`,
+            border: 'rgba(206, 214, 224, 0.45)',
+            bg: 'rgba(206, 214, 224, 0.1)',
+            color: '#ced6e0'
+        });
+    } else if (plataEntries.length > 1) {
+        const leaguesListStr = plataEntries.map(e => `Liga ${e.liga}`).join(', ');
+        podioBadges.push({
+            type: 'podio_plata',
+            subType: 'plata',
+            pos: 2,
+            emoji: '🥈',
+            roleTitle: `2º Puesto - Plata (${plataEntries.length} ligas):`,
+            text: `2º clasificado en ${leaguesListStr}`,
+            title: `2º Puesto - Plata (${plataEntries.length} ligas)`,
+            desc: `2º clasificado en ${leaguesListStr}`,
+            items: plataEntries.map(e => `Liga ${e.liga} (${e.pts} pts${e.tied ? ' - Empate' : ''})`),
+            border: 'rgba(206, 214, 224, 0.45)',
+            bg: 'rgba(206, 214, 224, 0.1)',
+            color: '#ced6e0'
+        });
+    }
+
+    // --- AGRUPACIÓN BRONCE (🥉) ---
+    if (bronceEntries.length === 1) {
+        const e = bronceEntries[0];
+        const tieSuffix = e.tied ? ' (Empate)' : '';
+        const tieDesc = e.tied ? ' (compartido)' : '';
+        podioBadges.push({
+            type: 'podio_bronce',
+            subType: 'bronce',
+            pos: 3,
+            liga: e.liga,
+            emoji: '🥉',
+            roleTitle: `3º Puesto - Bronce${tieSuffix} - Liga ${e.liga}`,
+            text: `3º clasificado${tieDesc} en Liga ${e.liga} (${e.pts} pts)`,
+            title: `3º Puesto - Bronce${tieSuffix} (${e.liga})`,
+            desc: `3º clasificado${tieDesc} en Liga ${e.liga} con ${e.pts} pts`,
+            border: 'rgba(229, 142, 38, 0.45)',
+            bg: 'rgba(229, 142, 38, 0.1)',
+            color: '#e58e26'
+        });
+    } else if (bronceEntries.length > 1) {
+        const leaguesListStr = bronceEntries.map(e => `Liga ${e.liga}`).join(', ');
+        podioBadges.push({
+            type: 'podio_bronce',
+            subType: 'bronce',
+            pos: 3,
+            emoji: '🥉',
+            roleTitle: `3º Puesto - Bronce (${bronceEntries.length} ligas):`,
+            text: `3º clasificado en ${leaguesListStr}`,
+            title: `3º Puesto - Bronce (${bronceEntries.length} ligas)`,
+            desc: `3º clasificado en ${leaguesListStr}`,
+            items: bronceEntries.map(e => `Liga ${e.liga} (${e.pts} pts${e.tied ? ' - Empate' : ''})`),
+            border: 'rgba(229, 142, 38, 0.45)',
+            bg: 'rgba(229, 142, 38, 0.1)',
+            color: '#e58e26'
+        });
+    }
+
+    // --- AGRUPACIÓN CUCHARA DE MADERA (🥄🪵) ---
+    if (cucharaEntries.length === 1) {
+        const e = cucharaEntries[0];
+        const tieLastSuffix = e.tied ? ' (Empate)' : '';
+        podioBadges.push({
+            type: 'podio_cuchara',
+            subType: 'cuchara',
+            liga: e.liga,
+            emoji: '🥄🪵',
+            roleTitle: `Cuchara de Madera - Liga ${e.liga}`,
+            text: `Cuchara de Madera - Liga ${e.liga} (${e.pts} pts${tieLastSuffix})`,
+            title: `Cuchara de Madera - Liga ${e.liga} (${e.pts} pts)`,
+            desc: `Cuchara de Madera en Liga ${e.liga} con ${e.pts} pts`,
+            border: 'rgba(184, 115, 51, 0.5)',
+            bg: 'rgba(184, 115, 51, 0.12)',
+            color: '#d38c52'
+        });
+    } else if (cucharaEntries.length > 1) {
+        const leaguesListStr = cucharaEntries.map(e => `Liga ${e.liga}`).join(', ');
+        podioBadges.push({
+            type: 'podio_cuchara',
+            subType: 'cuchara',
+            emoji: '🥄🪵',
+            roleTitle: `Cuchara de Madera (${cucharaEntries.length} ligas):`,
+            text: `Cuchara de Madera en ${leaguesListStr}`,
+            title: `Cuchara de Madera (${cucharaEntries.length} ligas)`,
+            desc: `Cuchara de Madera en ${leaguesListStr}`,
+            items: cucharaEntries.map(e => `Liga ${e.liga} (${e.pts} pts${e.tied ? ' - Empate' : ''})`),
+            border: 'rgba(184, 115, 51, 0.5)',
+            bg: 'rgba(184, 115, 51, 0.12)',
+            color: '#d38c52'
+        });
+    }
+
+    // --- AGRUPACIÓN DIANA (🎯) - TEMPORAL JORNADA ANTERIOR ---
+    if (dianaEntries.length === 1) {
+        const e = dianaEntries[0];
+        const tieSuffix = e.tied ? ' (Empate)' : '';
+        podioBadges.push({
+            type: 'podio_diana',
+            subType: 'diana',
+            liga: e.liga,
+            emoji: '🎯',
+            roleTitle: `Máxima Puntuación de Jornada - J${e.jornada} - Liga ${e.liga}`,
+            text: `Top anotador de la J${e.jornada} en Liga ${e.liga} (${e.pts} pts${tieSuffix})`,
+            title: `Máxima Puntuación J${e.jornada} (${e.liga})`,
+            desc: `Top anotador de la J${e.jornada} en Liga ${e.liga} con ${e.pts} pts`,
+            border: 'rgba(231, 76, 60, 0.45)',
+            bg: 'rgba(231, 76, 60, 0.08)',
+            color: '#e74c3c',
+            isTemporal: true
+        });
+    } else if (dianaEntries.length > 1) {
+        const leaguesListStr = dianaEntries.map(e => `Liga ${e.liga}`).join(', ');
+        podioBadges.push({
+            type: 'podio_diana',
+            subType: 'diana',
+            emoji: '🎯',
+            roleTitle: `Máxima Puntuación de la Última Jornada (${dianaEntries.length} ligas):`,
+            text: `Top anotador de la última jornada en ${leaguesListStr}`,
+            title: `Máxima Puntuación Última Jornada (${dianaEntries.length} ligas)`,
+            desc: `Top anotador de la última jornada en ${leaguesListStr}`,
+            items: dianaEntries.map(e => `Liga ${e.liga}: J${e.jornada} (${e.pts} pts${e.tied ? ' - Empate' : ''})`),
+            border: 'rgba(231, 76, 60, 0.45)',
+            bg: 'rgba(231, 76, 60, 0.08)',
+            color: '#e74c3c',
+            isTemporal: true
+        });
+    }
+
+    return podioBadges;
+};window.closePlayerInfo = function() {
         let modal = document.getElementById('playerInfoModal');
         if(modal) modal.style.display = 'none';
         document.body.style.overflow = '';
@@ -1276,11 +1630,15 @@
         
         // --- INSIGNIAS ---
         let displayBadges = uBadges.filter(b => b.type !== 'avatar');
+        let podioBadges = (typeof window.getPodioBadgesForUser === 'function')
+            ? window.getPodioBadgesForUser(jugador, ligaName)
+            : [];
+        let allBadges = [...podioBadges, ...displayBadges];
         let badgesHtml = "";
-        if(displayBadges.length === 0) {
+        if(allBadges.length === 0) {
             badgesHtml = `<div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 10px;">Sin insignias adicionales</div>`;
         } else {
-            displayBadges.forEach(b => {
+            allBadges.forEach(b => {
                 badgesHtml += renderBadgeItemHtml(b, "24px");
             });
         }
@@ -1407,13 +1765,23 @@ window.renderRankingV2 = function() {
         const buildBadgesInline = (jugador) => {
             let uBadges = data.insignias[jugador] || [];
             let displayBadges = uBadges.filter(b => b.type !== 'avatar');
-            if(displayBadges.length === 0) return "";
+            let podioBadges = (typeof window.getPodioBadgesForUser === 'function')
+                ? window.getPodioBadgesForUser(jugador, ligaName)
+                : [];
+            let allBadges = [...podioBadges, ...displayBadges];
+            if(allBadges.length === 0) return "";
             let html = "";
-            displayBadges.forEach(b => {
-                let cssColorClass = window.getBadgeCSS ? window.getBadgeCSS(b.type) : '';
-                html += renderBadgeIcon(b, "badge-icon", "width:15px; height:15px; display:inline-block; vertical-align:middle; flex-shrink:0;");
+            allBadges.forEach(b => {
+                let tooltipText = (b.items && b.items.length > 0)
+                    ? `${b.title || b.text}: ${b.items.join(' • ')}`
+                    : (b.title || b.text || '');
+                let safeText = tooltipText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                let iconHtml = renderBadgeIcon(b, "badge-icon", "width:15px; height:15px; display:inline-block; vertical-align:middle; flex-shrink:0;");
+                if (iconHtml) {
+                    html += `<span class="ranking-badge-item" title="${safeText}" onclick="event.stopPropagation(); if(typeof showMobileTooltip==='function') showMobileTooltip(event, '${safeText}');" onmouseenter="if(typeof showMobileTooltip==='function') showMobileTooltip(event, '${safeText}');" onmouseleave="if(typeof hideMobileTooltip==='function') hideMobileTooltip();" style="display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;">${iconHtml}</span>`;
+                }
             });
-            return `<span class="ranking-badges-wrap" style="display:inline-flex; align-items:center; gap:3px; flex-shrink:0; max-width:85px; overflow:hidden;">${html}</span>`;
+            return `<div class="ranking-badges-wrap horizontal-drag-scroll" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:3px; flex:1 1 auto; min-width:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; cursor:grab; padding:1px 0;">${html}</div>`;
         };
 
                 // ---------- CAJA 1: Título, Botones y Podio ----------
@@ -1671,9 +2039,9 @@ window.renderRankingV2 = function() {
                         <div style="display:flex; flex-direction:column; align-items:center; min-width:20px; flex-shrink:0;">
                             <span class="rank-num" style="margin:0;">${r.realRank}</span>
                         </div>
-                        <div class="rank-user-info" style="margin-left:6px;">
-                            <div class="name">
-                                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:0 1 auto; min-width:0;">@${r.jugador}</span>
+                        <div class="rank-user-info" style="margin-left:6px; min-width:0; flex:1 1 auto;">
+                            <div class="name" style="display:flex; align-items:center; gap:6px; min-width:0; width:100%;">
+                                <span class="rank-player-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-shrink:0; max-width:70%;">@${r.jugador}</span>
                                 ${badges}
                             </div>
                         </div>
@@ -1693,6 +2061,8 @@ window.renderRankingV2 = function() {
             newSlider.scrollLeft = savedScroll;
         }
         if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
+        if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 20);
+        if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 20);
     };
 window.updateProgressBar = function() {
         if(!window.appData) return;

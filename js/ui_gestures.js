@@ -123,7 +123,7 @@ window.aplicarIndicesBD = async function(e) {
     }
 };
 
-// --- SOPORTE DE DESPLAZAMIENTO HORIZONTAL EN PC (RUEDA DEL RATÓN + CLICK & DRAG) ---
+// --- SOPORTE DE DESPLAZAMIENTO HORIZONTAL EN PC (RUEDA DEL RATÓN + CLICK & DRAG + DIFUMINADO) ---
 (function() {
     let activeDragSlider = null;
     let dragStartX = 0;
@@ -132,8 +132,68 @@ window.aplicarIndicesBD = async function(e) {
 
     function getSlider(target) {
         if (!target || !target.closest) return null;
-        return target.closest('.category-filter-strip, #league-slider-container, .horizontal-drag-scroll');
+        return target.closest('.category-filter-strip, #league-slider-container, .horizontal-drag-scroll, .ranking-badges-wrap, .user-badges-scroll-track');
     }
+
+    function updateBadgeScrollFade(el) {
+        if (!el) return;
+        const scrollWidth = el.scrollWidth;
+        const clientWidth = el.clientWidth;
+        const scrollLeft = el.scrollLeft;
+
+        if (clientWidth === 0 || scrollWidth <= clientWidth + 2) {
+            el.style.maskImage = 'none';
+            el.style.webkitMaskImage = 'none';
+            return;
+        }
+
+        const isRanking = el.classList.contains('ranking-badges-wrap');
+        const fadePx = isRanking ? '14px' : '22px';
+        const atStart = scrollLeft <= 2;
+        const atEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2;
+
+        if (atStart && !atEnd) {
+            const m = 'linear-gradient(to right, black calc(100% - ' + fadePx + '), transparent 100%)';
+            el.style.maskImage = m;
+            el.style.webkitMaskImage = m;
+        } else if (atEnd && !atStart) {
+            const m = 'linear-gradient(to right, transparent 0%, black ' + fadePx + ', black 100%)';
+            el.style.maskImage = m;
+            el.style.webkitMaskImage = m;
+        } else if (!atStart && !atEnd) {
+            const m = 'linear-gradient(to right, transparent 0%, black ' + fadePx + ', black calc(100% - ' + fadePx + '), transparent 100%)';
+            el.style.maskImage = m;
+            el.style.webkitMaskImage = m;
+        } else {
+            el.style.maskImage = 'none';
+            el.style.webkitMaskImage = 'none';
+        }
+    }
+
+    function updateAllBadgeScrollFades() {
+        const list = document.querySelectorAll('.ranking-badges-wrap, .user-badges-scroll-track, .horizontal-drag-scroll');
+        list.forEach(updateBadgeScrollFade);
+    }
+
+    window.updateBadgeScrollFade = updateBadgeScrollFade;
+    window.updateAllBadgeScrollFades = updateAllBadgeScrollFades;
+
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== 'undefined') {
+        resizeObserver = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                if (entry.target) updateBadgeScrollFade(entry.target);
+            }
+        });
+        window._badgeResizeObserver = resizeObserver;
+    }
+
+    window.observeBadgeScrollContainers = function() {
+        if (!resizeObserver) return;
+        document.querySelectorAll('.ranking-badges-wrap, .user-badges-scroll-track').forEach(el => {
+            try { resizeObserver.observe(el); } catch(e) {}
+        });
+    };
 
     // 1. Rueda del ratón horizontal
     window.addEventListener('wheel', function(e) {
@@ -143,6 +203,7 @@ window.aplicarIndicesBD = async function(e) {
             if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
                 e.preventDefault();
                 slider.scrollLeft += e.deltaY;
+                updateBadgeScrollFade(slider);
             }
         }
     }, { passive: false });
@@ -167,6 +228,7 @@ window.aplicarIndicesBD = async function(e) {
             didDrag = true;
         }
         activeDragSlider.scrollLeft = dragInitialScroll - walk;
+        updateBadgeScrollFade(activeDragSlider);
     });
 
     window.addEventListener('mouseup', function() {
@@ -184,4 +246,18 @@ window.aplicarIndicesBD = async function(e) {
             e.stopImmediatePropagation();
         }
     }, true);
+
+    // 4. Escuchar evento scroll para actualizar difuminados en tiempo real (móvil y PC)
+    window.addEventListener('scroll', function(e) {
+        if (e.target && e.target.classList && (
+            e.target.classList.contains('ranking-badges-wrap') ||
+            e.target.classList.contains('user-badges-scroll-track') ||
+            e.target.classList.contains('horizontal-drag-scroll')
+        )) {
+            updateBadgeScrollFade(e.target);
+        }
+    }, true);
+
+    window.addEventListener('resize', updateAllBadgeScrollFades);
+    window.addEventListener('orientationchange', updateAllBadgeScrollFades);
 })();

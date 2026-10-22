@@ -8,7 +8,27 @@ window.renderCarteleraHTML = function(data) {
     if (!data || !data.equipos) return;
     if (typeof window.aplicarHorasMvpLocales === 'function') window.aplicarHorasMvpLocales(data);
 
+    nowMs = Date.now();
+
+    // Helper: determinar si un partido ya se ha jugado, se ha cerrado o han pasado horas desde su inicio
+    const isPartidoTerminado = (eq) => {
+        if (!eq) return false;
+        if (eq.estado === 'CERRADO' || eq.estado === 'FINALIZADO') return true;
+        if (eq.oficial_sets && String(eq.oficial_sets).trim() !== '') return true;
+        // Si han pasado más de 2.5 horas (150 min) desde el inicio del partido
+        if (eq.timestamp && (nowMs - eq.timestamp > 2.5 * 60 * 60 * 1000)) return true;
+        return false;
+    };
+
+    // Reordenar partidos:
+    // 1º Los que no se hayan jugado o se estén jugando (más próximos primero)
+    // 2º Debajo, los partidos cerrados o de los que ya hayan pasado horas (en el mismo orden cronológico)
     data.equipos.sort((a, b) => {
+        let termA = isPartidoTerminado(a);
+        let termB = isPartidoTerminado(b);
+        if (termA !== termB) {
+            return termA ? 1 : -1;
+        }
         let tsA = a.timestamp || Infinity; 
         let tsB = b.timestamp || Infinity;
         return tsA - tsB; 
@@ -19,7 +39,7 @@ window.renderCarteleraHTML = function(data) {
     let htmlPartidos = ``;
     let equiposPermitidos = 0;
     let equiposCerrados = 0;
-    let nowMs = new Date().getTime();
+    nowMs = Date.now();
     data.equipos.forEach(eq => {
         if ((eq.permitido || window.isGuestMode) && eq.visibilidad === "MOSTRAR") {
             equiposPermitidos++;
@@ -444,6 +464,67 @@ window.renderCarteleraHTML = function(data) {
         </div>`;
     }
 
+    // Bloque de acceso directo / aviso de votación MVP VALCYL disponible
+    let bannerContainer = document.getElementById('mvpBannerAviso');
+    if (!bannerContainer) {
+        const perfilTop = document.getElementById('perfilUsuarioTop');
+        if (perfilTop && perfilTop.parentNode) {
+            bannerContainer = document.createElement('div');
+            bannerContainer.id = 'mvpBannerAviso';
+            perfilTop.parentNode.insertBefore(bannerContainer, perfilTop.nextSibling);
+        }
+    }
+
+    if (bannerContainer) {
+        let activeMvpMatch = null;
+        const matchesPool = (Array.isArray(data.equipos) && data.equipos.length > 0) 
+            ? data.equipos 
+            : ((Array.isArray(data.todos_partidos)) ? data.todos_partidos : []);
+
+        activeMvpMatch = matchesPool.find(eq => {
+            let catL = (eq.categoria || '').toLowerCase();
+            let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
+            let mvpCands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
+            let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
+            return isSuperliga && isMvpVisible && mvpCands.length >= 2 && !eq.mvp_oficial;
+        });
+
+        if (activeMvpMatch) {
+            let myVote = (data.mvp_votos && data.mvp_votos[activeMvpMatch.id_partido]) ? data.mvp_votos[activeMvpMatch.id_partido] : null;
+            let rivalName = (activeMvpMatch.ubicacion === 'LOCAL') ? activeMvpMatch.rival : activeMvpMatch.equipo_local;
+            let matchLabel = rivalName ? ` vs ${rivalName}` : '';
+            let subtitleText = myVote
+                ? `Ya has emitido tu voto. Toca aquí para ver o cambiar tu elección 👇`
+                : `¡Ya está disponible la votación del MVP VALCYL! Toca aquí para votar 👇`;
+            let btnLabel = myVote ? 'Ver voto ✨' : 'Votar MVP 👑';
+
+            bannerContainer.innerHTML = `
+            <div class="mvp-aviso-banner" onclick="window.scrollToMvpWidget('${activeMvpMatch.id_partido}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(93, 23, 137, 0.32)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.22); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseenter="this.style.transform='scale(1.01)';" onmouseleave="this.style.transform='none';">
+                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(212, 175, 55, 0.22); border: 1px solid var(--secondary-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                        👑
+                    </div>
+                    <div style="min-width: 0; text-align: left;">
+                        <div style="font-size: 0.88rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
+                            <span>¡Votación MVP VALCYL disponible!</span>
+                            <span style="font-size: 0.68rem; background: var(--secondary-color); color: #000; font-weight: 800; padding: 1px 6px; border-radius: 6px; text-transform: uppercase;">Activa</span>
+                        </div>
+                        <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${subtitleText}
+                        </div>
+                    </div>
+                </div>
+                <div style="background: var(--secondary-color); color: #000; font-weight: 900; font-size: 0.75rem; padding: 7px 12px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                    <span>${btnLabel}</span>
+                </div>
+            </div>`;
+            bannerContainer.style.display = 'block';
+        } else {
+            bannerContainer.innerHTML = '';
+            bannerContainer.style.display = 'none';
+        }
+    }
+
     document.getElementById('contenedorPartidos').innerHTML = htmlPartidos;
     const appMsg = document.getElementById('appMessage');
     if (appMsg && window.isGuestMode) appMsg.style.display = 'none';
@@ -602,3 +683,21 @@ function iniciarRelojTotales() {
 window.historialDataCache = null;
 
 window.iniciarRelojes = iniciarRelojes;
+
+
+// Acceso directo con desplazamiento suave hacia el widget de votación de MVP
+window.scrollToMvpWidget = function(idPart) {
+    let target = document.getElementById('mvp-widget-' + idPart) || document.getElementById('card-v2-' + idPart);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+        let oldShadow = target.style.boxShadow;
+        let oldBorder = target.style.borderColor;
+        target.style.boxShadow = '0 0 25px rgba(212, 175, 55, 0.85)';
+        target.style.borderColor = 'var(--secondary-color)';
+        setTimeout(() => {
+            target.style.boxShadow = oldShadow;
+            target.style.borderColor = oldBorder;
+        }, 2200);
+    }
+};

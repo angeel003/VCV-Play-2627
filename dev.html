@@ -701,6 +701,76 @@
     .category-filter-strip::-webkit-scrollbar { display: none; }
     .category-filter-strip.is-dragging, #league-slider-container.is-dragging { cursor: grabbing !important; }
     #league-slider-container { cursor: grab; user-select: none; -webkit-user-select: none; }
+    .horizontal-drag-scroll {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      -webkit-overflow-scrolling: touch;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .horizontal-drag-scroll::-webkit-scrollbar {
+      display: none !important;
+    }
+    .horizontal-drag-scroll.is-dragging {
+      cursor: grabbing !important;
+    }
+    .horizontal-drag-scroll.is-dragging * {
+      cursor: grabbing !important;
+      user-select: none !important;
+    }
+    .ranking-badges-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 1px 0;
+      cursor: grab;
+      -webkit-mask-image: none;
+      mask-image: none;
+      transition: mask-image 0.15s ease, -webkit-mask-image 0.15s ease;
+    }
+    .ranking-badges-wrap > * {
+      flex-shrink: 0 !important;
+    }
+    .ranking-badge-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+    .ranking-badge-item:hover {
+      transform: scale(1.15);
+    }
+    .user-badges-scroll-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      margin-top: 8px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .user-badges-scroll-track {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 2px 2px;
+      cursor: grab;
+      -webkit-mask-image: none;
+      mask-image: none;
+      transition: mask-image 0.15s ease, -webkit-mask-image 0.15s ease;
+    }
+    .user-badges-scroll-track .user-badge-chip-icon {
+      flex-shrink: 0 !important;
+    }
     .cat-filter-btn { padding: 6px 14px; border-radius: 9999px; background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.75rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
     .cat-filter-btn:hover { border-color: var(--secondary-color); color: var(--text-main); }
     .cat-filter-btn.active { background: var(--secondary-color); color: #000; border-color: var(--secondary-color); font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
@@ -1903,6 +1973,7 @@
             <form id="prediccionForm">
                 
                 <div id="perfilUsuarioTop"></div>
+                <div id="mvpBannerAviso" style="display:none;"></div>
 
         
         

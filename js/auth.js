@@ -111,6 +111,8 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             }
 
             window.appData = data;
+            window.appData.usuario = usr;
+            window.currentUser = usr;
 
             // Header User chip for guest
             const rankEl = document.getElementById('h2-user-rank');
@@ -166,6 +168,9 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             if (titSec) titSec.style.display = 'block';
 
             // Render modern match cards
+            window.appData = data;
+            window.appData.usuario = "Invitado";
+            window.currentUser = "Invitado";
             window.renderCarteleraHTML(data);
 
             // Notifications
@@ -292,19 +297,30 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             }
             let porcentaje = totalOpen > 0 ? Math.round((predictedOpen / totalOpen) * 100) : 100;
             
+            // Asegurar que appData y currentUser estén disponibles antes de calcular podioBadges
+            window.appData = data;
+            window.appData.usuario = usr;
+            window.currentUser = usr;
+
             let myBadges = data.insignias ? (data.insignias[currentUser] || []) : [];
+            let podioBadges = (typeof window.getPodioBadgesForUser === 'function')
+                ? window.getPodioBadgesForUser(currentUser)
+                : [];
+            let displayMyBadges = [...podioBadges, ...myBadges.filter(b => b.type !== 'avatar' && b.type !== 'permiso_mvp' && b.type !== 'permiso_resultados')];
             let insigniasHTML = "";
-            let displayMyBadges = myBadges.filter(b => b.type !== 'avatar' && b.type !== 'permiso_mvp' && b.type !== 'permiso_resultados');
             if (displayMyBadges.length > 0) {
-                insigniasHTML += `<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px;">`;
+                insigniasHTML += `<div class="user-badges-scroll-wrapper" style="position:relative; width:100%; max-width:100%; margin-top:0; min-width:0; overflow:hidden;"><div class="user-badges-scroll-track horizontal-drag-scroll" style="display:flex; flex-wrap:nowrap; align-items:center; gap:8px; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; cursor:grab; padding:2px 2px;">`;
                 displayMyBadges.forEach(b => {
-                    let safeText = (b.text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    let tooltipText = (b.items && b.items.length > 0)
+                        ? `${b.title || b.text}: ${b.items.join(' • ')}`
+                        : (b.text || '');
+                    let safeText = tooltipText.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     let badgeIcon = renderBadgeIcon(b, "", "width:18px; height:18px; display:block; margin:0;");
                     if (badgeIcon) {
-                        insigniasHTML += `<div class="user-badge-chip-icon" title="${safeText}" onclick="showMobileTooltip(event, '${safeText}')" onmouseenter="showMobileTooltip(event, '${safeText}')" onmouseleave="hideMobileTooltip()" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--bg-general); border:1px solid var(--border-color); cursor:pointer; transition:transform 0.15s ease, border-color 0.15s ease;">${badgeIcon}</div>`;
+                        insigniasHTML += `<div class="user-badge-chip-icon" title="${safeText}" onclick="showMobileTooltip(event, '${safeText}')" onmouseenter="showMobileTooltip(event, '${safeText}')" onmouseleave="hideMobileTooltip()" style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:var(--bg-general); border:1px solid var(--border-color); cursor:pointer; flex-shrink:0; transition:transform 0.15s ease, border-color 0.15s ease;">${badgeIcon}</div>`;
                     }
                 });
-                insigniasHTML += `</div>`;
+                insigniasHTML += `</div></div>`;
             }
 
             
@@ -331,15 +347,18 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 </span>
               </div>
               
-              <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <div>
-                  <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--text-main); margin:0; letter-spacing:-0.5px; line-height:1.1; text-align:left;">¡Hola ${data.nombre_real || currentUser}!</h2>
-                  <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left;">
-                    <span style="color: var(--vcv-dorado); font-weight: 700;">@${currentUser}</span>
-                  </p>
+              <div style="min-width: 0;">
+                <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--text-main); margin:0; letter-spacing:-0.5px; line-height:1.1; text-align:left;">¡Hola ${data.nombre_real || currentUser}!</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left;">
+                  <span style="color: var(--vcv-dorado); font-weight: 700;">@${currentUser}</span>
+                </p>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; min-width: 0;">
+                <div style="min-width: 0; flex: 1 1 auto; overflow: hidden;">
                   ${insigniasHTML}
                 </div>
-                <span id="user-progress-label" style="font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap; margin-left:10px;">${porcentaje}% Listo</span>
+                <span id="user-progress-label" style="font-size: 0.8rem; font-weight: bold; color: var(--vcv-dorado); background: rgba(212, 175, 55, 0.1); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); white-space: nowrap; flex-shrink: 0;">${porcentaje}% Listo</span>
               </div>
 
               <div style="width: 100%; background: rgba(0, 0, 0, 0.15); border-radius: 9999px; height: 6px; margin-top: 14px; overflow: hidden;">
@@ -348,6 +367,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
               </div>
             </div>`;
             document.getElementById('perfilUsuarioTop').innerHTML = htmlPerfil;
+            if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 20);
+            if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 20);
             
             let promoDiv2 = document.getElementById('guestPromoBanner');
             if (promoDiv2) promoDiv2.style.display = "none";
