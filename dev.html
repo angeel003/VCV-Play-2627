@@ -4940,20 +4940,6 @@ window.renderCarteleraHTML = function(data) {
     let equiposCerrados = 0;
     let nowMs = new Date().getTime();
     data.equipos.forEach(eq => {
-            if (eq.visibilidad === "MOSTRAR" && (eq.permitido || window.isGuestMode)) {
-                let ts = eq.timestamp || 0;
-                let yaJugo = eq.estado === "CERRADO" || (eq.oficial_sets && String(eq.oficial_sets).trim() !== "");
-                if (!yaJugo) {
-                    pendientesPorJugar++;
-                    if (ts > nowMs && ts < proximoCierreMs) {
-                        proximoCierreMs = ts;
-                        proximoPartidoNombre = `${eq.equipo_local} vs ${eq.rival}`;
-                    }
-                }
-            }
-        });
-
-        data.equipos.forEach(eq => {
         if ((eq.permitido || window.isGuestMode) && eq.visibilidad === "MOSTRAR") {
             equiposPermitidos++;
             
