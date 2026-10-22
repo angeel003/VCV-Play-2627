@@ -1956,6 +1956,34 @@
             }
           </style>
 
+          <!-- 0. Monitor Silencioso de Accesos (Exclusivo Admin) -->
+          <details id="secAdminMonitor" class="admin-collapsible" ontoggle="if(this.open && window.cargarDatosMonitor) window.cargarDatosMonitor();" style="background: linear-gradient(to right, rgba(39, 174, 96, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">👁️ Monitor Silencioso de Accesos</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
+              <div style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                Supervisa discretamente a usuarios concretos (cuántas veces entran, a qué hora exacta y dispositivo). El usuario vigilado <b>no ve nada</b> en su pantalla.
+              </div>
+
+              <!-- Selector de usuario a vigilar y botón de añadir -->
+              <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="inputMonitorNuevoUsuario" placeholder="Escribe @usuario a vigilar..." style="flex:1; min-width:180px; padding:7px 10px; font-size:0.8rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                <button type="button" onclick="window.agregarUsuarioMonitor()" style="background:#27ae60; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
+                  ➕ Activar Seguimiento
+                </button>
+                <button type="button" onclick="window.cargarDatosMonitor()" style="background:var(--bg-card-alt); color:var(--text-main); border:1px solid var(--border-color); padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
+                  🔄 Actualizar
+                </button>
+              </div>
+
+              <!-- Lista de vigilados y registro -->
+              <div id="adminMonitorContenido" style="font-size:0.75rem; color:var(--text-muted);">
+                <div style="text-align:center; padding:10px;">Cargando lista de usuarios vigilados...</div>
+              </div>
+            </div>
+          </details>
+          
           <!-- 1. Botones de Control Servidor -->
           <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -3247,7 +3275,12 @@ function renderAdminPanel(equiposParam) {
             let visBadge = eq.visibilidad === "OCULTAR" ? `<span style="font-size:0.65rem; padding:1px 5px; border-radius:4px; background:rgba(231,76,60,0.2); color:#ff4757; font-weight:bold; margin-left:4px;">Oculto</span>` : '';
             
             html += `
-            <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            ${(ts < now && !yaTieneResultado && ts > 0) ? `
+            <div class="admin-match-box alerta-pendiente-resultado" style="background: linear-gradient(to right, rgba(231, 76, 60, 0.12), var(--bg-general)); border: 2px solid #e74c3c; border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(231, 76, 60, 0.25);">
+                <div style="background:#e74c3c; color:#fff; font-size:0.72rem; font-weight:900; padding:3px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:5px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+                    <i class="fas fa-exclamation-triangle"></i> PARTIDO FINALIZADO SIN RESULTADO OFICIAL
+                </div>` : `
+            <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">`}
                 <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
                     <span>${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit} ${visBadge}</span>
                     <div style="display:flex; align-items:center; gap:4px;">
@@ -4906,7 +4939,6 @@ window.renderCarteleraHTML = function(data) {
     let equiposPermitidos = 0;
     let equiposCerrados = 0;
     let nowMs = new Date().getTime();
-    
     data.equipos.forEach(eq => {
         if ((eq.permitido || window.isGuestMode) && eq.visibilidad === "MOSTRAR") {
             equiposPermitidos++;
@@ -5338,6 +5370,141 @@ window.renderCarteleraHTML = function(data) {
     if(typeof iniciarRelojes === 'function') iniciarRelojes();
     if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
 };
+
+
+// -------------------------------------------------------------
+// FUNCIONES DEL MONITOR SILENCIOSO DE ACCESOS (ADMIN)
+// -------------------------------------------------------------
+window.cargarDatosMonitor = function(selectedUser) {
+    const cont = document.getElementById('adminMonitorContenido');
+    if (!cont) return;
+    cont.innerHTML = '<div style="text-align:center; padding:10px;">⏳ Consultando accesos en la base de datos...</div>';
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'get_monitor_data',
+            usuario: currentUser,
+            password: currentPassword,
+            target_user: selectedUser || ''
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status !== 'success') {
+            cont.innerHTML = `<div style="color:#e74c3c; padding:8px;">${d.message || 'Error al cargar monitor'}</div>`;
+            return;
+        }
+
+        const vigilados = d.vigilados || [];
+        const logs = d.logs || [];
+
+        if (vigilados.length === 0) {
+            cont.innerHTML = '<div style="background:rgba(255,255,255,0.03); border:1px dashed var(--border-color); border-radius:8px; padding:12px; text-align:center;">No hay usuarios en seguimiento actualmente. Añade el usuario de la persona que quieras supervisar arriba.</div>';
+            return;
+        }
+
+        let activeTarget = selectedUser || (vigilados[0] ? vigilados[0].usuario : '');
+
+        let h = '<div style="margin-bottom:10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">';
+        h += '<span style="font-weight:bold; color:var(--text-muted); font-size:0.75rem;">Vigilados:</span>';
+        vigilados.forEach(v => {
+            let isCurrent = (v.usuario === activeTarget);
+            h += `<button type="button" onclick="window.cargarDatosMonitor('${v.usuario}')" style="padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; cursor:pointer; border:1px solid ${isCurrent ? '#2ecc71' : 'var(--border-color)'}; background:${isCurrent ? 'rgba(46,204,113,0.2)' : 'var(--bg-input)'}; color:${isCurrent ? '#2ecc71' : 'var(--text-main)'};">
+                @${v.usuario}
+            </button>`;
+        });
+        h += '</div>';
+
+        // Detalle del usuario seleccionado
+        h += `<div style="background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:8px; padding:10px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:900; color:#2ecc71; font-size:0.82rem;">📊 Accesos de @${activeTarget} (${logs.length} registrados)</span>
+                <button type="button" onclick="window.eliminarUsuarioMonitor('${activeTarget}')" style="background:transparent; color:#e74c3c; border:1px solid rgba(231,76,60,0.3); border-radius:4px; padding:2px 6px; font-size:0.68rem; cursor:pointer;">
+                    Dejar de vigilar
+                </button>
+            </div>`;
+
+        if (logs.length === 0) {
+            h += '<div style="color:var(--text-muted); font-size:0.72rem; padding:8px 0;">No se han registrado inicios de sesión aún para este usuario desde que se activó el seguimiento.</div>';
+        } else {
+            h += '<div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px;">';
+            logs.forEach(l => {
+                let dispCorta = (l.dispositivo || '').includes('Mobile') ? '📱 Móvil' : '💻 Ordenador';
+                h += `<div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div>
+                        <div style="font-weight:bold; color:var(--text-main); font-size:0.75rem;">${l.fecha_hora || 'Fecha desconocida'}</div>
+                        <div style="color:var(--text-muted); font-size:0.65rem;">${l.origen || 'Acceso'} • ${dispCorta}</div>
+                    </div>
+                    <span style="font-size:0.65rem; background:rgba(46,204,113,0.15); color:#2ecc71; padding:2px 6px; border-radius:4px; font-weight:800;">OK</span>
+                </div>`;
+            });
+            h += '</div>';
+        }
+        h += '</div>';
+
+        cont.innerHTML = h;
+    })
+    .catch(err => {
+        cont.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${err.message}</div>`;
+    });
+};
+
+window.agregarUsuarioMonitor = function() {
+    const input = document.getElementById('inputMonitorNuevoUsuario');
+    if (!input) return;
+    const target = input.value.trim().replace(/^@/, '');
+    if (!target) { alert('Introduce el nombre de usuario'); return; }
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'toggle_monitor_user',
+            usuario: currentUser,
+            password: currentPassword,
+            target_user: target,
+            activo: 1
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            mostrarToast(d.message);
+            input.value = '';
+            window.cargarDatosMonitor(target);
+        } else {
+            alert(d.message || 'Error');
+        }
+    });
+};
+
+window.eliminarUsuarioMonitor = function(user) {
+    if (!confirm(`¿Seguro que deseas dejar de registrar los accesos de @${user}?`)) return;
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'toggle_monitor_user',
+            usuario: currentUser,
+            password: currentPassword,
+            target_user: user,
+            remove: true
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            mostrarToast(d.message);
+            window.cargarDatosMonitor();
+        } else {
+            alert(d.message || 'Error');
+        }
+    });
+};
+
 
 // LOGICA MODO INVITADO
 document.getElementById('btnGuest').addEventListener('click', function(e) {
