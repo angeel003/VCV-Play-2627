@@ -1781,6 +1781,13 @@
             <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
           </div>
 
+          <div style="display: flex; align-items: center; justify-content: flex-start; margin-top: 10px; margin-bottom: 4px; font-size: 0.82rem; color: var(--text-muted);">
+            <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+              <input type="checkbox" id="chkRecordarSesion" checked style="accent-color: var(--secondary-color); cursor: pointer; width: 16px; height: 16px;">
+              <span>Mantener sesión iniciada</span>
+            </label>
+          </div>
+
           <button id="btnLogin" class="btn-gold-v2" style="margin-top: 14px;">
             <span>Entrar</span>
           </button>
@@ -4906,6 +4913,8 @@ window.cerrarSesionApp = function() {
     localStorage.removeItem('vcv_cache_data');
     localStorage.removeItem('vcv_cache_type');
     localStorage.removeItem('vcv_cache_creds');
+    localStorage.removeItem('vcv_saved_session');
+    sessionStorage.setItem('vcv_just_logged_out', 'true');
     sessionStorage.setItem('vcv_slide_left', 'true');
     
     const appSec = document.getElementById('appSection');
@@ -5689,12 +5698,31 @@ document.getElementById('btnLogin').addEventListener('click', function() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Accediendo...'; 
     msgBox.style.display = "none";
 
-    fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'login', usuario: usr, password: pwd }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
+    const payloadLogin = { action: 'login', usuario: usr, password: pwd };
+    if (window._esAutoLogin) {
+        payloadLogin.is_auto_reconnect = true;
+        window._esAutoLogin = false;
+    }
+    fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify(payloadLogin), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
             
             currentUser = usr; currentPassword = pwd;
+            
+            // Guardar sesión persistente si el checkbox está marcado
+            const chkRec = document.getElementById('chkRecordarSesion');
+            if (!chkRec || chkRec.checked) {
+                try {
+                    localStorage.setItem('vcv_saved_session', JSON.stringify({
+                        usuario: usr,
+                        password: pwd,
+                        ts: Date.now()
+                    }));
+                } catch(e) {}
+            } else {
+                localStorage.removeItem('vcv_saved_session');
+            }
             // --- NOTIFICACIONES ---
             if (data.notificaciones) {
                 const notifBadge = document.querySelector('.header-bell-badge');
@@ -6169,17 +6197,91 @@ document.getElementById('btnLogin').addEventListener('click', function() {
             }, 400);
             return;
         } else {
-            msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message || "Error desconocido devuelto por el servidor."; msgBox.style.display = "block";
-          updateProgressBar();
+            // Si el servidor rechaza las credenciales, limpiar la sesión guardada
+            localStorage.removeItem('vcv_saved_session');
+            msgBox.className = "alert-box alert-danger"; 
+            msgBox.innerText = (data.message && data.message.includes('incorrect')) 
+                ? "Tu sesión guardada ya no es válida o las credenciales cambiaron. Inicia sesión de nuevo." 
+                : (data.message || "Error devuelto por el servidor."); 
+            msgBox.style.display = "block";
+            if (typeof updateProgressBar === 'function') updateProgressBar();
         }
     })
-    .catch(err => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
-          updateProgressBar(); })
+    .catch(err => { 
+        msgBox.className = "alert-box alert-danger"; 
+        msgBox.innerHTML = `<div style="margin-bottom:6px;">⚠️ Error de conexión: ${err.message || 'Sin conexión'}</div>
+        <button type="button" onclick="document.getElementById('btnLogin').click()" style="background:#fff; color:#e74c3c; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.75rem;">🔄 Reintentar</button>`; 
+        msgBox.style.display = "block";
+        if (typeof updateProgressBar === 'function') updateProgressBar(); 
+    })
     .finally(() => { 
         btn.innerText = "Entrar"; 
         btn.disabled = false; 
     });
 });
+
+// -------------------------------------------------------------
+// SISTEMA DE SESIÓN PERSISTENTE Y AUTO-LOGIN (LOCAL)
+// -------------------------------------------------------------
+window.verificarAutoLogin = function() {
+    // Situación 1: Si el usuario acaba de pulsar 'Cerrar sesión / Volver', no auto-iniciar
+    if (sessionStorage.getItem('vcv_just_logged_out')) {
+        sessionStorage.removeItem('vcv_just_logged_out');
+        localStorage.removeItem('vcv_saved_session');
+        return;
+    }
+
+    // Situación 2: Parámetro en la URL para forzar salida (?logout=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout')) {
+        localStorage.removeItem('vcv_saved_session');
+        return;
+    }
+
+    try {
+        const raw = localStorage.getItem('vcv_saved_session');
+        if (!raw) return;
+        const ses = JSON.parse(raw);
+        if (!ses || !ses.usuario || !ses.password) return;
+
+        // Situación 3: Caducidad por inactividad prolongada (ej. 30 días)
+        const DIAS_LIMITE = 30;
+        if (ses.ts && (Date.now() - ses.ts > DIAS_LIMITE * 24 * 60 * 60 * 1000)) {
+            console.warn("Sesión caducada por superar el límite de 30 días.");
+            localStorage.removeItem('vcv_saved_session');
+            return;
+        }
+
+        const inputUsr = document.getElementById('loginUsuario');
+        const inputPwd = document.getElementById('loginPassword');
+        const btn = document.getElementById('btnLogin');
+        const chk = document.getElementById('chkRecordarSesion');
+
+        if (inputUsr && inputPwd && btn) {
+            inputUsr.value = ses.usuario;
+            inputPwd.value = ses.password;
+            if (chk) chk.checked = true;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restaurando sesión...';
+
+            window._esAutoLogin = true;
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.click();
+            }, 120);
+        }
+    } catch(e) {
+        console.error("Error al procesar auto-login:", e);
+    }
+};
+
+// Ejecutar verificación en cuanto la página esté lista
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.verificarAutoLogin);
+} else {
+    window.verificarAutoLogin();
+}
 
 function iniciarRelojes() {
     if(intervalCountdown) clearInterval(intervalCountdown);
