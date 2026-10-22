@@ -1842,11 +1842,26 @@ window.cargarDatosMonitor = function(selectedUser) {
         } else {
             h += '<div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px;">';
             logs.forEach(l => {
-                let dispCorta = (l.dispositivo || '').includes('Mobile') ? '📱 Móvil' : '💻 Ordenador';
+                let dispTexto = l.dispositivo || 'Desconocido';
+                if (dispTexto.startsWith('Mozilla/5.0')) {
+                    if (dispTexto.includes('iPhone')) {
+                        let m = dispTexto.match(/OS (\d+[_.\d]+)/i);
+                        dispTexto = `📱 iPhone (${m ? 'iOS ' + m[1].replace(/_/g, '.') : 'iOS'})`;
+                    } else if (dispTexto.includes('Android')) {
+                        let m = dispTexto.match(/Android\s*([0-9.]+)/i);
+                        dispTexto = `📱 Android (${m ? 'v' + m[1] : ''})`;
+                    } else if (dispTexto.includes('Windows')) {
+                        dispTexto = '💻 PC Windows';
+                    } else if (dispTexto.includes('Macintosh')) {
+                        dispTexto = '💻 Mac';
+                    } else {
+                        dispTexto = dispTexto.includes('Mobile') ? '📱 Móvil' : '💻 Ordenador';
+                    }
+                }
                 h += `<div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:6px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div>
                         <div style="font-weight:bold; color:var(--text-main); font-size:0.75rem;">${l.fecha_hora || 'Fecha desconocida'}</div>
-                        <div style="color:var(--text-muted); font-size:0.65rem;">${l.origen || 'Acceso'} • ${dispCorta}</div>
+                        <div style="color:var(--text-muted); font-size:0.65rem;" title="${(l.dispositivo || '').replace(/"/g, '&quot;')}">${l.origen || 'Acceso'} • <span style="color:var(--text-main); font-weight:600;">${dispTexto}</span></div>
                     </div>
                     <span style="font-size:0.65rem; background:rgba(46,204,113,0.15); color:#2ecc71; padding:2px 6px; border-radius:4px; font-weight:800;">OK</span>
                 </div>`;

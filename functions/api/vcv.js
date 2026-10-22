@@ -604,8 +604,11 @@ export async function onRequestPost(context) {
                     const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
                     const uAgent = context && context.request ? (context.request.headers.get("user-agent") || "Desconocido") : "Desconocido";
                     const origen = (body && body.is_auto_reconnect) ? "Sesión guardada (Auto)" : "Inicio manual";
+                    const disp = (body && body.dispositivo && typeof body.dispositivo === 'string' && body.dispositivo.trim() !== '')
+                        ? body.dispositivo.substring(0, 150)
+                        : uAgent.substring(0, 150);
                     await db.prepare('INSERT INTO "Log_Accesos" ("usuario", "fecha_hora", "timestamp", "origen", "dispositivo") VALUES (?, ?, ?, ?, ?)')
-                        .bind(usuario, nowMadrid, nowTs, origen, uAgent.substring(0, 150)).run();
+                        .bind(usuario, nowMadrid, nowTs, origen, disp).run();
                 }
             } catch(e) { console.error("Error en monitor silencioso:", e); }
         }
