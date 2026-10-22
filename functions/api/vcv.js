@@ -82,6 +82,27 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
+
+        // Tablas silenciosas de auditoría y monitorización de accesos
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Monitor_Usuarios" (
+                "usuario" TEXT PRIMARY KEY,
+                "activo" INTEGER DEFAULT 1,
+                "fecha_alta" TEXT,
+                "notas" TEXT
+            )`).run();
+        } catch(e) {}
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Accesos" (
+                "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+                "usuario" TEXT,
+                "fecha_hora" TEXT,
+                "timestamp" INTEGER,
+                "origen" TEXT,
+                "dispositivo" TEXT
+            )`).run();
+            await db.prepare(`CREATE INDEX IF NOT EXISTS idx_log_accesos_user_ts ON "Log_Accesos" ("usuario", "timestamp" DESC)`).run();
+        } catch(e) {}
         // Sincronización automática de fechas/horas/lugares oficiales (21/10/2026)
         try {
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '25/10/2026 12:30', "timestamp" = 1792927800000, "Pabellon" = 'PILAR FDEZ VALDERRAMA' WHERE "ID_Partido" = 'RFEVB_2555'`).run();
@@ -207,6 +228,59 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: "error", message: err.message }, 500);
         }
     }
+        // ADMIN: OBTENER LISTA DE MONITORIZACIÓN Y SUS ACCESOS
+    if (action === "get_monitor_data") {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { target_user } = body;
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Monitor_Usuarios" ("usuario" TEXT PRIMARY KEY, "activo" INTEGER DEFAULT 1, "fecha_alta" TEXT, "notas" TEXT)`).run();
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Accesos" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "usuario" TEXT, "fecha_hora" TEXT, "timestamp" INTEGER, "origen" TEXT, "dispositivo" TEXT)`).run();
+
+            const { results: vigilados } = await db.prepare('SELECT * FROM "Monitor_Usuarios" ORDER BY "usuario" ASC').all();
+            let logs = [];
+            if (target_user) {
+                const { results: l } = await db.prepare('SELECT * FROM "Log_Accesos" WHERE "usuario" = ? ORDER BY "timestamp" DESC LIMIT 100').bind(target_user).all();
+                logs = l || [];
+            } else if (vigilados && vigilados.length > 0) {
+                const firstUser = vigilados[0].usuario;
+                const { results: l } = await db.prepare('SELECT * FROM "Log_Accesos" WHERE "usuario" = ? ORDER BY "timestamp" DESC LIMIT 100').bind(firstUser).all();
+                logs = l || [];
+            }
+            return jsonResponse({ status: 'success', vigilados: vigilados || [], logs: logs });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
+    // ADMIN: AÑADIR O QUITAR USUARIO DE LA LISTA DE MONITORIZACIÓN
+    if (action === "toggle_monitor_user") {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { target_user, activo, remove } = body;
+        if (!target_user) return jsonResponse({ status: 'error', message: 'Falta usuario objetivo' }, 400);
+
+        try {
+            if (remove) {
+                await db.prepare('DELETE FROM "Monitor_Usuarios" WHERE "usuario" = ?').bind(target_user).run();
+                return jsonResponse({ status: 'success', message: `Usuario @${target_user} eliminado del monitor silencioso.` });
+            } else {
+                const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+                await db.prepare('INSERT INTO "Monitor_Usuarios" ("usuario", "activo", "fecha_alta") VALUES (?, ?, ?) ON CONFLICT("usuario") DO UPDATE SET "activo" = ?')
+                    .bind(target_user, activo ? 1 : 0, nowMadrid, activo ? 1 : 0).run();
+                return jsonResponse({ status: 'success', message: `Seguimiento de @${target_user} actualizado.` });
+            }
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
     if (action === "ping") {
         try {
             await db.prepare('INSERT OR IGNORE INTO "Reglas_Puntuacion" ("Regla", "Puntos") VALUES (\'Porcentaje Extra MVP\', \'10\')').run();
@@ -502,20 +576,30 @@ export async function onRequestPost(context) {
         }
 
                 // Actualizar ├║ltimo acceso si es un inicio de sesi├│n (throttled a 1 hora para ahorrar escrituras)
-        if (action === "login") {
+        if (action === "login" || action === "get_data") {
             try {
                 let shouldUpdate = true;
                 if (userRow.ultimo_acceso) {
-                    // El servidor guarda en UTC via CURRENT_TIMESTAMP
                     const lastAcc = new Date(userRow.ultimo_acceso + 'Z').getTime();
                     if (!isNaN(lastAcc) && (Date.now() - lastAcc < 3600000)) {
-                        shouldUpdate = false; // Ha pasado menos de 1 hora
+                        shouldUpdate = false;
                     }
                 }
-                if (shouldUpdate) {
+                if (shouldUpdate && action === "login") {
                     await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(usuario).run();
                 }
-            } catch(e) {}
+
+                // Monitorización silenciosa si el usuario está vigilado
+                const monRow = await db.prepare('SELECT activo FROM "Monitor_Usuarios" WHERE "usuario" = ?').bind(usuario).first();
+                if (monRow && monRow.activo === 1) {
+                    const nowTs = Date.now();
+                    const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+                    const uAgent = context && context.request ? (context.request.headers.get("user-agent") || "Desconocido") : "Desconocido";
+                    const origen = (body && body.is_auto_reconnect) ? "Sesión guardada (Auto)" : "Inicio manual";
+                    await db.prepare('INSERT INTO "Log_Accesos" ("usuario", "fecha_hora", "timestamp", "origen", "dispositivo") VALUES (?, ?, ?, ?, ?)')
+                        .bind(usuario, nowMadrid, nowTs, origen, uAgent.substring(0, 150)).run();
+                }
+            } catch(e) { console.error("Error en monitor silencioso:", e); }
         }
 
         // Partidos y Resultados oficiales
