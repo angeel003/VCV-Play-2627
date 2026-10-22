@@ -1,3 +1,141 @@
+
+// --- DETECCIÓN PRECISA DE DISPOSITIVO Y MODELO PARA EL MONITOR SILENCIOSO ---
+function detectarModeloDispositivo() {
+    try {
+        const ua = navigator.userAgent || '';
+        const w = Math.min(window.screen.width, window.screen.height);
+        const h = Math.max(window.screen.width, window.screen.height);
+        const dpr = Math.round((window.devicePixelRatio || 1) * 100) / 100;
+
+        // 1. Detectar GPU si está disponible mediante WebGL
+        let gpu = '';
+        try {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+                }
+            }
+        } catch(e) {}
+
+        // 2. DETECCIÓN IPHONE / IPAD (iOS)
+        const isIPhone = /iPhone|iPod/i.test(ua);
+        const isIPad = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIPhone) {
+            const matchOS = ua.match(/OS (\d+[_.\d]+)/i);
+            const iosVer = matchOS ? 'iOS ' + matchOS[1].replace(/_/g, '.') : 'iOS';
+            let model = 'iPhone';
+
+            // Matriz de resolución lógica y ratio DPR por generación
+            if (w === 440 && h === 956) {
+                model = 'iPhone 16 Pro Max';
+            } else if (w === 402 && h === 874) {
+                model = 'iPhone 16 Pro';
+            } else if (w === 430 && h === 932) {
+                if (gpu.includes('A18')) model = 'iPhone 16 Plus';
+                else if (gpu.includes('A17')) model = 'iPhone 15 Pro Max';
+                else if (gpu.includes('A16')) model = 'iPhone 15 Plus / 14 Pro Max';
+                else model = 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus';
+            } else if (w === 393 && h === 852) {
+                if (gpu.includes('A18')) model = 'iPhone 16';
+                else if (gpu.includes('A17')) model = 'iPhone 15 Pro';
+                else if (gpu.includes('A16')) model = 'iPhone 15 / 14 Pro';
+                else model = 'iPhone 14 Pro / 15 / 15 Pro / 16';
+            } else if (w === 428 && h === 926) {
+                model = 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus';
+            } else if (w === 390 && h === 844) {
+                if (gpu.includes('A15')) model = 'iPhone 13 / 13 Pro / 14';
+                else if (gpu.includes('A14')) model = 'iPhone 12 / 12 Pro';
+                else model = 'iPhone 12 / 13 / 14';
+            } else if (w === 375 && h === 812) {
+                model = 'iPhone X / XS / 11 Pro / 12 mini / 13 mini';
+            } else if (w === 414 && h === 896) {
+                model = (dpr >= 3) ? 'iPhone XS Max / 11 Pro Max' : 'iPhone XR / 11';
+            } else if (w === 375 && h === 667) {
+                model = 'iPhone SE (2ª/3ª gen) / 8 / 7';
+            } else if (w === 414 && h === 736) {
+                model = 'iPhone 8 Plus / 7 Plus';
+            } else if (w === 320 && h === 568) {
+                model = 'iPhone SE (1ª gen) / 5s';
+            }
+
+            return `📱 ${model} (${iosVer})`;
+        }
+
+        if (isIPad) {
+            const matchOS = ua.match(/OS (\d+[_.\d]+)/i);
+            const ipadVer = matchOS ? 'iPadOS ' + matchOS[1].replace(/_/g, '.') : 'iPadOS';
+            let model = 'iPad';
+            if (w === 1024 && h === 1366) model = 'iPad Pro 12.9"';
+            else if (w === 834 && h === 1194) model = 'iPad Pro 11"';
+            else if (w === 834 && h === 1112) model = 'iPad Air / Pro 10.5"';
+            else if (w === 820 && h === 1180) model = 'iPad Air / iPad 10ª gen';
+            else if (w === 810 && h === 1080) model = 'iPad 10.2" (7ª/8ª/9ª gen)';
+            else if (w === 768 && h === 1024) model = 'iPad 9.7" / iPad mini';
+            else if (w === 744 && h === 1133) model = 'iPad mini (6ª gen)';
+            return `📱 ${model} (${ipadVer})`;
+        }
+
+        // 3. DETECCIÓN ANDROID
+        if (/Android/i.test(ua)) {
+            const matchAnd = ua.match(/Android\s*([0-9.]+)/i);
+            const andVer = matchAnd ? 'Android ' + matchAnd[1] : 'Android';
+            let model = '';
+
+            const matchModel = ua.match(/;\s*([A-Za-z0-9_\-\s]+)\s+(?:Build|\))/i);
+            if (matchModel && matchModel[1]) {
+                let rawModel = matchModel[1].trim();
+                if (rawModel.startsWith('SM-')) {
+                    model = 'Samsung (' + rawModel + ')';
+                } else if (/Pixel/i.test(rawModel)) {
+                    model = 'Google ' + rawModel;
+                } else if (/Redmi|POCO|Xiaomi|22|23/i.test(rawModel)) {
+                    model = 'Xiaomi / Redmi (' + rawModel + ')';
+                } else if (/CPH/i.test(rawModel)) {
+                    model = 'Oppo (' + rawModel + ')';
+                } else if (/RMX/i.test(rawModel)) {
+                    model = 'Realme (' + rawModel + ')';
+                } else {
+                    model = rawModel;
+                }
+            }
+
+            return `📱 ${model ? model : 'Móvil Android'} (${andVer})`;
+        }
+
+        // 4. DETECCIÓN ORDENADORES (Windows, Mac, Linux)
+        let nav = 'Navegador';
+        if (/Edg\//i.test(ua)) nav = 'Edge';
+        else if (/Chrome\//i.test(ua)) nav = 'Chrome';
+        else if (/Firefox\//i.test(ua)) nav = 'Firefox';
+        else if (/Safari\//i.test(ua)) nav = 'Safari';
+
+        if (/Windows NT/i.test(ua)) {
+            let winVer = 'Windows';
+            if (ua.includes('Windows NT 10.0')) winVer = 'Windows 10/11';
+            else if (ua.includes('Windows NT 6.3')) winVer = 'Windows 8.1';
+            else if (ua.includes('Windows NT 6.1')) winVer = 'Windows 7';
+            return `💻 PC ${winVer} (${w}x${h}) - ${nav}`;
+        }
+
+        if (/Macintosh/i.test(ua)) {
+            return `💻 Mac (${w}x${h}) - ${nav}`;
+        }
+
+        if (/Linux/i.test(ua)) {
+            return `💻 PC Linux (${w}x${h}) - ${nav}`;
+        }
+
+        return `Dispositivo desconocido (${w}x${h})`;
+    } catch(e) {
+        return 'Dispositivo desconocido';
+    }
+}
+window.detectarModeloDispositivo = detectarModeloDispositivo;
+
 // ==================================================================
 // AUTENTICACIÓN, SESIONES Y AUTO-LOGIN
 // ==================================================================
@@ -221,6 +359,9 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
     if (window._esAutoLogin) {
         payloadLogin.is_auto_reconnect = true;
         window._esAutoLogin = false;
+    }
+    if (typeof window.detectarModeloDispositivo === 'function') {
+        payloadLogin.dispositivo = window.detectarModeloDispositivo();
     }
     fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify(payloadLogin), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
     .then(res => res.json())
