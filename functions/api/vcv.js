@@ -684,12 +684,34 @@ export async function onRequestPost(context) {
             if (b["Admin Web"] === "X") addBadge('admin', 'Admin Web');
             if (b["Directiva / Staff"]) addBadge('staff', b["Directiva / Staff"]);
             
+            // Helper para separar múltiples equipos manteniendo equipo y categoría en el mismo punto
+            const parseTeamsString = (raw) => {
+                if (!raw) return [];
+                let chunks = String(raw).split(/\s+y\s+|;\s*|\n/i).map(t => t.trim()).filter(Boolean);
+                let finalTeams = [];
+                chunks.forEach(chunk => {
+                    const parts = chunk.split(',').map(p => p.trim()).filter(Boolean);
+                    if (parts.length <= 2) {
+                        finalTeams.push(chunk);
+                    } else {
+                        for (let i = 0; i < parts.length; i++) {
+                            if (i + 1 < parts.length && /^(1ª|2ª|superliga|sm2|sf2|primera|segunda|división|nacional|masc|fem|juvenil|cadete|infantil)/i.test(parts[i+1])) {
+                                finalTeams.push(parts[i] + ', ' + parts[i+1]);
+                                i++;
+                            } else {
+                                finalTeams.push(parts[i]);
+                            }
+                        }
+                    }
+                });
+                return finalTeams;
+            };
+
             // Entrenador / Entrenadora de
             if (b["Entrenador de"]) {
-                const rawEnt = String(b["Entrenador de"]).trim();
-                const teamsEnt = rawEnt.split(',').map(item => item.trim()).filter(Boolean);
+                const teamsEnt = parseTeamsString(b["Entrenador de"]);
                 if (teamsEnt.length > 1) {
-                    addBadge('entrenador', `${lblEnt} de ${teamsEnt.join(' - ')}`, {
+                    addBadge('entrenador', `${lblEnt} de:`, {
                         roleTitle: `${lblEnt} de:`,
                         items: teamsEnt
                     });
@@ -700,10 +722,9 @@ export async function onRequestPost(context) {
 
             // Jugador / Jugadora de
             if (b["Jugador de"]) {
-                const rawJug = String(b["Jugador de"]).trim();
-                const teamsJug = rawJug.split(',').map(item => item.trim()).filter(Boolean);
+                const teamsJug = parseTeamsString(b["Jugador de"]);
                 if (teamsJug.length > 1) {
-                    addBadge('jugador', `${lblJug} de ${teamsJug.join(' - ')}`, {
+                    addBadge('jugador', `${lblJug} de:`, {
                         roleTitle: `${lblJug} de:`,
                         items: teamsJug
                     });
@@ -1208,6 +1229,7 @@ export async function onRequestPost(context) {
 
         return jsonResponse({
             status: "success",
+            usuario: usuario,
             notificaciones: notificaciones,
             mvp_votos: misVotosMvp,
             plantilla_superliga: plantillaSuperliga,

@@ -218,6 +218,15 @@ function renderBadgeIcon(b, sizeClasses, extraStyles) {
     if (b.type === 'lesionado') {
         return `<span style="font-size:${extraStyles.includes('12px') ? '11px' : '20px'}; margin-right:4px; color: #ff3b30; font-weight: 900; line-height: 1;">✚</span>`;
     }
+        if (b.type === 'podio' || (b.type && b.type.startsWith('podio_'))) {
+        let isSmall = extraStyles.includes('12px') || extraStyles.includes('14px') || extraStyles.includes('15px') || extraStyles.includes('16px');
+        if (b.subType === 'cuchara' || b.type === 'podio_cuchara') {
+            let sz = isSmall ? '15px' : '22px';
+            return `<span style="display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; line-height:1;" title="${b.title || 'Cuchara de Madera'}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" style="width:${sz}; height:${sz}; display:inline-block; vertical-align:middle; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));"><line x1="7" y1="25" x2="19" y2="13" stroke="#8B5A2B" stroke-width="3" stroke-linecap="round"/><line x1="8.5" y1="23.5" x2="18.5" y2="13.5" stroke="#CD853F" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="23" cy="9" rx="6.5" ry="4.2" transform="rotate(-45 23 9)" fill="#CD853F" stroke="#8B5A2B" stroke-width="1.4"/><ellipse cx="23" cy="9" rx="4.2" ry="2.2" transform="rotate(-45 23 9)" fill="#DEB887"/></svg></span>`;
+        }
+        let sz = isSmall ? '13px' : '18px';
+        return `<span style="font-size:${sz}; line-height: 1; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle;" title="${b.title || ''}">${b.emoji || '🏅'}</span>`;
+    }
     if (b.type === 'mvp') {
         let isSmall = extraStyles.includes('12px') || extraStyles.includes('14px') || extraStyles.includes('16px');
         let sz = isSmall ? '12px' : '16px';
@@ -247,14 +256,52 @@ function getBadgeCSS(type) {
     return '';
 }
 
+function stripLeadingBadgeEmoji(str, emoji) {
+    if (!str || typeof str !== 'string') return '';
+    let res = str.trim();
+    if (emoji && typeof emoji === 'string' && res.startsWith(emoji)) {
+        res = res.slice(emoji.length).trim();
+    }
+    res = res.replace(/^(🥇|🥈|🥉|🎯|🥄🪵|🥄|🪵|⭐|✨)\s*/u, '');
+    return res.trim();
+}
+window.stripLeadingBadgeEmoji = stripLeadingBadgeEmoji;
+
 function renderBadgeItemHtml(b, iconSize = "24px") {
     if (!b || b.type === 'permiso_mvp' || b.type === 'permiso_resultados') {
         return '';
     }
     // Si la insignia contiene una lista estructurada de varios partidos o equipos
     if (b.items && Array.isArray(b.items) && b.items.length > 0) {
-        let title = b.roleTitle || b.text || ((b.type === 'entrenador') ? 'Entrenador de:' : (b.type === 'mvp' ? 'MVP de:' : 'Jugador de:'));
-        let itemsHtml = b.items.map(it => `
+        // Defensive check: si los items vinieron erróneamente separados por comas (equipo en uno y categoría en otro), agruparlos juntos
+        let fixedItems = [];
+        for (let i = 0; i < b.items.length; i++) {
+            let it = b.items[i];
+            let next = b.items[i + 1];
+            if (next && /^(\d+[ªa]|superliga|sm2|sf2|primera|segunda|división|division|nacional|masc|fem|juvenil|cadete|infantil)/i.test(next.trim())) {
+                fixedItems.push(`${it}, ${next}`);
+                i++;
+            } else {
+                fixedItems.push(it);
+            }
+        }
+
+        // Si tras agrupar solo hay un equipo, renderizarlo en una sola línea elegante sin viñetas
+        if (fixedItems.length === 1 && (b.type === 'jugador' || b.type === 'entrenador')) {
+            let rolePrefix = b.roleTitle ? b.roleTitle.replace(/:$/, '').replace(/\s+de$/i, '') : (b.type === 'entrenador' ? 'Entrenador' : 'Jugador');
+            return `
+                <div style="display:flex; align-items:center; gap: 12px;">
+                    <div style="flex-shrink:0;">
+                        ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`) }
+                    </div>
+                    <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align:left;">${rolePrefix} de ${fixedItems[0]}</span>
+                </div>
+            `;
+        }
+
+        let rawTitle = b.roleTitle || b.text || ((b.type === 'entrenador') ? 'Entrenador de:' : (b.type === 'mvp' ? 'MVP de:' : 'Jugador de:'));
+        let title = stripLeadingBadgeEmoji(rawTitle, b.emoji);
+        let itemsHtml = fixedItems.map(it => `
             <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); margin-top:3px; padding-left:2px;">
                 <span style="color:var(--secondary-color); font-size:0.7rem; line-height:1;">•</span>
                 <span style="color:var(--text-main); font-weight:500;">${it}</span>
@@ -264,7 +311,7 @@ function renderBadgeItemHtml(b, iconSize = "24px") {
         return `
             <div style="display:flex; align-items:flex-start; gap: 12px; margin-bottom: 2px;">
                 <div style="margin-top:2px; flex-shrink:0;">
-                    ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`)}
+                    ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`) }
                 </div>
                 <div style="flex:1; text-align:left;">
                     <div style="font-size: 0.86rem; color: var(--text-main); font-weight: 700;">${title}</div>
@@ -277,11 +324,11 @@ function renderBadgeItemHtml(b, iconSize = "24px") {
     }
 
     // Formato estándar para una sola insignia o un solo equipo
-    let text = (b.text || '').replace(/, /g, " - ");
+    let text = stripLeadingBadgeEmoji(b.text || '', b.emoji);
     return `
         <div style="display:flex; align-items:center; gap: 12px;">
             <div style="flex-shrink:0;">
-                ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`)}
+                ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`) }
             </div>
             <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align:left;">${text}</span>
         </div>
