@@ -29,37 +29,38 @@ function detectarModeloDispositivo() {
             const iosVer = matchOS ? 'iOS ' + matchOS[1].replace(/_/g, '.') : 'iOS';
             let model = 'iPhone';
 
-            // Matriz de resolución lógica y ratio DPR por generación
-            if (w === 440 && h === 956) {
-                model = 'iPhone 16 Pro Max';
+            // Comprobación de dispositivo plegable (iPhone Fold / Flip)
+            const isFoldSpanning = (window.matchMedia && (
+                window.matchMedia('(horizontal-viewport-segments: 2)').matches ||
+                window.matchMedia('(vertical-viewport-segments: 2)').matches ||
+                window.matchMedia('(screen-spanning: single-fold-vertical)').matches ||
+                window.matchMedia('(screen-spanning: single-fold-horizontal)').matches
+            ));
+
+            if (isFoldSpanning || (w >= 650 && w <= 850 && h >= 750 && h <= 1000)) {
+                model = 'iPhone Plegable / Fold';
             } else if (w === 402 && h === 874) {
-                model = 'iPhone 16 Pro';
+                model = 'iPhone 16 Pro / 17 / 18 (6.3")';
+            } else if (w === 440 && h === 956) {
+                model = 'iPhone 16 Pro Max / 17 / 18 Pro Max (6.9")';
             } else if (w === 430 && h === 932) {
-                if (gpu.includes('A18')) model = 'iPhone 16 Plus';
-                else if (gpu.includes('A17')) model = 'iPhone 15 Pro Max';
-                else if (gpu.includes('A16')) model = 'iPhone 15 Plus / 14 Pro Max';
-                else model = 'iPhone 14 Pro Max / 15 Plus / 15 Pro Max / 16 Plus';
+                model = 'iPhone 14 Pro Max / 15 / 16 Plus (6.7")';
             } else if (w === 393 && h === 852) {
-                if (gpu.includes('A18')) model = 'iPhone 16';
-                else if (gpu.includes('A17')) model = 'iPhone 15 Pro';
-                else if (gpu.includes('A16')) model = 'iPhone 15 / 14 Pro';
-                else model = 'iPhone 14 Pro / 15 / 15 Pro / 16';
+                model = 'iPhone 14 Pro / 15 / 16 (6.1")';
             } else if (w === 428 && h === 926) {
-                model = 'iPhone 12 Pro Max / 13 Pro Max / 14 Plus';
+                model = 'iPhone 12 / 13 Pro Max / 14 Plus (6.7")';
             } else if (w === 390 && h === 844) {
-                if (gpu.includes('A15')) model = 'iPhone 13 / 13 Pro / 14';
-                else if (gpu.includes('A14')) model = 'iPhone 12 / 12 Pro';
-                else model = 'iPhone 12 / 13 / 14';
+                model = 'iPhone 12 / 13 / 14 (6.1")';
             } else if (w === 375 && h === 812) {
-                model = 'iPhone X / XS / 11 Pro / 12 mini / 13 mini';
+                model = 'iPhone X / XS / 11 Pro / Mini (5.4"-5.8")';
             } else if (w === 414 && h === 896) {
-                model = (dpr >= 3) ? 'iPhone XS Max / 11 Pro Max' : 'iPhone XR / 11';
+                model = (dpr >= 3) ? 'iPhone XS Max / 11 Pro Max (6.5")' : 'iPhone XR / 11 (6.1")';
             } else if (w === 375 && h === 667) {
-                model = 'iPhone SE (2ª/3ª gen) / 8 / 7';
+                model = 'iPhone SE (2ª/3ª gen) / 8 (4.7")';
             } else if (w === 414 && h === 736) {
-                model = 'iPhone 8 Plus / 7 Plus';
+                model = 'iPhone 8 Plus / 7 Plus (5.5")';
             } else if (w === 320 && h === 568) {
-                model = 'iPhone SE (1ª gen) / 5s';
+                model = 'iPhone SE (1ª gen) (4.0")';
             }
 
             return `📱 ${model} (${iosVer})`;
