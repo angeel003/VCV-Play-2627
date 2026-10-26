@@ -8,20 +8,20 @@
 // PLANTILLA INICIAL SUPERLIGA 2 (DORSAL, APODO, NOMBRE)
 // ------------------------------------------------------------------
 const PLANTILLA_SUPERLIGA_DEFAULT = [
-    { dorsal: 1, apodo: "Jorge", nombre: "Jorge Alonso Rivas", posicion: "", usuario: null },
-    { dorsal: 2, apodo: "Samuel", nombre: "Samuel Cabañeros Rodríguez", posicion: "", usuario: null },
-    { dorsal: 3, apodo: "Iker", nombre: "Iker de León Rodríguez", posicion: "", usuario: null },
-    { dorsal: 6, apodo: "Alonso", nombre: "Sergio Alonso Rivas", posicion: "", usuario: null },
-    { dorsal: 7, apodo: "Álvaro", nombre: "Álvaro Novella Gutiérrez", posicion: "", usuario: null },
-    { dorsal: 8, apodo: "Manu", nombre: "Manuel Posadas Yenes", posicion: "", usuario: null },
-    { dorsal: 9, apodo: "Alejandro", nombre: "Alejandro Bertrán Catalina", posicion: "", usuario: null },
-    { dorsal: 10, apodo: "Jany Jr", nombre: "Alejandro González Fernández", posicion: "", usuario: null },
-    { dorsal: 11, apodo: "Nikola", nombre: "Nikola Biserov Nankov", posicion: "", usuario: null },
-    { dorsal: 16, apodo: "Edu", nombre: "Eduardo Valverde Lorenzo", posicion: "", usuario: null },
-    { dorsal: 18, apodo: "Kike", nombre: "Enrique Carrasco Alvarado", posicion: "", usuario: null },
-    { dorsal: 21, apodo: "Fabián", nombre: "Fabián Corona Mediavilla", posicion: "", usuario: null },
-    { dorsal: 23, apodo: "Álvaro G.", nombre: "Álvaro García de Castro", posicion: "", usuario: null },
-    { dorsal: 24, apodo: "Kaloyan", nombre: "Kaloyan Biserov Nankov", posicion: "", usuario: null }
+    { dorsal: 1, apodo: "Jorge", nombre: "Jorge Alonso Rivas", posicion: "Colocador", usuario: null },
+    { dorsal: 2, apodo: "Samuel", nombre: "Samuel Cabañeros Rodríguez", posicion: "Receptor", usuario: null },
+    { dorsal: 3, apodo: "Iker", nombre: "Iker de León Rodríguez", posicion: "Central", usuario: null },
+    { dorsal: 6, apodo: "Alonso", nombre: "Sergio Alonso Rivas", posicion: "Líbero", usuario: null },
+    { dorsal: 7, apodo: "Álvaro", nombre: "Álvaro Novella Gutiérrez", posicion: "Opuesto", usuario: null },
+    { dorsal: 8, apodo: "Manu", nombre: "Manuel Posadas Yenes", posicion: "Receptor", usuario: null },
+    { dorsal: 9, apodo: "Alejandro", nombre: "Alejandro Bertrán Catalina", posicion: "Central", usuario: null },
+    { dorsal: 10, apodo: "Jany Jr", nombre: "Alejandro González Fernández", posicion: "Colocador", usuario: null },
+    { dorsal: 11, apodo: "Nikola", nombre: "Nikola Biserov Nankov", posicion: "Central", usuario: null },
+    { dorsal: 16, apodo: "Edu", nombre: "Eduardo Valverde Lorenzo", posicion: "Líbero", usuario: null },
+    { dorsal: 18, apodo: "Kike", nombre: "Enrique Carrasco Alvarado", posicion: "Receptor", usuario: null },
+    { dorsal: 21, apodo: "Fabián", nombre: "Fabián Corona Mediavilla", posicion: "Opuesto", usuario: null },
+    { dorsal: 23, apodo: "Álvaro G.", nombre: "Álvaro García de Castro", posicion: "Receptor", usuario: null },
+    { dorsal: 24, apodo: "Kaloyan", nombre: "Kaloyan Biserov Nankov", posicion: "Central", usuario: null }
 ];
 
 window.getPlantillaSuperligaActual = function() {
