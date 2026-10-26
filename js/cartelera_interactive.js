@@ -347,6 +347,22 @@
                 if (found.apodo) apodo = found.apodo;
                 if (found.posicion) posicion = found.posicion;
             }
+        } else if (!dorsal && Array.isArray(plantilla) && plantilla.length > 0) {
+            let normS = s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            let found = plantilla.find(p => {
+                let pAp = (p.apodo || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                let pNom = (p.nombre || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return (pAp && (normS.includes(pAp) || pAp.includes(normS))) ||
+                       (pNom && (normS.includes(pNom) || pNom.includes(normS))) ||
+                       (normS.includes('novella') && parseInt(p.dorsal) === 7) ||
+                       (normS.includes('fabian') && parseInt(p.dorsal) === 21);
+            });
+            if (found) {
+                dorsal = parseInt(found.dorsal);
+                if (found.nombre) nombre = found.nombre;
+                if (found.apodo) apodo = found.apodo;
+                if (found.posicion) posicion = found.posicion;
+            }
         }
         
         if (!apodo) apodo = (nombre ? nombre.split(' ')[0] : 'Jugador');
