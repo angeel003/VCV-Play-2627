@@ -2981,8 +2981,12 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         cargarImagenCanvas(`files/images/escudos/${safeVis}.webp`)
     ]);
 
-    const yaJugado = (match.estado === 'CERRADO' && match.oficial_sets);
-    const pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : null;
+    const nowMs = Date.now();
+    const hasOficialSets = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+    const yaJugado = Boolean(hasOficialSets || match.estado === 'FINALIZADO' || (match.estado === 'CERRADO' && hasOficialSets));
+    const isPastDeadline = Boolean(match.timestamp && (nowMs >= match.timestamp));
+    const isCerrado = Boolean(yaJugado || match.estado === 'CERRADO' || match.estado === 'BLOQUEADO' || isPastDeadline);
+    const pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : ((data.mis_predicciones && data.mis_predicciones[idPart]) ? data.mis_predicciones[idPart] : null);
 
     // --- BARRA SUPERIOR DE METADATOS (Pills redondeadas en una fila equilibrada) ---
     // Badge 1: Categoría
@@ -3019,7 +3023,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         statusText = 'FINALIZADO';
         statusColor = '#2ecc71';
         statusBg = 'rgba(46, 204, 113, 0.2)';
-    } else if (match.estado === 'CERRADO') {
+    } else if (isCerrado) {
         statusText = '🔒 CERRADA';
         statusColor = '#ff4757';
         statusBg = 'rgba(255, 71, 87, 0.2)';
@@ -3119,7 +3123,13 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = '#b7a4be';
         ctx.font = '700 22px sans-serif';
         let matchDateStr = match.timestamp ? new Date(match.timestamp).toLocaleDateString() : 'Por disputar';
-        ctx.fillText(matchDateStr, midX, posterY + 215);
+        if (isCerrado && isPastDeadline) {
+            ctx.fillText(matchDateStr + ' • En juego', midX, posterY + 215);
+        } else if (isCerrado) {
+            ctx.fillText(matchDateStr + ' • Cerrado', midX, posterY + 215);
+        } else {
+            ctx.fillText(matchDateStr, midX, posterY + 215);
+        }
     }
 
     // 3. ZONA VISITANTE (Mitad Derecha X = W - 260)
@@ -3324,11 +3334,22 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = '#b7a4be';
         ctx.font = '700 30px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Sin predicción registrada aún para este partido', midX, userBlockY + 120);
-
-        ctx.fillStyle = '#f3ce5e';
-        ctx.font = '700 24px sans-serif';
-        ctx.fillText('¡Entra en vcvplay.com y pronostica antes de que empiece!', midX, userBlockY + 175);
+        if (yaJugado) {
+            ctx.fillText('Sin predicción registrada para este partido', midX, userBlockY + 120);
+            ctx.fillStyle = '#f3ce5e';
+            ctx.font = '700 24px sans-serif';
+            ctx.fillText('¡Entra en vcvplay.com y consulta las clasificaciones!', midX, userBlockY + 175);
+        } else if (isCerrado) {
+            ctx.fillText('El plazo de predicciones para este partido ha finalizado', midX, userBlockY + 120);
+            ctx.fillStyle = '#f3ce5e';
+            ctx.font = '700 24px sans-serif';
+            ctx.fillText('¡Entra en vcvplay.com y sigue la jornada en directo!', midX, userBlockY + 175);
+        } else {
+            ctx.fillText('Sin predicción registrada aún para este partido', midX, userBlockY + 120);
+            ctx.fillStyle = '#f3ce5e';
+            ctx.font = '700 24px sans-serif';
+            ctx.fillText('¡Entra en vcvplay.com y pronostica antes de que empiece!', midX, userBlockY + 175);
+        }
     }
 }
 
@@ -3563,9 +3584,20 @@ window.ejecutarCompartirTarjeta = async function() {
         if (match) {
             const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
             const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
-            const pUser = (data.mis_predicciones || {})[match.id_partido];
-            
-            if (pUser && pUser.sets) {
+            const pUser = (data.predicciones_usuario && data.predicciones_usuario[match.id_partido]) 
+                       ? data.predicciones_usuario[match.id_partido] 
+                       : ((data.mis_predicciones && data.mis_predicciones[match.id_partido]) || null);
+
+            const hasOficialSets = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+            const yaJugado = Boolean(hasOficialSets || match.estado === 'FINALIZADO' || (match.estado === 'CERRADO' && hasOficialSets));
+
+            if (yaJugado) {
+                if (pUser && pUser.sets) {
+                    shareText = `🏐 Resultado final ${match.oficial_sets} en el ${locName} vs ${visName}. ¡Mi pronóstico fue ${pUser.sets}! Consulta el ranking en VCV Play:`;
+                } else {
+                    shareText = `🏐 Resultado final ${match.oficial_sets} en el ${locName} vs ${visName}. ¡Sigue las clasificaciones en VCV Play!`;
+                }
+            } else if (pUser && pUser.sets) {
                 shareText = `🏐 ¡Mi pronóstico para el ${locName} vs ${visName} en VCV Play es ${pUser.sets}! ¿Te atreves a competir conmigo? 🏆 Regístrate gratis en:`;
             } else {
                 shareText = `🏐 ¡Sigue el ${locName} vs ${visName} en VCV Play! Pronostica los resultados de los partidos del club y compite en el ranking:`;
