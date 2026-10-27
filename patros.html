@@ -46,14 +46,14 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at 50% 45%, #230b2b 0%, #0c0210 100%);
+    background: radial-gradient(circle at 50% 35%, #250a2e 0%, #0d0211 100%);
     z-index: 99999;
-    overflow: hidden;
-  }
-  @media (max-height: 640px) {
-    #splashTopSponsor img { height: 52px !important; }
-    #splashCobrandSponsor { height: 54px !important; }
-    #splashBottomSponsors { transform: scale(0.88); transform-origin: bottom center; }
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top, 20px) + 20px) 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
+    box-sizing: border-box;
+    overflow-y: auto;
   }
 </style>
 <style>
@@ -1884,124 +1884,110 @@
 </header>
 
 <div id="vcvAutoLoginOverlay">
-  <!-- BARRA DE CONTROL EN SPLASH (CAMBIO DE VISTAS Y CIERRE) -->
-  <div style="position: absolute; top: 12px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; z-index: 100002;">
-    <div style="display: flex; gap: 4px; background: rgba(0,0,0,0.7); padding: 3px 6px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(10px);">
-      <button type="button" id="btnSplashOptBalanced" onclick="window.setSplashVariant('balanced')" style="background: rgba(212,175,55,0.35); border: none; color: #fff; font-size: 0.62rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; cursor: pointer; transition: all 0.2s;">↕️ Principal Arriba (68px)</button>
-      <button type="button" id="btnSplashOptCobrand" onclick="window.setSplashVariant('cobrand')" style="background: transparent; border: none; color: rgba(255,255,255,0.7); font-size: 0.62rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; cursor: pointer; transition: all 0.2s;">🤝 Co-Branding Central</button>
-    </div>
-    <button type="button" onclick="document.getElementById('vcvAutoLoginOverlay').style.setProperty('display', 'none', 'important')" style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.25); color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;" title="Cerrar Splash">&times;</button>
-  </div>
+  <!-- BOTÓN DE CIERRE RÁPIDO PARA PRUEBAS -->
+  <button type="button" onclick="document.getElementById('vcvAutoLoginOverlay').style.setProperty('display', 'none', 'important')" style="position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.22); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; z-index: 100002; backdrop-filter: blur(8px);" title="Cerrar Splash">&times;</button>
 
-  <!-- 1. TIER 1 SUPERIOR: PATROCINADOR PRINCIPAL GRANDE (MISMO TAMAÑO QUE EL ESCUDO: 68px) -->
-  <div id="splashTopSponsor" style="position: absolute; top: calc(env(safe-area-inset-top, 20px) + 38px); left: 0; right: 0; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
-    <img src="files/images/valcyl_logo.png" alt="VALCYL" style="height: 68px; max-width: 85vw; width: auto; object-fit: contain; filter: brightness(0) invert(1); margin-bottom: 5px;">
-    <span style="font-size: 0.62rem; letter-spacing: 2.5px; color: rgba(255,255,255,0.75); font-weight: 700; text-transform: uppercase;">Patrocinador Principal Oficial</span>
-  </div>
-
-  <!-- 2. NÚCLEO CENTRAL DEL CLUB (SIEMPRE 100% CENTRADO EN PANTALLA) -->
-  <div id="splashClubCore" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; text-align: center; z-index: 20;">
+  <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 440px; margin: auto;">
     
-    <!-- Fila de Logos: En modo 'balanced' muestra solo el club; en modo 'cobrand' muestra Club ✕ Sponsor -->
-    <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
-      <!-- Escudo oficial del club (72px) -->
-      <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05); box-shadow: 0 0 25px rgba(212,175,55,0.25); flex-shrink: 0;">
+    <!-- 1. NÚCLEO CENTRAL DEL CLUB (ESCUDO + VCV PLAY + CARGANDO) -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; margin-bottom: 24px;">
+      <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05); box-shadow: 0 0 25px rgba(212,175,55,0.25);">
         <img src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain;">
       </div>
-
-      <!-- Co-Branding Divider & Logo (Solo visible en modo 'cobrand') -->
-      <div id="splashCobrandDivider" style="display: none; font-size: 1.5rem; color: rgba(255,255,255,0.3); font-weight: 300;">✕</div>
-      <img id="splashCobrandSponsor" src="files/images/valcyl_logo.png" alt="VALCYL" style="display: none; height: 68px; max-width: 45vw; width: auto; object-fit: contain; filter: brightness(0) invert(1);">
-    </div>
-
-    <!-- Título de la app -->
-    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 900; color: var(--secondary-color, #d4af37); letter-spacing: -0.3px; margin-top: 2px;">
-      VCV PLAY <span style="color: #fff;">26/27</span>
-    </div>
-
-    <!-- Spinner y estado -->
-    <div id="splashStatusText" style="display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted, #b7a4be); font-size: 0.85rem; font-weight: 600;">
-      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 15px; height: 15px; border-width: 2px;"></span>
-      <span>Cargando tus partidos...</span>
-    </div>
-  </div>
-
-  <!-- 3. BLOQUE INFERIOR DE PATROCINADORES (ANCLADO ABAJO: EQUIPOS Y COLABORADORES) -->
-  <div id="splashBottomSponsors" style="position: absolute; bottom: calc(env(safe-area-inset-bottom, 20px) + 16px); left: 16px; right: 16px; margin: 0 auto; max-width: 440px; text-align: center; display: flex; flex-direction: column; gap: 10px; z-index: 10;">
-    
-    <!-- TIER 2: SPONSORS DE EQUIPOS (3 logos vectoriales en blanco más grandes: 30px) -->
-    <div style="width: 100%;">
-      <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 10px; width: 100%;">
-        
-        <!-- Equipo 1: Superliga 2 -->
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-          <svg width="78" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 8 L24 20 L10 32 L4 20 Z" fill="#ffffff"/>
-            <path d="M22 8 L36 20 L22 32 L16 20 Z" fill="#ffffff" fill-opacity="0.85"/>
-            <text x="44" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#ffffff" letter-spacing="1">NEXUS</text>
-          </svg>
-          <span style="font-size: 0.55rem; letter-spacing: 0.7px; color: rgba(255,255,255,0.75); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Superliga 2</span>
-        </div>
-
-        <!-- Divisor sutil -->
-        <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.15); margin-top: 2px;"></div>
-
-        <!-- Equipo 2: 1ª Nacional Fem -->
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-          <svg width="78" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="16" cy="20" r="10" stroke="#ffffff" stroke-width="3" fill="none"/>
-            <circle cx="16" cy="20" r="4" fill="#ffffff"/>
-            <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#ffffff" letter-spacing="1">AURA</text>
-          </svg>
-          <span style="font-size: 0.55rem; letter-spacing: 0.7px; color: rgba(255,255,255,0.75); font-weight: 700; text-transform: uppercase; margin-top: 3px;">1ª Nac. Fem</span>
-        </div>
-
-        <!-- Divisor sutil -->
-        <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.15); margin-top: 2px;"></div>
-
-        <!-- Equipo 3: Cantera Base -->
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-          <svg width="78" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="16,6 26,28 6,28" stroke="#ffffff" stroke-width="2.5" fill="none"/>
-            <polygon points="16,14 22,26 10,26" fill="#ffffff"/>
-            <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#ffffff" letter-spacing="1">TERRA</text>
-          </svg>
-          <span style="font-size: 0.55rem; letter-spacing: 0.7px; color: rgba(255,255,255,0.75); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Cantera Base</span>
-        </div>
-
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--secondary-color, #d4af37); letter-spacing: -0.3px;">
+        VCV PLAY <span style="color: #fff;">26/27</span>
       </div>
-      <div style="font-size: 0.48rem; letter-spacing: 1.8px; color: rgba(255,255,255,0.45); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
-        Patrocinadores Oficiales de Equipo
+      <div id="splashStatusText" style="display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted, #b7a4be); font-size: 0.85rem; font-weight: 600;">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 14px; height: 14px; border-width: 2px;"></span>
+        <span>Cargando tus partidos...</span>
       </div>
     </div>
 
-    <!-- TIER 3: COLABORADORES OFICIALES (Menor tamaño e inversión) -->
-    <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px;">
-      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; opacity: 0.7; flex-wrap: wrap;">
-        <!-- Fisio -->
-        <div style="display: flex; align-items: center; gap: 4px;" title="Fisioterapia y Salud">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
-          <span style="font-size: 0.6rem; font-weight: 700; color: #fff; letter-spacing: 0.5px;">CLINIC</span>
+    <!-- 2. BLOQUE DE PATROCINADORES TODOS DEBAJO (EN ORDEN DE IMPORTANCIA / TAMAÑO COHERENTE) -->
+    <!-- TONO: MORADO / LAVANDA TRANSLÚCIDO INTEGRADO -->
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;">
+
+      <!-- TIER 1: PATROCINADOR PRINCIPAL (MAYOR INVERSIÓN - TAMAÑO GRANDE 56px) -->
+      <div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 4px;">
+        <img src="files/images/valcyl_logo_lavender.png" alt="VALCYL" onerror="this.src='files/images/valcyl_logo.png'; this.style.filter='brightness(0) invert(85%) sepia(20%) saturate(1400%) hue-rotate(240deg)';" style="height: 56px; max-width: 75vw; width: auto; object-fit: contain; opacity: 0.9; margin-bottom: 4px;">
+        <span style="font-size: 0.58rem; letter-spacing: 2.2px; color: rgba(226, 208, 238, 0.7); font-weight: 700; text-transform: uppercase;">Patrocinador Principal Oficial</span>
+      </div>
+
+      <!-- TIER 2: SPONSORS DE EQUIPOS (INVERSIÓN MEDIA - A LA MITAD: 26px) -->
+      <div style="width: 100%; padding: 4px 0;">
+        <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 12px; width: 100%;">
+          
+          <!-- Superliga 2 -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <path d="M10 8 L24 20 L10 32 L4 20 Z" fill="#d8c2e6"/>
+              <path d="M22 8 L36 20 L22 32 L16 20 Z" fill="#d8c2e6" fill-opacity="0.8"/>
+              <text x="44" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">NEXUS</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Superliga 2</span>
+          </div>
+
+          <!-- Divisor vertical fino -->
+          <div style="width: 1px; height: 26px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+
+          <!-- 1ª Nac. Fem -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <circle cx="16" cy="20" r="10" stroke="#d8c2e6" stroke-width="3" fill="none"/>
+              <circle cx="16" cy="20" r="4" fill="#d8c2e6"/>
+              <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">AURA</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">1ª Nac. Fem</span>
+          </div>
+
+          <!-- Divisor vertical fino -->
+          <div style="width: 1px; height: 26px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+
+          <!-- Cantera Base -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <polygon points="16,6 26,28 6,28" stroke="#d8c2e6" stroke-width="2.5" fill="none"/>
+              <polygon points="16,14 22,26 10,26" fill="#d8c2e6"/>
+              <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">TERRA</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Cantera Base</span>
+          </div>
+
         </div>
-        <!-- Material -->
-        <div style="display: flex; align-items: center; gap: 4px;" title="Material Técnico">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-          <span style="font-size: 0.6rem; font-weight: 700; color: #fff; letter-spacing: 0.5px;">SPORT</span>
-        </div>
-        <!-- Hostelería -->
-        <div style="display: flex; align-items: center; gap: 4px;" title="Restauración">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-          <span style="font-size: 0.6rem; font-weight: 700; color: #fff; letter-spacing: 0.5px;">BISTRO</span>
-        </div>
-        <!-- Transporte -->
-        <div style="display: flex; align-items: center; gap: 4px;" title="Transportes">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-          <span style="font-size: 0.6rem; font-weight: 700; color: #fff; letter-spacing: 0.5px;">BUS</span>
+        <div style="font-size: 0.46rem; letter-spacing: 1.6px; color: rgba(226, 208, 238, 0.4); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
+          Sponsors Oficiales de Equipo
         </div>
       </div>
-      <div style="font-size: 0.48rem; letter-spacing: 2px; color: rgba(255,255,255,0.45); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
-        Colaboradores Oficiales
+
+      <!-- TIER 3: COLABORADORES OFICIALES (MENOR INVERSIÓN - MÁS PEQUEÑOS Y TRANSLÚCIDOS: 13px / 45% OPACIDAD) -->
+      <div style="border-top: 1px solid rgba(216, 194, 230, 0.1); padding-top: 8px; width: 100%;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 18px; opacity: 0.45; flex-wrap: wrap;">
+          <!-- Fisio -->
+          <div style="display: flex; align-items: center; gap: 4px;" title="Fisioterapia y Salud">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">CLINIC</span>
+          </div>
+          <!-- Material -->
+          <div style="display: flex; align-items: center; gap: 4px;" title="Material Técnico">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">SPORT</span>
+          </div>
+          <!-- Hostelería -->
+          <div style="display: flex; align-items: center; gap: 4px;" title="Restauración">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">BISTRO</span>
+          </div>
+          <!-- Transporte -->
+          <div style="display: flex; align-items: center; gap: 4px;" title="Transportes">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">BUS</span>
+          </div>
+        </div>
+        <div style="font-size: 0.44rem; letter-spacing: 1.8px; color: rgba(226, 208, 238, 0.35); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
+          Colaboradores Oficiales
+        </div>
       </div>
+
     </div>
 
   </div>
@@ -3532,8 +3518,7 @@
 <!-- BARRA CONTROLADORA DE DEMO PATROCINIOS -->
 <div id="vcvSponsorDemoBar" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100000; background: rgba(18, 5, 23, 0.95); border: 1.5px solid var(--secondary-color); border-radius: 30px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 22px rgba(0,0,0,0.7); font-size: 0.74rem; color: #fff; max-width: 96vw; flex-wrap: wrap; justify-content: center; backdrop-filter: blur(10px);">
   <span style="color: var(--secondary-color); font-weight: 900;">⭐ Demo Patrocinios (patros.html)</span>
-  <button type="button" onclick="window.testSplashDemo('balanced')" style="background: rgba(212,175,55,0.3); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">👁️ Splash Principal Arriba (68px)</button>
-  <button type="button" onclick="window.testSplashDemo('cobrand')" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🤝 Splash Co-Branding</button>
+  <button type="button" onclick="window.testSplashDemo()" style="background: rgba(212,175,55,0.25); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">👁️ Ver Splash (Sponsors Debajo)</button>
   <button type="button" onclick="window.testLoginDemo()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🔑 Ver Login</button>
   <button type="button" onclick="window.testAppDemo()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🏐 Ver App</button>
   <button type="button" onclick="window.testPatrosGuestTab()" style="background: rgba(212,175,55,0.3); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">⭐ Pestaña Sponsors</button>
@@ -3541,36 +3526,11 @@
 </div>
 
 <script>
-  window.testSplashDemo = function(preferredVariant) {
+  window.testSplashDemo = function() {
     var o = document.getElementById('vcvAutoLoginOverlay');
     if (o) {
-      if (preferredVariant) {
-        window.setSplashVariant(preferredVariant);
-      }
-      o.style.setProperty('display', 'block', 'important');
+      o.style.setProperty('display', 'flex', 'important');
       o.style.opacity = '1';
-    }
-  };
-
-  window.setSplashVariant = function(variant) {
-    var topEl = document.getElementById('splashTopSponsor');
-    var divCobrand = document.getElementById('splashCobrandDivider');
-    var imgCobrand = document.getElementById('splashCobrandSponsor');
-    var btnBal = document.getElementById('btnSplashOptBalanced');
-    var btnCob = document.getElementById('btnSplashOptCobrand');
-    
-    if (variant === 'cobrand') {
-      if (topEl) topEl.style.display = 'none';
-      if (divCobrand) divCobrand.style.display = 'block';
-      if (imgCobrand) imgCobrand.style.display = 'block';
-      if (btnBal) { btnBal.style.background = 'transparent'; btnBal.style.color = 'rgba(255,255,255,0.7)'; }
-      if (btnCob) { btnCob.style.background = 'rgba(212,175,55,0.35)'; btnCob.style.color = '#fff'; }
-    } else {
-      if (topEl) topEl.style.display = 'flex';
-      if (divCobrand) divCobrand.style.display = 'none';
-      if (imgCobrand) imgCobrand.style.display = 'none';
-      if (btnBal) { btnBal.style.background = 'rgba(212,175,55,0.35)'; btnBal.style.color = '#fff'; }
-      if (btnCob) { btnCob.style.background = 'transparent'; btnCob.style.color = 'rgba(255,255,255,0.7)'; }
     }
   };
 
