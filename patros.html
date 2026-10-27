@@ -2024,6 +2024,14 @@
         <button id="btnGuest" class="btn-outline-v2" style="width: 100%; margin-top: 10px;">
           👀 Entrar como invitado
         </button>
+
+        <!-- Botón discreto FAQ con flecha -->
+        <div style="text-align: center; margin-top: 8px;">
+          <button type="button" onclick="window.abrirFaqDesplegado()" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.76rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: 0.75; padding: 4px 10px; border-radius: 12px; transition: all 0.2s; user-select: none;" onmouseover="this.style.opacity='1'; this.style.color='var(--secondary-color)';" onmouseout="this.style.opacity='0.75'; this.style.color='var(--text-muted)';">
+            <span>FAQ</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: vcvBounceDown 1.5s infinite;"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+          </button>
+        </div>
         
         <div id="loginMessage" class="alert-box" style="margin-top:10px; display:none; background-color:#ff4444; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold;"></div>
     </div>
@@ -2110,15 +2118,8 @@
 
     </div>
 
-    <!-- Indicador visual con flecha hacia Preguntas Frecuentes y Registro -->
-    <div onclick="document.getElementById('masterFaq').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer; text-align: center; margin: 18px auto 14px; user-select: none;">
-      <span style="font-size: 0.78rem; font-weight: 700; color: var(--secondary-color); display: inline-flex; align-items: center; gap: 6px; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); padding: 6px 16px; border-radius: 20px; transition: all 0.2s;">
-        <span>¿No tienes cuenta? Preguntas Frecuentes</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: vcvBounceDown 1.5s infinite;"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-      </span>
-    </div>
-
-    <div class="faq-container" style="width:100%; max-width:500px; margin:0 auto; padding:0; background:transparent; border:none; box-shadow:none;">
+    <!-- Contenedor FAQ (oculto por defecto hasta pulsar FAQ) -->
+    <div id="faqContainerWrapper" class="faq-container" style="display:none; width:100%; max-width:500px; margin: 18px auto 30px; padding:0; background:transparent; border:none; box-shadow:none;">
     <details class="vcv-faq-master" id="masterFaq" style="scroll-margin-top: calc(20px + env(safe-area-inset-top, 0px));">
         <summary>Preguntas Frecuentes y Gestión</summary>
         <div class="faq-content-v2">
@@ -3583,6 +3584,20 @@
     if (o) {
       o.style.setProperty('display', 'flex', 'important');
       o.style.opacity = '1';
+    }
+  };
+
+  window.abrirFaqDesplegado = function() {
+    var wrap = document.getElementById('faqContainerWrapper');
+    var faq = document.getElementById('masterFaq');
+    if (wrap) {
+      wrap.style.display = 'block';
+    }
+    if (faq) {
+      faq.open = true;
+      setTimeout(function() {
+        faq.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     }
   };
 
