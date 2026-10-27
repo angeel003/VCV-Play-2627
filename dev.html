@@ -1824,6 +1824,13 @@
   </style>
 
 
+
+<style>
+  @keyframes vcvBounceDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+</style>
 </head>
 <body>
 
@@ -1920,6 +1927,14 @@
         </button>
         
         <div id="loginMessage" class="alert-box" style="margin-top:10px; display:none; background-color:#ff4444; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold;"></div>
+    </div>
+
+    <!-- Indicador visual con flecha hacia Preguntas Frecuentes y Registro -->
+    <div onclick="document.getElementById('masterFaq').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer; text-align: center; margin: 18px auto 14px; user-select: none;">
+      <span style="font-size: 0.78rem; font-weight: 700; color: var(--secondary-color); display: inline-flex; align-items: center; gap: 6px; background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); padding: 6px 16px; border-radius: 20px; transition: all 0.2s;">
+        <span>¿No tienes cuenta? Preguntas Frecuentes</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: vcvBounceDown 1.5s infinite;"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </span>
     </div>
 
     <div class="faq-container" style="width:100%; max-width:500px; margin:0 auto; padding:0; background:transparent; border:none; box-shadow:none;">
