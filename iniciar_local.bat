@@ -9,7 +9,9 @@ echo.
 echo Iniciando servidor local en el puerto 8080...
 echo.
 echo Abre tu navegador en:
-echo     http://localhost:8080/dev.html
+echo     http://localhost:8080/dev.html       (Versión desarrollo)
+echo     http://localhost:8080/patros.html    (Demo patrocinadores)
+echo     http://localhost:8080/index.html     (Versión oficial)
 echo.
 echo Para detener el servidor, cierra esta ventana o pulsa Ctrl + C.
 echo =======================================================
