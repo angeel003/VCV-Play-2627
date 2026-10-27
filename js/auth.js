@@ -1,10 +1,23 @@
 window.ocultarOverlayAutoLogin = function() {
     try {
-        document.documentElement.classList.remove('vcv-auto-logging-in');
-        const o = document.getElementById('vcvAutoLoginOverlay');
-        if (o) {
-            o.style.setProperty('display', 'none', 'important');
-        }
+        const elapsed = Date.now() - (window._autoLoginStartTs || 0);
+        // Garantizar al menos 1.2s en auto-login para que el aficionado aprecie la pantalla de carga y el patrocinador
+        const minTime = window._autoLoginStartTs ? 1200 : 0;
+        const remaining = Math.max(0, minTime - elapsed);
+        setTimeout(() => {
+            const o = document.getElementById('vcvAutoLoginOverlay');
+            if (o) {
+                o.style.transition = 'opacity 0.3s ease';
+                o.style.opacity = '0';
+                setTimeout(() => {
+                    document.documentElement.classList.remove('vcv-auto-logging-in');
+                    o.style.setProperty('display', 'none', 'important');
+                    o.style.opacity = '1';
+                }, 300);
+            } else {
+                document.documentElement.classList.remove('vcv-auto-logging-in');
+            }
+        }, remaining);
     } catch(e) {}
 };
 
@@ -257,8 +270,8 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             }
 
             window.appData = data;
-            window.appData.usuario = usr;
-            window.currentUser = usr;
+            window.appData.usuario = "Invitado";
+            window.currentUser = "Invitado";
 
             // Header User chip for guest
             const rankEl = document.getElementById('h2-user-rank');
@@ -917,6 +930,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
 // SISTEMA DE SESIÓN PERSISTENTE Y AUTO-LOGIN (LOCAL)
 // -------------------------------------------------------------
 window.verificarAutoLogin = function() {
+    window._autoLoginStartTs = Date.now();
     // Situación 1: Si el usuario acaba de pulsar 'Cerrar sesión / Volver', no auto-iniciar
     if (sessionStorage.getItem('vcv_just_logged_out')) {
         document.documentElement.classList.remove('vcv-auto-logging-in');
