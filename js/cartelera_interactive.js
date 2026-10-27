@@ -138,7 +138,7 @@
     function switchTabV2(sectionId, btn) {
         if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
         // Hide all sections in appSection
-        const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'prediccionesTotalesSection', 'guestInfoSection', 'patrosGuestSection'];
+        const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'guestInfoSection', 'patrosGuestSection'];
         sections.forEach(s => {
             const el = document.getElementById(s);
             if (el) el.classList.remove('active-tab');
@@ -150,12 +150,6 @@
             target.classList.add('active-tab');
         }
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
-        
-        // If cartelera, also show prediccionesTotalesSection right below it (only for normal registered users, never for guest)
-        if (sectionId === 'carteleraSection' && !window.isGuestMode) {
-            const extra = document.getElementById('prediccionesTotalesSection');
-            if (extra && extra.style.display !== 'none') extra.classList.add('active-tab');
-        }
 
         // Update active button state
         document.querySelectorAll('.nav-item-v2').forEach(b => b.classList.remove('active'));
@@ -205,8 +199,6 @@
         // Initialize first tab as active
         const firstSec = document.getElementById('carteleraSection');
         if (firstSec) firstSec.classList.add('active-tab');
-        const tsSec = document.getElementById('prediccionesTotalesSection');
-        if (tsSec) tsSec.classList.add('active-tab');
     });
 
     function handleSaveOrModifyV2(idPart) {

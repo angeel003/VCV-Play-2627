@@ -412,10 +412,33 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         listHTML = `<div style="display: flex; flex-direction: column; gap: 12px;">` + partidosEvaluados.join("") + `</div>`;
     }
 
-    container.innerHTML = topBar + statsHTML + `<h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main); margin-bottom:12px; margin-top:25px;">Desglose de Partidos</h3>` + listHTML;
+    // Mini botón para avanzar a la Predicción de Puntos Totales
+    const miniBotonTotalesHTML = `
+      <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 22px;">
+        <button type="button" onclick="window.irAPrediccionTotales && window.irAPrediccionTotales()" style="display: inline-flex; align-items: center; gap: 7px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.45); color: var(--vcv-dorado, #ffd700); padding: 6px 14px; border-radius: 20px; font-size: 0.76rem; font-weight: 800; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s ease;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--vcv-dorado, #ffd700);"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          <span>Predicción Puntos Totales</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.85;"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+        </button>
+      </div>
+    `;
+
+    container.innerHTML = topBar + statsHTML + miniBotonTotalesHTML + `<h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main); margin-bottom:12px; margin-top:15px;">Desglose de Partidos</h3>` + listHTML;
     
     if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
 }
+
+window.irAPrediccionTotales = function() {
+    const sec = document.getElementById('prediccionesTotalesSection');
+    if (!sec) return;
+    const details = sec.querySelector('details') || document.getElementById('detailsPrediccionesTotales');
+    if (details) {
+        details.open = true;
+    }
+    setTimeout(() => {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 40);
+};
 
 function cargarDatosAntiguos() {
     fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'load', usuario: currentUser, password: currentPassword }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })

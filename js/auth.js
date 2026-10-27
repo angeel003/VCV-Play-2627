@@ -794,6 +794,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 if(tsSec) tsSec.remove();
             }
             if(data.equipos_totales && data.equipos_totales.length > 0) {
+                let tsSec = document.getElementById('prediccionesTotalesSection');
+                if(tsSec) tsSec.style.display = '';
                 
                 
                 let isClosed = new Date().getTime() >= new Date("2026-10-10T12:00:00").getTime();

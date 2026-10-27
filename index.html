@@ -2667,7 +2667,29 @@
       </div>
     
     </section>
-    <section id="historialSection"><div id="historialContentV2"></div></section>
+    <section id="historialSection">
+      <div id="historialContentV2"></div>
+      
+      <!-- Predicción de Puntos Totales al final de Mis Predicciones -->
+      <div id="prediccionesTotalesSection" style="padding-top: 25px; padding-bottom: 25px;">
+        <details class="vcv-faq-master" id="detailsPrediccionesTotales" style="margin-top: 0px; margin-bottom: 20px; max-width: 100%; border: 1px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);">
+            <summary style="padding:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.3rem;"></span>
+                    <span style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); letter-spacing:0.5px;">👉 Predicción de Puntos Totales 26/27 👈</span>
+                </div>
+                <div id="relojTotales" style="font-size:0.95rem; font-weight:800; color:#ef4444; text-align:right;">Calculando...</div>
+            </summary>
+            <div class="faq-content-v2" style="padding:0 15px 15px 15px; border-top:1px solid rgba(255,255,255,0.05);">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0 15px 0; text-align:left;">
+                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada. <strong>Cada voto será completamente secreto.</strong>
+                </p>
+                
+                <div id="contenedorPrediccionesTotales"></div>
+            </div>
+        </details>
+      </div>
+    </section>
     <section id="calendarioSection">
     <div class="vcv-card-v2" style="margin-bottom: 20px;">
         <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main);">Calendario de Partidos</h2>
@@ -2752,24 +2774,6 @@
         </div>
       </div>
 </section>
-    <section id="prediccionesTotalesSection" style="padding-top: 0; padding-bottom: 20px;">
-        <details class="vcv-faq-master" style="margin-top: 0px; margin-bottom: 20px; max-width: 100%; border: 1px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);">
-            <summary style="padding:16px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.3rem;"></span>
-                    <span style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); letter-spacing:0.5px;">👉 Predicción de Puntos Totales 26/27 👈</span>
-                </div>
-                <div id="relojTotales" style="font-size:0.95rem; font-weight:800; color:#ef4444; text-align:right;">Calculando...</div>
-            </summary>
-            <div class="faq-content-v2" style="padding:0 15px 15px 15px; border-top:1px solid rgba(255,255,255,0.05);">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0 15px 0; text-align:left;">
-                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada. <strong>Cada voto será completamente secreto.</strong>
-                </p>
-                
-                <div id="contenedorPrediccionesTotales"></div>
-            </div>
-        </details>
-    </section>
 
     <!-- SECCIÓN DESCUBRE VCV PLAY / MODO INVITADO -->
     <section id="guestInfoSection" style="padding-bottom: 40px;">
@@ -3068,14 +3072,14 @@
 <footer><p>© VCV Play 2026-2027</p></footer>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261027_guestfix2"></script>
-<script src="js/admin.js?v=20261027_guestfix2"></script>
-<script src="js/cartelera.js?v=20261027_guestfix2"></script>
-<script src="js/ranking.js?v=20261027_guestfix2"></script>
-<script src="js/calendario.js?v=20261027_guestfix2"></script>
-<script src="js/cartelera_interactive.js?v=20261027_guestfix2"></script>
-<script src="js/ui_gestures.js?v=20261027_guestfix2"></script>
-<script src="js/auth.js?v=20261027_guestfix2"></script>
+<script src="js/config.js?v=20261027_totales_tab"></script>
+<script src="js/admin.js?v=20261027_totales_tab"></script>
+<script src="js/cartelera.js?v=20261027_totales_tab"></script>
+<script src="js/ranking.js?v=20261027_totales_tab"></script>
+<script src="js/calendario.js?v=20261027_totales_tab"></script>
+<script src="js/cartelera_interactive.js?v=20261027_totales_tab"></script>
+<script src="js/ui_gestures.js?v=20261027_totales_tab"></script>
+<script src="js/auth.js?v=20261027_totales_tab"></script>
 </body>
 
 </html>
