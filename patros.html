@@ -1858,6 +1858,10 @@
             <i data-lucide="user"></i>
             <span>Perfil</span>
           </button>
+          <button class="nav-item-v2" id="navItemPatros" onclick="switchTabV2('patrosGuestSection', this)" style="display:none;">
+            <i data-lucide="award"></i>
+            <span>Patrocinadores</span>
+          </button>
           <button class="nav-item-v2" id="navItemGuestInfo" onclick="switchTabV2('guestInfoSection', this)" style="display:none;">
             <i data-lucide="sparkles"></i>
             <span>¡Únete!</span>
@@ -3053,6 +3057,191 @@
         </div>
     </section>
 
+    <!-- SECCIÓN PATROCINADORES DEL CLUB (MODO INVITADO EN PATROS.HTML) -->
+    <section id="patrosGuestSection" style="padding-bottom: 40px; display: none;">
+        <!-- Hero Card -->
+        <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(26, 11, 38, 0.98) 100%); border: 1.5px solid var(--secondary-color); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.15); text-align: center; padding: 24px 18px; margin-bottom: 20px;">
+            <div style="width: 58px; height: 58px; margin: 0 auto 12px; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--secondary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 18px rgba(212, 175, 55, 0.35);">
+                <i data-lucide="award" style="width: 30px; height: 30px; color: var(--secondary-color);"></i>
+            </div>
+            <span style="display: inline-block; background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); font-weight: 800; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.4); margin-bottom: 8px;">
+                Temporada 2026 / 2027
+            </span>
+            <h2 style="font-size: 1.45rem; font-weight: 900; color: #fff; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+                Patrocinadores & Colaboradores
+            </h2>
+            <p style="font-size: 0.86rem; color: #d1c4e9; margin: 0 auto; line-height: 1.5; max-width: 480px;">
+                Empresas e instituciones que impulsan cada set, cada viaje y la formación de más de 200 jugadores en el <strong>Valladolid Club Voleibol</strong>.
+            </p>
+        </div>
+
+        <!-- 1. PATROCINADOR PRINCIPAL -->
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 0 4px;">
+                <span style="color: var(--secondary-color); font-size: 1.1rem;">⭐</span>
+                <h3 style="font-size: 0.85rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.8px; margin: 0;">Patrocinador Principal</h3>
+            </div>
+            <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(35, 14, 48, 0.95), rgba(18, 6, 25, 0.98)); border: 1.5px solid var(--secondary-color); padding: 20px 18px; text-align: center; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -12px; right: -12px; background: rgba(212, 175, 55, 0.12); width: 80px; height: 80px; border-radius: 50%; pointer-events: none;"></div>
+                <div style="background: #fff; border-radius: 14px; padding: 14px 20px; display: inline-flex; align-items: center; justify-content: center; max-width: 220px; margin: 0 auto 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.5);">
+                    <img src="files/images/valcyl_logo.png" alt="VALCYL" style="height: 38px; width: auto; object-fit: contain;">
+                </div>
+                <h4 style="font-size: 1.2rem; font-weight: 900; color: #fff; margin: 0 0 4px 0;">VALCYL Climatización</h4>
+                <p style="font-size: 0.78rem; color: var(--secondary-color); font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Eficiencia Energética & Climatización Integral
+                </p>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 14px 0;">
+                    Sponsor oficial del equipo Superliga 2 Masculina y patrocinador del <strong>Trofeo MVP VALCYL</strong> que premia al mejor jugador en cada jornada.
+                </p>
+                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                    <span style="font-size: 0.72rem; font-weight: 700; background: rgba(212, 175, 55, 0.15); color: var(--secondary-color); border: 1px solid rgba(212, 175, 55, 0.35); padding: 4px 10px; border-radius: 12px;">🏆 Superliga 2 Masculina</span>
+                    <span style="font-size: 0.72rem; font-weight: 700; background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); padding: 4px 10px; border-radius: 12px;">⭐ Premio MVP Oficial</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PATROCINADORES OFICIALES DE EQUIPOS -->
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 0 4px;">
+                <span style="color: var(--secondary-color); font-size: 1.1rem;">🏐</span>
+                <h3 style="font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 0;">Sponsors de Equipos VCV</h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                <!-- Equipo 1 -->
+                <div class="vcv-card-v2" style="padding: 16px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: var(--secondary-color); background: rgba(212,175,55,0.15); padding: 2px 8px; border-radius: 8px;">Superliga 2 Masc.</span>
+                            <span style="font-size: 0.7rem; color: #4cd137; font-weight: 700;">● Titular Activo</span>
+                        </div>
+                        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 4px 0;">VALCYL VCV</h4>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px 0;">Primera plantilla sénior masculina en categoría nacional de plata.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(212,175,55,0.3); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="font-size: 0.75rem; color: var(--secondary-color); font-weight: 700;">VALCYL Climatización</span>
+                    </div>
+                </div>
+
+                <!-- Equipo 2 -->
+                <div class="vcv-card-v2" style="padding: 16px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #3498db; background: rgba(52,152,219,0.15); padding: 2px 8px; border-radius: 8px;">1ª Nacional Fem.</span>
+                            <span style="font-size: 0.7rem; color: var(--secondary-color); font-weight: 700;">● Disponible</span>
+                        </div>
+                        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 4px 0;">Valladolid CV Vacceas</h4>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px 0;">Primer equipo sénior femenino compitiendo en Grupo A Nacional.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.25); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">[Espacio Sponsor Titular Disponible]</span>
+                    </div>
+                </div>
+
+                <!-- Equipo 3 -->
+                <div class="vcv-card-v2" style="padding: 16px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #9b59b6; background: rgba(155,89,182,0.15); padding: 2px 8px; border-radius: 8px;">1ª Nacional Masc.</span>
+                            <span style="font-size: 0.7rem; color: #4cd137; font-weight: 700;">● Convenio UVa</span>
+                        </div>
+                        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 4px 0;">Universidad de Valladolid VCV</h4>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px 0;">Equipo sénior masculino en vinculación con el Servicio de Deportes UVa.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(155,89,182,0.3); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="font-size: 0.75rem; color: #d1c4e9; font-weight: 700;">Universidad de Valladolid (UVa)</span>
+                    </div>
+                </div>
+
+                <!-- Equipo 4 -->
+                <div class="vcv-card-v2" style="padding: 16px; margin-bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #e67e22; background: rgba(230,126,34,0.15); padding: 2px 8px; border-radius: 8px;">Cantera & Base</span>
+                            <span style="font-size: 0.7rem; color: #f1c40f; font-weight: 700;">● Abierto a Empresas</span>
+                        </div>
+                        <h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin: 0 0 4px 0;">Cantera VCV (Juvenil / Cadete / Infantil)</h4>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px 0;">María Molina, Meseta, Zorrilla y más de 12 equipos formativos.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(230,126,34,0.3); border-radius: 8px; padding: 10px; text-align: center;">
+                        <span style="font-size: 0.75rem; color: #f39c12; font-weight: 600;">[Espacios de Camiseta & Soporte Cantera]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. COLABORADORES OFICIALES & EMPRESAS AMIGAS -->
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 0 4px;">
+                <span style="color: var(--secondary-color); font-size: 1.1rem;">🤝</span>
+                <h3 style="font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 0;">Colaboradores Oficiales</h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                <div class="vcv-card-v2" style="padding: 14px 12px; margin-bottom: 0; text-align: center;">
+                    <div style="font-size: 1.6rem; margin-bottom: 6px;">🏥</div>
+                    <strong style="font-size: 0.84rem; color: #fff; display: block; margin-bottom: 3px;">Fisioterapia & Salud</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; display: block;">Clínica Oficial de Readaptación</span>
+                </div>
+
+                <div class="vcv-card-v2" style="padding: 14px 12px; margin-bottom: 0; text-align: center;">
+                    <div style="font-size: 1.6rem; margin-bottom: 6px;">🏐</div>
+                    <strong style="font-size: 0.84rem; color: #fff; display: block; margin-bottom: 3px;">Equipamiento Técnico</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; display: block;">Material Oficial de Competición</span>
+                </div>
+
+                <div class="vcv-card-v2" style="padding: 14px 12px; margin-bottom: 0; text-align: center;">
+                    <div style="font-size: 1.6rem; margin-bottom: 6px;">🍽️</div>
+                    <strong style="font-size: 0.84rem; color: #fff; display: block; margin-bottom: 3px;">Restauración & Hostelería</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; display: block;">Tercer Tiempo & Nutrición</span>
+                </div>
+
+                <div class="vcv-card-v2" style="padding: 14px 12px; margin-bottom: 0; text-align: center;">
+                    <div style="font-size: 1.6rem; margin-bottom: 6px;">🚌</div>
+                    <strong style="font-size: 0.84rem; color: #fff; display: block; margin-bottom: 3px;">Transporte & Viajes</strong>
+                    <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.3; display: block;">Desplazamientos Nacionales</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. VENTAJAS Y DESCUENTOS PARA LA FAMILIA VCV -->
+        <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(20, 10, 28, 0.95) 100%); border: 1px solid rgba(46, 204, 113, 0.35); padding: 18px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(46, 204, 113, 0.2); border: 1px solid rgba(46, 204, 113, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    🏷️
+                </div>
+                <div>
+                    <h4 style="font-size: 0.98rem; font-weight: 800; color: #fff; margin: 0;">Ventajas para Socios y Afición</h4>
+                    <span style="font-size: 0.72rem; color: #2ecc71; font-weight: 700;">Club de Beneficios VCV</span>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 10px 0;">
+                Ser parte del Valladolid Club Voleibol o aficionado activo en VCV Play da acceso a promociones exclusivas en la red de comercios colaboradores de la ciudad.
+            </p>
+            <ul style="padding-left: 18px; margin: 0; font-size: 0.78rem; color: #d1c4e9; line-height: 1.5;">
+                <li>Descuentos en sesiones de fisioterapia y reconocimientos médicos.</li>
+                <li>Precios preferentes en material deportivo y calzado técnico.</li>
+                <li>Sorteos de comidas, cenas y productos en los descansos de Fuente de la Mora.</li>
+            </ul>
+        </div>
+
+        <!-- 5. CTA UNIRSE A PATROCINIOS -->
+        <div class="vcv-card-v2" style="background: linear-gradient(135deg, rgba(93, 23, 137, 0.4), rgba(26, 11, 38, 0.95)); border: 1.5px solid var(--secondary-color); text-align: center; padding: 22px 18px; margin-bottom: 10px;">
+            <h4 style="font-size: 1.15rem; font-weight: 900; color: #fff; margin: 0 0 6px 0;">
+                ¿Quieres vincular tu empresa al VCV?
+            </h4>
+            <p style="font-size: 0.82rem; color: #d1c4e9; line-height: 1.45; margin: 0 auto 16px auto; max-width: 440px;">
+                Pancartas en pista en Fuente de la Mora, soportes físicos en equipaciones oficiales, menciones en retransmisiones RFEVB y presencia digital en la app oficial VCV Play con más de 1.000 aficionados.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="mailto:adminfantasyvcv@gmail.com?subject=Inter%C3%A9s%20en%20Patrocinio%20Valladolid%20Club%20Voleibol&body=Hola!%20Nos%20gustar%C3%ADa%20recibir%20el%20dossier%20de%20patrocinio%20del%20Valladolid%20Club%20Voleibol.%0A%0AEmpresa:%0APersona%20de%20contacto:%0ATel%C3%A9fono:%0A%C3%81rea%20de%20inter%C3%A9s%20(Sponsor%20equipo,%20pista,%20cantera,%20colaborador):" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; background: var(--secondary-color); color: #000; text-decoration: none; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                    <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                    <span>Contactar con Área de Patrocinios</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
 
     
 
@@ -3232,14 +3421,14 @@
 <footer><p>© VCV Play 2026-2027</p></footer>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261027_1"></script>
-<script src="js/admin.js?v=20261027_1"></script>
-<script src="js/cartelera.js?v=20261027_1"></script>
-<script src="js/ranking.js?v=20261027_1"></script>
-<script src="js/calendario.js?v=20261027_1"></script>
-<script src="js/cartelera_interactive.js?v=20261027_1"></script>
-<script src="js/ui_gestures.js?v=20261027_1"></script>
-<script src="js/auth.js?v=20261027_1"></script>
+<script src="js/config.js?v=20261027_guestfix2"></script>
+<script src="js/admin.js?v=20261027_guestfix2"></script>
+<script src="js/cartelera.js?v=20261027_guestfix2"></script>
+<script src="js/ranking.js?v=20261027_guestfix2"></script>
+<script src="js/calendario.js?v=20261027_guestfix2"></script>
+<script src="js/cartelera_interactive.js?v=20261027_guestfix2"></script>
+<script src="js/ui_gestures.js?v=20261027_guestfix2"></script>
+<script src="js/auth.js?v=20261027_guestfix2"></script>
 
 <!-- BARRA CONTROLADORA DE DEMO PATROCINIOS -->
 <div id="vcvSponsorDemoBar" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100000; background: rgba(18, 5, 23, 0.95); border: 1.5px solid var(--secondary-color); border-radius: 30px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 22px rgba(0,0,0,0.7); font-size: 0.74rem; color: #fff; max-width: 96vw; flex-wrap: wrap; justify-content: center; backdrop-filter: blur(10px);">
@@ -3247,6 +3436,7 @@
   <button type="button" onclick="window.testSplashDemo()" style="background: rgba(212,175,55,0.22); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">👁️ Ver Splash</button>
   <button type="button" onclick="window.testLoginDemo()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🔑 Ver Login</button>
   <button type="button" onclick="window.testAppDemo()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🏐 Ver App</button>
+  <button type="button" onclick="window.testPatrosGuestTab()" style="background: rgba(212,175,55,0.3); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">⭐ Pestaña Sponsors</button>
   <button type="button" onclick="document.getElementById('vcvSponsorDemoBar').style.display='none'" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0 4px; line-height: 1;" title="Cerrar barra">&times;</button>
 </div>
 
@@ -3277,6 +3467,20 @@
     if (typeof switchTabV2 === 'function') {
       var firstBtn = document.querySelector('.bottom-nav-v2 .nav-item-v2');
       switchTabV2('carteleraSection', firstBtn);
+    }
+  };
+
+  window.testPatrosGuestTab = function() {
+    window.testAppDemo();
+    var navItems = document.querySelectorAll('#bottomNavV2 .nav-item-v2');
+    navItems.forEach(function(b) { b.style.display = 'none'; b.classList.remove('active'); });
+    if (navItems[0]) { navItems[0].style.display = 'flex'; navItems[0].style.width = '33.33%'; }
+    var navPatros = document.getElementById('navItemPatros');
+    if (navPatros) { navPatros.style.display = 'flex'; navPatros.style.width = '33.33%'; navPatros.classList.add('active'); }
+    var navGuest = document.getElementById('navItemGuestInfo');
+    if (navGuest) { navGuest.style.display = 'flex'; navGuest.style.width = '33.33%'; }
+    if (typeof switchTabV2 === 'function') {
+      switchTabV2('patrosGuestSection', navPatros);
     }
   };
 </script>

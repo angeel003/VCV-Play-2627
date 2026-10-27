@@ -286,21 +286,37 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
                 secTotales.style.display = 'none';
             }
 
-            // Setup simplified 2-tab bottom nav for Guest (Partidos & ¡Únete!)
+            // Setup simplified bottom nav for Guest (Partidos, Patrocinadores si existe, ¡Únete!)
             const navItems = document.querySelectorAll('#bottomNavV2 .nav-item-v2');
             navItems.forEach(b => {
                 b.style.display = 'none';
                 b.classList.remove('active');
             });
-            if (navItems[0]) {
-                navItems[0].style.display = 'flex';
-                navItems[0].classList.add('active');
-                navItems[0].style.width = '50%';
-            }
-            const navGuest = document.getElementById('navItemGuestInfo');
-            if (navGuest) {
-                navGuest.style.display = 'flex';
-                navGuest.style.width = '50%';
+            const navPatros = document.getElementById('navItemPatros');
+            if (navPatros) {
+                if (navItems[0]) {
+                    navItems[0].style.display = 'flex';
+                    navItems[0].classList.add('active');
+                    navItems[0].style.width = '33.33%';
+                }
+                navPatros.style.display = 'flex';
+                navPatros.style.width = '33.33%';
+                const navGuest = document.getElementById('navItemGuestInfo');
+                if (navGuest) {
+                    navGuest.style.display = 'flex';
+                    navGuest.style.width = '33.33%';
+                }
+            } else {
+                if (navItems[0]) {
+                    navItems[0].style.display = 'flex';
+                    navItems[0].classList.add('active');
+                    navItems[0].style.width = '50%';
+                }
+                const navGuest = document.getElementById('navItemGuestInfo');
+                if (navGuest) {
+                    navGuest.style.display = 'flex';
+                    navGuest.style.width = '50%';
+                }
             }
 
             // Top greeting for guest
