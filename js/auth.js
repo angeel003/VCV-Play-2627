@@ -1,3 +1,13 @@
+window.ocultarOverlayAutoLogin = function() {
+    try {
+        document.documentElement.classList.remove('vcv-auto-logging-in');
+        const o = document.getElementById('vcvAutoLoginOverlay');
+        if (o) {
+            o.style.setProperty('display', 'none', 'important');
+        }
+    } catch(e) {}
+};
+
 
 // --- DETECCIÓN PRECISA DE DISPOSITIVO Y MODELO PARA EL MONITOR SILENCIOSO ---
 function detectarModeloDispositivo() {
@@ -319,7 +329,7 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             }
 
             // Activate cartelera tab
-            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
             const firstNavBtn = navItems[0] || null;
@@ -859,6 +869,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 }
             }
 
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
             
@@ -968,6 +979,7 @@ window.verificarAutoLogin = function() {
             }, 120);
         }
     } catch(e) {
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
         console.error("Error al procesar auto-login:", e);
     }
 };
