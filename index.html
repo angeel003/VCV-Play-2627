@@ -53,7 +53,39 @@
     justify-content: center;
     gap: 14px;
   }
-</style>
+
+    /* SCROLLBAR ESTILIZADO PARA HISTORICO JORNADAS EN MODAL PERFIL */
+    .player-jornadas-scrollable::-webkit-scrollbar {
+      width: 5px;
+    }
+    .player-jornadas-scrollable::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 4px;
+    }
+    .player-jornadas-scrollable::-webkit-scrollbar-thumb {
+      background: var(--secondary-color, #d4af37);
+      border-radius: 4px;
+    }
+    .mvp-winner-photo {
+      position: relative;
+    }
+    @media (max-width: 380px) {
+      .admin-stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .mvp-winner-proclaimed-card {
+        padding: 8px 6px !important;
+        gap: 6px !important;
+      }
+      .mvp-winner-photo {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        min-height: 48px !important;
+      }
+    }
+
+  </style>
 <style>
     /* ---------------------------------------------------
        1. VARIABLES DE COLOR OFICIALES DEL VCV
@@ -1101,18 +1133,7 @@
       flex-shrink: 0;
     }
     .mvp-valcyl-watermark {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 92%;
-      height: 92%;
-      object-fit: contain;
-      opacity: 0.26;
-      filter: blur(0.3px) grayscale(10%);
-      pointer-events: none;
-      z-index: 1;
-      user-select: none;
+      display: none !important;
     }
     .mvp-photo-img {
       width: 100%;
@@ -1821,10 +1842,192 @@
         font-size: 0.9rem;
       }
     }
+  
+    /* ========================================================
+       OPTIMIZACIONES PARA PANTALLAS ESTRECHAS (320px - 365px)
+       ======================================================== */
+    @media (max-width: 365px) {
+      /* 1. Barra de navegación inferior: Opción B */
+      .nav-item-v2 {
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+        padding: 2px 1px !important;
+      }
+      .nav-item-v2 i {
+        width: 20px !important;
+        height: 20px !important;
+        margin-bottom: 1px !important;
+      }
+      .nav-item-v2 span {
+        text-align: center;
+        display: block;
+        word-break: normal;
+        white-space: normal;
+      }
+
+      /* 2. Login, Splash y Preguntas frecuentes */
+      #loginSection {
+        padding: calc(env(safe-area-inset-top, 50px) + 20px) 12px 24px 12px !important;
+      }
+      .login-card {
+        padding: 24px 14px !important;
+        margin-bottom: 24px !important;
+      }
+      .faq-container {
+        padding: 16px 12px !important;
+      }
+      .faq-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 14px !important;
+      }
+      .faq-summary {
+        font-size: 0.92rem !important;
+        line-height: 1.25 !important;
+      }
+      .faq-content {
+        font-size: 0.85rem !important;
+        padding: 8px 4px 4px 8px !important;
+      }
+
+      /* 3. Cartelera y Equipos */
+      .teams-versus-container-v2 {
+        gap: 4px !important;
+        margin-bottom: 10px !important;
+      }
+      .team-avatar-v2 {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 11px !important;
+      }
+      .team-name-v2 {
+        font-size: 0.78rem !important;
+        line-height: 1.12 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        white-space: normal !important;
+      }
+      .team-role-v2 {
+        font-size: 0.60rem !important;
+      }
+      .vs-divider-v2 {
+        padding: 0 2px !important;
+      }
+
+      /* 3b. Candidatos MVP en tarjeta */
+      .mvp-candidates-grid {
+        gap: 6px !important;
+      }
+      .mvp-card-btn {
+        padding: 0 0 6px 0 !important;
+        border-radius: 9px !important;
+      }
+      .mvp-name-label {
+        font-size: 0.70rem !important;
+        line-height: 1.12 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+      }
+      .mvp-sub-label {
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+      }
+      .mvp-dorsal-tag {
+        font-size: 0.62rem !important;
+        padding: 1px 4px !important;
+      }
+      .mvp-voted-badge {
+        font-size: 0.55rem !important;
+        padding: 1px 4px !important;
+      }
+
+      /* 4. Ranking y Podio (multilínea sin puntos suspensivos) */
+      .podium-container {
+        gap: 3px !important;
+        padding: 14px 2px 6px !important;
+      }
+      .podium-avatar {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 0.8rem !important;
+      }
+      .podium-slot.rank-1 .podium-avatar {
+        width: 48px !important;
+        height: 48px !important;
+      }
+      .podium-bar {
+        padding: 10px 2px 6px !important;
+      }
+      .podium-bar .player-handle {
+        font-size: 0.58rem !important;
+        line-height: 1.12 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        text-overflow: clip !important;
+        text-align: center !important;
+        max-width: 100% !important;
+      }
+      .podium-bar .player-pts {
+        font-size: 0.68rem !important;
+      }
+      .podium-slot.rank-1 .podium-bar { min-height: 98px !important; }
+      .podium-slot.rank-2 .podium-bar { min-height: 82px !important; }
+      .podium-slot.rank-3 .podium-bar { min-height: 72px !important; }
+
+      .ranking-list-item {
+        padding: 8px 6px !important;
+      }
+      .rank-player-name {
+        font-size: 0.76rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.15 !important;
+        max-width: 100% !important;
+      }
+      .rank-pts {
+        font-size: 0.88rem !important;
+      }
+
+      /* 5. Mis Predicciones */
+      .vcv-card-v2 {
+        padding: 12px 10px !important;
+      }
+      .metric-label {
+        font-size: 0.66rem !important;
+        line-height: 1.15 !important;
+        word-break: break-word !important;
+      }
+      .metric-val {
+        font-size: 1.25rem !important;
+      }
+
+      /* 6. Predicción de puntos totales */
+      #detailsPrediccionesTotales summary {
+        padding: 12px 8px !important;
+      }
+      #detailsPrediccionesTotales summary span[style*="font-size:1.1rem"] {
+        font-size: 0.80rem !important;
+        line-height: 1.2 !important;
+      }
+      #relojTotales {
+        font-size: 0.74rem !important;
+      }
+
+      /* 7. Modal de Compartir Tarjeta */
+      #shareCardModal > div {
+        padding: 14px 10px !important;
+        max-height: 95vh !important;
+      }
+      #shareCardCanvas {
+        max-height: 48vh !important;
+      }
+      #btnShareNative {
+        padding: 10px 12px !important;
+        font-size: 0.88rem !important;
+      }
+    }
+
   </style>
-
-
-
 </head>
 <body>
 
@@ -2087,6 +2290,50 @@
             details.admin-collapsible[open] summary::after {
               transform: rotate(180deg);
             }
+
+            /* --- RESPONSIVIDAD INTRANET / ADMIN PARA MÓVILES ESTRECHOS --- */
+            #adminPanelWrapper, #adminPanelWrapper * {
+              box-sizing: border-box;
+              max-width: 100%;
+            }
+            #adminPanelWrapper {
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            }
+            #adminPanelWrapper input,
+            #adminPanelWrapper select,
+            #adminPanelWrapper button,
+            #adminPanelWrapper textarea {
+              max-width: 100%;
+              box-sizing: border-box;
+            }
+            .admin-match-box {
+              word-break: break-word;
+              overflow-wrap: anywhere;
+              max-width: 100%;
+              box-sizing: border-box;
+            }
+            .admin-collapsible > div {
+              overflow-x: hidden;
+            }
+            @media (max-width: 440px) {
+              #adminPanelWrapper details#adminMainDetails > summary {
+                padding: 12px 14px !important;
+              }
+              #adminPanelWrapper details#adminMainDetails > div {
+                padding: 0 10px 16px 10px !important;
+              }
+              details.admin-collapsible > summary {
+                padding: 10px 12px !important;
+                font-size: 0.82rem !important;
+              }
+              details.admin-collapsible > div {
+                padding: 10px 10px 14px 10px !important;
+              }
+              .admin-stat-grid {
+                grid-template-columns: 1fr !important;
+              }
+            }
           </style>
 
           <!-- 0. Monitor Silencioso de Accesos (Exclusivo Admin) -->
@@ -2203,6 +2450,21 @@
               <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
                 Crear Usuario en Sheets
               </button>
+            </div>
+          </details>
+
+          <!-- Buzón de Sugerencias y Reportes de Errores -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.2), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">💡 Buzón de Sugerencias y Errores</span>
+              <span style="font-size: 0.72rem; background: rgba(52, 152, 219, 0.15); color: #3498db; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Comunidad</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Consulta las sugerencias y avisos de errores enviados por los usuarios desde su perfil.</p>
+              <button type="button" id="btnCargarSugerenciasAdmin" onclick="window.cargarSugerenciasAdmin()" class="btn btn-primary btn-block" style="background: #3498db; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios
+              </button>
+              <div id="adminSugerenciasBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
           </details>
 
@@ -2346,12 +2608,12 @@
                 </div>
                 
                 <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-                  <div style="min-width: 110px; flex: 1;">
+                  <div style="flex: 1 1 110px; min-width: 100px;">
                     <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Jornada:</label>
                     <select id="directMvpJornadaSelect" onchange="window.onDirectMvpJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
-                  <div style="flex: 2; min-width: 200px;">
+                  <div style="flex: 2 1 180px; min-width: 140px;">
                     <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight:700;">Partido de Superliga 2:</label>
                     <select id="directMvpPartidoSelect" onchange="window.onDirectMvpPartidoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
@@ -2395,6 +2657,27 @@
                   </button>
                 </div>
 
+                <!-- TARJETA OFICIAL GANADOR MVP (1080x1080) -->
+                <div style="margin: 14px 0; padding: 12px; background: linear-gradient(135deg, rgba(142, 68, 173, 0.22) 0%, rgba(212, 175, 55, 0.15) 100%); border: 1.5px solid var(--secondary-color); border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
+                    <div style="font-weight: 900; font-size: 0.86rem; color: var(--secondary-color); display: flex; align-items: center; gap: 6px;">
+                      <span>📸 Tarjeta Oficial MVP (1080×1080 • Redes / Instagram)</span>
+                    </div>
+                    <span style="font-size: 0.65rem; background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); border: 1px solid var(--secondary-color); padding: 2px 6px; border-radius: 4px; font-weight: 800;">COMUNICACIÓN / CM</span>
+                  </div>
+                  <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.35;">
+                    Descarga exactamente la misma tarjeta oficial de MVP de la app (formato 1080×1080) como si el ganador ya estuviese proclamado, con el diseño del club y sin datos de usuario, lista para publicar en historias o posts de redes aunque aún no se haya publicado en la app.
+                  </p>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="window.abrirTarjetaMvpOficialClub(false)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, #8e44ad, #3498db); color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
+                      <span>👁️ Previsualizar Tarjeta</span>
+                    </button>
+                    <button type="button" onclick="window.abrirTarjetaMvpOficialClub(true)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, var(--secondary-color), #f39c12); color: #000; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(212,175,55,0.3);">
+                      <span>⬇️ Descargar Tarjeta (PNG 1080x1080)</span>
+                    </button>
+                  </div>
+                </div>
+
                 <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
                 <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
                   <div style="font-weight: 800; font-size: 0.85rem; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
@@ -2408,18 +2691,18 @@
                     </select>
                   </div>
                   <!-- ESTADÍSTICAS DESTACADAS DEL MVP (OPCIONALES 1 a 4) -->
-                  <div style="margin-top: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.25);">
+                  <div style="margin-top: 10px; margin-bottom: 10px; padding: 8px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; border: 1px solid rgba(46, 204, 113, 0.25); box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden;">
                     <div style="font-size: 0.73rem; font-weight: 800; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
                       <span>📊 Estadísticas del Jugador en el Partido (Opcional, 1 a 4)</span>
                     </div>
-                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px;">
+                    <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3;">
                       Ej: <em>Ataques: 15 (65%)</em>, <em>Recepción: 19</em>, <em>Saques directos: 5 (29%)</em>, <em>Bloqueos: 4</em>. Deja vacías las que no uses.
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                      <input type="text" id="mvpStat1" placeholder="Estadística 1 (ej: Ataques: 15 (65%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat2" placeholder="Estadística 2 (ej: Recepción: 19)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat3" placeholder="Estadística 3 (ej: Puntos saque: 5 (29%))" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-                      <input type="text" id="mvpStat4" placeholder="Estadística 4 (ej: Bloqueos: 4)" style="padding: 7px 8px; font-size: 0.75rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                    <div class="admin-stat-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 6px; width: 100%; box-sizing: border-box;">
+                      <input type="text" id="mvpStat1" placeholder="Estadística 1 (ej: Ataques: 15 (65%))" style="width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding: 7px 6px; font-size: 0.73rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat2" placeholder="Estadística 2 (ej: Recepción: 19)" style="width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding: 7px 6px; font-size: 0.73rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat3" placeholder="Estadística 3 (ej: Puntos saque: 5 (29%))" style="width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding: 7px 6px; font-size: 0.73rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                      <input type="text" id="mvpStat4" placeholder="Estadística 4 (ej: Bloqueos: 4)" style="width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding: 7px 6px; font-size: 0.73rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                     </div>
                   </div>
 
@@ -2431,9 +2714,9 @@
                     <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.35;">
                       Por defecto se fija a las <b>12:00 del día siguiente</b> a la subida de los nominados, pero puedes modificarla cuando quieras. En la cartelera habrá una <b>cuenta atrás en directo</b> hasta esa hora.
                     </div>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                      <input type="datetime-local" id="adminMvpFechaPublicacion" style="flex: 1; padding: 8px 10px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 700;">
-                      <button type="button" id="btnGuardarHoraMvp" onclick="window.guardarSoloHoraPublicacionMvp(event)" style="padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; white-space: nowrap; box-shadow: 0 2px 6px rgba(212,175,55,0.3);">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                      <input type="datetime-local" id="adminMvpFechaPublicacion" style="flex: 1 1 180px; min-width: 0; width: 100%; padding: 8px 10px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 700;">
+                      <button type="button" id="btnGuardarHoraMvp" onclick="window.guardarSoloHoraPublicacionMvp(event)" style="flex: 1 1 auto; padding: 8px 14px; background: var(--secondary-color); color: #000; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; font-size: 0.78rem; white-space: nowrap; box-shadow: 0 2px 6px rgba(212,175,55,0.3);">
                         💾 Guardar Hora
                       </button>
                     </div>
@@ -2655,6 +2938,44 @@
       
       </div>
 
+      <!-- Tarjeta Sugerencias o Aviso de Errores -->
+      <div class="vcv-card-v2" style="margin-top: 20px; border: 1px solid rgba(212, 175, 55, 0.35); background: linear-gradient(135deg, rgba(37, 11, 54, 0.5) 0%, rgba(20, 6, 30, 0.7) 100%); border-radius: 14px; padding: 18px; box-shadow: 0 4px 16px rgba(0,0,0,0.25);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <span>💡 Sugerencias y Reporte de Errores</span>
+          </h3>
+          <span style="font-size: 0.68rem; background: rgba(212, 175, 55, 0.18); color: var(--secondary-color); font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.35); text-transform: uppercase;">
+            Comunidad
+          </span>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 14px 0; line-height: 1.4;">
+          ¿Tienes una idea para mejorar VCV Play o has detectado algún fallo en la web? Envíanoslo directamente para revisarlo.
+        </p>
+
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Tipo de mensaje:</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" id="btnTipoSugerencia" onclick="window.setFeedbackType('Sugerencia')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--secondary-color); background: rgba(212, 175, 55, 0.2); color: #fff; font-size: 0.78rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+              <span>💡 Sugerencia</span>
+            </button>
+            <button type="button" id="btnTipoError" onclick="window.setFeedbackType('Error')" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.05); color: var(--text-muted); font-size: 0.78rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+              <span>⚠️ Error / Bug</span>
+            </button>
+          </div>
+          <input type="hidden" id="feedbackTipoValue" value="Sugerencia">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Mensaje o detalle:</label>
+          <textarea id="feedbackMensaje" rows="3" placeholder="Describe aquí tu sugerencia o el error que has encontrado..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main); font-size: 0.82rem; font-family: inherit; resize: vertical; min-height: 70px; line-height: 1.35;"></textarea>
+        </div>
+
+        <button type="button" id="btnEnviarFeedback" onclick="window.enviarFeedbackUsuario(event)" style="width: 100%; background: linear-gradient(135deg, var(--vcv-morado), #3e125c); border: 1px solid var(--secondary-color); color: #fff; padding: 11px 16px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);">
+          <span>📨 Enviar a los Administradores</span>
+        </button>
+        <div id="msgFeedback" class="alert-box" style="padding: 10px; display: none; margin-top: 10px; font-size: 0.8rem; border-radius: 8px;"></div>
+      </div>
+
       <!-- Tarjeta Cerrar Sesión en Perfil -->
       <div class="vcv-card-v2" style="margin-top: 20px; margin-bottom: 25px; border: 1px solid rgba(231, 76, 60, 0.35); background: rgba(231, 76, 60, 0.05); border-radius: 14px; padding: 18px;">
         <button type="button" onclick="document.getElementById('btnLogout').click()" style="width: 100%; background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3)); border: 1px solid #e74c3c; color: #ff6b81; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15);">
@@ -2698,10 +3019,10 @@
         </p>
 
         <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-            <select id="calendarTeamSelect" class="form-control" style="flex:2; font-weight:bold; min-width:200px; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+            <select id="calendarTeamSelect" class="form-control" style="flex:2 1 180px; font-weight:bold; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
                 <option value="">-- Todos los equipos --</option>
             </select>
-            <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1; min-width:150px; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+            <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1 1 140px; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
         </div>
         
         <div style="text-align: right; margin-top: -10px; margin-bottom: 25px;">
@@ -3055,7 +3376,7 @@
 
         <!-- Contenedor del Canvas de Previsualización -->
         <div style="background:#0e0612; border-radius:14px; padding:10px; border:1px solid var(--border-color); margin-bottom:16px; display:flex; justify-content:center; align-items:center; min-height:260px;">
-            <canvas id="shareCardCanvas" style="max-width:100%; height:auto; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
+            <canvas id="shareCardCanvas" style="max-width:100%; max-height:52vh; object-fit:contain; height:auto; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
         </div>
 
         <!-- Botón de Acción Principal -->
@@ -3072,14 +3393,17 @@
 <footer><p>© VCV Play 2026-2027</p></footer>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261027_totales_tab"></script>
-<script src="js/admin.js?v=20261027_totales_tab"></script>
-<script src="js/cartelera.js?v=20261027_totales_tab"></script>
-<script src="js/ranking.js?v=20261027_totales_tab"></script>
-<script src="js/calendario.js?v=20261027_totales_tab"></script>
-<script src="js/cartelera_interactive.js?v=20261027_totales_tab"></script>
-<script src="js/ui_gestures.js?v=20261027_totales_tab"></script>
-<script src="js/auth.js?v=20261027_totales_tab"></script>
+<script src="js/config.js?v=20261027_feedback_v1"></script>
+<script src="js/admin.js?v=20261027_feedback_v1"></script>
+<script src="js/cartelera.js?v=20261027_feedback_v1"></script>
+<script src="js/ranking.js?v=20261027_feedback_v1"></script>
+<script src="js/calendario.js?v=20261027_feedback_v1"></script>
+<script src="js/cartelera_interactive.js?v=20261027_feedback_v1"></script>
+<script src="js/ui_gestures.js?v=20261027_feedback_v1"></script>
+<script src="js/auth.js?v=20261027_feedback_v1"></script>
+
+
+
 </body>
 
 </html>

@@ -157,14 +157,14 @@ function renderAdminPanel(equiposParam) {
             
             html += `
             ${(ts < now && !yaTieneResultado && ts > 0) ? `
-            <div class="admin-match-box alerta-pendiente-resultado" style="background: linear-gradient(to right, rgba(231, 76, 60, 0.12), var(--bg-general)); border: 2px solid #e74c3c; border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(231, 76, 60, 0.25);">
-                <div style="background:#e74c3c; color:#fff; font-size:0.72rem; font-weight:900; padding:3px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:5px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+            <div class="admin-match-box alerta-pendiente-resultado" style="background: linear-gradient(to right, rgba(231, 76, 60, 0.12), var(--bg-general)); border: 2px solid #e74c3c; border-radius: 8px; padding: 12px; margin-bottom: 14px; box-shadow: 0 0 15px rgba(231, 76, 60, 0.25); max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
+                <div style="background:#e74c3c; color:#fff; font-size:0.72rem; font-weight:900; padding:3px 8px; border-radius:4px; display:inline-flex; align-items:center; gap:5px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px; max-width: 100%; flex-wrap: wrap;">
                     <i class="fas fa-exclamation-triangle"></i> PARTIDO FINALIZADO SIN RESULTADO OFICIAL
                 </div>` : `
-            <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">`}
-                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-                    <span>${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit} ${visBadge}</span>
-                    <div style="display:flex; align-items:center; gap:4px;">
+            <div class="admin-match-box" style="background: var(--bg-general); border: 1px solid rgba(230,126,34,0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 100%; box-sizing: border-box; overflow-x: hidden;">`}
+                <div style="font-weight:bold; margin-bottom:8px; color: var(--text-main); font-size: 0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <span style="min-width:0; flex:1 1 180px; word-break:break-word;">${adminLocal} <span style="color:var(--text-muted);">vs</span> ${adminVisit} ${visBadge}</span>
+                    <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
                         ${jornadaBadge ? `<span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:rgba(230,126,34,0.15); color:#e67e22; font-weight:800;">${jornadaBadge}</span>` : ''}
                         <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:var(--bg-card-alt); color:var(--secondary-color); font-weight:800;">${eq.categoria || ''}</span>
                     </div>
@@ -174,17 +174,17 @@ function renderAdminPanel(equiposParam) {
                 <div style="margin-bottom: 8px; border-left: 2px solid var(--vcv-morado); padding-left: 8px;">
                     <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Resultado Final (Sets)</label>
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
+                        <input type="number" id="adm_sets_loc_${eq.id_partido}" class="form-control" placeholder="Sets Local" value="${eq.oficial_sets ? eq.oficial_sets.split('-')[0] : ''}" style="flex:1 1 50px; min-width:0; width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
                         <span style="color: var(--text-muted);">-</span>
-                        <input type="number" id="adm_sets_vis_${eq.id_partido}" class="form-control" placeholder="Sets Visitante" value="${eq.oficial_sets ? (eq.oficial_sets.split('-')[1] || '') : ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
+                        <input type="number" id="adm_sets_vis_${eq.id_partido}" class="form-control" placeholder="Sets Visitante" value="${eq.oficial_sets ? (eq.oficial_sets.split('-')[1] || '') : ''}" style="flex:1 1 50px; min-width:0; width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); text-align:center;">
                     </div>
-                    <input type="text" id="adm_parc_${eq.id_partido}" class="form-control" placeholder="Parciales (ej: 25-20, 25-22...)" value="${eq.oficial_parciales || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-top: 6px;">
+                    <input type="text" id="adm_parc_${eq.id_partido}" class="form-control" placeholder="Parciales (ej: 25-20, 25-22...)" value="${eq.oficial_parciales || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-top: 6px;">
                 </div>
 
                 <!-- SECCIÓN STREAMING -->
                 <div style="margin-bottom: 8px; border-left: 2px solid #e67e22; padding-left: 8px;">
                     <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Link Streaming Oficial</label>
-                    <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                    <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
 ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px; display:flex; align-items:center; gap:4px;">
@@ -1736,6 +1736,169 @@ if (btnChangePwdEl) btnChangePwdEl.addEventListener('click', function(e) {
     .finally(() => { btn.innerText = "Actualizar Contraseña"; btn.disabled = false; });
 });
 
+// ==================================================================
+// BUZÓN DE SUGERENCIAS Y REPORTE DE ERRORES (USUARIOS Y ADMIN)
+// ==================================================================
+window.feedbackTipoActivo = 'Sugerencia';
+
+window.setFeedbackType = function(tipo) {
+    window.feedbackTipoActivo = tipo;
+    const inputHidden = document.getElementById('feedbackTipoValue');
+    if (inputHidden) inputHidden.value = tipo;
+
+    const bSug = document.getElementById('btnTipoSugerencia');
+    const bErr = document.getElementById('btnTipoError');
+
+    if (tipo === 'Sugerencia') {
+        if (bSug) {
+            bSug.style.border = '1.5px solid var(--secondary-color)';
+            bSug.style.background = 'rgba(212, 175, 55, 0.2)';
+            bSug.style.color = '#fff';
+            bSug.style.fontWeight = '800';
+        }
+        if (bErr) {
+            bErr.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+            bErr.style.background = 'rgba(255, 255, 255, 0.05)';
+            bErr.style.color = 'var(--text-muted)';
+            bErr.style.fontWeight = '700';
+        }
+    } else {
+        if (bSug) {
+            bSug.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+            bSug.style.background = 'rgba(255, 255, 255, 0.05)';
+            bSug.style.color = 'var(--text-muted)';
+            bSug.style.fontWeight = '700';
+        }
+        if (bErr) {
+            bErr.style.border = '1.5px solid #e74c3c';
+            bErr.style.background = 'rgba(231, 76, 60, 0.2)';
+            bErr.style.color = '#ff6b81';
+            bErr.style.fontWeight = '800';
+        }
+    }
+};
+
+window.enviarFeedbackUsuario = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const btn = document.getElementById('btnEnviarFeedback');
+    const txtArea = document.getElementById('feedbackMensaje');
+    const msgBox = document.getElementById('msgFeedback');
+    if (!txtArea || !msgBox) return;
+
+    const mensaje = txtArea.value.trim();
+    const tipo = window.feedbackTipoActivo || 'Sugerencia';
+
+    if (!mensaje) {
+        msgBox.className = 'alert-box alert-warning';
+        msgBox.style.display = 'block';
+        msgBox.style.background = 'rgba(243, 156, 18, 0.15)';
+        msgBox.style.color = '#f39c12';
+        msgBox.style.border = '1px solid #f39c12';
+        msgBox.innerText = 'Por favor, escribe un mensaje antes de enviar.';
+        return;
+    }
+
+    const data = window.appData || {};
+    const uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (data.usuario || 'Invitado');
+    const uPwd = (typeof currentPassword !== 'undefined' && currentPassword) ? currentPassword : '';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Enviando...</span>';
+    }
+    msgBox.style.display = 'none';
+
+    try {
+        let res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'enviar_sugerencia',
+                usuario: uName,
+                password: uPwd,
+                tipo: tipo,
+                mensaje: mensaje
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        let resData = await res.json();
+        msgBox.style.display = 'block';
+        if (resData.status === 'success') {
+            msgBox.className = 'alert-box alert-success';
+            msgBox.style.background = 'rgba(46, 204, 113, 0.15)';
+            msgBox.style.color = '#2ecc71';
+            msgBox.style.border = '1px solid #2ecc71';
+            msgBox.innerText = resData.message || '¡Gracias! Tu mensaje ha sido enviado correctamente.';
+            txtArea.value = '';
+        } else {
+            msgBox.className = 'alert-box alert-danger';
+            msgBox.style.background = 'rgba(231, 76, 60, 0.15)';
+            msgBox.style.color = '#e74c3c';
+            msgBox.style.border = '1px solid #e74c3c';
+            msgBox.innerText = resData.message || 'No se pudo enviar el mensaje. Inténtalo de nuevo.';
+        }
+    } catch (err) {
+        msgBox.style.display = 'block';
+        msgBox.className = 'alert-box alert-danger';
+        msgBox.style.background = 'rgba(231, 76, 60, 0.15)';
+        msgBox.style.color = '#e74c3c';
+        msgBox.style.border = '1px solid #e74c3c';
+        msgBox.innerText = 'Error al enviar: ' + err.message;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>📨 Enviar a los Administradores</span>';
+        }
+    }
+};
+
+window.cargarSugerenciasAdmin = async function() {
+    const box = document.getElementById('adminSugerenciasBox');
+    const btn = document.getElementById('btnCargarSugerenciasAdmin');
+    if (!box) return;
+    if (btn) { btn.disabled = true; btn.innerText = "Cargando..."; }
+    box.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">⏳ Consultando base de datos...</div>';
+
+    try {
+        let res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_sugerencias',
+                usuario: currentUser,
+                password: currentPassword
+            })
+        });
+        let data = await res.json();
+        if (data.status === 'success') {
+            const list = data.sugerencias || [];
+            if (list.length === 0) {
+                box.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">No hay mensajes registrados aún en el buzón.</div>';
+            } else {
+                box.innerHTML = list.map(item => `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: ${item.tipo === 'Error' ? 'rgba(231,76,60,0.2)' : 'rgba(212,175,55,0.2)'}; color: ${item.tipo === 'Error' ? '#ff6b81' : 'var(--secondary-color)'};">
+                                    ${item.tipo === 'Error' ? '⚠️ Error / Bug' : '💡 Sugerencia'}
+                                </span>
+                                <strong style="color: #fff; font-size: 0.85rem;">@${item.usuario}</strong>
+                            </div>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">${item.fecha_hora || ''}</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-main); margin-top: 4px; white-space: pre-wrap; line-height: 1.35; word-break: break-word;">${item.mensaje}</div>
+                    </div>
+                `).join('');
+            }
+        } else {
+            box.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${data.message || 'No se pudieron cargar'}</div>`;
+        }
+    } catch(err) {
+        box.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${err.message}</div>`;
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios'; }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
 // LÓGICA DE PETICIÓN DE CAMBIO DE NOMBRE
 const btnReqNameEl = document.getElementById('btnReqName');
 if (btnReqNameEl) btnReqNameEl.addEventListener('click', function(e) {
@@ -1931,4 +2094,75 @@ window.eliminarUsuarioMonitor = function(user) {
     });
 };
 
-
+
+
+
+// ==================================================================
+
+// ==================================================================
+// HERRAMIENTA CM / REDES: TARJETA OFICIAL GANADOR MVP (1080x1080)
+// ==================================================================
+window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
+    const pSelect = document.getElementById('directMvpPartidoSelect');
+    const idPart = pSelect ? pSelect.value : null;
+    if (!idPart) {
+        alert('Por favor, selecciona primero un partido en el desplegable.');
+        return;
+    }
+
+    const data = window.appData || {};
+    let match = null;
+    if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+    if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+
+    // Obtener candidatos seleccionados en la pantalla
+    const s1 = document.getElementById('directMvp1');
+    const s2 = document.getElementById('directMvp2');
+    const s3 = document.getElementById('directMvp3');
+    let cands = [s1 ? s1.value : '', s2 ? s2.value : '', s3 ? s3.value : ''].filter(Boolean);
+    if (cands.length === 0 && match && Array.isArray(match.mvp_candidatos)) {
+        cands = match.mvp_candidatos.filter(Boolean);
+    }
+
+    if (cands.length < 2) {
+        alert('Para generar la tarjeta del MVP debes tener al menos 2 candidatos nominados.');
+        return;
+    }
+
+    // Ganador seleccionado en el desplegable de ganador oficial o el primero de los candidatos
+    const sOficial = document.getElementById('directMvpOficialSelect');
+    let winner = (sOficial && sOficial.value) ? sOficial.value : (match && match.mvp_oficial ? match.mvp_oficial : '');
+    if (!winner && cands.length > 0) {
+        winner = cands[0];
+    }
+
+    // Estadísticas
+    const st1 = document.getElementById('mvpStat1')?.value?.trim();
+    const st2 = document.getElementById('mvpStat2')?.value?.trim();
+    const st3 = document.getElementById('mvpStat3')?.value?.trim();
+    const st4 = document.getElementById('mvpStat4')?.value?.trim();
+    let stats = [st1, st2, st3, st4].filter(Boolean);
+    if (stats.length === 0 && match && Array.isArray(match.mvp_stats)) {
+        stats = match.mvp_stats.filter(Boolean);
+    }
+
+    // Parámetros para el canvas de la tarjeta oficial (1080x1080)
+    window.currentShareMode = 'mvp';
+    window.currentShareMatchId = idPart;
+    window.isMvpAdminClubCard = true;
+    window.currentShareWinnerOverride = winner;
+    window.currentShareStatsOverride = stats;
+    window.currentShareCandidatesOverride = cands;
+
+    const ligaSelector = document.getElementById('shareLigaSelectorContainer');
+    if (ligaSelector) ligaSelector.style.display = 'none';
+
+    if (directDownload) {
+        await window.dibujarTarjetaCompartir();
+        window.descargarTarjetaCanvas();
+    } else {
+        const modal = document.getElementById('shareCardModal');
+        if (modal) modal.style.display = 'flex';
+        await window.dibujarTarjetaCompartir();
+    }
+};

@@ -1737,6 +1737,64 @@ export async function onRequestPost(context) {
     }
 
     
+    // BUZÓN DE SUGERENCIAS Y REPORTE DE ERRORES (GUARDADO EN BASE DE DATOS)
+    if (action === 'enviar_sugerencia' || action === 'submit_feedback') {
+        const { tipo, mensaje } = body;
+        const targetUser = usuario || body.usuario || 'Invitado';
+
+        if (!mensaje || !mensaje.trim()) {
+            return jsonResponse({ status: 'error', message: 'El mensaje no puede estar vacío.' }, 400);
+        }
+
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Sugerencias_Errores" (
+                "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+                "usuario" TEXT NOT NULL,
+                "tipo" TEXT NOT NULL,
+                "mensaje" TEXT NOT NULL,
+                "fecha_hora" TEXT NOT NULL,
+                "timestamp" INTEGER NOT NULL,
+                "estado" TEXT DEFAULT 'PENDIENTE'
+            )`).run();
+        } catch(e) {}
+
+        const now = new Date();
+        const fechaHora = now.toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
+        const ts = Date.now();
+
+        try {
+            await db.prepare(`INSERT INTO "Sugerencias_Errores" ("usuario", "tipo", "mensaje", "fecha_hora", "timestamp", "estado") VALUES (?, ?, ?, ?, ?, ?)`)
+                .bind(targetUser, tipo || 'Sugerencia', mensaje.trim(), fechaHora, ts, 'PENDIENTE').run();
+
+            return jsonResponse({ status: 'success', message: '¡Muchas gracias! Tu mensaje ha sido enviado correctamente.' });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: 'Error al guardar en la base de datos: ' + e.message }, 500);
+        }
+    }
+
+    if (action === 'get_sugerencias') {
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos de administrador'}, 403);
+
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Sugerencias_Errores" (
+                "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+                "usuario" TEXT NOT NULL,
+                "tipo" TEXT NOT NULL,
+                "mensaje" TEXT NOT NULL,
+                "fecha_hora" TEXT NOT NULL,
+                "timestamp" INTEGER NOT NULL,
+                "estado" TEXT DEFAULT 'PENDIENTE'
+            )`).run();
+            const { results } = await db.prepare('SELECT * FROM "Sugerencias_Errores" ORDER BY id DESC LIMIT 50').all();
+            return jsonResponse({ status: 'success', sugerencias: results || [] });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
     // SAVE EMAIL
     
     

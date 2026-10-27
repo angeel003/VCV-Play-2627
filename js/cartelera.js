@@ -178,44 +178,43 @@ window.renderCarteleraHTML = function(data) {
                         ${widgetHtml}`;
                     } else if (isSuperliga && mvpOficial && isMvpVisible && !isCountdownActive) {
                         let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
-                        let myVoteNote = myMvpVote ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">Tu voto en la jornada fue para: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
+                        let myVoteNote = myMvpVote ? `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; word-break:break-word;">Tu voto en la jornada: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
                         mvpHtml = `
-                        <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div class="mvp-photo-wrapper" style="width: 72px; height: 72px; min-width: 72px; min-height: 72px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.45); overflow: hidden; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
-                                    <img src="files/images/valcyl_logo.png" alt="VALCYL" class="mvp-valcyl-watermark">
-                                    <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\\'>${oInfo.initials}</span>';">
+                        <div class="mvp-winner-proclaimed-card" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 10px 12px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; box-sizing: border-box; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                <div class="mvp-photo-wrapper mvp-winner-photo" style="position: relative; width: 58px; height: 58px; min-width: 58px; min-height: 58px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 12px rgba(212, 175, 55, 0.45); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
+                                    <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\'>${oInfo.initials}</span>';">
                                 </div>
-                                <div>
-                                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.6px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                                <div style="min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
                                         <span>👑 MVP VALCYL</span>
-                                        <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación y elección del MVP" style="background: rgba(212,175,55,0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1;">
+                                        <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación y elección del MVP" style="background: rgba(212,175,55,0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0;">
                                             ?
                                         </button>
                                     </div>
-                                    <div style="font-size: 1.05rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                        <span>${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
-                                        ${oInfo.posicion ? `<span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:4px;">${oInfo.posicion}</span>` : ''}
+                                    <div style="font-size: clamp(0.92rem, 3.5vw, 1.05rem); font-weight: 900; color: #fff; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; line-height: 1.2;">
+                                        <span style="word-break: break-word;">${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
+                                        ${oInfo.posicion ? `<span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; flex-shrink: 0;">${oInfo.posicion}</span>` : ''}
                                     </div>
                                     ${(function() {
                                         let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
                                         if (statsList.length === 0) return '';
                                         let badges = statsList.map(st => `
-                                            <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.35); border:1px solid rgba(212,175,55,0.35); padding:2px 7px; border-radius:6px;">
-                                                <span style="color:var(--secondary-color);">⚡</span> ${st}
+                                            <span style="display:inline-flex; align-items:center; gap:3px; font-size:0.68rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.4); border:1px solid rgba(212,175,55,0.35); padding:2px 6px; border-radius:6px; max-width: 100%; word-break: break-word;">
+                                                <span style="color:var(--secondary-color); flex-shrink:0;">⚡</span> <span>${st}</span>
                                             </span>
                                         `).join('');
-                                        return `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;">${badges}</div>`;
+                                        return `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;">${badges}</div>`;
                                     })()}
                                     ${myVoteNote}
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0;">
-                                <div style="font-size: 1.8rem; filter: drop-shadow(0 0 10px rgba(212,175,55,0.7));">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;">
+                                <div style="font-size: 1.5rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">
                                     🏆
                                 </div>
-                                <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 8px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                                     Compartir
                                 </button>
                             </div>
@@ -265,18 +264,18 @@ window.renderCarteleraHTML = function(data) {
                             <div style="font-size: 0.85rem; font-weight: 800; color: var(--secondary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 🔒 ¡Únete!
                             </div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; word-break: break-word; line-height: 1.15;">
                                 Regístrate para puntuar
                             </div>
                         </div>` : `
                         <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; box-sizing: border-box; overflow: hidden;">
-                            <div style="font-size: 0.65rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="font-size: 0.65rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px; word-break: break-word; line-height: 1.15;">
                                 <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px; flex-shrink: 0;"></i> TU PREDICCIÓN
                             </div>
                             <div style="font-size: clamp(1.05rem, 4vw, 1.25rem); font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
                                 ${miPronSets}
                             </div>
-                            <div style="font-size: 0.72rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <div style="font-size: 0.72rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; word-break: break-word; line-height: 1.15;">
                                 ${miPronDetalle}
                             </div>
                         </div>`;
@@ -324,7 +323,7 @@ window.renderCarteleraHTML = function(data) {
                                 <div style="font-size: clamp(1.05rem, 4vw, 1.25rem); font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
                                     ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
                                 </div>
-                                <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.oficial_parciales || ''}">
+                                <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px; word-break: break-word; line-height: 1.15;" title="${eq.oficial_parciales || ''}">
                                     ${eq.oficial_parciales || 'Parciales pendientes'}
                                 </div>
                             </div>

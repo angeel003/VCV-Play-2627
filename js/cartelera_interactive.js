@@ -407,7 +407,6 @@
             <div class="mvp-card-slot" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
                 <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}">
                     <div class="mvp-photo-wrapper">
-                        <img src="files/images/valcyl_logo.png" alt="VALCYL" class="mvp-valcyl-watermark">
                         <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="window.handleJugadorImgError(this, ${info.dorsal || 0}, '${info.initials}');">
                         ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
                     </div>
@@ -636,7 +635,7 @@
         let recordJornada = "0";
         let recordPartido = "0";
         let desgloseHtml = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 6px 0;">Aún no hay puntos registrados.</div>`;
-        if (!data) return { mediaPuntos, mediaPos, recordJornada, recordPartido, desgloseHtml };
+        if (!data) return { mediaPuntos, mediaPos, recordJornada, recordPartido, desgloseHtml, numJornadas: (typeof jKeys !== 'undefined' ? jKeys.length : 0) };
 
         let loggedUser = data.usuario || (typeof currentUser !== 'undefined' ? currentUser : '');
         let targetUser = jugador || loggedUser;
@@ -896,7 +895,7 @@
                     if (myIndex !== -1) mediaPos = (myIndex + 1) + "º";
                 }
 
-                return { mediaPuntos, mediaPos, recordJornada, recordPartido, desgloseHtml };
+                return { mediaPuntos, mediaPos, recordJornada, recordPartido, desgloseHtml, numJornadas: (typeof jornadasJugadas !== 'undefined' ? jornadasJugadas.length : 0) };
             }
         }
 
@@ -928,11 +927,9 @@
                     countJ++;
                     if (ptsJ > maxPVal) maxPVal = ptsJ;
                     desgloseHtml += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                            <span style="font-size:0.8rem; font-weight:700;">Jornada ${j}</span>
-                            <div style="display:flex; gap:12px; align-items:center;">
-                                <span style="font-weight:800; color:var(--secondary-color); font-size:0.9rem;">+${ptsJ} pts</span>
-                            </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding: 9px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; margin-bottom: 6px;">
+                            <span style="font-size:0.82rem; font-weight:800; color:var(--text-main);">Jornada ${j}</span>
+                            <span style="font-weight:900; color:var(--secondary-color); font-size:0.95rem; font-family:'Space Grotesk',sans-serif;">+${ptsJ} pts</span>
                         </div>
                     `;
                 });
@@ -988,7 +985,7 @@
                     let myIndex = rnk.findIndex(r => r.jugador === targetUser);
                     if (myIndex !== -1) mediaPos = (myIndex + 1) + "º";
                 }
-                return { mediaPuntos, mediaPos, recordJornada, recordPartido: "-", desgloseHtml };
+                return { mediaPuntos, mediaPos, recordJornada, recordPartido: "-", desgloseHtml, numJornadas: (typeof jornadasJugadas !== 'undefined' ? jornadasJugadas.length : 0) };
             }
         }
 
@@ -1624,6 +1621,12 @@ window.getPodioBadgesForUser = function(targetUser, currentLigaContext = null) {
         }
 
         let desgloseTitle = isOwn ? `Desglose de Puntos (${ligaName ? 'Liga ' + ligaName : 'General'})` : `Desglose por Jornada (${ligaName ? 'Liga ' + ligaName : 'General'})`;
+        let totalJornadasCount = statsResult.numJornadas || 0;
+        let scrollIndicatorHtml = (!isOwn && totalJornadasCount > 3) ? `
+            <div style="display:flex; align-items:center; justify-content:center; gap:5px; font-size:0.72rem; color:var(--text-muted); margin-top:6px; font-weight:600;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--secondary-color);"><path d="m6 9 6 6 6-6"/></svg>
+                <span>Desliza para ver más jornadas (${totalJornadasCount} en total)</span>
+            </div>` : '';
 
         let htmlStats = `
 
@@ -1631,9 +1634,10 @@ window.getPodioBadgesForUser = function(targetUser, currentLigaContext = null) {
             ${statsGridHtml}
             <div style="text-align: left; margin-bottom: 20px;">
                 <h4 style="margin: 0 0 8px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">${desgloseTitle}</h4>
-                <div style="max-height: 220px; overflow-y: auto; padding-right: 5px; scrollbar-width: thin;">
+                <div class="player-jornadas-scrollable" style="max-height: ${isOwn ? '220px' : '142px'}; overflow-y: auto; padding-right: 4px; box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--secondary-color) rgba(255,255,255,0.05); -webkit-overflow-scrolling: touch;">
                     ${desgloseHtml}
                 </div>
+                ${scrollIndicatorHtml}
             </div>
         `;
 
@@ -2001,7 +2005,7 @@ window.renderRankingV2 = function() {
                         <span style="font-weight: 900; font-size: 0.9rem;">${pos}º</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-                        <div style="font-weight: 800; font-size: 0.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@${r.jugador}</div>
+                        <div style="font-weight: 800; font-size: 0.92rem; word-break:break-word; line-height:1.2;">@${r.jugador}</div>
                         <span class="role-badge" style="background: var(--secondary-color); color: #140818; border:none; flex-shrink:0;">TÚ</span>
                     </div>
                 </div>
@@ -2051,7 +2055,7 @@ window.renderRankingV2 = function() {
                         </div>
                         <div class="rank-user-info" style="margin-left:6px; min-width:0; flex:1 1 auto;">
                             <div class="name" style="display:flex; align-items:center; gap:6px; min-width:0; width:100%;">
-                                <span class="rank-player-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-shrink:0; max-width:70%;">@${r.jugador}</span>
+                                <span class="rank-player-name" style="word-break:break-word; overflow-wrap:break-word; line-height:1.2; font-weight:700; color:var(--text-main); font-size:0.86rem;">@${r.jugador}</span>
                                 ${badges}
                             </div>
                         </div>
@@ -2374,6 +2378,10 @@ window.currentShareLiga = null;
 window.closeShareCardModal = function() {
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'none';
+    window.isMvpAdminClubCard = false;
+    window.currentShareWinnerOverride = null;
+    window.currentShareStatsOverride = null;
+    window.currentShareCandidatesOverride = null;
 };
 
 window.abrirModalCompartirPartido = function(idPart) {
@@ -2389,6 +2397,10 @@ window.abrirModalCompartirPartido = function(idPart) {
 window.abrirModalCompartirMVP = function(idPart) {
     window.currentShareMode = 'mvp';
     window.currentShareMatchId = idPart;
+    window.isMvpAdminClubCard = false;
+    window.currentShareWinnerOverride = null;
+    window.currentShareStatsOverride = null;
+    window.currentShareCandidatesOverride = null;
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
     const modal = document.getElementById('shareCardModal');
@@ -2596,20 +2608,28 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const cat = (match.categoria || 'SUPERLIGA 2').toUpperCase();
     const jNum = match.jornada_eq || match.ronda_global || '-';
 
+    const isClubCard = Boolean(window.isMvpAdminClubCard);
+
     // Candidatos y votos
-    const cands = Array.isArray(match.mvp_candidatos) ? match.mvp_candidatos : [];
-    const myVote = (data.mvp_votos && data.mvp_votos[idPart]) ? data.mvp_votos[idPart] : null;
-    const isProclaimed = !!match.mvp_oficial;
+    const cands = (isClubCard && Array.isArray(window.currentShareCandidatesOverride) && window.currentShareCandidatesOverride.length > 0)
+        ? window.currentShareCandidatesOverride
+        : (Array.isArray(match.mvp_candidatos) ? match.mvp_candidatos : []);
+    // En modo club/intranet, anulamos completamente cualquier voto previo de usuario
+    const myVote = isClubCard ? null : ((data.mvp_votos && data.mvp_votos[idPart]) ? data.mvp_votos[idPart] : null);
+    const isProclaimed = isClubCard ? true : !!match.mvp_oficial;
+    const winnerOficial = (isClubCard && window.currentShareWinnerOverride) 
+        ? window.currentShareWinnerOverride 
+        : (match.mvp_oficial || (cands.length > 0 ? cands[0] : null));
 
     // Determinar qué jugador destacar como principal
     let primaryInfo = null;
     let isHit = false;
 
     if (isProclaimed) {
-        primaryInfo = window.parseCandInfo(match.mvp_oficial);
-        if (myVote) {
+        primaryInfo = window.parseCandInfo(winnerOficial || match.mvp_oficial || (cands.length > 0 ? cands[0] : ''));
+        if (myVote && !isClubCard) {
             let uMvpVote = String(myVote).trim().toLowerCase();
-            let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+            let mOficial = String(winnerOficial || match.mvp_oficial).trim().toLowerCase();
             let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
             let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
             if (dorOf && dorVo && dorOf === dorVo) isHit = true;
@@ -2621,7 +2641,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         primaryInfo = window.parseCandInfo(cands[0]);
     }
 
-    // Cargar imagen del jugador principal
+    // Cargar marca de agua oficial VALCYL e imagen del jugador principal
+    let valcylLogoImg = await cargarImagenCanvas('files/images/valcyl_logo.png');
     let mainImg = null;
     if (primaryInfo) {
         mainImg = await cargarImagenCanvas(primaryInfo.photoSrc);
@@ -2642,7 +2663,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.textAlign = 'center';
     drawTextFitted(ctx, cat, 190, 210, 215, 20, '900 "Space Grotesk", sans-serif', 14);
 
-    // Badge 2: Partido
+    // Badge 2: Partido (solo rival: "vs [Equipo Rival]")
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 1.5;
@@ -2651,7 +2672,8 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
-    drawTextFitted(ctx, `${locName} vs ${visName}`, 505, 210, 335, 19, '800 sans-serif', 13);
+    let rivalNameOnly = match.rival || (match.ubicacion === 'LOCAL' ? match.rival : match.equipo_local) || 'Rival';
+    drawTextFitted(ctx, `vs ${rivalNameOnly}`, 505, 210, 335, 22, '800 sans-serif', 14);
 
     // Badge 3: Jornada (Derecha)
     ctx.fillStyle = '#b7a4be';
@@ -2687,7 +2709,9 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'right';
-    let userHeaderTxt = '@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : '');
+    let userHeaderTxt = isClubCard 
+        ? 'VCV PLAY' 
+        : ('@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : ''));
     drawTextFitted(ctx, userHeaderTxt, W - 110, topBannerY + 24, 380, 24, '800 sans-serif', 16);
 
     // Separador sutil bajo el banner
@@ -2721,20 +2745,33 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Dibujar foto o iniciales
-    if (mainImg) {
+    // Dibujar clip interior para marca de agua difuminada y foto o iniciales
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8, 18);
+    ctx.clip();
+
+    // 1. Marca de agua difuminada del logo VALCYL detrás del jugador (igual que en cartelera)
+    if (valcylLogoImg) {
         ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8, 18);
-        ctx.clip();
-        drawImageContain(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
+        ctx.globalAlpha = 0.28;
+        const wmSize = (photoBoxW - 8) * 0.90;
+        const wmX = photoX + 4 + ((photoBoxW - 8) - wmSize) / 2;
+        const wmY = photoY + 4 + ((photoBoxH - 8) - wmSize) / 2;
+        drawImageContain(ctx, valcylLogoImg, wmX, wmY, wmSize, wmSize);
         ctx.restore();
+    }
+
+    // 2. Foto del jugador o iniciales por delante de la marca de agua
+    if (mainImg) {
+        drawImageContain(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
     } else if (primaryInfo) {
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 80px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(primaryInfo.initials, photoX + (photoBoxW / 2), photoY + (photoBoxH / 2) + 28);
     }
+    ctx.restore();
     ctx.restore();
 
     // Dorsal Badge flotante sobre la foto
@@ -2786,10 +2823,13 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         drawTextFitted(ctx, primaryInfo.posicion, infoX + 90, heroY + 169, 160, 18, '800 sans-serif', 13);
     }
 
-    // Estadísticas destacadas de MVP (si el partido ya terminó y tiene mvp_stats)
-    if (isProclaimed && Array.isArray(match.mvp_stats) && match.mvp_stats.length > 0) {
+    // Estadísticas destacadas de MVP (si el partido ya terminó o por override)
+    let statsToShow = (window.isMvpAdminClubCard && Array.isArray(window.currentShareStatsOverride) && window.currentShareStatsOverride.length > 0)
+        ? window.currentShareStatsOverride
+        : (Array.isArray(match.mvp_stats) ? match.mvp_stats : []);
+    if (isProclaimed && Array.isArray(statsToShow) && statsToShow.length > 0) {
         let stY = heroY + 198;
-        let validStats = match.mvp_stats.filter(Boolean);
+        let validStats = statsToShow.filter(Boolean);
         validStats.slice(0, 3).forEach((st, i) => {
             let badgeX = infoX + (i * 155);
             if (badgeX + 145 <= W - 110) {
@@ -2812,7 +2852,19 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const bannerBoxY = heroY + photoBoxH + 28;
     const bannerMaxW = W - 260; // margen dentro del recuadro
     if (isProclaimed) {
-        if (isHit) {
+        if (isClubCard) {
+            // Banner genérico oficial del club (sin datos ni votos de usuario)
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.18)';
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(110, bannerBoxY, W - 220, 68, 16);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#ffd700';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '👑 MVP VALCYL DE LA JORNADA', midX, bannerBoxY + 44, bannerMaxW, 30, '900 sans-serif', 18);
+        } else if (isHit) {
             // Acierto en verde/oro
             ctx.fillStyle = 'rgba(46, 204, 113, 0.18)';
             ctx.strokeStyle = '#2ecc71';
@@ -2884,8 +2936,11 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         const cInf = window.parseCandInfo(cStr);
         const mx = 110 + i * (miniW + 20);
 
-        const isUserVoteThis = (myVote && (myVote === cStr || (cInf.dorsal && window.parseCandInfo(myVote).dorsal === cInf.dorsal)));
-        const isOfficialThis = (isProclaimed && match.mvp_oficial && (match.mvp_oficial === cStr || (cInf.dorsal && window.parseCandInfo(match.mvp_oficial).dorsal === cInf.dorsal)));
+        const isUserVoteThis = (!window.isMvpAdminClubCard && myVote && (myVote === cStr || (cInf.dorsal && window.parseCandInfo(myVote).dorsal === cInf.dorsal)));
+        const isOfficialThis = (isProclaimed && (winnerOficial || match.mvp_oficial) && (
+            (winnerOficial && (winnerOficial === cStr || (cInf.dorsal && window.parseCandInfo(winnerOficial).dorsal === cInf.dorsal))) ||
+            (match.mvp_oficial && (match.mvp_oficial === cStr || (cInf.dorsal && window.parseCandInfo(match.mvp_oficial).dorsal === cInf.dorsal)))
+        ));
 
         // Fondo mini card
         ctx.fillStyle = isOfficialThis ? 'rgba(212, 175, 55, 0.22)' : (isUserVoteThis ? 'rgba(123, 51, 130, 0.35)' : 'rgba(255, 255, 255, 0.04)');
@@ -2913,19 +2968,31 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        if (miniImg) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4, 10);
+        ctx.clip();
+
+        // Marca de agua VALCYL difuminada en mini card
+        if (valcylLogoImg) {
             ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4, 10);
-            ctx.clip();
-            drawImageContain(ctx, miniImg, mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4);
+            ctx.globalAlpha = 0.25;
+            const mWmSize = (mPhotoSize - 4) * 0.88;
+            const mWmX = mPhotoX + 2 + ((mPhotoSize - 4) - mWmSize) / 2;
+            const mWmY = mPhotoY + 2 + ((mPhotoSize - 4) - mWmSize) / 2;
+            drawImageContain(ctx, valcylLogoImg, mWmX, mWmY, mWmSize, mWmSize);
             ctx.restore();
+        }
+
+        if (miniImg) {
+            drawImageContain(ctx, miniImg, mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4);
         } else {
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 32px "Space Grotesk", sans-serif';
             ctx.textAlign = 'center';
             ctx.fillText(cInf.initials, mPhotoX + (mPhotoSize / 2), mPhotoY + (mPhotoSize / 2) + 12);
         }
+        ctx.restore();
         ctx.restore();
 
         // Textos mini card a la derecha de la miniatura
@@ -3610,7 +3677,12 @@ window.ejecutarCompartirTarjeta = async function() {
         const visName = match ? ((match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local) : 'Rival';
         const uVote = (data.mvp_votos && idPart) ? data.mvp_votos[idPart] : null;
 
-        if (match && match.mvp_oficial) {
+        if (window.isMvpAdminClubCard) {
+            let winOv = window.currentShareWinnerOverride || (match && match.mvp_oficial) || 'Jugador';
+            let oInf = window.parseCandInfo(winOv);
+            shareText = `👑 ¡MVP VALCYL! ${oInf.apodo} ha sido elegido como el Jugador Más Valioso en el partido ${locName} vs ${visName}. ¡Consulta los detalles en VCV Play!`;
+            shareTitle = `👑 MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
+        } else if (match && match.mvp_oficial) {
             let oInf = window.parseCandInfo(match.mvp_oficial);
             let uMvpVote = String(uVote || '').trim().toLowerCase();
             let mOficial = String(match.mvp_oficial).trim().toLowerCase();
@@ -3688,7 +3760,10 @@ window.descargarTarjetaCanvas = function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
     const link = document.createElement('a');
-    link.download = 'vcv_play_tarjeta.png';
+    let filename = (window.currentShareMode === 'mvp' && window.isMvpAdminClubCard) 
+        ? 'mvp_valcyl_ganador_oficial.png' 
+        : 'vcv_play_tarjeta.png';
+    link.download = filename;
     link.href = canvas.toDataURL('image/png');
     link.click();
 };
