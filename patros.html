@@ -46,12 +46,12 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at 50% 35%, #250a2e 0%, #0d0211 100%);
+    background: radial-gradient(circle at 50% 38%, #250a2e 0%, #0d0211 100%);
     z-index: 99999;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: calc(env(safe-area-inset-top, 20px) + 20px) 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
+    padding: calc(env(safe-area-inset-top, 20px) + 16px) 20px calc(env(safe-area-inset-bottom, 20px) + 20px);
     box-sizing: border-box;
     overflow-y: auto;
   }
@@ -1887,14 +1887,14 @@
   <!-- BOTÓN DE CIERRE RÁPIDO PARA PRUEBAS -->
   <button type="button" onclick="document.getElementById('vcvAutoLoginOverlay').style.setProperty('display', 'none', 'important')" style="position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.22); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; z-index: 100002; backdrop-filter: blur(8px);" title="Cerrar Splash">&times;</button>
 
-  <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 440px; margin: auto;">
+  <div style="display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 440px; margin: auto; padding-top: 10px; padding-bottom: 10px;">
     
-    <!-- 1. NÚCLEO CENTRAL DEL CLUB (ESCUDO + VCV PLAY + CARGANDO) -->
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; margin-bottom: 24px;">
-      <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05); box-shadow: 0 0 25px rgba(212,175,55,0.25);">
+    <!-- 1. NÚCLEO CENTRAL DEL CLUB (ESCUDO CENTRADO + TÍTULO APP + CARGANDO) -->
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; margin-bottom: 22px;">
+      <div style="width: 76px; height: 76px; border-radius: 50%; overflow: hidden; border: 2.5px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05); box-shadow: 0 0 28px rgba(212,175,55,0.3);">
         <img src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain;">
       </div>
-      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--secondary-color, #d4af37); letter-spacing: -0.3px;">
+      <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 900; color: var(--secondary-color, #d4af37); letter-spacing: -0.3px;">
         VCV PLAY <span style="color: #fff;">26/27</span>
       </div>
       <div id="splashStatusText" style="display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-muted, #b7a4be); font-size: 0.85rem; font-weight: 600;">
@@ -1903,23 +1903,23 @@
       </div>
     </div>
 
-    <!-- 2. BLOQUE DE PATROCINADORES TODOS DEBAJO (EN ORDEN DE IMPORTANCIA / TAMAÑO COHERENTE) -->
+    <!-- 2. BLOQUE DE PATROCINADORES TODOS DEBAJO (EN ORDEN DECRECIENTE DE TAMAÑO / IMPORTANCIA) -->
     <!-- TONO: MORADO / LAVANDA TRANSLÚCIDO INTEGRADO -->
-    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;">
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 13px; text-align: center;">
 
-      <!-- TIER 1: PATROCINADOR PRINCIPAL (MAYOR INVERSIÓN - TAMAÑO GRANDE 56px) -->
-      <div style="display: flex; flex-direction: column; align-items: center; width: 100%; padding-top: 4px;">
-        <img src="files/images/valcyl_logo_lavender.png" alt="VALCYL" onerror="this.src='files/images/valcyl_logo.png'; this.style.filter='brightness(0) invert(85%) sepia(20%) saturate(1400%) hue-rotate(240deg)';" style="height: 56px; max-width: 75vw; width: auto; object-fit: contain; opacity: 0.9; margin-bottom: 4px;">
+      <!-- TIER 1: PATROCINADOR PRINCIPAL (TAMAÑO GRANDE: 54px) -->
+      <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <img src="files/images/valcyl_logo_lavender.png" alt="VALCYL" onerror="this.src='files/images/valcyl_logo.png'; this.style.filter='brightness(0) invert(85%) sepia(20%) saturate(1400%) hue-rotate(240deg)';" style="height: 54px; max-width: 75vw; width: auto; object-fit: contain; opacity: 0.9; margin-bottom: 4px;">
         <span style="font-size: 0.58rem; letter-spacing: 2.2px; color: rgba(226, 208, 238, 0.7); font-weight: 700; text-transform: uppercase;">Patrocinador Principal Oficial</span>
       </div>
 
-      <!-- TIER 2: SPONSORS DE EQUIPOS (INVERSIÓN MEDIA - A LA MITAD: 26px) -->
-      <div style="width: 100%; padding: 4px 0;">
-        <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 12px; width: 100%;">
+      <!-- TIER 2: SPONSORS DE EQUIPOS (TAMAÑO MEDIO COHERENTE: 25px) -->
+      <div style="width: 100%; padding: 2px 0;">
+        <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 10px; width: 100%;">
           
           <!-- Superliga 2 -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+            <svg width="74" height="25" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
               <path d="M10 8 L24 20 L10 32 L4 20 Z" fill="#d8c2e6"/>
               <path d="M22 8 L36 20 L22 32 L16 20 Z" fill="#d8c2e6" fill-opacity="0.8"/>
               <text x="44" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">NEXUS</text>
@@ -1928,11 +1928,11 @@
           </div>
 
           <!-- Divisor vertical fino -->
-          <div style="width: 1px; height: 26px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+          <div style="width: 1px; height: 25px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
 
           <!-- 1ª Nac. Fem -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+            <svg width="74" height="25" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
               <circle cx="16" cy="20" r="10" stroke="#d8c2e6" stroke-width="3" fill="none"/>
               <circle cx="16" cy="20" r="4" fill="#d8c2e6"/>
               <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">AURA</text>
@@ -1941,11 +1941,11 @@
           </div>
 
           <!-- Divisor vertical fino -->
-          <div style="width: 1px; height: 26px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+          <div style="width: 1px; height: 25px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
 
           <!-- Cantera Base -->
           <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
-            <svg width="76" height="26" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+            <svg width="74" height="25" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
               <polygon points="16,6 26,28 6,28" stroke="#d8c2e6" stroke-width="2.5" fill="none"/>
               <polygon points="16,14 22,26 10,26" fill="#d8c2e6"/>
               <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">TERRA</text>
@@ -1959,7 +1959,7 @@
         </div>
       </div>
 
-      <!-- TIER 3: COLABORADORES OFICIALES (MENOR INVERSIÓN - MÁS PEQUEÑOS Y TRANSLÚCIDOS: 13px / 45% OPACIDAD) -->
+      <!-- TIER 3: COLABORADORES OFICIALES (TAMAÑO COMPACTO: 13px / 45% OPACIDAD) -->
       <div style="border-top: 1px solid rgba(216, 194, 230, 0.1); padding-top: 8px; width: 100%;">
         <div style="display: flex; justify-content: center; align-items: center; gap: 18px; opacity: 0.45; flex-wrap: wrap;">
           <!-- Fisio -->
@@ -1979,7 +1979,7 @@
           </div>
           <!-- Transporte -->
           <div style="display: flex; align-items: center; gap: 4px;" title="Transportes">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
             <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">BUS</span>
           </div>
         </div>
@@ -2031,32 +2031,88 @@
         
         <div id="loginMessage" class="alert-box" style="margin-top:10px; display:none; background-color:#ff4444; color:white; padding:10px; border-radius:8px; text-align:center; font-weight:bold;"></div>
     </div>
+    <!-- PATROCINADORES Y COLABORADORES EN PANTALLA DE LOGIN (MISMO FORMATO QUE EN SPLASH) -->
+    <div style="margin: 22px auto 14px; text-align: center; max-width: 440px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px;">
 
-    <!-- [COLABORADORES DIRECTAMENTE SOBRE EL FONDO (SIN BLOQUE/TRANSPARENTE)] -->
-    <div class="vcv-mock-sponsor" style="margin: 22px auto 6px; text-align: center; max-width: 440px; width: 100%;">
-      <div style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; margin-bottom: 12px; opacity: 0.85;">
-        Colaboradores Oficiales del Club
+      <!-- TIER 1: PATROCINADOR PRINCIPAL (TAMAÑO GRANDE: 52px) -->
+      <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <img src="files/images/valcyl_logo_lavender.png" alt="VALCYL" onerror="this.src='files/images/valcyl_logo.png'; this.style.filter='brightness(0) invert(85%) sepia(20%) saturate(1400%) hue-rotate(240deg)';" style="height: 52px; max-width: 75vw; width: auto; object-fit: contain; opacity: 0.9; margin-bottom: 4px;">
+        <span style="font-size: 0.58rem; letter-spacing: 2.2px; color: rgba(226, 208, 238, 0.7); font-weight: 700; text-transform: uppercase;">Patrocinador Principal Oficial</span>
       </div>
-      <div style="display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.85; transition: transform 0.2s, opacity 0.2s; cursor: pointer;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.08)'" onmouseout="this.style.opacity='0.85'; this.style.transform='none'">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🏥</div>
-          <span style="font-size: 0.68rem; color: #fff; font-weight: 700;">LOGO 1</span>
-          <span style="font-size: 0.58rem; color: var(--secondary-color);">Salud Oficial</span>
-        </div>
 
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.85; transition: transform 0.2s, opacity 0.2s; cursor: pointer;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.08)'" onmouseout="this.style.opacity='0.85'; this.style.transform='none'">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🍕</div>
-          <span style="font-size: 0.68rem; color: #fff; font-weight: 700;">LOGO 2</span>
-          <span style="font-size: 0.58rem; color: var(--secondary-color);">Restauración</span>
-        </div>
+      <!-- TIER 2: SPONSORS DE EQUIPOS (TAMAÑO MEDIO COHERENTE: 24px) -->
+      <div style="width: 100%; padding: 2px 0;">
+        <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 10px; width: 100%;">
+          
+          <!-- Superliga 2 -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="74" height="24" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <path d="M10 8 L24 20 L10 32 L4 20 Z" fill="#d8c2e6"/>
+              <path d="M22 8 L36 20 L22 32 L16 20 Z" fill="#d8c2e6" fill-opacity="0.8"/>
+              <text x="44" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">NEXUS</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Superliga 2</span>
+          </div>
 
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.85; transition: transform 0.2s, opacity 0.2s; cursor: pointer;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.08)'" onmouseout="this.style.opacity='0.85'; this.style.transform='none'">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">🚗</div>
-          <span style="font-size: 0.68rem; color: #fff; font-weight: 700;">LOGO 3</span>
-          <span style="font-size: 0.58rem; color: var(--secondary-color);">Movilidad</span>
+          <!-- Divisor vertical fino -->
+          <div style="width: 1px; height: 24px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+
+          <!-- 1ª Nac. Fem -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="74" height="24" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <circle cx="16" cy="20" r="10" stroke="#d8c2e6" stroke-width="3" fill="none"/>
+              <circle cx="16" cy="20" r="4" fill="#d8c2e6"/>
+              <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">AURA</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">1ª Nac. Fem</span>
+          </div>
+
+          <!-- Divisor vertical fino -->
+          <div style="width: 1px; height: 24px; background: rgba(216, 194, 230, 0.15); margin-top: 2px;"></div>
+
+          <!-- Cantera Base -->
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+            <svg width="74" height="24" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.75;">
+              <polygon points="16,6 26,28 6,28" stroke="#d8c2e6" stroke-width="2.5" fill="none"/>
+              <polygon points="16,14 22,26 10,26" fill="#d8c2e6"/>
+              <text x="36" y="27" font-family="'Space Grotesk', sans-serif" font-weight="900" font-size="20" fill="#d8c2e6" letter-spacing="1">TERRA</text>
+            </svg>
+            <span style="font-size: 0.52rem; letter-spacing: 0.6px; color: rgba(226, 208, 238, 0.65); font-weight: 700; text-transform: uppercase; margin-top: 3px;">Cantera Base</span>
+          </div>
+
+        </div>
+        <div style="font-size: 0.46rem; letter-spacing: 1.6px; color: rgba(226, 208, 238, 0.4); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
+          Sponsors Oficiales de Equipo
         </div>
       </div>
+
+      <!-- TIER 3: COLABORADORES OFICIALES (TAMAÑO COMPACTO: 13px / 45% OPACIDAD) -->
+      <div style="border-top: 1px solid rgba(216, 194, 230, 0.1); padding-top: 8px; width: 100%;">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 18px; opacity: 0.45; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 4px;" title="Fisioterapia y Salud">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">CLINIC</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;" title="Material Técnico">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">SPORT</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;" title="Restauración">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">BISTRO</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px;" title="Transportes">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d8c2e6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <span style="font-size: 0.56rem; font-weight: 700; color: #d8c2e6; letter-spacing: 0.5px;">BUS</span>
+          </div>
+        </div>
+        <div style="font-size: 0.44rem; letter-spacing: 1.8px; color: rgba(226, 208, 238, 0.35); text-transform: uppercase; font-weight: 700; margin-top: 4px;">
+          Colaboradores Oficiales
+        </div>
+      </div>
+
     </div>
+
 
     <!-- Indicador visual con flecha hacia Preguntas Frecuentes y Registro -->
     <div onclick="document.getElementById('masterFaq').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer; text-align: center; margin: 18px auto 14px; user-select: none;">
