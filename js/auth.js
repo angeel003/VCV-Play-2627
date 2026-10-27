@@ -144,9 +144,6 @@ window.detectarModeloDispositivo = detectarModeloDispositivo;
 // LOGICA DE BOTON VOLVER ATRAS / SALIR
 // ------------------------------------------------------------------
 window.cerrarSesionApp = function() {
-    localStorage.removeItem('vcv_cache_data');
-    localStorage.removeItem('vcv_cache_type');
-    localStorage.removeItem('vcv_cache_creds');
     localStorage.removeItem('vcv_saved_session');
     sessionStorage.setItem('vcv_just_logged_out', 'true');
     sessionStorage.setItem('vcv_slide_left', 'true');
@@ -322,11 +319,13 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             }
 
             // Activate cartelera tab
+            document.documentElement.classList.remove('vcv-auto-logging-in');
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
             const firstNavBtn = navItems[0] || null;
             switchTabV2('carteleraSection', firstNavBtn);
         } else {
+            document.documentElement.classList.remove('vcv-auto-logging-in');
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message || "Error cargando modo invitado."; msgBox.style.display = "block";
             if (typeof updateProgressBar === 'function') updateProgressBar();
         }
@@ -349,7 +348,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
     const msgBox = document.getElementById('loginMessage');
     const btn = this;
 
-    if(!usr || !pwd) { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Rellena usuario y contraseña."; msgBox.style.display = "block";
+    if(!usr || !pwd) { document.documentElement.classList.remove('vcv-auto-logging-in'); msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Rellena usuario y contraseña."; msgBox.style.display = "block";
           updateProgressBar(); return; }
     
     btn.disabled = true; 
@@ -875,7 +874,12 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             return;
         } else {
             // Si el servidor rechaza las credenciales, limpiar la sesión guardada
-            localStorage.removeItem('vcv_saved_session');
+            const msgLower = (data.message || '').toLowerCase();
+            const isCredsError = msgLower.includes('incorrect') || msgLower.includes('inválid') || msgLower.includes('no existe');
+            if (isCredsError) {
+                localStorage.removeItem('vcv_saved_session');
+            }
+            document.documentElement.classList.remove('vcv-auto-logging-in');
             msgBox.className = "alert-box alert-danger"; 
             msgBox.innerText = (data.message && data.message.includes('incorrect')) 
                 ? "Tu sesión guardada ya no es válida o las credenciales cambiaron. Inicia sesión de nuevo." 
@@ -885,6 +889,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
         }
     })
     .catch(err => { 
+        document.documentElement.classList.remove('vcv-auto-logging-in');
         msgBox.className = "alert-box alert-danger"; 
         msgBox.innerHTML = `<div style="margin-bottom:6px;">⚠️ Error de conexión: ${err.message || 'Sin conexión'}</div>
         <button type="button" onclick="document.getElementById('btnLogin').click()" style="background:#fff; color:#e74c3c; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.75rem;">🔄 Reintentar</button>`; 
@@ -903,6 +908,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
 window.verificarAutoLogin = function() {
     // Situación 1: Si el usuario acaba de pulsar 'Cerrar sesión / Volver', no auto-iniciar
     if (sessionStorage.getItem('vcv_just_logged_out')) {
+        document.documentElement.classList.remove('vcv-auto-logging-in');
         sessionStorage.removeItem('vcv_just_logged_out');
         localStorage.removeItem('vcv_saved_session');
         return;
@@ -911,23 +917,36 @@ window.verificarAutoLogin = function() {
     // Situación 2: Parámetro en la URL para forzar salida (?logout=1)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('logout')) {
+        document.documentElement.classList.remove('vcv-auto-logging-in');
         localStorage.removeItem('vcv_saved_session');
         return;
     }
 
     try {
         const raw = localStorage.getItem('vcv_saved_session');
-        if (!raw) return;
+        if (!raw) {
+            document.documentElement.classList.remove('vcv-auto-logging-in');
+            return;
+        }
         const ses = JSON.parse(raw);
-        if (!ses || !ses.usuario || !ses.password) return;
+        if (!ses || !ses.usuario || !ses.password) {
+            document.documentElement.classList.remove('vcv-auto-logging-in');
+            return;
+        }
 
         // Situación 3: Caducidad por inactividad prolongada (ej. 30 días)
         const DIAS_LIMITE = 30;
         if (ses.ts && (Date.now() - ses.ts > DIAS_LIMITE * 24 * 60 * 60 * 1000)) {
             console.warn("Sesión caducada por superar el límite de 30 días.");
+            document.documentElement.classList.remove('vcv-auto-logging-in');
             localStorage.removeItem('vcv_saved_session');
             return;
         }
+        // Renovar fecha de actividad para que cuente 30 días desde la última vez que abrió la app
+        try {
+            ses.ts = Date.now();
+            localStorage.setItem('vcv_saved_session', JSON.stringify(ses));
+        } catch(e) {}
 
         const inputUsr = document.getElementById('loginUsuario');
         const inputPwd = document.getElementById('loginPassword');

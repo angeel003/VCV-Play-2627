@@ -16,6 +16,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
+<script>
+  (function() {
+    try {
+      if (localStorage.getItem('vcv_saved_session') && !sessionStorage.getItem('vcv_just_logged_out')) {
+        document.documentElement.classList.add('vcv-auto-logging-in');
+      }
+    } catch(e) {}
+  })();
+</script>
+<style>
+  html.vcv-auto-logging-in #loginSection {
+    display: none !important;
+  }
+  html.vcv-auto-logging-in #vcvAutoLoginOverlay {
+    display: flex !important;
+  }
+  #vcvAutoLoginOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-general, #120517);
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+</style>
 <style>
     /* ---------------------------------------------------
        1. VARIABLES DE COLOR OFICIALES DEL VCV
@@ -1832,6 +1860,19 @@
     
 </header>
 
+<div id="vcvAutoLoginOverlay">
+  <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05);">
+    <img src="files/images/logo_vcv_circle.png" style="width: 100%; height: 100%; object-fit: contain;">
+  </div>
+  <div style="font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 900; color: var(--secondary-color, #d4af37); letter-spacing: -0.3px;">
+    VCV PLAY <span style="color: #fff;">26/27</span>
+  </div>
+  <div id="splashStatusText" style="display: flex; align-items: center; gap: 8px; color: var(--text-muted, #b7a4be); font-size: 0.85rem; font-weight: 600;">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width: 15px; height: 15px; border-width: 2px;"></span>
+    <span>Cargando tus partidos...</span>
+  </div>
+</div>
+
 <div id="loginSection">
     <div class="modal-card-v2">
         <div style="text-align: center; margin-bottom: 18px;">
@@ -2599,8 +2640,18 @@
         </button>
         <div id="msgReqName" class="alert-box mt-2" style="padding:10px; display:none; margin-top:10px;"></div>
       
-      
-</div>
+      </div>
+
+      <!-- Tarjeta Cerrar Sesión en Perfil -->
+      <div class="vcv-card-v2" style="margin-top: 20px; margin-bottom: 25px; border: 1px solid rgba(231, 76, 60, 0.35); background: rgba(231, 76, 60, 0.05); border-radius: 14px; padding: 18px;">
+        <button type="button" onclick="document.getElementById('btnLogout').click()" style="width: 100%; background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3)); border: 1px solid #e74c3c; color: #ff6b81; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <span>Cerrar sesión</span>
+        </button>
+        <p style="font-size: 0.74rem; color: var(--text-muted); margin: 10px 0 0 0; text-align: center; line-height: 1.4;">
+          Tu sesión permanece guardada automáticamente en este dispositivo durante 30 días de actividad.
+        </p>
+      </div>
     
     </section>
     <section id="historialSection"><div id="historialContentV2"></div></section>

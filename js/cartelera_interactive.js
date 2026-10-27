@@ -1097,8 +1097,9 @@
 
         container.innerHTML = `
             <div style="background:var(--bg-card); border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.25); border: 1px solid var(--border-color); text-align: center; position: relative;">
-                <button type="button" onclick="window.cerrarSesionApp()" title="Cerrar sesión" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff6b81; border-radius: 50%; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 71, 87, 0.25)';" onmouseout="this.style.background='rgba(255, 71, 87, 0.12)';">
-                    <i data-lucide="log-out" style="width: 17px; height: 17px;"></i>
+                <button type="button" onclick="window.cerrarSesionApp()" title="Cerrar sesión" style="position: absolute; top: 14px; right: 14px; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.35); color: #ff6b81; border-radius: 20px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 700; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" onmouseover="this.style.background='rgba(255, 71, 87, 0.25)';" onmouseout="this.style.background='rgba(255, 71, 87, 0.12)';">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                    <span>Cerrar sesión</span>
                 </button>
                 <div style="width:96px; height:96px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2.2rem; font-weight: 900; color: #fff; overflow:hidden;">
                     ${avatarHtml}
