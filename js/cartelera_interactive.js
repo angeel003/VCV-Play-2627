@@ -136,6 +136,7 @@
     });
 
     function switchTabV2(sectionId, btn) {
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
         // Hide all sections in appSection
         const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'prediccionesTotalesSection', 'guestInfoSection'];
         sections.forEach(s => {
