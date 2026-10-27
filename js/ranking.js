@@ -358,11 +358,11 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
          <h2 style="font-size: 1.15rem; font-weight: 900; color:var(--text-main); margin:0 0 10px 0;">
             <i data-lucide="bar-chart-2" style="width:18px;height:18px;display:inline-block;vertical-align:text-bottom; color:var(--vcv-dorado);"></i> Estadísticas
          </h2>
-         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-             <select id="histFilterJornada" onchange="drawHistorialUI(this.value, document.getElementById('histFilterEquipo').value)" style="flex:1; min-width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; outline:none;">
+         <div style="display:flex; gap:8px; flex-wrap:wrap;">
+             <select id="histFilterJornada" onchange="drawHistorialUI(this.value, document.getElementById('histFilterEquipo').value)" style="flex:1 1 130px; min-width:0; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.82rem; outline:none;">
                 ${filterOptionsJ}
              </select>
-             <select id="histFilterEquipo" onchange="drawHistorialUI(document.getElementById('histFilterJornada').value, this.value)" style="flex:2; min-width:180px; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; outline:none;">
+             <select id="histFilterEquipo" onchange="drawHistorialUI(document.getElementById('histFilterJornada').value, this.value)" style="flex:1 1 170px; min-width:0; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.82rem; outline:none;">
                 ${filterOptionsE}
              </select>
          </div>
@@ -374,27 +374,27 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
       <div style="background: linear-gradient(135deg, var(--vcv-morado) 0%, #15081a 100%); padding: 15px; border-radius:12px; margin-bottom:20px; color:white; border:1px solid var(--vcv-dorado); box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           
-          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Pts Ganados</div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: var(--vcv-dorado);">${ptsTxt}</div>
+          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
+            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Pts Ganados</div>
+            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: var(--vcv-dorado); font-family: 'Space Grotesk', sans-serif;">${ptsTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; display:flex; align-items:center;">
+          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
+            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; line-height:1.2; word-break: break-word;">
                 <span>Promedio</span>
                 ${derbyAvisoHtml}
             </div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #a29bfe;">${promedioTxt}</div>
+            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #a29bfe; font-family: 'Space Grotesk', sans-serif;">${promedioTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Aciertos (Part.)</div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #74b9ff;">${aciertosTxt}</div>
+          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
+            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Aciertos (Part.)</div>
+            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #74b9ff; font-family: 'Space Grotesk', sans-serif;">${aciertosTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700;">Sets Exactos</div>
-            <div style="font-size: 1.5rem; font-weight: 900; color: #fff;">${setsTxt}</div>
+          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
+            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Sets Exactos</div>
+            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #fff; font-family: 'Space Grotesk', sans-serif;">${setsTxt}</div>
           </div>
           
         </div>
