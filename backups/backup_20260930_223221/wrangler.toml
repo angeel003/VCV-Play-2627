@@ -1,8 +1,0 @@
-name = "vcv-play-2627"
-pages_build_output_dir = "."
-compatibility_date = "2024-09-30"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "vcv_database"
-database_id = "42b0ddfe-a3d7-49e1-b24f-84754af63215"
