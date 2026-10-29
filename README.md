@@ -1,54 +1,54 @@
-# 🏐 VCV Play 26/27 — Valladolid Club Voleibol
+# VCV Play 26/27 — Valladolid Club Voleibol
 
 Plataforma web oficial y progresiva (PWA) de pronósticos, cartelera deportiva, votación de MVP y comunidad para el **Valladolid Club Voleibol (VCV)**.
 
 ---
 
-## 📖 Descripción General
+## Descripción General
 
 **VCV Play 26/27** es una aplicación web interactiva diseñada para la comunidad de aficionados, jugadores y cuerpo técnico del Valladolid Club Voleibol. Permite seguir el calendario oficial de los equipos del club (Superliga 2, Primera Nacional, etc.), realizar pronósticos deportivos jornada a jornada, votar al MVP de cada partido, consultar estadísticas y clasificaciones en tiempo real, y competir tanto a nivel global como en ligas privadas entre amigos o equipos.
 
-Desarrollada bajo una arquitectura moderna *Jamstack/Serverless* sobre **Cloudflare Pages** y base de datos relacional **Cloudflare D1 (SQLite)**, la plataforma ofrece tiempos de respuesta instantáneos, soporte de instalación nativa PWA en dispositivos móviles y una experiencia de usuario fluida con diseño *Glassmorphism*.
+Desarrollada bajo una arquitectura Jamstack/Serverless sobre **Cloudflare Pages** y base de datos relacional **Cloudflare D1 (SQLite)**, la plataforma ofrece tiempos de respuesta instantáneos, soporte de instalación nativa PWA en dispositivos móviles y una experiencia de usuario fluida con diseño Glassmorphism.
 
 ---
 
-## ✨ Características Principales
+## Características Principales
 
-### 📅 Cartelera de Partidos y Seguimiento en Vivo
+### Cartelera de Partidos y Seguimiento en Vivo
 - **Visualización en tiempo real:** Horarios, pabellones, categorías (RFEVB / EsVoley), escudos y estados de los encuentros (programado, en juego, finalizado).
-- **Cierre automático:** Bloqueo inteligente de apuestas y pronósticos minutos antes del inicio oficial.
+- **Cierre automático:** Bloqueo de pronósticos minutos antes del inicio oficial.
 - **Cuotas y porcentajes:** Muestra de tendencias de la comunidad sobre las predicciones de cada partido.
 
-### 🎯 Sistema de Pronósticos (Porras)
+### Sistema de Pronósticos (Porras)
 - Predicción de sets (marcador exacto: 3-0, 3-1, 3-2, etc.).
-- Predicción secreta de puntuación total para desempate y puntuación bonus.
+- Predicción de puntuación total para desempate y puntuación bonus.
 - Cálculo automático de puntos por acierto de ganador, sets exactos y aproximación.
 
-### 🌟 Sistema MVP VALCYL
+### Sistema MVP VALCYL
 - **Votación interactiva:** Elección comunitaria del mejor jugador/a del encuentro tras la finalización del partido.
 - **Proclamación oficial:** Reconocimiento de los galardonados de la jornada.
 - **Generador de Tarjetas para Redes Sociales:** Motor Canvas 1080x1080 para exportar imágenes con estética profesional, foto del jugador, escudo, marca de agua de VALCYL y detalles del partido listas para compartir en Instagram Stories, WhatsApp y Twitter.
 
-### 🏆 Clasificaciones y Ligas Privadas
+### Clasificaciones y Ligas Privadas
 - **Ranking Global Dinámico:** Podio destacado, medallas, tendencias de ascenso/descenso y desglose interactivo de puntos por jornada para cada usuario.
 - **Ligas Privadas:** Creación y unión mediante códigos de acceso exclusivos para competir en grupos cerrados.
 
-### 👤 Perfiles de Usuario y Comunidad
+### Perfiles de Usuario y Comunidad
 - Tarjetas de perfil con avatares, estadísticas de efectividad histórica y roles (directiva, staff, cantera, afición).
 - **Sistema de Insignias:** Reconocimientos y logros visuales desbloqueables.
 - **Buzón de Sugerencias y Reportes:** Canal directo para que los usuarios informen de incidencias o propongan mejoras.
 
-### 🛠️ Intranet de Administración Integral
+### Intranet de Administración
 - Panel protegido para administradores del club.
 - Gestión de partidos: creación, modificación y publicación de resultados oficiales.
-- Cierre de jornadas y ejecución del motor de cálculo y reparto de puntos con un clic.
+- Cierre de jornadas y ejecución del motor de cálculo y reparto de puntos.
 - Herramienta de proclamación de MVPs y generación de creatividades.
 - Importación/exportación masiva de calendarios desde plantillas Excel.
 - Visualización y gestión de sugerencias y reportes de la comunidad.
 
 ---
 
-## 🏛️ Arquitectura Técnica
+## Arquitectura Técnica
 
 ```
 ├── Frontend (Client-Side)
@@ -64,13 +64,13 @@ Desarrollada bajo una arquitectura moderna *Jamstack/Serverless* sobre **Cloudfl
 ```
 
 - **Frontend:** Single Page Application (SPA) ultraligera sin frameworks pesados, garantizando máxima velocidad de carga en dispositivos móviles y bajo consumo de datos.
-- **API & Backend:** Cloudflare Pages Functions ejecutadas en la red global de Cloudflare Edge. Arquitectura RESTful con endpoints seguros para autenticación, pronósticos, partidos y administración.
+- **API & Backend:** Cloudflare Pages Functions ejecutadas en la red global de Cloudflare Edge. Arquitectura RESTful con endpoints para autenticación, pronósticos, partidos y administración.
 - **Persistencia:** Base de datos Cloudflare D1 estructurada en tablas relacionales (`Usuarios`, `Partidos`, `Porras`, `Ligas`, `Insignias`, `Sugerencias_Errores`, etc.).
-- **Seguridad:** Encriptación y hashing de credenciales, tokens de sesión seguros y consultas parametrizadas (Prepared Statements) para prevenir inyecciones SQL.
+- **Seguridad:** Encriptación y hashing de credenciales, tokens de sesión y consultas parametrizadas (Prepared Statements) para prevenir inyecciones SQL.
 
 ---
 
-## 📁 Estructura del Repositorio
+## Estructura del Repositorio
 
 | Directorio / Archivo | Descripción |
 | :--- | :--- |
@@ -88,7 +88,7 @@ Desarrollada bajo una arquitectura moderna *Jamstack/Serverless* sobre **Cloudfl
 
 ---
 
-## 💻 Desarrollo Local
+## Desarrollo Local
 
 Para ejecutar el proyecto localmente emulando el entorno de Cloudflare Pages y la base de datos D1:
 
@@ -111,16 +111,16 @@ Para ejecutar el proyecto localmente emulando el entorno de Cloudflare Pages y l
 
 ---
 
-## 📱 Instalación como App (PWA)
+## Instalación como App (PWA)
 
 VCV Play es instalable directamente desde el navegador en cualquier smartphone (iOS / Android) o PC:
-1. Accede a la URL de la aplicación desde Chrome, Safari o tu navegador preferido.
+1. Accede a la URL de la aplicación desde Chrome, Safari o el navegador que utilices.
 2. Pulsa en **"Añadir a la pantalla de inicio"** o en el icono de instalación en la barra del navegador.
 3. Se creará un acceso directo con apariencia y comportamiento de aplicación nativa.
 
 ---
 
-## 📄 Licencia y Créditos
+## Licencia y Créditos
 
 Proyecto desarrollado para el **Valladolid Club Voleibol**.  
 Todos los derechos reservados © 2026-2027.
