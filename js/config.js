@@ -41,8 +41,8 @@ var fetchSeguro = (url, options, retries = 1) => {
 var isDev = window.location.pathname.includes('dev') || window.location.hostname.includes('dev');
 var isLocalStaticServer = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && window.location.port !== '' && window.location.port !== '8788';
 var scriptURL = (isLocalStaticServer)
-    ? (isDev ? 'https://dev.vcv-play-2627.pages.dev/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv')
-    : ((window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') || window.location.port === '8788') ? '/api/vcv' : (isDev ? 'https://dev.vcv-play-2627.pages.dev/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv'));
+    ? 'https://vcv-play-2627.pages.dev/api/vcv'
+    : ((window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') || window.location.port === '8788') ? '/api/vcv' : 'https://vcv-play-2627.pages.dev/api/vcv');
 window.scriptURL = scriptURL;
 
 // --- PERSISTENCIA LOCAL / CACHÉ DE HORA MVP ---

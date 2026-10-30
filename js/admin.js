@@ -1873,20 +1873,45 @@ window.cargarSugerenciasAdmin = async function() {
             if (list.length === 0) {
                 box.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">No hay mensajes registrados aún en el buzón.</div>';
             } else {
-                box.innerHTML = list.map(item => `
-                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 4px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
-                            <div style="display: flex; align-items: center; gap: 6px;">
+                box.innerHTML = list.map(item => {
+                    const est = (item.estado || 'PENDIENTE').toUpperCase();
+                    let badgeEstado = '';
+                    if (est === 'ARREGLADO' || est === 'RESUELTO') {
+                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35);">✅ Arreglado</span>';
+                    } else if (est === 'LEÍDO' || est === 'LEIDO') {
+                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(52,152,219,0.2); color: #5dade2; border: 1px solid rgba(52,152,219,0.35);">👁️ Leído</span>';
+                    } else {
+                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.35);">⏳ Pendiente</span>';
+                    }
+
+                    return `
+                    <div id="sug_card_${item.id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                 <span style="font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: ${item.tipo === 'Error' ? 'rgba(231,76,60,0.2)' : 'rgba(212,175,55,0.2)'}; color: ${item.tipo === 'Error' ? '#ff6b81' : 'var(--secondary-color)'};">
                                     ${item.tipo === 'Error' ? '⚠️ Error / Bug' : '💡 Sugerencia'}
                                 </span>
                                 <strong style="color: #fff; font-size: 0.85rem;">@${item.usuario}</strong>
+                                <span id="sug_badge_${item.id}">${badgeEstado}</span>
                             </div>
                             <span style="font-size: 0.7rem; color: var(--text-muted);">${item.fecha_hora || ''}</span>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-main); margin-top: 4px; white-space: pre-wrap; line-height: 1.35; word-break: break-word;">${item.mensaje}</div>
-                    </div>
-                `).join('');
+                        <div style="font-size: 0.8rem; color: var(--text-main); margin-top: 2px; white-space: pre-wrap; line-height: 1.35; word-break: break-word;">${item.mensaje}</div>
+                        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
+                            <span style="font-size: 0.68rem; color: var(--text-muted); margin-right: auto;">Cambiar estado:</span>
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'LEÍDO')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid ${est === 'LEÍDO' || est === 'LEIDO' ? '#3498db' : 'rgba(52,152,219,0.35)'}; background: ${est === 'LEÍDO' || est === 'LEIDO' ? 'rgba(52,152,219,0.3)' : 'rgba(52,152,219,0.12)'}; color: #5dade2; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                                👁️ Leído
+                            </button>
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'ARREGLADO')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid ${est === 'ARREGLADO' ? '#2ecc71' : 'rgba(46,204,113,0.35)'}; background: ${est === 'ARREGLADO' ? 'rgba(46,204,113,0.3)' : 'rgba(46,204,113,0.12)'}; color: #2ecc71; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                                ✅ Arreglado
+                            </button>
+                            ${est !== 'PENDIENTE' ? `
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'PENDIENTE')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text-muted); cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                                ⏳ Pendiente
+                            </button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
             }
         } else {
             box.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${data.message || 'No se pudieron cargar'}</div>`;
@@ -1896,6 +1921,44 @@ window.cargarSugerenciasAdmin = async function() {
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios'; }
         if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.cambiarEstadoSugerencia = async function(id, nuevoEstado) {
+    if (!id) return;
+    const badgeEl = document.getElementById(`sug_badge_${id}`);
+    if (badgeEl) {
+        badgeEl.innerHTML = '<span style="font-size:0.68rem; color:var(--text-muted);">⏳ Guardando...</span>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'marcar_sugerencia_estado',
+                usuario: currentUser,
+                password: currentPassword,
+                id: id,
+                nuevo_estado: nuevoEstado
+            })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            mostrarToast(`Mensaje marcado como: ${nuevoEstado}`);
+            if (typeof window.cargarSugerenciasAdmin === 'function') {
+                window.cargarSugerenciasAdmin();
+            }
+        } else {
+            mostrarToast("Error: " + (data.message || "No se pudo actualizar"));
+            if (typeof window.cargarSugerenciasAdmin === 'function') {
+                window.cargarSugerenciasAdmin();
+            }
+        }
+    } catch (err) {
+        mostrarToast("Error de conexión: " + err.message);
+        if (typeof window.cargarSugerenciasAdmin === 'function') {
+            window.cargarSugerenciasAdmin();
+        }
     }
 };
 
