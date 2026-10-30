@@ -1870,40 +1870,44 @@ window.cargarSugerenciasAdmin = async function() {
         let data = await res.json();
         if (data.status === 'success') {
             const list = data.sugerencias || [];
-            if (list.length === 0) {
-                box.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">No hay mensajes registrados aún en el buzón.</div>';
-            } else {
-                box.innerHTML = list.map(item => {
-                    const est = (item.estado || 'PENDIENTE').toUpperCase();
-                    const isArreglado = (est === 'ARREGLADO' || est === 'RESUELTO');
-                    const badgeEstado = isArreglado
-                        ? '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35);">✅ Arreglado</span>'
-                        : '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.35);">⏳ Pendiente</span>';
+            // Filtrar para mostrar en la intranet únicamente las que están pendientes
+            const pendientes = list.filter(item => {
+                const est = (item.estado || 'PENDIENTE').toUpperCase();
+                return est !== 'ARREGLADO' && est !== 'RESUELTO';
+            });
+            const totalArreglados = list.length - pendientes.length;
 
-                    return `
-                    <div id="sug_card_${item.id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+            if (pendientes.length === 0) {
+                box.innerHTML = `
+                    <div style="color:var(--text-muted); text-align:center; padding:16px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.06);">
+                        <div style="font-size:1.1rem; margin-bottom:4px;">🎉</div>
+                        <div style="font-weight:700; color:#fff; font-size:0.85rem;">¡Buzón al día!</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">No tienes incidencias ni sugerencias pendientes.</div>
+                        ${totalArreglados > 0 ? `<div style="margin-top:8px; font-size:0.7rem; color:rgba(46,204,113,0.8);">(${totalArreglados} resueltos archivados en la base de datos)</div>` : ''}
+                    </div>`;
+            } else {
+                box.innerHTML = pendientes.map(item => `
+                    <div id="sug_card_${item.id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; transition: all 0.3s ease;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                             <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                 <span style="font-size: 0.68rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: ${item.tipo === 'Error' ? 'rgba(231,76,60,0.2)' : 'rgba(212,175,55,0.2)'}; color: ${item.tipo === 'Error' ? '#ff6b81' : 'var(--secondary-color)'};">
                                     ${item.tipo === 'Error' ? '⚠️ Error / Bug' : '💡 Sugerencia'}
                                 </span>
                                 <strong style="color: #fff; font-size: 0.85rem;">@${item.usuario}</strong>
-                                <span id="sug_badge_${item.id}">${badgeEstado}</span>
+                                <span id="sug_badge_${item.id}">
+                                    <span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.35);">⏳ Pendiente</span>
+                                </span>
                             </div>
                             <span style="font-size: 0.7rem; color: var(--text-muted);">${item.fecha_hora || ''}</span>
                         </div>
                         <div style="font-size: 0.8rem; color: var(--text-main); margin-top: 2px; white-space: pre-wrap; line-height: 1.35; word-break: break-word;">${item.mensaje}</div>
                         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
-                            ${isArreglado ? `
-                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'PENDIENTE')" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: var(--text-muted); cursor: pointer; font-weight: bold; transition: all 0.2s;">
-                                ⏳ Marcar como Pendiente
-                            </button>` : `
-                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'ARREGLADO')" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(46,204,113,0.4); background: rgba(46,204,113,0.15); color: #2ecc71; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'ARREGLADO')" style="font-size: 0.72rem; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(46,204,113,0.4); background: rgba(46,204,113,0.15); color: #2ecc71; cursor: pointer; font-weight: bold; transition: all 0.2s;">
                                 ✅ Marcar como Arreglado
-                            </button>`}
+                            </button>
                         </div>
-                    </div>`;
-                }).join('');
+                    </div>
+                `).join('');
             }
         } else {
             box.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${data.message || 'No se pudieron cargar'}</div>`;

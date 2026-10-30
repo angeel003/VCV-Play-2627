@@ -273,6 +273,7 @@
                     if(typeof updateProgressBar === 'function') updateProgressBar();
 
                     // Micro-animación: Destello dorado y confeti
+                    if (typeof window.vcvHaptic === 'function') window.vcvHaptic('success');
                     card.classList.add('save-success-glow');
                     setTimeout(() => card.classList.remove('save-success-glow'), 1200);
                     if (typeof confetti === 'function') {
@@ -517,6 +518,7 @@
             return;
         }
         window._mvpVoteCooldowns[idPart] = now;
+        if (typeof window.vcvHaptic === 'function') window.vcvHaptic('vote');
 
         let cands = [];
         try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}
@@ -573,6 +575,7 @@
         .then(res => res.json())
         .then(data => {
             if(data && data.status === 'success') {
+                if (typeof window.vcvHaptic === 'function') window.vcvHaptic('success');
                 mostrarToast("¡Voto MVP registrado!");
             } else {
                 mostrarToast("¡Voto MVP registrado (modo pruebas)!");
@@ -1087,9 +1090,8 @@
 
         container.innerHTML = `
             <div style="background:var(--bg-card); border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.25); border: 1px solid var(--border-color); text-align: center; position: relative;">
-                <button type="button" onclick="window.cerrarSesionApp()" title="Cerrar sesión" style="position: absolute; top: 14px; right: 14px; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.35); color: #ff6b81; border-radius: 20px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 700; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" onmouseover="this.style.background='rgba(255, 71, 87, 0.25)';" onmouseout="this.style.background='rgba(255, 71, 87, 0.12)';">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                    <span>Cerrar sesión</span>
+                <button type="button" onclick="window.cerrarSesionApp()" title="Cerrar sesión" style="position: absolute; top: 14px; right: 14px; background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.35); color: #ff6b81; border-radius: 50%; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" onmouseover="this.style.background='rgba(255, 71, 87, 0.25)';" onmouseout="this.style.background='rgba(255, 71, 87, 0.12)';">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
                 </button>
                 <div style="width:96px; height:96px; border-radius:18px; background:linear-gradient(135deg, var(--vcv-morado), var(--vcv-dorado)); display:flex; align-items:center; justify-content:center; margin: 0 auto 12px; font-size: 2.2rem; font-weight: 900; color: #fff; overflow:hidden;">
                     ${avatarHtml}
@@ -1099,22 +1101,22 @@
                 
                 ${ligaSelectorPills}
 
-                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background:rgba(255,255,255,0.05); padding:12px 6px; border-radius:12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); text-align:center;">
-                    <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                        <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pts</div>
-                        <div style="font-weight:900; color:var(--secondary-color); font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPuntos}</div>
+                <div class="user-profile-stats-grid">
+                    <div class="user-profile-stat-box">
+                        <div class="user-profile-stat-label">Media Pts</div>
+                        <div class="user-profile-stat-val" style="color:#f5c542;">${mediaPuntos}</div>
                     </div>
-                    <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                        <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pos</div>
-                        <div style="font-weight:900; color:#fff; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPos}</div>
+                    <div class="user-profile-stat-box">
+                        <div class="user-profile-stat-label">Media Pos</div>
+                        <div class="user-profile-stat-val" style="color:#fcfaff;">${mediaPos}</div>
                     </div>
-                    <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                        <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;" title="Récord de una jornada">Récord J.</div>
-                        <div style="font-weight:900; color:#4caf50; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${recordJornada}</div>
+                    <div class="user-profile-stat-box">
+                        <div class="user-profile-stat-label" title="Récord de una jornada">Récord J.</div>
+                        <div class="user-profile-stat-val" style="color:#10b981;">${recordJornada}</div>
                     </div>
-                    <div style="padding:0 2px;">
-                        <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;" title="Récord en un partido">Récord Part.</div>
-                        <div style="font-weight:900; color:#00d2d3; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${recordPartido}</div>
+                    <div class="user-profile-stat-box">
+                        <div class="user-profile-stat-label" title="Récord en un partido">Récord Part.</div>
+                        <div class="user-profile-stat-val" style="color:#38bdf8;">${recordPartido}</div>
                     </div>
                 </div>
 
@@ -1584,38 +1586,38 @@ window.getPodioBadgesForUser = function(targetUser, currentLigaContext = null) {
         let statsGridHtml = "";
         if (isOwn) {
             statsGridHtml = `
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background:rgba(255,255,255,0.05); padding:12px 6px; border-radius:12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); text-align:center;">
-                <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                    <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pts</div>
-                    <div style="font-weight:900; color:var(--secondary-color); font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPuntos}</div>
+            <div class="user-profile-stats-grid">
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label">Media Pts</div>
+                    <div class="user-profile-stat-val" style="color:#f5c542;">${mediaPuntos}</div>
                 </div>
-                <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                    <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pos</div>
-                    <div style="font-weight:900; color:#fff; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPos}</div>
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label">Media Pos</div>
+                    <div class="user-profile-stat-val" style="color:#fcfaff;">${mediaPos}</div>
                 </div>
-                <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 2px;">
-                    <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;" title="Récord de una jornada">Récord J.</div>
-                    <div style="font-weight:900; color:#4caf50; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${recordJornada}</div>
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label" title="Récord de una jornada">Récord J.</div>
+                    <div class="user-profile-stat-val" style="color:#10b981;">${recordJornada}</div>
                 </div>
-                <div style="padding:0 2px;">
-                    <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;" title="Récord en un partido">Récord Part.</div>
-                    <div style="font-weight:900; color:#00d2d3; font-size:1.05rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${recordPartido}</div>
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label" title="Récord en un partido">Récord Part.</div>
+                    <div class="user-profile-stat-val" style="color:#38bdf8;">${recordPartido}</div>
                 </div>
             </div>`;
         } else {
             statsGridHtml = `
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background:rgba(255,255,255,0.05); padding:12px 10px; border-radius:12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); text-align:center;">
-                <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 5px;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pts</div>
-                    <div style="font-weight:900; color:var(--secondary-color); font-size:1.1rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPuntos}</div>
+            <div class="user-profile-stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label">Media Pts</div>
+                    <div class="user-profile-stat-val" style="color:#f5c542; font-size:1.15rem;">${mediaPuntos}</div>
                 </div>
-                <div style="border-right:1px solid rgba(255,255,255,0.08); padding:0 5px;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;">Media Pos</div>
-                    <div style="font-weight:900; color:#fff; font-size:1.1rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${mediaPos}</div>
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label">Media Pos</div>
+                    <div class="user-profile-stat-val" style="color:#fcfaff; font-size:1.15rem;">${mediaPos}</div>
                 </div>
-                <div style="padding:0 5px;">
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; white-space:nowrap;" title="Récord de una jornada">Récord J.</div>
-                    <div style="font-weight:900; color:#4caf50; font-size:1.1rem; font-family:'Space Grotesk',sans-serif; margin-top:3px;">${recordJornada}</div>
+                <div class="user-profile-stat-box">
+                    <div class="user-profile-stat-label" title="Récord de una jornada">Récord J.</div>
+                    <div class="user-profile-stat-val" style="color:#10b981; font-size:1.15rem;">${recordJornada}</div>
                 </div>
             </div>`;
         }
