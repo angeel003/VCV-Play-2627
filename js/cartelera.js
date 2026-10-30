@@ -666,9 +666,8 @@ function iniciarRelojTotales() {
         const now = new Date().getTime();
         const diff = deadline - now;
         if(diff <= 0) {
-            el.innerHTML = "CERRADO";
-            el.style.color = "var(--vcv-rojo)";
-            el.style.backgroundColor = "transparent";
+            el.innerHTML = "";
+            el.style.display = "none";
         } else {
             let d = Math.floor(diff / (1000 * 60 * 60 * 24));
             let h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

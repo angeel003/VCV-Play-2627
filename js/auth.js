@@ -173,16 +173,12 @@ window.cerrarSesionApp = function() {
     
     const appSec = document.getElementById('appSection');
     if (appSec) appSec.classList.add('slide-out-right');
-    const btnL = document.getElementById('btnLogout');
-    if (btnL) btnL.style.transform = 'translateY(-50%) translateX(-100%)';
     
     setTimeout(() => {
         window.location.href = window.location.pathname + '?v=' + new Date().getTime();
     }, 280);
 };
 
-const btnLogoutEl = document.getElementById('btnLogout');
-if (btnLogoutEl) btnLogoutEl.addEventListener('click', window.cerrarSesionApp);
 
 // ------------------------------------------------------------------
 
@@ -904,7 +900,6 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
             
-            document.getElementById('btnLogout').style.display = "block";
             iniciarRelojTotales();
         } else if (data.status === "ok") {
             console.log("Servidor despertado con éxito (Cold Start). Reintentando login automáticamente...");

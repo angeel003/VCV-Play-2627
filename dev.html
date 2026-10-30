@@ -13,7 +13,10 @@
 <link rel="icon" type="image/png" href="files/images/logo_vcv_circle.png">
 <link rel="apple-touch-icon" href="files/images/logo_vcv_square_white.png">
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=Space+Grotesk:wght@600;700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 <script>
@@ -85,7 +88,79 @@
       }
     }
 
-  </style>
+  
+    /* PERFIL: GRID DE ESTADÍSTICAS RESPONSIVE (ALTO CONTRASTE Y LEGIBILIDAD) */
+    .user-profile-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        background: #0f0416;
+        padding: 12px 8px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(192, 132, 252, 0.16);
+        text-align: center;
+        box-sizing: border-box;
+        width: 100%;
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    .user-profile-stat-box {
+        min-width: 0;
+        overflow: hidden;
+        padding: 8px 4px;
+        box-sizing: border-box;
+        background: #180622;
+        border: 1px solid rgba(192, 132, 252, 0.12);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.15s ease;
+    }
+    .user-profile-stat-label {
+        font-size: 0.68rem;
+        color: #bfa9c9;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+    .user-profile-stat-val {
+        font-weight: 900;
+        font-size: 1.15rem;
+        font-family: 'Space Grotesk', sans-serif;
+        margin-top: 4px;
+        line-height: 1.1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    @media (max-width: 520px) {
+        .user-profile-stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            padding: 10px 8px !important;
+        }
+        .user-profile-stat-box {
+            background: #180622 !important;
+            border: 1px solid rgba(192, 132, 252, 0.15) !important;
+            border-radius: 10px !important;
+            padding: 10px 6px !important;
+        }
+        .user-profile-stat-label {
+            font-size: 0.70rem !important;
+            color: #bfa9c9 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+        .user-profile-stat-val {
+            font-size: 1.35rem !important;
+        }
+    }
+
+</style>
 <style>
     /* ---------------------------------------------------
        1. VARIABLES DE COLOR OFICIALES DEL VCV
@@ -111,7 +186,7 @@
     html { scroll-behavior: smooth; }
     html, body { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
     a, button, input, select, textarea { touch-action: manipulation; }
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-general); margin: 0; color: var(--vcv-negro); overflow-x: hidden; }
+    body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif; letter-spacing: -0.01em; background: var(--bg-general); margin: 0; color: var(--vcv-negro); overflow-x: hidden; }
 
     /* ---------------------------------------------------
        2. TRANSICIONES Y ANIMACIONES (Fade-in)
@@ -129,7 +204,7 @@
        3. CABECERAS Y TÍTULOS
        --------------------------------------------------- */
     header { position: relative; background: var(--vcv-morado); color: var(--vcv-blanco); padding: calc(40px + env(safe-area-inset-top, 0px)) 15px 40px; text-align: center; border-bottom: 5px solid var(--vcv-dorado); }
-    header h1 { font-family: 'Golos Text', sans-serif; font-weight: 600; font-size: 3.2rem; margin-bottom: 0px; }
+    
     
     h2, h3, h4, h5, .faq-title { font-weight: 600; color: var(--vcv-morado); }
     h2 { margin-bottom: 35px; text-align: center; }
@@ -298,27 +373,7 @@
     /* ---------------------------------------------------
        5. BOTON ATRAS (Pestaña flotante)
        --------------------------------------------------- */
-    #btnLogout {
-        display: none;
-        position: fixed;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--vcv-dorado);
-        border: none;
-        border-radius: 0 12px 12px 0;
-        color: var(--vcv-morado);
-        font-size: 1.8rem;
-        font-weight: bold;
-        cursor: pointer;
-        padding: 20px 12px 20px 8px;
-        box-shadow: 3px 3px 12px rgba(0,0,0,0.4);
-        z-index: 99999;
-        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    }
-    #btnLogout:hover {
-        transform: translateY(-50%) translateX(8px);
-    }
+
     
     @keyframes slideOutRight {
         0% { opacity: 1; transform: none; }
@@ -338,120 +393,6 @@
     }
 
 
-    /* FAQ V2 STYLES */
-    .vcv-faq-master {
-      background: linear-gradient(to right, rgba(93, 23, 137, 0.3), var(--bg-card), var(--bg-card));
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      margin-top: 0;
-      width: 100%;
-      max-width: 500px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-    .vcv-faq-master summary {
-      padding: 16px;
-      font-weight: 800;
-      font-size: 0.95rem;
-      color: var(--secondary-color);
-      cursor: pointer;
-      list-style: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .vcv-faq-master summary::-webkit-details-marker { display: none; }
-    .vcv-faq-master summary::after {
-      content: '+';
-      font-size: 1.2rem;
-      color: var(--secondary-color);
-      transition: transform 0.2s ease;
-    }
-    .vcv-faq-master[open] summary::after {
-      content: '−';
-      transform: rotate(180deg);
-    }
-    .vcv-faq-master .faq-content-v2 {
-      padding: 0 16px 16px 16px;
-      color: var(--text-main);
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-    .faq-inner-item {
-      background: var(--bg-card-alt);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border-color);
-    }
-    .faq-inner-title {
-      font-weight: 700;
-      color: var(--text-gold);
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-    }
-    .faq-inner-item input {
-      background: var(--bg-input);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-    }
-
-  
-    /* BOTTOM NAV V2 */
-    .bottom-nav-v2 {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: var(--bg-card);
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-around;
-        padding: 10px 0;
-        z-index: 9999;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-        padding-bottom: env(safe-area-inset-bottom, 10px);
-    }
-    .nav-item-v2 {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.65rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        width: 20%;
-    }
-    .nav-item-v2 i {
-        width: 22px;
-        height: 22px;
-        margin-bottom: 2px;
-    }
-    .nav-item-v2.active {
-        color: var(--secondary-color);
-    }
-    .nav-item-v2.active i {
-        transform: scale(1.15);
-    }
-    
-    /* Hide all sections by default except when active */
-    #appSection > section {
-        display: none;
-        padding-top: 13px;
-        padding-bottom: 10px;
-    }
-    #appSection > section.active-tab {
-        display: block;
-        animation: tabFadeSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-    @keyframes fadeInTab {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
 
     @keyframes goldGlowPulse {
         0% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); border-color: var(--border-color); }
@@ -462,52 +403,6 @@
     .save-success-glow {
         animation: goldGlowPulse 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
-
-  
-    .tied-btn {
-        background: var(--secondary-color) !important;
-        color: #000 !important;
-        border-color: var(--secondary-color) !important;
-        opacity: 0.7;
-    }
-
-  
-    /* STREAMING V2 */
-    .btn-streaming-v2 {
-        display: flex; align-items: center; justify-content: center; gap: 4px;
-        font-size: 0.6rem; font-weight: 800; border-radius: 6px;
-        padding: 4px 6px; text-decoration: none; border: none;
-        text-transform: uppercase;
-        cursor: pointer;
-    }
-    .btn-streaming-v2.active {
-        background: var(--danger); color: #fff;
-        box-shadow: 0 2px 8px rgba(231,76,60,0.4);
-    }
-    .btn-streaming-v2.disabled {
-        background: var(--bg-card-alt); color: var(--text-muted); border: 1px solid var(--border-color);
-        cursor: not-allowed;
-    }
-
-  
-    /* MOBILE RESPONSIVENESS */
-    @media (max-width: 600px) {
-        .form-container {
-            padding: 10px !important;
-            border-radius: 0px !important; /* maybe 0px or small radius if it takes full width? */
-            border-left: none !important;
-            border-right: none !important;
-        }
-        body {
-            padding: 0 !important;
-            padding-right: 0px !important;
-        }
-        .vcv-card-v2 {
-            padding: 12px;
-            border-radius: 12px;
-        }
-    }
-
     /* V2 HEADER */
     
     
@@ -521,7 +416,7 @@
     
     #appSection {
         padding-top: calc(env(safe-area-inset-top, 0px) + 70px) !important;
-        padding-bottom: 80px;
+        padding-bottom: 0px !important;
         max-width: 500px;
         margin: 0 auto;
         width: 100%;
@@ -536,9 +431,10 @@
         right: 0;
         width: 100%;
         background: rgba(22, 10, 25, 0.95);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid #3e1d45;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         padding: 10px 16px;
         padding-top: calc(env(safe-area-inset-top, 0px) + 18px);
         z-index: 1000;
@@ -563,13 +459,13 @@
         flex: 1 1 auto;
     }
     .header-logo-circle {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
         border-radius: 50%;
-        background: linear-gradient(to top right, #6a2c70, #d4af37);
+        background: linear-gradient(135deg, #7b2cbf 0%, #f5c542 100%);
         padding: 2px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 0 16px rgba(245, 197, 66, 0.45), 0 0 25px rgba(123, 44, 191, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -578,12 +474,19 @@
     .header-logo-inner {
         width: 100%;
         height: 100%;
-        background: #240f28;
+        background: #1f0a2c;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #d4af37;
+        overflow: hidden;
+    }
+    .header-logo-inner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        display: block;
     }
     .header-logo-inner svg, .header-logo-inner i {
         width: 16px !important;
@@ -1301,28 +1204,41 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
-      --primary-color: #6a2c70;
-      --primary-hover: #7e3686;
-      --secondary-color: #d4af37;
-      --secondary-hover: #e5bf43;
-      --bg-surface: #140818;
-      --bg-card: #200f25;
-      --bg-card-alt: #2a1532;
-      --bg-input: #1a0b1e;
-      --border-color: #3b1d45;
-      --border-glow: rgba(212, 175, 55, 0.4);
-      --text-main: #f9f5fa;
-      --text-muted: #b7a4be;
-      --text-gold: #f3ce5e;
-      --success: #2ecc71;
-      --danger: #e74c3c;
+      --primary-color: #7b2cbf;
+      --primary-hover: #9333ea;
+      --secondary-color: #f5c542;
+      --secondary-hover: #ffd766;
+      --bg-general: #0d0314;
+      --bg-surface: #12051b;
+      --bg-card: #1c0829;
+      --bg-card-alt: #260c38;
+      --bg-input: #160621;
+      --border-color: rgba(192, 132, 252, 0.18);
+      --border-glow: rgba(245, 197, 66, 0.4);
+      --text-main: #fcfaff;
+      --text-muted: #c4b3cf;
+      --text-gold: #f5c542;
+      --vcv-morado: #7b2cbf;
+      --vcv-dorado: #f5c542;
+      --vcv-blanco: #ffffff;
+      --vcv-negro: #0d0314;
+      --success: #10b981;
+      --danger: #ef4444;
     }
     
-    body { background-color: var(--bg-surface) !important; color: var(--text-main) !important; }
-    #prediccionForm button[type="submit"] { display: none !important; }
-    footer { display: none !important; }
-    .text-center.mt-4.mb-3 { display: none !important; }
+    body {
+      background-color: #08020a !important;
+      background-image: none !important;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif !important;
+      color: var(--text-main) !important;
+      letter-spacing: -0.01em !important;
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    
 
+    #prediccionForm button[type="submit"] { display: none !important; }
     /* LOGIN STYLES */
     #loginSection { display: flex; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top, 50px) + 40px) 20px 40px 20px;
       flex-direction: column;
@@ -1586,14 +1502,26 @@
     }
     .vcv-faq-master summary::-webkit-details-marker { display: none; }
     .vcv-faq-master summary::after {
-      content: '+';
-      font-size: 1.2rem;
-      color: var(--secondary-color);
-      transition: transform 0.2s ease;
+      content: '';
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: rgba(245, 197, 66, 0.12);
+      border: 1px solid rgba(245, 197, 66, 0.35);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f5c542' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'%3E%3C/line%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
+      background-position: center;
+      background-repeat: no-repeat;
+      margin-left: 10px;
+      flex-shrink: 0;
+      transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
     }
     .vcv-faq-master[open] summary::after {
-      content: '−';
-      transform: rotate(180deg);
+      background-color: rgba(245, 197, 66, 0.24);
+      border-color: rgba(245, 197, 66, 0.55);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23f5c542' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E");
     }
     .vcv-faq-master .faq-content-v2 {
       padding: 0 16px 16px 16px;
@@ -1621,53 +1549,96 @@
     }
 
   
-    /* BOTTOM NAV V2 */
+    /* BOTTOM NAV V2 - ISLA FLOTANTE */
     .bottom-nav-v2 {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: var(--bg-card);
-        border-top: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-around;
-        padding: 10px 0;
-        z-index: 9999;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
-        padding-bottom: env(safe-area-inset-bottom, 10px);
+        position: fixed !important;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 24px) !important;
+        max-width: 480px !important;
+        background: rgba(30, 11, 43, 0.93) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(192, 132, 252, 0.28) !important;
+        border-radius: 28px !important;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(123, 44, 191, 0.35), 0 1px 0 rgba(255, 255, 255, 0.15) inset !important;
+        display: flex !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        padding: 8px 6px !important;
+        z-index: 9999 !important;
     }
     .nav-item-v2 {
-        background: transparent;
-        border: none;
-        color: var(--text-muted);
+        background: transparent !important;
+        border: none !important;
+        color: var(--text-muted) !important;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        font-size: 0.65rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.2s;
-        width: 20%;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: 20% !important;
+        cursor: pointer !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding: 4px 1px !important;
+        position: relative !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    .nav-item-v2 span {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        font-size: clamp(0.55rem, 2.3vw, 0.65rem) !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.2px !important;
+    }
+    .nav-item-v2[style*="display: none"],
+    .nav-item-v2[style*="display:none"] {
+        display: none !important;
     }
     .nav-item-v2 i {
-        width: 22px;
-        height: 22px;
-        margin-bottom: 2px;
+        width: 22px !important;
+        height: 22px !important;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
     .nav-item-v2.active {
-        color: var(--secondary-color);
+        color: var(--secondary-color) !important;
+        font-weight: 800 !important;
     }
     .nav-item-v2.active i {
-        transform: scale(1.15);
+        transform: translateY(-2px) scale(1.12) !important;
+        color: var(--secondary-color) !important;
+    }
+    .nav-item-v2.active::after {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -2px !important;
+        width: 16px !important;
+        height: 3px !important;
+        border-radius: 3px !important;
+        background: var(--secondary-color) !important;
+        box-shadow: 0 0 12px rgba(245, 197, 66, 0.9) !important;
     }
     
     /* Hide all sections by default except when active */
     #appSection > section {
         display: none;
         padding-top: 13px;
-        padding-bottom: 10px;
+        padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
     }
+    /* En cartelera la última tarjeta no tiene margen propio; se compensa para que libre la isla con el mismo margen que las demás */
+    #appSection > section#carteleraSection {
+        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    #contenedorPartidos { margin-bottom: 0 !important; }
     #appSection > section.active-tab {
         display: block;
         animation: tabFadeSlideIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -2045,7 +2016,7 @@
           </button>
           <button class="nav-item-v2" onclick="switchTabV2('historialSection', this)">
             <i data-lucide="check-circle-2"></i>
-            <span>Mis predicciones</span>
+            <span>Predicciones</span>
           </button>
           <button class="nav-item-v2" onclick="switchTabV2('calendarioSection', this)">
             <i data-lucide="calendar"></i>
@@ -2065,14 +2036,6 @@
 <div id="mobileTooltip"></div>
 
 <div id="toastNotification">✅ Datos actualizados</div>
-
-<header style="display:none !important;">
-    <button id="btnLogout" title="Volver atrás">&#10094;</button>
-    <div class="header-content">
-        <h1 style="margin-bottom: 0px; line-height:1.2;">VCV Play 26/27</h1>
-    </div>
-    
-</header>
 
 <div id="vcvAutoLoginOverlay">
   <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--secondary-color, #d4af37); padding: 4px; background: rgba(255,255,255,0.05);">
@@ -2193,7 +2156,7 @@
       <div class="header-brand-v2">
         <div class="header-logo-circle">
           <div class="header-logo-inner">
-            <i data-lucide="volleyball" style="width:20px; height:20px;"></i>
+            <img src="files/images/logo_vcv_circle.png" alt="VCV">
           </div>
         </div>
         <div class="header-title-col">
@@ -2244,7 +2207,7 @@
 
                 <div id="appMessage" class="alert-box"></div>
 
-                <button type="submit" id="btnSubmit" style="width:100%; padding: 14px; border-radius: 12px; font-weight: 900; border: none; background: var(--secondary-color); color: #000; cursor:pointer; font-size:1.1rem; transition: all 0.2s; margin-top:10px; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);">💾 Guardar Mis Predicciones</button>
+                <button type="submit" id="btnSubmit" style="display:none !important;" aria-hidden="true"></button>
             </form>
         </div>
     </section>
@@ -2981,7 +2944,7 @@
 
       <!-- Tarjeta Cerrar Sesión en Perfil -->
       <div class="vcv-card-v2" style="margin-top: 20px; margin-bottom: 25px; border: 1px solid rgba(231, 76, 60, 0.35); background: rgba(231, 76, 60, 0.05); border-radius: 14px; padding: 18px;">
-        <button type="button" onclick="document.getElementById('btnLogout').click()" style="width: 100%; background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3)); border: 1px solid #e74c3c; color: #ff6b81; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15);">
+        <button type="button" onclick="window.cerrarSesionApp()" style="width: 100%; background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3)); border: 1px solid #e74c3c; color: #ff6b81; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15);">
           <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
           <span>Cerrar sesión</span>
         </button>
@@ -3002,7 +2965,7 @@
                     <span style="font-size:1.3rem;"></span>
                     <span style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); letter-spacing:0.5px;">👉 Predicción de Puntos Totales 26/27 👈</span>
                 </div>
-                <div id="relojTotales" style="font-size:0.95rem; font-weight:800; color:#ef4444; text-align:right;">Calculando...</div>
+                <div id="relojTotales" style="display:none;"></div>
             </summary>
             <div class="faq-content-v2" style="padding:0 15px 15px 15px; border-top:1px solid rgba(255,255,255,0.05);">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0 15px 0; text-align:left;">
@@ -3392,20 +3355,44 @@
     </div>
 </div>
 
-
-<footer><p>© VCV Play 2026-2027</p></footer>
-
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261030_v3"></script>
-<script src="js/admin.js?v=20261030_v3"></script>
-<script src="js/cartelera.js?v=20261030_v3"></script>
-<script src="js/ranking.js?v=20261030_v3"></script>
-<script src="js/calendario.js?v=20261030_v3"></script>
-<script src="js/cartelera_interactive.js?v=20261030_v3"></script>
-<script src="js/ui_gestures.js?v=20261030_v3"></script>
-<script src="js/auth.js?v=20261030_v3"></script>
+<script src="js/config.js?v=20261030_v9"></script>
+<script src="js/admin.js?v=20261030_v9"></script>
+<script src="js/cartelera.js?v=20261030_v9"></script>
+<script src="js/ranking.js?v=20261030_v9"></script>
+<script src="js/calendario.js?v=20261030_v9"></script>
+<script src="js/cartelera_interactive.js?v=20261030_v9"></script>
+<script src="js/ui_gestures.js?v=20261030_v9"></script>
+<script src="js/auth.js?v=20261030_v9"></script>
 
 
+
+<!-- CONTROL HÁPTICO LEVE (MICRO-VIBRACIÓN) -->
+<script>
+  window.vcvHaptic = function(type) {
+    if (!navigator.vibrate) return;
+    try {
+      if (type === 'tick') {
+        navigator.vibrate(8); // Micro-toque ultra-leve (menús/tabs/botones)
+      } else if (type === 'select') {
+        navigator.vibrate(10); // Leve al pulsar sets o stepper
+      } else if (type === 'vote') {
+        navigator.vibrate(12); // Toque suave al pulsar candidato MVP
+      } else if (type === 'success') {
+        navigator.vibrate([10, 35, 12]); // Doble pulso muy suave y breve al guardar con éxito
+      } else {
+        navigator.vibrate(8);
+      }
+    } catch(e) {}
+  };
+
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.nav-item-v2, .set-option-btn-v2, .btn-step-v2, .sign-btn-v2, .cat-filter-pill, .cat-filter-btn');
+    if (btn && typeof window.vcvHaptic === 'function') {
+      window.vcvHaptic('tick');
+    }
+  }, { passive: true });
+</script>
 
 </body>
 

@@ -370,31 +370,31 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     `;
 
     let statsHTML = `
-      <!-- Resumen Métricas -->
-      <div style="background: linear-gradient(135deg, var(--vcv-morado) 0%, #15081a 100%); padding: 15px; border-radius:12px; margin-bottom:20px; color:white; border:1px solid var(--vcv-dorado); box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
+      <!-- Resumen Métricas (Oscuro y alto contraste) -->
+      <div style="background: linear-gradient(180deg, #180622 0%, #0d0314 100%); padding: 15px; border-radius:14px; margin-bottom:20px; color:white; border:1px solid rgba(212,175,55,0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           
-          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
-            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Pts Ganados</div>
-            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: var(--vcv-dorado); font-family: 'Space Grotesk', sans-serif;">${ptsTxt}</div>
+          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
+            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Pts Ganados</div>
+            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #f5c542; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${ptsTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
-            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; line-height:1.2; word-break: break-word;">
+          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
+            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">
                 <span>Promedio</span>
                 ${derbyAvisoHtml}
             </div>
-            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #a29bfe; font-family: 'Space Grotesk', sans-serif;">${promedioTxt}</div>
+            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #fcfaff; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${promedioTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
-            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Aciertos (Part.)</div>
-            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #74b9ff; font-family: 'Space Grotesk', sans-serif;">${aciertosTxt}</div>
+          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
+            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Aciertos (Part.)</div>
+            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #38bdf8; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${aciertosTxt}</div>
           </div>
           
-          <div style="background: rgba(255,255,255,0.1); padding: 10px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 0;">
-            <div class="metric-label" style="font-size: 0.72rem; color: rgba(255,255,255,0.7); text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word;">Sets Exactos</div>
-            <div class="metric-val" style="font-size: 1.4rem; font-weight: 900; color: #fff; font-family: 'Space Grotesk', sans-serif;">${setsTxt}</div>
+          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
+            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Sets Exactos</div>
+            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #10b981; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${setsTxt}</div>
           </div>
           
         </div>
@@ -556,11 +556,13 @@ if (prediccionFormEl) prediccionFormEl.addEventListener('submit', function(e) {
     .then(res => res.json())
     .then(data => {
         msgBox.style.display = "block";
+        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
           updateProgressBar();
         if (data.status === "success") { msgBox.className = "alert-box alert-success"; msgBox.innerText = "✅ " + data.message; } 
         else { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "❌ " + data.message; }
     })
     .catch(() => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
+        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
           updateProgressBar(); })
     .finally(() => { btnSubmit.disabled = false; btnSubmit.innerText = "💾 Guardar Mis Predicciones"; });
 });
@@ -591,6 +593,7 @@ if (btnHistoryEl) btnHistoryEl.addEventListener('click', function(e) {
         if(data.status === "success") {
             if (data.history.length === 0) {
                 msgBox.style.display = "block";
+        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
           updateProgressBar(); msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Aún no tienes predicciones ni resultados."; container.style.display = "none"; controls.style.display = "none";
             } else {
                 globalHistorialData = data.history;
