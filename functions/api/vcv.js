@@ -1063,8 +1063,8 @@ export async function onRequestPost(context) {
             console.error("Error Ligas_Config:", e);
         }
 
-        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN' : 'userPointsInLiga';
-        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN' : 'statsLigas';
+        const cacheKey = isFrozen ? 'userPointsInLiga_FROZEN_v2' : 'userPointsInLiga_v2';
+        const statsCacheKey = isFrozen ? 'statsLigas_FROZEN_v2' : 'statsLigas_v2';
 
         let userPointsInLiga = {};
         let statsLigas = {};
@@ -1152,7 +1152,15 @@ export async function onRequestPost(context) {
                     }
                 }
 
-                const jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
+                // Agrupar puntos por Fin de Semana de competición sincronizado (Base: Viernes 2 Octubre 2026 00:00 CEST)
+                const BASE_SEASON_TS = 1790892000000;
+                const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+                let jNum = 1;
+                if (p.timestamp && p.timestamp >= BASE_SEASON_TS) {
+                    jNum = Math.floor((p.timestamp - BASE_SEASON_TS) / ONE_WEEK_MS) + 1;
+                } else {
+                    jNum = parseInt(p.ronda_global) || parseInt(p.jornada_eq) || 1;
+                }
 
                 if (isFrozen && p.timestamp >= freezeCutoff) {
                     for (const lName in ligasMap) {
