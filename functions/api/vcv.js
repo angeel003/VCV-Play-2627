@@ -62,7 +62,7 @@ export async function onRequestPost(context) {
     const usuario = (body.usuario || "").trim();
     const password = (body.password || "").trim();
 
-    // 1. PING & MIGRACIONES / ├ìNDICES
+    // 1. PING & MIGRACIONES / ÍNDICES
     if (action === 'migrate_db' || action === 'apply_indexes') {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar TEXT").run(); } catch(e) {}
@@ -108,11 +108,13 @@ export async function onRequestPost(context) {
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '25/10/2026 12:30', "timestamp" = 1792927800000, "Pabellon" = 'PILAR FDEZ VALDERRAMA' WHERE "ID_Partido" = 'RFEVB_2555'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/02/2027 12:45', "timestamp" = 1802000700000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2623'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/02/2027 16:00', "timestamp" = 1801926000000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2755'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/10/2026 16:00', "timestamp" = 1793458800000 WHERE "ID_Partido" = 'RFEVB_2561'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '19/12/2026 18:30', "timestamp" = 1797701400000 WHERE "ID_Partido" = 'RFEVB_2753'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 15:00', "timestamp" = 1806843600000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2M007_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 17:00', "timestamp" = 1800806400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID', "Equipo_Local" = 'VCV Meseta', "Rival" = 'Pegamo Abanto', "Ubicacion" = 'LOCAL' WHERE "ID_Partido" = 'FVCL_2M008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/01/2027 20:00', "timestamp" = 1801422000000, "Pabellon" = 'POLIDEPORTIVO, JULIÁN SÁNCHEZ EL CHARRO, SALAMANCA' WHERE "ID_Partido" = 'FVCL_2M009_MES'`).run();
@@ -218,11 +220,11 @@ export async function onRequestPost(context) {
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '25/10/2026 12:30', "timestamp" = 1792927800000, "Pabellon" = 'PILAR FDEZ VALDERRAMA' WHERE "ID_Partido" = 'RFEVB_2555'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/02/2027 12:45', "timestamp" = 1802000700000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2623'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/02/2027 16:00', "timestamp" = 1801926000000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2755'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 15:00', "timestamp" = 1806843600000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2M007_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 17:00', "timestamp" = 1800806400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID', "Equipo_Local" = 'VCV Meseta', "Rival" = 'Pegamo Abanto', "Ubicacion" = 'LOCAL' WHERE "ID_Partido" = 'FVCL_2M008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/01/2027 20:00', "timestamp" = 1801422000000, "Pabellon" = 'POLIDEPORTIVO, JULIÁN SÁNCHEZ EL CHARRO, SALAMANCA' WHERE "ID_Partido" = 'FVCL_2M009_MES'`).run();
@@ -321,6 +323,16 @@ export async function onRequestPost(context) {
                     ts = getMadridTimestamp(year, month, day, hour, minute);
                 }
             }
+        }
+
+        if (idPart === 'RFEVB_2561') {
+            r.Fecha = '31/10/2026 16:00';
+            r.timestamp = 1793458800000;
+            ts = 1793458800000;
+        } else if (idPart === 'RFEVB_2753') {
+            r.Fecha = '19/12/2026 18:30';
+            r.timestamp = 1797701400000;
+            ts = 1797701400000;
         }
 
         return {
@@ -446,16 +458,16 @@ export async function onRequestPost(context) {
         });
     }
 
-    // 3. CAMBIO DE CONTRASE├æA
+    // 3. CAMBIO DE CONTRASEÑA
     if (action === "change_password") {
         const oldPwd = (body.old_password || "").trim();
         const newPwd = (body.new_password || "").trim();
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, oldPwd).first();
         if (!user) {
-            return jsonResponse({ status: "error", message: "La contrase├▒a actual no es correcta." });
+            return jsonResponse({ status: "error", message: "La contraseña actual no es correcta." });
         }
         await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(newPwd, usuario).run();
-        return jsonResponse({ status: "success", message: "┬íContrase├▒a actualizada con ├®xito!" });
+        return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
     }
 
     // 4. GUARDAR PREDICCIONES (Porras)
@@ -470,11 +482,11 @@ export async function onRequestPost(context) {
         for (const idPart in preds) {
             const partido = await db.prepare('SELECT "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPart).first();
             if (partido && (partido.Estado === "CERRADO" || (partido.timestamp && nowMs >= partido.timestamp))) {
-                return jsonResponse({ status: "error", message: `ÔÜá´©Å Seguridad: El partido ${idPart} ya ha comenzado o est├í cerrado.` });
+                return jsonResponse({ status: "error", message: `⚠️ Seguridad: El partido ${idPart} ya ha comenzado o está cerrado.` });
             }
         }
 
-        // Optimizaci├│n: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
+        // Optimización: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
         const batchStmts = [];
         const nowStr = new Date().toLocaleString("es-ES");
         for (const idPart in preds) {
@@ -515,7 +527,7 @@ export async function onRequestPost(context) {
         if (batchTotales.length > 0) {
             await db.batch(batchTotales);
         }
-        return jsonResponse({ status: "success", message: "┬íTus predicciones a final de temporada han sido guardadas!" });
+        return jsonResponse({ status: "success", message: "¡Tus predicciones a final de temporada han sido guardadas!" });
     }
 
     // 6. HISTORIAL DE PARTIDOS
@@ -580,10 +592,10 @@ export async function onRequestPost(context) {
     if (action === "login" || action === "get_data") {
         const userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!userRow) {
-            return jsonResponse({ status: "error", message: "Usuario o contrase├▒a incorrectos." });
+            return jsonResponse({ status: "error", message: "Usuario o contraseña incorrectos." });
         }
 
-                // Actualizar ├║ltimo acceso si es un inicio de sesi├│n (throttled a 1 hora para ahorrar escrituras)
+                // Actualizar último acceso si es un inicio de sesión (throttled a 1 hora para ahorrar escrituras)
         if (action === "login" || action === "get_data") {
             try {
                 let shouldUpdate = true;
@@ -925,7 +937,7 @@ export async function onRequestPost(context) {
                 const sL = parseInt(p.oficial_sets.split("-")[0]);
                 const sV = parseInt(p.oficial_sets.split("-")[1]);
                 
-                // Determinar qui├®n jug├│ a la izquierda (Local real) y qui├®n a la derecha (Visitante real)
+                // Determinar quién jugó a la izquierda (Local real) y quién a la derecha (Visitante real)
                 const leftTeam = (p.ubicacion === 'LOCAL') ? p.equipo_local : p.rival;
                 const rightTeam = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
 
@@ -974,7 +986,7 @@ export async function onRequestPost(context) {
         const mapNombresReales = {};
         for (const u of allUsers || []) mapNombresReales[u.Usuario] = u["Nombre Real"] || u.Usuario;
 
-        // CLASIFICACIONES: calcular puntos por usuario y liga (CON CACH├ë)
+        // CLASIFICACIONES: calcular puntos por usuario y liga (CON CACHÉ)
         
         // --- LOGICA DE APAGON DE RANKINGS (FIN DE SEMANA) ---
         const now = new Date();
@@ -984,7 +996,7 @@ export async function onRequestPost(context) {
         let unfreezeTime = 0;
 
         if (utcDay === 6 || utcDay === 0 || utcDay === 1) {
-            // Unfreeze: Lunes a las 18:00 hora espa├▒ola (16:00 UTC en verano, 17:00 UTC en invierno)
+            // Unfreeze: Lunes a las 18:00 hora española (16:00 UTC en verano, 17:00 UTC en invierno)
             let u = new Date(now);
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
@@ -992,7 +1004,7 @@ export async function onRequestPost(context) {
             u.setUTCHours(16, 0, 0, 0); // 18:00 verano / 17:00 invierno
             unfreezeTime = u.getTime();
 
-            // Si todav├¡a no hemos superado la hora de descongelaci├│n del lunes
+            // Si todavía no hemos superado la hora de descongelación del lunes
             if (now.getTime() < unfreezeTime) {
                 isFrozen = true;
                 // Cutoff: Viernes a las 23:59:59 UTC
@@ -1005,13 +1017,13 @@ export async function onRequestPost(context) {
             }
         }
 
-        // --- OVERRIDE MANUAL DE CONGELACI├ôN (ADMIN INTRANET) ---
+        // --- OVERRIDE MANUAL DE CONGELACIÓN (ADMIN INTRANET) ---
         let freezeOverride = null; // 'UNFREEZE', 'FREEZE', o null
         try {
             const rowOverride = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").first();
             if (rowOverride && rowOverride.valor) {
                 const parsed = JSON.parse(rowOverride.valor);
-                // Si el override expir├│ (por ejemplo super├│ unfreeze_until o expires_at), se descarta autom├íticamente
+                // Si el override expiró (por ejemplo super├│ unfreeze_until o expires_at), se descarta automáticamente
                 if (parsed.expires_at && now.getTime() > parsed.expires_at) {
                     await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
                 } else {
@@ -1316,7 +1328,7 @@ export async function onRequestPost(context) {
             }
         }
         
-        return jsonResponse({ status: 'success', message: '┬íPermisos sincronizados! Las X han sido rellenadas f├¡sicamente en la base de datos.' });
+        return jsonResponse({ status: 'success', message: '¡Permisos sincronizados! Las X han sido rellenadas f├¡sicamente en la base de datos.' });
     }
     
     if (action === 'fix_timestamps') {
@@ -1365,7 +1377,7 @@ export async function onRequestPost(context) {
             await db.prepare('INSERT OR REPLACE INTO "Ligas_Config" ("Liga", "Congelar") VALUES (?, ?)').bind(lName, val).run();
         }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
-        return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y cach├® reseteada.' });
+        return jsonResponse({ status: 'success', message: 'Ajuste de ligas guardado y caché reseteada.' });
     }
 
     if (action === 'set_freeze_override') {
@@ -1378,8 +1390,8 @@ export async function onRequestPost(context) {
         if (mode === 'AUTO' || !mode) {
             await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
         } else {
-            // Calcular fecha de expiraci├│n autom├ítica: el pr├│ximo martes a las 00:00 UTC
-            // de modo que el siguiente fin de semana vuelva a funcionar 100% autom├ítico sin tener que acordarse
+            // Calcular fecha de expiración automática: el próximo martes a las 00:00 UTC
+            // de modo que el siguiente fin de semana vuelva a funcionar 100% automático sin tener que acordarse
             const expireDate = new Date();
             const currDay = expireDate.getUTCDay(); // 0=Dom, 1=Lun...
             let daysUntilTuesday = (2 - currDay + 7) % 7;
@@ -1396,11 +1408,11 @@ export async function onRequestPost(context) {
             await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor) VALUES ('FREEZE_OVERRIDE', ?)").bind(overrideData).run();
         }
 
-        // Limpiar cach├® de clasificaciones para que el cambio surta efecto de inmediato
+        // Limpiar caché de clasificaciones para que el cambio surta efecto de inmediato
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
-        let mensajeExito = "Horario restablecido a AUTOM├üTICO.";
-        if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con ├®xito. Todos los puntos se muestran en vivo.";
+        let mensajeExito = "Horario restablecido a AUTOMÁTICO.";
+        if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con éxito. Todos los puntos se muestran en vivo.";
         if (mode === 'FREEZE') mensajeExito = "Clasificaciones CONGELADAS manualmente.";
 
         return jsonResponse({ status: 'success', message: mensajeExito, mode: mode });
@@ -1465,7 +1477,7 @@ export async function onRequestPost(context) {
             await db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(new_u).run();
         }
 
-        return jsonResponse({ status: 'success', message: 'Usuario creado con ├®xito en la BD de Cloudflare' });
+        return jsonResponse({ status: 'success', message: 'Usuario creado con éxito en la BD de Cloudflare' });
     }
 
     // ADMIN: SAVE RESULTADO OFICIAL
@@ -1795,6 +1807,24 @@ export async function onRequestPost(context) {
         }
     }
 
+    if (action === 'marcar_sugerencia_estado' || action === 'update_sugerencia_estado') {
+        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos de administrador'}, 403);
+
+        const idSug = body.id;
+        const nuevoEstado = (body.nuevo_estado || 'LEÍDO').toUpperCase();
+        if (!idSug) return jsonResponse({ status: 'error', message: 'ID de sugerencia requerido' }, 400);
+
+        try {
+            await db.prepare('UPDATE "Sugerencias_Errores" SET "estado" = ? WHERE "id" = ?').bind(nuevoEstado, idSug).run();
+            return jsonResponse({ status: 'success', message: `Estado actualizado a ${nuevoEstado}`, nuevo_estado: nuevoEstado });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
     // SAVE EMAIL
     
     
@@ -1802,7 +1832,7 @@ export async function onRequestPost(context) {
         const { new_usuario, new_nombre } = body;
         
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         if (!new_usuario && !new_nombre) {
             return jsonResponse({status: 'error', message: 'Faltan datos'}, 400);
@@ -1810,13 +1840,13 @@ export async function onRequestPost(context) {
 
         if (new_usuario) {
             const check = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(new_usuario).first();
-            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya est├í cogido.'}, 400);
+            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está cogido.'}, 400);
             
             await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(usuario).run();
             await db.prepare('INSERT INTO "Peticiones_Nombre" ("Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
                 .bind(usuario, new_usuario, new_nombre || '', new Date().toISOString(), 'PENDIENTE').run();
             
-            return jsonResponse({status: 'success', message: 'Un administrador la revisar├í. Si tras varios d├¡as no se ha cambiado, av├¡sanos por correo. Mientras tanto, usa tu usuario actual.'});
+            return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, av├¡sanos por correo. Mientras tanto, usa tu usuario actual.'});
         } else {
             await db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
             return jsonResponse({status: 'success', message: 'Tu Nombre Real se ha actualizado inmediatamente.'});
@@ -1825,7 +1855,7 @@ export async function onRequestPost(context) {
 
     if (action === 'get_name_change_requests') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
@@ -1844,18 +1874,18 @@ export async function onRequestPost(context) {
         const { target_user, resolution } = body;
         
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
 
         if (resolution === 'reject') {
             await db.prepare('UPDATE "Peticiones_Nombre" SET "Estado" = \'RECHAZADO\' WHERE "Usuario Actual" = ?').bind(target_user).run();
-            return jsonResponse({status: 'success', message: 'Petici├│n rechazada.'});
+            return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
                 if (resolution === 'approve') {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).first();
-            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontr├│ la petici├│n.'}, 404);
+            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
             const oldU = peticion["Usuario Actual"];
             const newU = peticion["Nuevo Usuario Sol"];
@@ -1890,14 +1920,14 @@ export async function onRequestPost(context) {
             
             await db.batch(stmts);
             
-            let msg = 'Petici├│n aprobada con ├®xito.';
-            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con ├®xito.`;
+            let msg = 'Petición aprobada con éxito.';
+            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con éxito.`;
             return jsonResponse({status: 'success', message: msg});
         }
     }
     if (action === 'delete_avatar') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Avatar" = \'\', "Avatar_Url" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
         return jsonResponse({status: 'success', message: 'Foto borrada.'});
@@ -1905,7 +1935,7 @@ export async function onRequestPost(context) {
 
     if (action === 'delete_custom_badge') {
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Custom_Badge" = \'\', "Custom_Emoji" = \'\', "Custom_Desc" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
         return jsonResponse({status: 'success', message: 'Insignia borrada.'});
@@ -1914,12 +1944,12 @@ export async function onRequestPost(context) {
     if (action === 'request_badge_update') {
         const { payload } = body;
         const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inv├ílidas'}, 401);
+        if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('INSERT INTO "Peticiones_Insignias" ("Usuario", "Tipo", "Equipo_Externo", "Estado", "Fecha") VALUES (?, ?, ?, ?, ?)')
             .bind(usuario, 'PERFIL', payload, 'PENDIENTE', new Date().toISOString()).run();
             
-        return jsonResponse({status: 'success', message: 'Petici├│n enviada a los administradores.'});
+        return jsonResponse({status: 'success', message: 'Petición enviada a los administradores.'});
     }
 
     if (action === 'get_peticiones_insignias') {
@@ -1937,12 +1967,12 @@ export async function onRequestPost(context) {
 
         if (resolution === 'reject') {
             await db.prepare('UPDATE "Peticiones_Insignias" SET "Estado" = \'RECHAZADO\' WHERE "id_peticion" = ?').bind(id_peticion).run();
-            return jsonResponse({status: 'success', message: 'Petici├│n rechazada.'});
+            return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
         if (resolution === 'approve') {
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Insignias" WHERE "id_peticion" = ?').bind(id_peticion).first();
-            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontr├│ la petici├│n.'}, 404);
+            if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
             if (peticion.Tipo === 'PERFIL') {
                 const userToUpdate = peticion.Usuario;
@@ -1970,7 +2000,7 @@ export async function onRequestPost(context) {
             }
 
             await db.prepare('UPDATE "Peticiones_Insignias" SET "Estado" = \'APROBADO\' WHERE "id_peticion" = ?').bind(id_peticion).run();
-            return jsonResponse({status: 'success', message: 'Petici├│n aprobada con ├®xito.'});
+            return jsonResponse({status: 'success', message: 'Petición aprobada con éxito.'});
         }
     }
 
@@ -2054,5 +2084,5 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: 'success', message: `Permisos actualizados para @${target_usuario}` });
     }
 
-    return jsonResponse({ status: "error", message: `Acci├│n desconocida: ${action}` }, 400);
+    return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
 }
