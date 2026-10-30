@@ -1875,14 +1875,10 @@ window.cargarSugerenciasAdmin = async function() {
             } else {
                 box.innerHTML = list.map(item => {
                     const est = (item.estado || 'PENDIENTE').toUpperCase();
-                    let badgeEstado = '';
-                    if (est === 'ARREGLADO' || est === 'RESUELTO') {
-                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35);">✅ Arreglado</span>';
-                    } else if (est === 'LEÍDO' || est === 'LEIDO') {
-                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(52,152,219,0.2); color: #5dade2; border: 1px solid rgba(52,152,219,0.35);">👁️ Leído</span>';
-                    } else {
-                        badgeEstado = '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.35);">⏳ Pendiente</span>';
-                    }
+                    const isArreglado = (est === 'ARREGLADO' || est === 'RESUELTO');
+                    const badgeEstado = isArreglado
+                        ? '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35);">✅ Arreglado</span>'
+                        : '<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 4px; background: rgba(243,156,18,0.2); color: #f39c12; border: 1px solid rgba(243,156,18,0.35);">⏳ Pendiente</span>';
 
                     return `
                     <div id="sug_card_${item.id}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
@@ -1898,17 +1894,13 @@ window.cargarSugerenciasAdmin = async function() {
                         </div>
                         <div style="font-size: 0.8rem; color: var(--text-main); margin-top: 2px; white-space: pre-wrap; line-height: 1.35; word-break: break-word;">${item.mensaje}</div>
                         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
-                            <span style="font-size: 0.68rem; color: var(--text-muted); margin-right: auto;">Cambiar estado:</span>
-                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'LEÍDO')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid ${est === 'LEÍDO' || est === 'LEIDO' ? '#3498db' : 'rgba(52,152,219,0.35)'}; background: ${est === 'LEÍDO' || est === 'LEIDO' ? 'rgba(52,152,219,0.3)' : 'rgba(52,152,219,0.12)'}; color: #5dade2; cursor: pointer; font-weight: bold; transition: all 0.2s;">
-                                👁️ Leído
-                            </button>
-                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'ARREGLADO')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid ${est === 'ARREGLADO' ? '#2ecc71' : 'rgba(46,204,113,0.35)'}; background: ${est === 'ARREGLADO' ? 'rgba(46,204,113,0.3)' : 'rgba(46,204,113,0.12)'}; color: #2ecc71; cursor: pointer; font-weight: bold; transition: all 0.2s;">
-                                ✅ Arreglado
-                            </button>
-                            ${est !== 'PENDIENTE' ? `
-                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'PENDIENTE')" style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--text-muted); cursor: pointer; font-weight: bold; transition: all 0.2s;">
-                                ⏳ Pendiente
-                            </button>` : ''}
+                            ${isArreglado ? `
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'PENDIENTE')" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: var(--text-muted); cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                                ⏳ Marcar como Pendiente
+                            </button>` : `
+                            <button type="button" onclick="window.cambiarEstadoSugerencia(${item.id}, 'ARREGLADO')" style="font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(46,204,113,0.4); background: rgba(46,204,113,0.15); color: #2ecc71; cursor: pointer; font-weight: bold; transition: all 0.2s;">
+                                ✅ Marcar como Arreglado
+                            </button>`}
                         </div>
                     </div>`;
                 }).join('');
