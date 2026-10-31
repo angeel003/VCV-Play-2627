@@ -630,17 +630,8 @@
         }
 
         // 2. Poblar selector de partidos para pruebas
-        const selectPartidos = document.getElementById('adminSelectPartidoPushPrueba');
-        if (selectPartidos && window.appData && Array.isArray(window.appData.partidos)) {
-            selectPartidos.innerHTML = '<option value="">-- Próximos partidos en 2h (Automático) --</option>';
-            const sorted = [...window.appData.partidos].sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-            sorted.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id_partido;
-                const fechaStr = p.fecha || (p.timestamp ? new Date(p.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : '');
-                opt.textContent = `[${p.id_partido}] ${p.equipo_local} vs ${p.rival} (${fechaStr})`;
-                selectPartidos.appendChild(opt);
-            });
+        if (window.poblarSelectorPartidosAdmin) {
+            window.poblarSelectorPartidosAdmin();
         }
 
         // 3. Cargar logs
@@ -734,17 +725,52 @@
         }
     };
 
+    window.poblarSelectorPartidosAdmin = function() {
+        const selectPartidos = document.getElementById('adminSelectPartidoPushPrueba');
+        if (!selectPartidos) return;
+
+        const rawPartidos = (window.appData && (window.appData.todos_partidos || window.appData.equipos || window.appData.partidos)) || [];
+        if (!Array.isArray(rawPartidos) || rawPartidos.length === 0) return;
+
+        const currentVal = selectPartidos.value;
+        selectPartidos.innerHTML = '<option value="">-- Próximos partidos en 2h (Automático) --</option>';
+
+        const uniqueMap = new Map();
+        rawPartidos.forEach(p => {
+            if (p && p.id_partido && !uniqueMap.has(p.id_partido)) {
+                uniqueMap.set(p.id_partido, p);
+            }
+        });
+
+        const sorted = Array.from(uniqueMap.values()).sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+        sorted.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id_partido;
+            const horaStr = p.hora ? ` ${p.hora}` : '';
+            const fechaStr = (p.fecha ? p.fecha + horaStr : '') || (p.timestamp ? new Date(p.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : '');
+            const eqLoc = p.equipo_local || p.local || 'Local';
+            const eqRiv = p.rival || p.visitante || 'Visitante';
+            opt.textContent = `[${p.id_partido}] ${eqLoc} vs ${eqRiv} (${fechaStr})`;
+            selectPartidos.appendChild(opt);
+        });
+
+        if (currentVal) selectPartidos.value = currentVal;
+    };
+
     window.adminDispararCron2Horas = async function(forzarPartido = false) {
         const { usr, pwd } = getCredentials();
         const feedback = document.getElementById('adminPushActionFeedback');
         const selPart = document.getElementById('adminSelectPartidoPushPrueba');
-        const forzarId = (forzarPartido && selPart && selPart.value) ? selPart.value : undefined;
+        const selectedVal = selPart ? selPart.value : '';
+        const forzarId = (forzarPartido || selectedVal) ? selectedVal : undefined;
 
         if (feedback) {
             feedback.style.display = 'block';
             feedback.style.background = 'rgba(37, 99, 235, 0.15)';
             feedback.style.color = '#93c5fd';
-            feedback.textContent = '⏳ Ejecutando comprobación de recordatorios 2 horas...';
+            feedback.textContent = forzarId
+                ? `⏳ Simulando aviso para el partido ${forzarId}...`
+                : '⏳ Buscando partidos en las próximas 2 horas...';
         }
 
         try {
@@ -761,10 +787,15 @@
             const data = await res.json();
             if (data && data.status === 'success') {
                 if (feedback) {
-                    feedback.style.background = 'rgba(16, 185, 129, 0.2)';
-                    feedback.style.color = '#10b981';
+                    const hasSent = data.enviados > 0;
+                    feedback.style.background = hasSent ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)';
+                    feedback.style.color = hasSent ? '#10b981' : '#facc15';
                     let extra = data.solo_admin ? ' [Modo Admins: Solo administradores evaluados]' : '';
-                    feedback.textContent = `✅ ${data.message} (${data.partidos_encontrados} partidos, ${data.enviados} envíos)${extra}`;
+                    let hint = '';
+                    if (!hasSent && !forzarId) {
+                        hint = ' 👉 Elige un partido en el desplegable de abajo y pulsa ⚡ Forzar para probarlo ya.';
+                    }
+                    feedback.textContent = `ℹ️ ${data.message} (${data.partidos_encontrados} partidos evaluados, ${data.enviados} notificaciones enviadas)${extra}${hint}`;
                 }
             } else {
                 if (feedback) {
@@ -773,7 +804,9 @@
                     feedback.textContent = '❌ ' + (data.message || 'Error en cron 2 horas');
                 }
             }
-            window.adminCargarLogsNotificaciones();
+            if (typeof window.adminCargarLogsNotificaciones === 'function') {
+                window.adminCargarLogsNotificaciones();
+            }
         } catch(e) {
             if (feedback) {
                 feedback.style.background = 'rgba(239, 68, 68, 0.2)';

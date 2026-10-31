@@ -2477,21 +2477,21 @@ export async function onRequestPost(context) {
         const margenMinutos = parseInt(body.margen_minutos) || 135;
         const maxTs = now + (margenMinutos * 60 * 1000);
 
-        const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes" WHERE "Visibilidad" = \'MOSTRAR\'').all();
+        const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes"').all();
         const resMap = {};
         const partidos = (rawPartidos || []).map(r => formatMatch(r, resMap));
 
         let partidosObjetivo = [];
         if (body.forzar_partido_id) {
-            partidosObjetivo = partidos.filter(p => p.id_partido === body.forzar_partido_id);
+            partidosObjetivo = partidos.filter(p => String(p.id_partido).trim() === String(body.forzar_partido_id).trim());
         } else {
-            partidosObjetivo = partidos.filter(p => p.timestamp && p.timestamp > now && p.timestamp <= maxTs);
+            partidosObjetivo = partidos.filter(p => p.visibilidad === 'MOSTRAR' && p.timestamp && p.timestamp > now && p.timestamp <= maxTs);
         }
 
         if (partidosObjetivo.length === 0) {
             return jsonResponse({
                 status: 'success',
-                message: 'No hay partidos programados en las próximas 2 horas.',
+                message: body.forzar_partido_id ? `Partido '${body.forzar_partido_id}' no encontrado en la base de datos.` : 'No hay partidos programados en las próximas 2 horas.',
                 partidos_encontrados: 0,
                 enviados: 0,
                 solo_admin: soloAdmin
@@ -2550,7 +2550,7 @@ export async function onRequestPost(context) {
                     continue;
                 }
 
-                if (sentSet.has(`${u}_${tipoLog}`)) {
+                if (!body.forzar_partido_id && sentSet.has(`${u}_${tipoLog}`)) {
                     continue;
                 }
 

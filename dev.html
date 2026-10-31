@@ -2769,7 +2769,7 @@
                   Forzar prueba con un partido concreto (opcional):
                 </label>
                 <div style="display:flex; gap:6px;">
-                  <select id="adminSelectPartidoPushPrueba" style="flex:1; padding:7px; font-size:0.78rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                  <select id="adminSelectPartidoPushPrueba" onfocus="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" onclick="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" style="flex:1; padding:7px; font-size:0.78rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
                     <option value="">-- Próximos partidos en 2h (Automático) --</option>
                   </select>
                   <button type="button" onclick="window.adminDispararCron2Horas(true)" style="padding:7px 12px; font-size:0.75rem; font-weight:700; background:rgba(37,99,235,0.2); border:1px solid #3b82f6; color:#93c5fd; border-radius:6px; cursor:pointer;">
@@ -3437,7 +3437,7 @@
 <script src="js/cartelera_interactive.js?v=20261030_v13"></script>
 <script src="js/ui_gestures.js?v=20261030_v11"></script>
 <script src="js/auth.js?v=20261030_v11"></script>
-<script src="js/push_notifications.js?v=20261031_v8"></script>
+<script src="js/push_notifications.js?v=20261031_v9"></script>
 
 
 
