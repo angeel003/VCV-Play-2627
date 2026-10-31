@@ -2441,7 +2441,7 @@ export async function onRequestPost(context) {
             title: body.titulo || "🏐 Notificación de Prueba VCV Play",
             body: body.mensaje || `¡Hola @${targetUser}! Las notificaciones Push nativas funcionan correctamente en tu dispositivo.`,
             data: {
-                url: body.forzar_partido_id ? `/dev.html?partido=${body.forzar_partido_id}` : "/dev.html",
+                url: body.forzar_partido_id ? `/?partido=${body.forzar_partido_id}` : "/",
                 id_partido: body.forzar_partido_id || null
             }
         };
@@ -2632,7 +2632,7 @@ export async function onRequestPost(context) {
                     title: title,
                     body: bodyNotif,
                     data: {
-                        url: `/dev.html?partido=${p.id_partido}`,
+                        url: `/?partido=${p.id_partido}`,
                         id_partido: p.id_partido
                     }
                 };

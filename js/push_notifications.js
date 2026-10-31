@@ -29,7 +29,9 @@
         try {
             let reg = await navigator.serviceWorker.getRegistration();
             if (!reg) {
-                reg = await navigator.serviceWorker.register('sw.js');
+                reg = await navigator.serviceWorker.register('sw.js?v=20261031_v14');
+            } else {
+                try { await reg.update(); } catch(e){}
             }
             await navigator.serviceWorker.ready;
             return reg;
