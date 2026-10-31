@@ -127,10 +127,11 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
     keyInfo.set(subscriberPubBytes, keyInfoPrefix.length);
     keyInfo.set(localPubBytes, keyInfoPrefix.length + 65);
 
-    const authKey = await crypto.subtle.importKey("raw", subscriberAuthBytes, { name: "HKDF" }, false, ["deriveBits"]);
+    // RFC 8291 3.4: HKDF-Extract(salt = auth_secret, IKM = ecdh_secret)
+    const ecdhKey = await crypto.subtle.importKey("raw", sharedSecret, { name: "HKDF" }, false, ["deriveBits"]);
     const ikm = await crypto.subtle.deriveBits(
-        { name: "HKDF", hash: "SHA-256", salt: sharedSecret, info: keyInfo },
-        authKey,
+        { name: "HKDF", hash: "SHA-256", salt: subscriberAuthBytes, info: keyInfo },
+        ecdhKey,
         256
     );
 
