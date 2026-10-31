@@ -444,6 +444,11 @@
                     feedbackDiv.textContent = 'Notificaciones desactivadas para este dispositivo.';
                     setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 3000);
                 }
+                setTimeout(() => {
+                    if (typeof window.renderUserPushSettings === 'function') {
+                        window.renderUserPushSettings();
+                    }
+                }, 350);
             }
         } catch (err) {
             console.error('[Push] Error al cambiar estado de push:', err);
@@ -717,12 +722,12 @@
 
         container.innerHTML = `
             <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 14px; padding: 18px; margin-top: 16px; text-align: left; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size: 1.2rem;">🔔</span>
-                        <h4 style="margin:0; font-size: 0.96rem; font-weight: 800; color: #f5c542; letter-spacing: 0.3px;">Avisos y Notificaciones Push</h4>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px; gap: 10px; width:100%; box-sizing:border-box;">
+                    <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1 1 auto;">
+                        <span style="font-size: 1.25rem; flex-shrink:0; line-height:1;">🔔</span>
+                        <h4 style="margin:0; font-size: 0.95rem; font-weight: 800; color: #f5c542; letter-spacing: 0.2px; line-height:1.3; word-break:break-word;">Avisos y Notificaciones Push</h4>
                     </div>
-                    <span id="pushStatusBadge" style="font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; background: ${statusBg}; color: ${statusColor};">
+                    <span id="pushStatusBadge" style="font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; background: ${statusBg}; color: ${statusColor}; flex-shrink:0; white-space:nowrap; text-align:center; line-height:1.2;">
                         ${statusText}
                     </span>
                 </div>
@@ -734,13 +739,13 @@
                 ${renderDeviceHelpBanner(devInfo)}
 
                 <!-- SWITCH PRINCIPAL: ACTIVAR EN ESTE DISPOSITIVO -->
-                <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(28, 10, 38, 0.8); border: 1px solid rgba(192, 132, 252, 0.25); padding: 12px 14px; border-radius: 10px; margin-bottom: 12px;">
-                    <div>
-                        <strong style="font-size: 0.85rem; color: var(--text-main); display:block;">Activar en este dispositivo</strong>
-                        <span style="font-size: 0.72rem; color: var(--text-muted);">Alertas nativas de VCV Play</span>
+                <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(28, 10, 38, 0.85); border: 1px solid rgba(192, 132, 252, 0.25); padding: 12px 14px; border-radius: 10px; margin-bottom: 12px; gap: 12px; width: 100%; box-sizing: border-box;">
+                    <div style="display:flex; flex-direction:column; min-width:0; flex: 1 1 auto;">
+                        <span style="font-size: 0.86rem; font-weight: 700; color: var(--text-main); line-height: 1.35; display:block; margin: 0 0 2px 0;">Activar en este dispositivo</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.25; display:block; margin: 0;">Alertas nativas de VCV Play</span>
                     </div>
-                    <label style="position: relative; display: inline-block; width: 46px; height: 26px; margin: 0; cursor: pointer;">
-                        <input type="checkbox" id="switchPushDispositivo" ${isActivo ? 'checked' : ''} ${(!supported && (!devInfo.isIOS || devInfo.isStandalone)) ? 'disabled' : ''} onchange="window.togglePushDispositivo(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                    <label style="position: relative; display: inline-block; width: 46px; height: 26px; min-width: 46px; margin: 0; cursor: pointer; flex-shrink: 0;">
+                        <input type="checkbox" id="switchPushDispositivo" ${isActivo ? 'checked' : ''} ${(!supported && (!devInfo.isIOS || devInfo.isStandalone)) ? 'disabled' : ''} onchange="window.togglePushDispositivo(this.checked)" style="opacity: 0; width: 0; height: 0; position: absolute;">
                         <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${isActivo ? '#10b981' : 'rgba(255,255,255,0.2)'}; transition: .3s; border-radius: 34px;">
                             <span style="position: absolute; content: ''; height: 20px; width: 20px; left: ${isActivo ? '23px' : '3px'}; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></span>
                         </span>
@@ -793,7 +798,7 @@
                     </div>
                 </div>
 
-                <div id="pushConfigFeedback" style="font-size: 0.75rem; margin-top: 10px; display: none; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.3);"></div>
+                <div id="pushConfigFeedback" style="font-size: 0.75rem; line-height: 1.4; margin-top: 10px; margin-bottom: 6px; display: none; padding: 8px 12px; border-radius: 6px; background: rgba(0,0,0,0.35); box-sizing: border-box; width: 100%; word-break: break-word;"></div>
 
                 ${renderDeviceGuideDetails(devInfo)}
             </div>
