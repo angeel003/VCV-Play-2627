@@ -2553,8 +2553,11 @@ export async function onRequestPost(context) {
                 }
 
                 const uPerm = permMap[u] || {};
-                const hasTeamPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X') || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
-                if (!hasTeamPerm) continue;
+                const hasLocPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X');
+                const hasRivPerm = isUserAdmin || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
+                if (!hasLocPerm && !hasRivPerm) continue;
+
+                const isDerby = (hasLocPerm && hasRivPerm);
 
                 // COMPROBACIÓN ESPECÍFICA POR EQUIPO (Equipos_Permitidos)
                 let userEqCfg = null;
@@ -2562,42 +2565,50 @@ export async function onRequestPost(context) {
                     try { userEqCfg = JSON.parse(subRow.Equipos_Permitidos); } catch(e) {}
                 }
 
-                // Determinar el equipo del usuario en este partido
-                const teamKey = (userEqCfg && userEqCfg[loc] !== undefined) ? loc : ((userEqCfg && userEqCfg[riv] !== undefined) ? riv : loc);
-                const cfgForTeam = userEqCfg ? userEqCfg[teamKey] : null;
+                const getTeamSetting = (teamName) => {
+                    if (!userEqCfg || typeof userEqCfg !== 'object') return { activo: true, solo_olvidos: false };
+                    if (Array.isArray(userEqCfg)) {
+                        return { activo: userEqCfg.length === 0 || userEqCfg.includes(teamName), solo_olvidos: false };
+                    }
+                    const val = userEqCfg[teamName];
+                    if (val === undefined) return { activo: true, solo_olvidos: false };
+                    if (typeof val === 'object') return { activo: val.activo !== false, solo_olvidos: Boolean(val.solo_olvidos) };
+                    return { activo: Boolean(val), solo_olvidos: false };
+                };
 
-                // Si el usuario configuró el equipo y lo tiene desactivado, saltar
-                if (cfgForTeam !== null && cfgForTeam !== undefined) {
-                    if (typeof cfgForTeam === 'object' && cfgForTeam.activo === false) {
-                        continue; // Desactivado para este equipo específico
-                    } else if (cfgForTeam === false) {
-                        continue;
-                    }
-                } else if (Array.isArray(userEqCfg) && userEqCfg.length > 0) {
-                    if (!userEqCfg.includes(loc) && !userEqCfg.includes(riv)) {
-                        continue;
-                    }
+                const locCfg = hasLocPerm ? getTeamSetting(loc) : { activo: false, solo_olvidos: false };
+                const rivCfg = hasRivPerm ? getTeamSetting(riv) : { activo: false, solo_olvidos: false };
+
+                // Si todos los equipos con permiso para este usuario están desactivados, saltar
+                if (!locCfg.activo && !rivCfg.activo) {
+                    continue;
                 }
 
                 const userPred = porrasMap[`${u}_${p.id_partido}`];
                 const hasPredicted = Boolean(userPred && userPred.Sets);
 
-                // Comprobar filtro "Solo si aún no he pronosticado" (específico por equipo o global):
-                const teamSoloOlvidos = (typeof cfgForTeam === 'object' && cfgForTeam.solo_olvidos !== undefined)
-                    ? Boolean(cfgForTeam.solo_olvidos)
-                    : Boolean(subRow.Opciones_SoloOlvidos);
+                // Comprobar filtro "Solo si aún no he pronosticado":
+                // Si el usuario ya ha pronosticado, solo saltamos si TODOS sus equipos activos exigen solo_olvidos
+                const shouldSkipPredicted = (
+                    (!locCfg.activo || locCfg.solo_olvidos) &&
+                    (!rivCfg.activo || rivCfg.solo_olvidos)
+                );
 
-                if (teamSoloOlvidos && hasPredicted) {
+                if (shouldSkipPredicted && hasPredicted) {
                     continue;
                 }
 
                 let subObj;
                 try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { continue; }
 
-                let title = `🏐 ¡Tu partido empieza en 2 horas!`;
-                let bodyNotif = hasPredicted
-                    ? `Tienes pronosticado (${userPred.Sets}): ${loc} vs ${riv}. ¡A punto de comenzar!`
-                    : `⚠️ ¡Aún no has pronosticado el ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`;
+                let title = isDerby ? `🏐 ¡Derbi VCV en 2 horas!` : `🏐 ¡Tu partido empieza en 2 horas!`;
+                let bodyNotif = isDerby
+                    ? (hasPredicted
+                        ? `Tienes pronosticado (${userPred.Sets}): Derbi ${loc} vs ${riv}. ¡A punto de comenzar!`
+                        : `⚠️ ¡Derbi entre tus equipos ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`)
+                    : (hasPredicted
+                        ? `Tienes pronosticado (${userPred.Sets}): ${loc} vs ${riv}. ¡A punto de comenzar!`
+                        : `⚠️ ¡Aún no has pronosticado el ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`);
 
                 const payload = {
                     title: title,

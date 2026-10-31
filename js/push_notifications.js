@@ -51,6 +51,16 @@
 
     // Helper para obtener la lista de equipos disponibles para el usuario
     function getAvailableTeamsForUser() {
+        const usr = window.currentUser || (window.appData && window.appData.usuario);
+        const uBadges = (window.appData && window.appData.insignias && window.appData.insignias[usr]) ? window.appData.insignias[usr] : [];
+        const isUserAdmin = uBadges.some(b => b.type === 'admin');
+
+        // Para usuarios normales, mostrar ESTRICTAMENTE sus equipos con permiso
+        if (!isUserAdmin && window.appData && Array.isArray(window.appData.mis_equipos_siguiendo) && window.appData.mis_equipos_siguiendo.length > 0) {
+            return [...window.appData.mis_equipos_siguiendo].filter(Boolean).sort();
+        }
+
+        // Para administradores (o fallback), todos los equipos del club
         const set = new Set();
         if (window.appData) {
             if (Array.isArray(window.appData.mis_equipos_siguiendo)) {
@@ -63,7 +73,7 @@
                 window.appData.todos_partidos.forEach(p => { if (p.equipo_local) set.add(p.equipo_local); });
             }
         }
-        return Array.from(set).sort();
+        return Array.from(set).filter(Boolean).sort();
     }
 
     // --- CARGAR ESTADO Y CONFIGURACIÓN ---
