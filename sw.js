@@ -14,7 +14,7 @@ self.addEventListener('push', function(event) {
 
     let title = '🏐 Fantasy VCV';
     let body = '¡Tienes una nueva actualización de partido en VCV Play!';
-    let payloadData = { url: '/dev.html' };
+    let payloadData = { url: '/' };
 
     if (event.data) {
         try {
@@ -48,13 +48,13 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     const payloadData = event.notification.data || {};
-    const targetUrl = payloadData.url || '/dev.html';
+    const targetUrl = payloadData.url || '/';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
             for (let i = 0; i < clientList.length; i++) {
                 const client = clientList[i];
-                if (client.url.includes('dev.html') && 'focus' in client) {
+                if ('focus' in client) {
                     if (payloadData.id_partido) {
                         client.postMessage({ action: 'scrollToPartido', id_partido: payloadData.id_partido });
                     }
