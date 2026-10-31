@@ -327,11 +327,13 @@
         window.guardarAjustesPush();
     };
 
-    window.pushMarcarTodosSoloOlvidos = function(activar) {
-        const checkboxes = document.querySelectorAll('.chk-team-push-olvido');
-        const act = (activar !== undefined) ? activar : Array.from(checkboxes).some(c => !c.checked && !c.disabled);
+    window.pushMarcarTodosSoloOlvidos = function(forzar) {
+        const checkboxes = Array.from(document.querySelectorAll('.chk-team-push-olvido')).filter(c => !c.disabled);
+        if (checkboxes.length === 0) return;
+        const allChecked = checkboxes.every(c => c.checked);
+        const nuevoEstado = (forzar !== undefined) ? forzar : !allChecked;
         checkboxes.forEach(chk => {
-            if (!chk.disabled) chk.checked = act;
+            chk.checked = nuevoEstado;
         });
         window.guardarAjustesPush();
     };
@@ -533,7 +535,7 @@
                                 <div style="display:flex; gap: 4px;">
                                     <button type="button" onclick="window.pushMarcarTodosEquipos(true)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; cursor: pointer;">Todos</button>
                                     <button type="button" onclick="window.pushMarcarTodosEquipos(false)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; cursor: pointer;">Ninguno</button>
-                                    <button type="button" onclick="window.pushMarcarTodosSoloOlvidos(true)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; border-radius: 4px; cursor: pointer;">Solo olvidos</button>
+                                    <button type="button" onclick="window.pushMarcarTodosSoloOlvidos()" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; border-radius: 4px; cursor: pointer;">Solo olvidos</button>
                                 </div>
                             </div>
 
