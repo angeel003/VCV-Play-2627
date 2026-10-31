@@ -1326,6 +1326,7 @@
       align-items: center;
       flex: 1;
       text-align: center;
+      min-width: 0;
     }
     .team-avatar-v2 {
       width: 52px;
@@ -1638,11 +1639,11 @@
     #appSection > section {
         display: none;
         padding-top: 13px;
-        padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
     }
-    /* En cartelera la última tarjeta no tiene margen propio; se compensa para que libre la isla con el mismo margen que las demás */
+    /* En cartelera y demás pestañas se mantiene holgura completa para librar la isla flotante */
     #appSection > section#carteleraSection {
-        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
     }
     #contenedorPartidos { margin-bottom: 0 !important; }
     #appSection > section.active-tab {
@@ -2005,6 +2006,305 @@
     }
 
   </style>
+<style>
+    /* ============================================================================
+       REGLAS BASE Y MODERNIZACIÓN UNIVERSAL (Móvil y Escritorio)
+       ============================================================================ */
+    .perfil-dashboard-grid {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .perfil-col-left, .perfil-col-right {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .guest-benefits-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .enlaces-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Inputs y controles con brillo suave y moderno al enfocar en cualquier dispositivo */
+    .form-control, input[type="text"], input[type="password"], input[type="email"], input[type="number"], select, textarea {
+      transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease !important;
+    }
+    .form-control:focus, input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+      border-color: rgba(212, 175, 55, 0.65) !important;
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16) !important;
+      outline: none !important;
+    }
+
+    /* Modales con desenfoque de fondo moderno */
+    [id$="Modal"] {
+      backdrop-filter: blur(8px) !important;
+      -webkit-backdrop-filter: blur(8px) !important;
+    }
+
+    /* ============================================================================
+       ADAPTACIÓN MODERNA PARA ORDENADORES Y TABLETS (>= 800px)
+       ============================================================================ */
+    @media (min-width: 800px) {
+      /* Expansión armónica del contenedor principal en monitores */
+      #appSection {
+        max-width: 1040px !important;
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+      .header-container-v2 {
+        max-width: 1040px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+      }
+      #carteleraSection .form-container {
+        max-width: 100% !important;
+      }
+
+      /* Cartelera de Partidos: Cuadrícula responsive de 2 columnas */
+      #contenedorPartidos {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)) !important;
+        gap: 18px !important;
+        align-items: stretch !important;
+      }
+      #contenedorPartidos .vcv-card-v2 {
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      #contenedorPartidos .vcv-card-v2.is-hidden,
+      #contenedorPartidos .vcv-card-v2[style*="display: none"],
+      #contenedorPartidos .vcv-card-v2[style*="display:none"],
+      #contenedorPartidos .card.mb-3[style*="display: none"],
+      #contenedorPartidos .card.mb-3[style*="display:none"] {
+        display: none !important;
+      }
+
+      /* Filtro de categorías centrado en pantallas grandes */
+      .category-filter-strip {
+        max-width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Expansión coordinada de todas las pestañas en escritorio */
+      #enlacesRfevbSection,
+      #calendarioSection,
+      #historialSection,
+      #guestInfoSection {
+        max-width: 1040px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      #clasificacionesSection {
+        max-width: 920px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      /* PESTAÑA PERFIL: Dashboard de 2 columnas elegante */
+      .perfil-dashboard-grid {
+        display: grid !important;
+        grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.25fr) !important;
+        gap: 24px !important;
+        align-items: start !important;
+      }
+      .perfil-col-left {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+      }
+      .perfil-col-right {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+      }
+
+      /* PESTAÑA CALENDARIO: Cuadrícula responsive de 2 columnas y enlaces en 2 columnas */
+      #calendarResults {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)) !important;
+        gap: 18px !important;
+        align-items: stretch !important;
+      }
+      #calendarResults .vcv-card-v2 {
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      #calendarResults .vcv-card-v2.is-hidden,
+      #calendarResults .vcv-card-v2[style*="display: none"],
+      #calendarResults .vcv-card-v2[style*="display:none"] {
+        display: none !important;
+      }
+      .calendar-date-separator {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+      }
+      #enlacesOficialesBlock .enlaces-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+      }
+
+      /* PESTAÑA MIS PREDICCIONES / HISTORIAL: Métricas en 4 columnas y partidos en 2 columnas */
+      .historial-metrics-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 14px !important;
+      }
+      .historial-matches-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)) !important;
+        gap: 18px !important;
+        align-items: stretch !important;
+      }
+      .historial-matches-grid .vcv-card-v2 {
+        max-width: 100% !important;
+        margin-bottom: 0 !important;
+        height: 100% !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .historial-matches-grid .vcv-card-v2.is-hidden,
+      .historial-matches-grid .vcv-card-v2[style*="display: none"],
+      .historial-matches-grid .vcv-card-v2[style*="display:none"] {
+        display: none !important;
+      }
+
+      /* PESTAÑA CLASIFICACIONES: Podio con mayor presencia y centrado */
+      .podium-container {
+        max-width: 520px !important;
+        margin: 0 auto 18px auto !important;
+        gap: 16px !important;
+      }
+      .podium-avatar {
+        width: 60px !important;
+        height: 60px !important;
+      }
+      .podium-slot.rank-1 .podium-avatar {
+        width: 76px !important;
+        height: 76px !important;
+      }
+      .podium-slot.rank-1 .podium-bar {
+        min-height: 140px !important;
+      }
+      .podium-slot.rank-2 .podium-bar {
+        min-height: 112px !important;
+      }
+      .podium-slot.rank-3 .podium-bar {
+        min-height: 98px !important;
+      }
+
+      /* PESTAÑA MODO INVITADO: Ventajas en cuadrícula 2x2 */
+      .guest-benefits-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+      }
+      .guest-benefits-grid .vcv-card-v2 {
+        height: 100% !important;
+        margin-bottom: 0 !important;
+      }
+
+      /* Barra de navegación flotante dock estilo macOS centrado */
+      .bottom-nav-v2 {
+        max-width: 560px !important;
+        padding: 10px 16px !important;
+        border-radius: 36px !important;
+        bottom: 22px !important;
+      }
+      .nav-item-v2 span {
+        font-size: 0.74rem !important;
+      }
+      .nav-item-v2 i {
+        width: 24px !important;
+        height: 24px !important;
+      }
+
+      /* Modales proporcionados en escritorio */
+      .modal-card-v2, [id$="Modal"] > div[style*="background"] {
+        max-width: 520px !important;
+        margin: auto !important;
+        border-radius: 18px !important;
+      }
+    }
+
+    /* ============================================================================
+       MICRO-INTERACCIONES Y DETALLES MODERNOS PARA PC (Ratón / Hover / Scroll)
+       ============================================================================ */
+    @media (hover: hover) and (pointer: fine) {
+      .vcv-card-v2 {
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
+      }
+      .vcv-card-v2:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 18px rgba(123, 44, 191, 0.2) !important;
+        border-color: rgba(192, 132, 252, 0.35) !important;
+      }
+
+      .nav-item-v2:hover {
+        color: #fff !important;
+        transform: translateY(-1.5px) !important;
+      }
+
+      /* Filas de la tabla de clasificación con iluminación suave al pasar el ratón */
+      .ranking-list-item {
+        transition: background-color 0.18s ease, transform 0.18s ease !important;
+      }
+      .ranking-list-item:hover {
+        background-color: rgba(192, 132, 252, 0.08) !important;
+      }
+      .ranking-list-item.is-current-user:hover {
+        background-color: rgba(106, 44, 112, 0.55) !important;
+      }
+
+      /* Botones con sutil micro-interacción */
+      .btn, button {
+        transition: filter 0.2s ease, transform 0.15s ease, background 0.2s ease, border-color 0.2s ease !important;
+      }
+      .btn:hover:not(:disabled), button:hover:not(:disabled) {
+        filter: brightness(1.08) !important;
+      }
+      .btn:active:not(:disabled), button:active:not(:disabled) {
+        transform: scale(0.98) !important;
+      }
+    }
+
+    /* Scrollbars modernos oscuros estilo VCV Play */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #140718;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(192, 132, 252, 0.25);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(212, 175, 55, 0.5);
+    }
+    html {
+      scrollbar-color: rgba(192, 132, 252, 0.25) #140718;
+      scrollbar-width: thin;
+    }
+
+</style>
 </head>
 <body>
 
@@ -2212,7 +2512,7 @@
 
                 
 
-                <div id="appMessage" class="alert-box"></div>
+                <div id="appMessage" class="alert-box" style="display:none !important;"></div>
 
                 <button type="submit" id="btnSubmit" style="display:none !important;" aria-hidden="true"></button>
             </form>
@@ -2222,7 +2522,7 @@
         <div id="rankingEnConstruccion" style="padding: 60px 20px; text-align: center; color: var(--text-muted); display: none;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hammer" style="color: var(--vcv-dorado); margin-bottom: 16px;"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L13.586 10.586"/><path d="m18 10.5-2.5-2.5"/><path d="M12 21 3 12"/><path d="m12 6.5 2.5 2.5"/><path d="m19 11.5-8-8c-1-1-3-1-4 0a3.18 3.18 0 0 0 0 4.5l8 8c1 1 3 1 4 0a3.18 3.18 0 0 0 0-4.5z"/></svg><h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3><p>¡Estoy trabajando en implementar esto cuanto antes! 🚀</p></div>
             <div id="tablasClasificacionContainer"></div>
     </section>
-    <section id="enlacesRfevbSection" style=" padding-bottom:30px;">
+    <section id="enlacesRfevbSection">
 
 <div class="vcv-card" id="adminPanelWrapper" style="display: none; margin-bottom:20px; border: 2px dashed #e67e22; background: rgba(230, 126, 34, 0.08); border-radius: 16px; padding: 0; overflow: hidden;">
     <details id="adminMainDetails" style="width: 100%;">
@@ -2811,22 +3111,28 @@
     </details>
 </div>
 
-      <!-- TARJETA DE PERFIL PROPIO (Estilo popup de jugador) -->
-      <div id="myProfileCardContainer" style="margin-bottom: 20px;"></div>
+      <!-- CONTENEDOR GRID DASHBOARD DE PERFIL -->
+      <div class="perfil-dashboard-grid">
+        <div class="perfil-col-left">
+          <!-- TARJETA DE PERFIL PROPIO (Estilo popup de jugador) -->
+          <div id="myProfileCardContainer" style="margin-bottom: 20px;"></div>
 
-      <!-- TARJETA DE NOTIFICACIONES PUSH -->
-      <div id="userPushSettingsContainer" style="margin-bottom: 20px;"></div>
+          <!-- TARJETA DE NOTIFICACIONES PUSH -->
+          <div id="userPushSettingsContainer" style="margin-bottom: 20px;"></div>
+        </div>
 
-        <div style="background: var(--bg-general); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h3 style="font-size:1rem; margin-top:0; color:var(--vcv-morado); display:flex; align-items:center; gap:6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <div class="perfil-col-right">
+
+        <div class="vcv-card-v2" style="margin-bottom: 20px; border: 1px solid rgba(192, 132, 252, 0.2); background: linear-gradient(135deg, rgba(46, 16, 73, 0.35) 0%, rgba(26, 11, 38, 0.6) 100%); border-radius: 14px; padding: 18px;">
+          <h3 style="font-size: 1rem; font-weight: 800; margin-top: 0; margin-bottom: 8px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color);"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Recuperación de Cuenta (Opcional)
           </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
-          <div id="currentEmailDisplay" style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-main); display:none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
+          <div id="currentEmailDisplay" style="font-size: 0.82rem; margin-bottom: 10px; color: var(--secondary-color); background: rgba(212, 175, 55, 0.1); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.25); display: none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
           <form id="formSaveEmail">
-            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo" required style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--vcv-morado); color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(44,62,80,0.2);">Guardar Correo</button>
+            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo electrónico" required style="width: 100%; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: linear-gradient(135deg, var(--primary-color), #4a175f); color: white; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s;">💾 Guardar Correo</button>
           </form>
         </div>
 
@@ -3041,6 +3347,8 @@
           Tu sesión permanece guardada automáticamente en este dispositivo durante 30 días de actividad.
         </p>
       </div>
+        </div> <!-- /.perfil-col-right -->
+      </div> <!-- /.perfil-dashboard-grid -->
     
     </section>
     <section id="historialSection">
@@ -3099,7 +3407,7 @@
           <i data-lucide="external-link" style="width: 18px; height: 18px; color: var(--secondary-color);"></i>
           Enlaces Oficiales de Competición
         </h3>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="enlaces-grid" style="display: flex; flex-direction: column; gap: 10px;">
           <a href="https://rfevb.com/" target="_blank" class="btn" style="display:flex; justify-content: space-between; align-items:center; text-decoration: none; padding:14px; border-radius:12px; border: 1px solid var(--border-color); background: var(--bg-input); color:var(--text-main); font-weight:bold; font-size:0.85rem; transition: all 0.2s;">
             <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:1.2rem;">🌐</span>
@@ -3170,7 +3478,7 @@
         </div>
 
         <!-- Ventajas Grid / Showcase -->
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+        <div class="guest-benefits-grid" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
             <!-- Ventaja 1 -->
             <div class="vcv-card-v2" style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; margin-bottom: 0;">
                 <div style="width: 42px; height: 42px; min-width: 42px; border-radius: 12px; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.35); display: flex; align-items: center; justify-content: center;">
@@ -3448,12 +3756,12 @@
 <script src="js/config.js?v=20261030_v11"></script>
 <script src="js/admin.js?v=20261030_v11"></script>
 <script src="js/cartelera.js?v=20261031_v13"></script>
-<script src="js/ranking.js?v=20261030_v11"></script>
-<script src="js/calendario.js?v=20261031_v13"></script>
-<script src="js/cartelera_interactive.js?v=20261031_v19"></script>
-<script src="js/ui_gestures.js?v=20261030_v11"></script>
+<script src="js/ranking.js?v=20261031_v21"></script>
+<script src="js/calendario.js?v=20261031_v20"></script>
+<script src="js/cartelera_interactive.js?v=20261031_v20"></script>
+<script src="js/ui_gestures.js?v=20261031_v20"></script>
 <script src="js/auth.js?v=20261031_v12"></script>
-<script src="js/push_notifications.js?v=20261031_v22"></script>
+<script src="js/push_notifications.js?v=20261031_v24"></script>
 
 
 
