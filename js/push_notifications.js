@@ -445,6 +445,17 @@
             return;
         }
 
+        // Doble escudo: mientras Modo Pruebas esté activo, usuarios normales no ven la tarjeta
+        const isUserAdmin = Boolean(
+            (window.appData && window.appData.admin) ||
+            (window.appData && window.appData.insignias && window.appData.insignias["Admin Web"] === "X") ||
+            (document.getElementById('adminPanelWrapper'))
+        );
+        if (currentPushConfig.solo_admin && !isUserAdmin) {
+            container.innerHTML = '';
+            return;
+        }
+
         const supported = isPushSupported();
         let perm = supported ? Notification.permission : 'unsupported';
         await window.cargarEstadoPush();

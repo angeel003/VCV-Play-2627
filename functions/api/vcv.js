@@ -2361,6 +2361,14 @@ export async function onRequestPost(context) {
             if (row && row.Equipos_Permitidos) {
                 try { equiposCfg = JSON.parse(row.Equipos_Permitidos); } catch(e){}
             }
+            let soloAdmin = true;
+            try {
+                const rowModo = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'NOTIF_SOLO_ADMIN'").first();
+                if (rowModo && rowModo.valor !== undefined) {
+                    soloAdmin = (rowModo.valor === 'SI' || rowModo.valor === '1' || rowModo.valor === 'true');
+                }
+            } catch(e) {}
+
             let config = {
                 tiene_suscripcion: Boolean(row && row.Suscripcion_JSON && row.Suscripcion_JSON.length > 20),
                 opciones_2horas: row ? Boolean(row.Opciones_2Horas) : true,
@@ -2368,7 +2376,8 @@ export async function onRequestPost(context) {
                 opciones_solo_olvidos: row ? Boolean(row.Opciones_SoloOlvidos) : false,
                 equipos_config: equiposCfg,
                 equipos_permitidos: Array.isArray(equiposCfg) ? equiposCfg : Object.keys(equiposCfg),
-                public_key: pubKey
+                public_key: pubKey,
+                solo_admin: soloAdmin
             };
             return jsonResponse({ status: 'success', config });
         } catch(e) {
