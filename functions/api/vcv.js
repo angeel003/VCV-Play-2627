@@ -2569,6 +2569,12 @@ export async function onRequestPost(context) {
 
         const { results: permRows } = await db.prepare('SELECT * FROM "Permisos_Equipos"').all();
         const permMap = {};
+        const clubTeams = new Set();
+        if (permRows && permRows.length > 0) {
+            Object.keys(permRows[0]).forEach(k => {
+                if (k !== 'Jugador' && k !== 'id') clubTeams.add(k);
+            });
+        }
         for (const pr of permRows || []) permMap[pr.Jugador] = pr;
 
         const { results: insRows } = await db.prepare('SELECT * FROM "Insignias"').all();
@@ -2593,6 +2599,10 @@ export async function onRequestPost(context) {
             const riv = p.rival;
             const tipoLog = `2HORAS_${p.id_partido}`;
 
+            // Determinar si los equipos contendientes son del club VCV
+            const isClubLoc = clubTeams.has(loc);
+            const isClubRiv = clubTeams.has(riv);
+
             for (const subRow of subs) {
                 const u = subRow.Usuario;
                 const userIns = insMap[u] || {};
@@ -2609,11 +2619,19 @@ export async function onRequestPost(context) {
                 }
 
                 const uPerm = permMap[u] || {};
-                const hasLocPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X');
-                const hasRivPerm = isUserAdmin || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
-                if (!hasLocPerm && !hasRivPerm) continue;
+                const realLocPerm = Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X');
+                const realRivPerm = Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
 
-                const isDerby = (hasLocPerm && hasRivPerm);
+                // Si no es admin y no tiene permiso real para ninguno de los dos equipos, saltar
+                if (!isUserAdmin && !realLocPerm && !realRivPerm) {
+                    continue;
+                }
+
+                // Un partido es Derby SOLO si:
+                // 1. Viene marcado explícitamente en el partido (p.es_derby === true)
+                // 2. O ambos equipos son equipos del club VCV (isClubLoc && isClubRiv)
+                // 3. O el usuario tiene asignados ambos equipos con permiso 'X' (realLocPerm && realRivPerm)
+                const isDerby = Boolean(p.es_derby === true || (isClubLoc && isClubRiv) || (realLocPerm && realRivPerm));
 
                 // COMPROBACIÓN ESPECÍFICA POR EQUIPO (Equipos_Permitidos)
                 let userEqCfg = null;
@@ -2632,11 +2650,16 @@ export async function onRequestPost(context) {
                     return { activo: Boolean(val), solo_olvidos: false };
                 };
 
-                const locCfg = hasLocPerm ? getTeamSetting(loc) : { activo: false, solo_olvidos: false };
-                const rivCfg = hasRivPerm ? getTeamSetting(riv) : { activo: false, solo_olvidos: false };
+                // Evaluamos los equipos relevantes del usuario en este partido:
+                // Solo aplican los equipos que pertenecen al club o para los que el usuario tiene permiso real
+                const appliesLoc = realLocPerm || (isUserAdmin && isClubLoc);
+                const appliesRiv = realRivPerm || (isUserAdmin && isClubRiv);
 
-                // Si todos los equipos con permiso para este usuario están desactivados, saltar
-                if (!locCfg.activo && !rivCfg.activo) {
+                const locCfg = appliesLoc ? getTeamSetting(loc) : { activo: false, solo_olvidos: false };
+                const rivCfg = appliesRiv ? getTeamSetting(riv) : { activo: false, solo_olvidos: false };
+
+                // Si al menos uno de los equipos del partido aplica al usuario, comprobar si todos los aplicables están desactivados
+                if ((appliesLoc || appliesRiv) && !locCfg.activo && !rivCfg.activo) {
                     continue;
                 }
 
