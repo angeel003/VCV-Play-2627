@@ -2603,7 +2603,7 @@ export async function onRequestPost(context) {
                 );
 
                 if (!ignorarFiltros && shouldSkipPredicted && hasPredicted) {
-                    motivosOmision.push(`@${u}: ya pronosticó ${p.id_partido} y tiene activo 'Solo si aún no he pronosticado'`);
+                    motivosOmision.push(`@${u}: ya tiene predicción para ${p.id_partido} y tiene activo 'Solo si aún no tengo predicción'`);
                     continue;
                 }
 
@@ -2613,11 +2613,11 @@ export async function onRequestPost(context) {
                 let title = isDerby ? `🏐 ¡Derbi VCV en 2 horas!` : `🏐 ¡Tu partido empieza en 2 horas!`;
                 let bodyNotif = isDerby
                     ? (hasPredicted
-                        ? `Tienes pronosticado (${userPred.Sets}): Derbi ${loc} vs ${riv}. ¡A punto de comenzar!`
-                        : `⚠️ ¡Derbi entre tus equipos ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`)
+                        ? `Tu predicción (${userPred.Sets}): Derbi ${loc} vs ${riv}. ¡A punto de comenzar!`
+                        : `⚠️ ¡Derbi entre tus equipos ${loc} vs ${riv}! Entra a hacer tu predicción antes de que empiece.`)
                     : (hasPredicted
-                        ? `Tienes pronosticado (${userPred.Sets}): ${loc} vs ${riv}. ¡A punto de comenzar!`
-                        : `⚠️ ¡Aún no has pronosticado el ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`);
+                        ? `Tu predicción (${userPred.Sets}): ${loc} vs ${riv}. ¡A punto de comenzar!`
+                        : `⚠️ ¡Aún no tienes predicción para el ${loc} vs ${riv}! Entra antes de que empiece.`);
 
                 const payload = {
                     title: title,

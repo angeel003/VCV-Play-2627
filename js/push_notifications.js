@@ -491,7 +491,7 @@
                         </label>
                         <label style="display:flex; align-items:center; gap: 4px; margin: 0; cursor: pointer; white-space: nowrap;">
                             <input type="checkbox" class="chk-team-push-olvido" data-team="${t}" ${isTeamOlvido ? 'checked' : ''} ${!isTeamActivo ? 'disabled' : ''} onchange="window.guardarAjustesPush()" style="accent-color: #f59e0b; transform: scale(0.95); cursor:pointer;">
-                            <span style="font-size: 0.70rem; font-weight: 600; color: ${isTeamActivo ? '#f59e0b' : 'var(--text-muted)'};" title="Avisar solo si aún no has pronosticado en partidos de este equipo">Solo olvidos</span>
+                            <span style="font-size: 0.70rem; font-weight: 600; color: ${isTeamActivo ? '#f59e0b' : 'var(--text-muted)'};" title="Avisar solo si aún no has hecho tu predicción en partidos de este equipo">Solo olvidos</span>
                         </label>
                     </div>
                 `;
@@ -511,7 +511,7 @@
                 </div>
 
                 <p style="font-size: 0.78rem; color: #bfa9c9; margin: 0 0 14px 0; line-height: 1.4;">
-                    Recibe recordatorios automáticos en tu dispositivo antes de que comiencen los partidos de tus equipos para que nunca te quedes sin pronosticar.
+                    Recibe recordatorios automáticos en tu dispositivo antes de que comiencen los partidos de tus equipos para que nunca te quedes sin hacer tu predicción.
                 </p>
 
                 <!-- SWITCH PRINCIPAL: ACTIVAR EN ESTE DISPOSITIVO -->
