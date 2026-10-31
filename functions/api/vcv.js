@@ -37,7 +37,7 @@ function b64url(buf) {
     const bytes = new Uint8Array(buf);
     let str = "";
     for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
-    return btoa(str).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=/g, "");
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function fromB64url(str) {
@@ -49,20 +49,15 @@ function fromB64url(str) {
     return bytes;
 }
 
-function pubKeyToJwk(pubBytes) {
+function vapidToJwk(pubBytes, privBytes) {
     return {
         kty: "EC",
         crv: "P-256",
         x: b64url(pubBytes.slice(1, 33)),
         y: b64url(pubBytes.slice(33, 65)),
+        d: b64url(privBytes),
         ext: true
     };
-}
-
-function vapidToJwk(pubBytes, privBytes) {
-    const jwk = pubKeyToJwk(pubBytes);
-    jwk.d = b64url(privBytes);
-    return jwk;
 }
 
 async function createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes) {
@@ -85,7 +80,7 @@ async function createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes) {
 
     const encHeader = b64url(new TextEncoder().encode(JSON.stringify(header)));
     const encPayload = b64url(new TextEncoder().encode(JSON.stringify(payload)));
-    const dataToSign = new TextEncoder().encode(`${encHeader}.${encPayload}`);
+    const dataToSign = new TextEncoder().encode(encHeader + "." + encPayload);
 
     const signature = await crypto.subtle.sign(
         { name: "ECDSA", hash: { name: "SHA-256" } },
@@ -93,8 +88,8 @@ async function createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes) {
         dataToSign
     );
 
-    const jwt = `${encHeader}.${encPayload}.${b64url(signature)}`;
-    return `vapid t=${jwt}, k=${b64url(pubKeyBytes)}`;
+    const jwt = encHeader + "." + encPayload + "." + b64url(signature);
+    return "vapid t=" + jwt + ", k=" + b64url(pubKeyBytes);
 }
 
 async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBase64, payloadString) {
@@ -109,9 +104,10 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
     const localRawPub = await crypto.subtle.exportKey("raw", localKeyPair.publicKey);
     const localPubBytes = new Uint8Array(localRawPub);
 
+    // Importar directamente como clave pública ANSI X9.62 ECDH cruda (65 bytes)
     const subPubKey = await crypto.subtle.importKey(
-        "jwk",
-        pubKeyToJwk(subscriberPubBytes),
+        "raw",
+        subscriberPubBytes,
         { name: "ECDH", namedCurve: "P-256" },
         false,
         []
@@ -125,7 +121,7 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
 
     const salt = crypto.getRandomValues(new Uint8Array(16));
 
-    const keyInfoPrefix = new TextEncoder().encode("WebPush: info\\0");
+    const keyInfoPrefix = new TextEncoder().encode("WebPush: info\0");
     const keyInfo = new Uint8Array(keyInfoPrefix.length + 65 + 65);
     keyInfo.set(keyInfoPrefix, 0);
     keyInfo.set(subscriberPubBytes, keyInfoPrefix.length);
@@ -140,7 +136,7 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
 
     const prkKey = await crypto.subtle.importKey("raw", ikm, { name: "HKDF" }, false, ["deriveBits"]);
 
-    const cekInfo = new TextEncoder().encode("Content-Encoding: aes128gcm\\0");
+    const cekInfo = new TextEncoder().encode("Content-Encoding: aes128gcm\0");
     const cekBits = await crypto.subtle.deriveBits(
         { name: "HKDF", hash: "SHA-256", salt: salt, info: cekInfo },
         prkKey,
@@ -148,7 +144,7 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
     );
     const cek = await crypto.subtle.importKey("raw", cekBits, { name: "AES-GCM" }, false, ["encrypt"]);
 
-    const nonceInfo = new TextEncoder().encode("Content-Encoding: nonce\\0");
+    const nonceInfo = new TextEncoder().encode("Content-Encoding: nonce\0");
     const nonceBits = await crypto.subtle.deriveBits(
         { name: "HKDF", hash: "SHA-256", salt: salt, info: nonceInfo },
         prkKey,
@@ -179,39 +175,39 @@ async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBas
 }
 
 async function sendWebPushNotification(subObj, payloadObj, env) {
-    if (!subObj || !subObj.endpoint) {
-        return { success: false, error: "Subscripción inválida: falta endpoint" };
-    }
-
-    const pubKeyStr = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
-    const privKeyStr = (env && env.VAPID_PRIVATE_KEY) || DEFAULT_VAPID_PRIVATE;
-    const subject = (env && env.VAPID_SUBJECT) || DEFAULT_VAPID_SUBJECT;
-
-    const pubKeyBytes = fromB64url(pubKeyStr);
-    const privKeyBytes = fromB64url(privKeyStr);
-
-    const urlObj = new URL(subObj.endpoint);
-    const audience = `${urlObj.protocol}//${urlObj.host}`;
-
-    const vapidAuth = await createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes);
-
-    const jsonPayload = JSON.stringify(payloadObj);
-    let bodyData;
-    const headers = {
-        "TTL": "86400",
-        "Authorization": vapidAuth
-    };
-
-    if (subObj.keys && subObj.keys.p256dh && subObj.keys.auth) {
-        bodyData = await encryptPayloadAes128Gcm(subObj.keys.p256dh, subObj.keys.auth, jsonPayload);
-        headers["Content-Type"] = "application/octet-stream";
-        headers["Content-Encoding"] = "aes128gcm";
-    } else {
-        bodyData = jsonPayload;
-        headers["Content-Type"] = "application/json";
-    }
-
     try {
+        if (!subObj || !subObj.endpoint) {
+            return { success: false, error: "Suscripción inválida: falta endpoint" };
+        }
+
+        const pubKeyStr = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
+        const privKeyStr = (env && env.VAPID_PRIVATE_KEY) || DEFAULT_VAPID_PRIVATE;
+        const subject = (env && env.VAPID_SUBJECT) || DEFAULT_VAPID_SUBJECT;
+
+        const pubKeyBytes = fromB64url(pubKeyStr);
+        const privKeyBytes = fromB64url(privKeyStr);
+
+        const urlObj = new URL(subObj.endpoint);
+        const audience = urlObj.protocol + "//" + urlObj.host;
+
+        const vapidAuth = await createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes);
+
+        const jsonPayload = JSON.stringify(payloadObj);
+        let bodyData;
+        const headers = {
+            "TTL": "86400",
+            "Authorization": vapidAuth
+        };
+
+        if (subObj.keys && subObj.keys.p256dh && subObj.keys.auth) {
+            bodyData = await encryptPayloadAes128Gcm(subObj.keys.p256dh, subObj.keys.auth, jsonPayload);
+            headers["Content-Type"] = "application/octet-stream";
+            headers["Content-Encoding"] = "aes128gcm";
+        } else {
+            bodyData = jsonPayload;
+            headers["Content-Type"] = "application/json";
+        }
+
         const resp = await fetch(subObj.endpoint, {
             method: "POST",
             headers: headers,
@@ -225,6 +221,7 @@ async function sendWebPushNotification(subObj, payloadObj, env) {
             return { success: false, status: resp.status, error: errText, isExpired: (resp.status === 404 || resp.status === 410) };
         }
     } catch (e) {
+        console.error("sendWebPushNotification exception:", e);
         return { success: false, error: e.message };
     }
 }
@@ -2415,6 +2412,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'enviar_push_prueba_admin') {
+        try {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
@@ -2450,6 +2448,9 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: 'success', message: `✅ Notificación enviada con éxito a @${targetUser}` });
         } else {
             return jsonResponse({ status: 'error', message: `❌ Error enviando Push: ${pushRes.error || ('HTTP ' + pushRes.status)}` }, 500);
+        }
+        } catch(errPush) {
+            return jsonResponse({ status: 'error', message: 'Error procesando push: ' + errPush.message }, 500);
         }
     }
 
