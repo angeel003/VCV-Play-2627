@@ -2431,7 +2431,10 @@ export async function onRequestPost(context) {
         const testPayload = {
             title: body.titulo || "🏐 Notificación de Prueba VCV Play",
             body: body.mensaje || `¡Hola @${targetUser}! Las notificaciones Push nativas funcionan correctamente en tu dispositivo.`,
-            data: { url: "/dev.html" }
+            data: {
+                url: body.forzar_partido_id ? `/dev.html?partido=${body.forzar_partido_id}` : "/dev.html",
+                id_partido: body.forzar_partido_id || null
+            }
         };
 
         const pushRes = await sendWebPushNotification(subObj, testPayload, env);
@@ -2619,7 +2622,10 @@ export async function onRequestPost(context) {
                 const payload = {
                     title: title,
                     body: bodyNotif,
-                    data: { url: "/dev.html" }
+                    data: {
+                        url: `/dev.html?partido=${p.id_partido}`,
+                        id_partido: p.id_partido
+                    }
                 };
 
                 const pushRes = await sendWebPushNotification(subObj, payload, env);
