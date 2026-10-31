@@ -1133,8 +1133,14 @@
                         ${badgesHtml}
                     </div>
                 </div>
+
+                <!-- RECORDATORIOS Y NOTIFICACIONES PUSH -->
+                <div id="userPushSettingsContainer"></div>
             </div>
         `;
+        if (typeof window.renderUserPushSettings === 'function') {
+            window.renderUserPushSettings();
+        }
     };
 
     
