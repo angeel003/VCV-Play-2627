@@ -178,11 +178,10 @@
 
                 // Guardar suscripción y preferencias
                 const chk2h = document.getElementById('chkPush2Horas');
-                const chkOlv = document.getElementById('chkPushSoloOlvidos');
                 const chkVie = document.getElementById('chkPushViernes');
 
                 const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
-                const opOlv = chkOlv ? chkOlv.checked : currentPushConfig.opciones_solo_olvidos;
+                const opOlv = 0;
                 const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
                 const eqCfg = window.recopilarEquiposPushConfig();
 
@@ -319,8 +318,10 @@
     };
 
     window.pushMarcarTodosSoloOlvidos = function(activar) {
-        document.querySelectorAll('.chk-team-push-olvido').forEach(chk => {
-            if (!chk.disabled) chk.checked = activar;
+        const checkboxes = document.querySelectorAll('.chk-team-push-olvido');
+        const act = (activar !== undefined) ? activar : Array.from(checkboxes).some(c => !c.checked && !c.disabled);
+        checkboxes.forEach(chk => {
+            if (!chk.disabled) chk.checked = act;
         });
         window.guardarAjustesPush();
     };
@@ -333,11 +334,10 @@
         if (!usr || usr === 'lectura' || usr === 'Invitado') return;
 
         const chk2h = document.getElementById('chkPush2Horas');
-        const chkOlv = document.getElementById('chkPushSoloOlvidos');
         const chkVie = document.getElementById('chkPushViernes');
 
         const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
-        const opOlv = chkOlv ? chkOlv.checked : currentPushConfig.opciones_solo_olvidos;
+        const opOlv = 0;
         const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
         const eqCfg = window.recopilarEquiposPushConfig();
 
@@ -512,14 +512,7 @@
                             </div>
                         </label>
 
-                        <!-- MODO GLOBAL "SOLO SI HE OLVIDADO PRONOSTICAR" -->
-                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; margin-left: 26px; margin-top: 10px; user-select:none;">
-                            <input type="checkbox" id="chkPushSoloOlvidos" ${currentPushConfig.opciones_solo_olvidos ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.1); accent-color: #f59e0b; cursor:pointer;">
-                            <div>
-                                <div style="font-size: 0.80rem; font-weight: 700; color: #f59e0b;">⚠️ Avisarme solo si aún no he pronosticado</div>
-                                <div style="font-size: 0.70rem; color: var(--text-muted);">Si ya has guardado tu porra para ese partido, no te molestará.</div>
-                            </div>
-                        </label>
+
 
                         <!-- LISTA DE EQUIPOS PERSONALIZADA (PER-TEAM CONFIG) -->
                         <div id="pushEquiposCard" style="margin-top: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 8px; padding: 12px; display: ${currentPushConfig.opciones_2horas ? 'block' : 'none'};">
