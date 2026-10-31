@@ -238,7 +238,57 @@ export async function onRequestOptions() {
     });
 }
 
-export async function onRequestGet() {
+async function getNotificacionesPublicas(db) {
+    try {
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Notificaciones" (
+            "ID" INTEGER PRIMARY KEY AUTOINCREMENT,
+            "Titulo" TEXT,
+            "Mensaje" TEXT,
+            "Tipo" TEXT,
+            "Importancia" TEXT,
+            "Visibilidad" TEXT,
+            "timestamp" INTEGER
+        )`).run();
+
+        // Asegurar que la notificación de aviso de recordatorios push esté presente
+        const rowCheck = await db.prepare('SELECT "ID" FROM "Notificaciones" WHERE "Titulo" LIKE ?').bind('%Notificaciones%').first();
+        if (!rowCheck) {
+            await db.prepare('INSERT INTO "Notificaciones" ("Titulo", "Mensaje", "Tipo", "Importancia", "Visibilidad", "timestamp") VALUES (?, ?, ?, ?, ?, ?)')
+                .bind(
+                    '🔔 ¡Novedad! Recordatorios y Notificaciones',
+                    'Ya puedes recibir avisos automáticos 2 horas antes de los partidos de tus equipos para no quedarte sin hacer tus predicciones. ¡Actívalas y configúralas a tu gusto desde tu pestaña de Perfil!',
+                    'Aviso',
+                    'ALTA',
+                    'MOSTRAR',
+                    Date.now()
+                ).run();
+        }
+
+        const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
+        return results || [];
+    } catch (e) {
+        console.warn('Error fetching notificaciones:', e);
+        return [];
+    }
+}
+
+export async function onRequestGet(context) {
+    const { request, env } = context;
+    try {
+        const url = new URL(request.url);
+        const cronParam = url.searchParams.get("cron") || url.searchParams.get("action");
+        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas") {
+            const fakeContext = {
+                request: new Request(request.url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "cron_recordatorio_2horas" })
+                }),
+                env: env
+            };
+            return await onRequestPost(fakeContext);
+        }
+    } catch(e) {}
     return jsonResponse({ status: "ok", message: "VCV Cloudflare D1 API is online." });
 }
 
@@ -645,11 +695,7 @@ export async function onRequestPost(context) {
         }
 
         // Notificaciones públicas
-        let notificaciones = [];
-        try {
-            const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
-            notificaciones = results || [];
-        } catch (e) {}
+        let notificaciones = await getNotificacionesPublicas(db);
 
         return jsonResponse({
             status: "success",
@@ -1446,13 +1492,7 @@ export async function onRequestPost(context) {
         }
 
         // Fetch Notificaciones
-        let notificaciones = [];
-        try {
-            const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
-            notificaciones = results || [];
-        } catch (e) {
-            // Table might not exist yet
-        }
+        let notificaciones = await getNotificacionesPublicas(db);
 
         return jsonResponse({
             status: "success",

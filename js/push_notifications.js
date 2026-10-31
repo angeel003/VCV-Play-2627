@@ -576,6 +576,71 @@
         }
     };
 
+    // --- BANNER INFORMATIVO EN LA PESTAÑA PARTIDOS (DEBAJO DE 'HOLA USUARIO') ---
+    window.renderPushPromoBannerPartidos = function() {
+        const bannerContainer = document.getElementById('pushPromoBannerPartidos');
+        if (!bannerContainer) return;
+
+        // Si el usuario ya lo descartó, no mostrarlo
+        try {
+            if (localStorage.getItem('vcv_push_promo_dismissed') === 'true') {
+                bannerContainer.innerHTML = '';
+                return;
+            }
+        } catch(e) {}
+
+        const usr = window.currentUser || (window.appData && window.appData.usuario);
+        if (!usr || usr === 'lectura' || usr === 'Invitado') {
+            bannerContainer.innerHTML = '';
+            return;
+        }
+
+        // Si ya está suscrito en este dispositivo, ocultar el aviso promocional
+        if (currentPushConfig && currentPushConfig.dispositivo_suscrito) {
+            bannerContainer.innerHTML = '';
+            return;
+        }
+
+        bannerContainer.innerHTML = `
+            <div id="pushPromoBannerCard" style="background: linear-gradient(135deg, rgba(93, 23, 137, 0.45) 0%, rgba(28, 10, 38, 0.9) 100%); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 12px 14px; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.25); margin-bottom: 12px; animation: fadeIn 0.4s ease-out;">
+                <button type="button" onclick="window.dismissPushPromoBanner()" title="Ocultar aviso" style="position: absolute; top: 6px; right: 8px; background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; line-height: 1; cursor: pointer; padding: 2px 6px; border-radius: 4px;">&times;</button>
+                <div style="display:flex; align-items:flex-start; gap: 10px; padding-right: 18px;">
+                    <span style="font-size: 1.35rem; flex-shrink: 0; margin-top: 1px; display:inline-block; animation: pulse 2s infinite;">🔔</span>
+                    <div style="min-width: 0;">
+                        <strong style="color: #f5c542; font-size: 0.88rem; display: block; margin-bottom: 3px; font-weight: 800; letter-spacing: 0.2px;">
+                            ¡Nuevo! Recordatorios 2 horas antes
+                        </strong>
+                        <p style="color: #e2e8f0; font-size: 0.77rem; margin: 0 0 8px 0; line-height: 1.4;">
+                            Recibe un aviso automático en tu móvil u ordenador antes de los partidos de tus equipos para que nunca te quedes sin hacer tus predicciones.
+                        </p>
+                        <button type="button" onclick="window.irAjustesNotificacionesPerfil()" style="background: linear-gradient(90deg, #d4af37, #f5c542); color: #000; border: none; border-radius: 8px; padding: 6px 14px; font-size: 0.76rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);">
+                            <span>⚙️ Configurar en mi Perfil</span>
+                            <span style="font-size: 0.85rem;">&rarr;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    window.dismissPushPromoBanner = function() {
+        try { localStorage.setItem('vcv_push_promo_dismissed', 'true'); } catch(e) {}
+        const b = document.getElementById('pushPromoBannerPartidos');
+        if (b) b.innerHTML = '';
+    };
+
+    window.irAjustesNotificacionesPerfil = function() {
+        if (typeof window.switchTabV2 === 'function') {
+            window.switchTabV2('perfil');
+        } else if (typeof window.switchTab === 'function') {
+            window.switchTab('perfil');
+        }
+        setTimeout(() => {
+            const el = document.getElementById('userPushSettingsContainer');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+    };
+
     // --- RENDERIZAR INTERFAZ DE USUARIO EN LA PESTAÑA PERFIL ---
     window.renderUserPushSettings = async function() {
         const container = document.getElementById('userPushSettingsContainer');
@@ -1128,6 +1193,7 @@
 
     // Ejecutar render automáticamente al cargar
     setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 100);
+    setTimeout(() => { if (typeof window.renderPushPromoBannerPartidos === 'function') window.renderPushPromoBannerPartidos(); }, 150);
     setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 800);
     setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 2000);
 

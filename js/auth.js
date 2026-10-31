@@ -543,6 +543,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
               </div>
             </div>`;
             document.getElementById('perfilUsuarioTop').innerHTML = htmlPerfil;
+            if (typeof window.renderPushPromoBannerPartidos === 'function') window.renderPushPromoBannerPartidos();
             if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 20);
             if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 20);
             
@@ -1017,4 +1018,4 @@ if (document.readyState === 'loading') {
 } else {
     window.verificarAutoLogin();
 }
-
+
