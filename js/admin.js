@@ -211,6 +211,9 @@ ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); 
     if (typeof window.populateDirectMvpBoxes === 'function') {
         window.populateDirectMvpBoxes();
     }
+    if (typeof window.initAdminPushPanel === 'function') {
+        window.initAdminPushPanel();
+    }
 }
 
 window.getJugadorPhotoUrl = function(dorsal) {

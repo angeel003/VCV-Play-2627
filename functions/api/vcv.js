@@ -24,6 +24,212 @@ function getMadridTimestamp(year, month, day, hour, minute) {
     return d.getTime() - diffMs;
 }
 
+
+// ============================================================================
+// 🔔 SISTEMA WEB PUSH (RFC 8291 / RFC 8292) - 100% WEB CRYPTO NATIVO
+// ============================================================================
+
+const DEFAULT_VAPID_PUBLIC = "BC2qOrSTAHeNqSis_RChG_ycGZ0SY1bTIgJbRr7etA9D6z0XgIZqNdR-1jwLn99sKtaJvuganWgIwUnFRUYd_1U";
+const DEFAULT_VAPID_PRIVATE = "RdKwpMLygVN-810zd21qVNUx93NKqMGmqL8CQmuCLvE";
+const DEFAULT_VAPID_SUBJECT = "mailto:soporte@vcvplay.com";
+
+function b64url(buf) {
+    const bytes = new Uint8Array(buf);
+    let str = "";
+    for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+    return btoa(str).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=/g, "");
+}
+
+function fromB64url(str) {
+    str = (str || "").replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) str += "=";
+    const binary = atob(str);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+}
+
+function pubKeyToJwk(pubBytes) {
+    return {
+        kty: "EC",
+        crv: "P-256",
+        x: b64url(pubBytes.slice(1, 33)),
+        y: b64url(pubBytes.slice(33, 65)),
+        ext: true
+    };
+}
+
+function vapidToJwk(pubBytes, privBytes) {
+    const jwk = pubKeyToJwk(pubBytes);
+    jwk.d = b64url(privBytes);
+    return jwk;
+}
+
+async function createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes) {
+    const jwk = vapidToJwk(pubKeyBytes, privKeyBytes);
+    const privKey = await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        { name: "ECDSA", namedCurve: "P-256" },
+        false,
+        ["sign"]
+    );
+
+    const header = { alg: "ES256", typ: "JWT" };
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+        aud: audience,
+        exp: now + 43200,
+        sub: subject
+    };
+
+    const encHeader = b64url(new TextEncoder().encode(JSON.stringify(header)));
+    const encPayload = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+    const dataToSign = new TextEncoder().encode(`${encHeader}.${encPayload}`);
+
+    const signature = await crypto.subtle.sign(
+        { name: "ECDSA", hash: { name: "SHA-256" } },
+        privKey,
+        dataToSign
+    );
+
+    const jwt = `${encHeader}.${encPayload}.${b64url(signature)}`;
+    return `vapid t=${jwt}, k=${b64url(pubKeyBytes)}`;
+}
+
+async function encryptPayloadAes128Gcm(subscriberP256dhBase64, subscriberAuthBase64, payloadString) {
+    const subscriberPubBytes = fromB64url(subscriberP256dhBase64);
+    const subscriberAuthBytes = fromB64url(subscriberAuthBase64);
+
+    const localKeyPair = await crypto.subtle.generateKey(
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveBits"]
+    );
+    const localRawPub = await crypto.subtle.exportKey("raw", localKeyPair.publicKey);
+    const localPubBytes = new Uint8Array(localRawPub);
+
+    const subPubKey = await crypto.subtle.importKey(
+        "jwk",
+        pubKeyToJwk(subscriberPubBytes),
+        { name: "ECDH", namedCurve: "P-256" },
+        false,
+        []
+    );
+
+    const sharedSecret = await crypto.subtle.deriveBits(
+        { name: "ECDH", public: subPubKey },
+        localKeyPair.privateKey,
+        256
+    );
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+
+    const keyInfoPrefix = new TextEncoder().encode("WebPush: info\\0");
+    const keyInfo = new Uint8Array(keyInfoPrefix.length + 65 + 65);
+    keyInfo.set(keyInfoPrefix, 0);
+    keyInfo.set(subscriberPubBytes, keyInfoPrefix.length);
+    keyInfo.set(localPubBytes, keyInfoPrefix.length + 65);
+
+    const authKey = await crypto.subtle.importKey("raw", subscriberAuthBytes, { name: "HKDF" }, false, ["deriveBits"]);
+    const ikm = await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt: sharedSecret, info: keyInfo },
+        authKey,
+        256
+    );
+
+    const prkKey = await crypto.subtle.importKey("raw", ikm, { name: "HKDF" }, false, ["deriveBits"]);
+
+    const cekInfo = new TextEncoder().encode("Content-Encoding: aes128gcm\\0");
+    const cekBits = await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt: salt, info: cekInfo },
+        prkKey,
+        128
+    );
+    const cek = await crypto.subtle.importKey("raw", cekBits, { name: "AES-GCM" }, false, ["encrypt"]);
+
+    const nonceInfo = new TextEncoder().encode("Content-Encoding: nonce\\0");
+    const nonceBits = await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt: salt, info: nonceInfo },
+        prkKey,
+        96
+    );
+    const nonce = new Uint8Array(nonceBits);
+
+    const plainBytes = new TextEncoder().encode(payloadString);
+    const padded = new Uint8Array(plainBytes.length + 1);
+    padded.set(plainBytes, 0);
+    padded[plainBytes.length] = 2; // Delimiter RFC 8291
+
+    const ciphertext = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: nonce, tagLength: 128 },
+        cek,
+        padded
+    );
+    const cipherBytes = new Uint8Array(ciphertext);
+
+    const body = new Uint8Array(16 + 4 + 1 + 65 + cipherBytes.length);
+    body.set(salt, 0);
+    body[16] = 0; body[17] = 0; body[18] = 0x10; body[19] = 0; // 4096
+    body[20] = 65;
+    body.set(localPubBytes, 21);
+    body.set(cipherBytes, 86);
+
+    return body;
+}
+
+async function sendWebPushNotification(subObj, payloadObj, env) {
+    if (!subObj || !subObj.endpoint) {
+        return { success: false, error: "Subscripción inválida: falta endpoint" };
+    }
+
+    const pubKeyStr = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
+    const privKeyStr = (env && env.VAPID_PRIVATE_KEY) || DEFAULT_VAPID_PRIVATE;
+    const subject = (env && env.VAPID_SUBJECT) || DEFAULT_VAPID_SUBJECT;
+
+    const pubKeyBytes = fromB64url(pubKeyStr);
+    const privKeyBytes = fromB64url(privKeyStr);
+
+    const urlObj = new URL(subObj.endpoint);
+    const audience = `${urlObj.protocol}//${urlObj.host}`;
+
+    const vapidAuth = await createVapidHeader(audience, subject, pubKeyBytes, privKeyBytes);
+
+    const jsonPayload = JSON.stringify(payloadObj);
+    let bodyData;
+    const headers = {
+        "TTL": "86400",
+        "Authorization": vapidAuth
+    };
+
+    if (subObj.keys && subObj.keys.p256dh && subObj.keys.auth) {
+        bodyData = await encryptPayloadAes128Gcm(subObj.keys.p256dh, subObj.keys.auth, jsonPayload);
+        headers["Content-Type"] = "application/octet-stream";
+        headers["Content-Encoding"] = "aes128gcm";
+    } else {
+        bodyData = jsonPayload;
+        headers["Content-Type"] = "application/json";
+    }
+
+    try {
+        const resp = await fetch(subObj.endpoint, {
+            method: "POST",
+            headers: headers,
+            body: bodyData
+        });
+
+        if (resp.status === 201 || resp.status === 200 || resp.status === 202) {
+            return { success: true, status: resp.status };
+        } else {
+            const errText = await resp.text();
+            return { success: false, status: resp.status, error: errText, isExpired: (resp.status === 404 || resp.status === 410) };
+        }
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+
 export async function onRequestOptions() {
     return new Response(null, {
         headers: {
@@ -2090,6 +2296,355 @@ export async function onRequestPost(context) {
         }
 
         return jsonResponse({ status: 'success', message: `Permisos actualizados para @${target_usuario}` });
+    }
+
+    
+    // -------------------------------------------------------------
+    // 🔔 ACCIONES DE NOTIFICACIONES WEB PUSH
+    // -------------------------------------------------------------
+
+    if (action === 'get_vapid_public_key') {
+        const pubKey = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
+        return jsonResponse({ status: 'success', public_key: pubKey });
+    }
+
+    if (action === 'guardar_suscripcion_push') {
+        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_config, equipos_permitidos } = body;
+        if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
+        if (!suscripcion) return jsonResponse({ status: 'error', message: 'Datos de suscripción requeridos' }, 400);
+
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
+                "Usuario" TEXT PRIMARY KEY,
+                "Suscripcion_JSON" TEXT NOT NULL,
+                "Opciones_Viernes" INTEGER DEFAULT 1,
+                "Opciones_2Horas" INTEGER DEFAULT 1,
+                "Opciones_SoloOlvidos" INTEGER DEFAULT 0,
+                "Equipos_Permitidos" TEXT DEFAULT '{}',
+                "Ultima_Actualizacion" TEXT
+            )`).run();
+
+            const subJson = typeof suscripcion === 'string' ? suscripcion : JSON.stringify(suscripcion);
+            const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
+            const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
+            const opOlv = (opciones_solo_olvidos !== undefined) ? (opciones_solo_olvidos ? 1 : 0) : 0;
+            const rawEq = (equipos_config !== undefined) ? equipos_config : equipos_permitidos;
+            const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
+            const nowIso = new Date().toISOString();
+
+            await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push" 
+                ("Usuario", "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Equipos_Permitidos", "Ultima_Actualizacion")
+                VALUES (?, ?, ?, ?, ?, ?, ?)`
+            ).bind(usuario, subJson, opVie, op2h, opOlv, eqPerm, nowIso).run();
+
+            return jsonResponse({ status: 'success', message: 'Suscripción y preferencias guardadas correctamente' });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: 'Error guardando suscripción: ' + e.message }, 500);
+        }
+    }
+
+    if (action === 'obtener_config_push') {
+        if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
+        const pubKey = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
+
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
+                "Usuario" TEXT PRIMARY KEY,
+                "Suscripcion_JSON" TEXT NOT NULL,
+                "Opciones_Viernes" INTEGER DEFAULT 1,
+                "Opciones_2Horas" INTEGER DEFAULT 1,
+                "Opciones_SoloOlvidos" INTEGER DEFAULT 0,
+                "Equipos_Permitidos" TEXT DEFAULT '{}',
+                "Ultima_Actualizacion" TEXT
+            )`).run();
+
+            const row = await db.prepare('SELECT * FROM "Suscripciones_Push" WHERE "Usuario" = ?').bind(usuario).first();
+            let equiposCfg = {};
+            if (row && row.Equipos_Permitidos) {
+                try { equiposCfg = JSON.parse(row.Equipos_Permitidos); } catch(e){}
+            }
+            let config = {
+                tiene_suscripcion: Boolean(row && row.Suscripcion_JSON && row.Suscripcion_JSON.length > 20),
+                opciones_2horas: row ? Boolean(row.Opciones_2Horas) : true,
+                opciones_viernes: row ? Boolean(row.Opciones_Viernes) : true,
+                opciones_solo_olvidos: row ? Boolean(row.Opciones_SoloOlvidos) : false,
+                equipos_config: equiposCfg,
+                equipos_permitidos: Array.isArray(equiposCfg) ? equiposCfg : Object.keys(equiposCfg),
+                public_key: pubKey
+            };
+            return jsonResponse({ status: 'success', config });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
+    if (action === 'eliminar_suscripcion_push') {
+        if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
+        try {
+            await db.prepare('UPDATE "Suscripciones_Push" SET "Opciones_2Horas" = 0, "Opciones_Viernes" = 0, "Suscripcion_JSON" = "" WHERE "Usuario" = ?').bind(usuario).run();
+            return jsonResponse({ status: 'success', message: 'Notificaciones desactivadas para este usuario' });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
+    if (action === 'get_modo_pruebas_notif') {
+        let soloAdmin = true;
+        try {
+            const row = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'NOTIF_SOLO_ADMIN'").first();
+            if (row && row.valor !== undefined) {
+                soloAdmin = (row.valor === 'SI' || row.valor === '1' || row.valor === 'true');
+            }
+        } catch(e) {}
+        return jsonResponse({ status: 'success', solo_admin: soloAdmin });
+    }
+
+    if (action === 'set_modo_pruebas_notif') {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const soloAdminVal = (body.solo_admin === true || body.solo_admin === 'SI' || body.solo_admin === 1) ? 'SI' : 'NO';
+        try {
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('NOTIF_SOLO_ADMIN', ?, ?)").bind(soloAdminVal, Date.now()).run();
+            return jsonResponse({ status: 'success', message: `Modo pruebas actualizado: ${soloAdminVal === 'SI' ? 'Activado (Solo Administradores)' : 'Desactivado (Todos los usuarios)'}`, solo_admin: soloAdminVal === 'SI' });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
+    }
+
+    if (action === 'enviar_push_prueba_admin') {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const targetUser = (body.target_usuario || usuario).trim();
+        const subRow = await db.prepare('SELECT Suscripcion_JSON FROM "Suscripciones_Push" WHERE "Usuario" = ?').bind(targetUser).first();
+        if (!subRow || !subRow.Suscripcion_JSON || subRow.Suscripcion_JSON.length < 20) {
+            return jsonResponse({ status: 'error', message: `El usuario @${targetUser} no tiene ninguna suscripción Push registrada en su dispositivo aún.` }, 400);
+        }
+
+        let subObj;
+        try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { return jsonResponse({ status: 'error', message: 'Formato de suscripción corrupto' }, 500); }
+
+        const testPayload = {
+            title: body.titulo || "🏐 Notificación de Prueba VCV Play",
+            body: body.mensaje || `¡Hola @${targetUser}! Las notificaciones Push nativas funcionan correctamente en tu dispositivo.`,
+            data: { url: "/dev.html" }
+        };
+
+        const pushRes = await sendWebPushNotification(subObj, testPayload, env);
+
+        const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Notificaciones" (
+                "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
+            )`).run();
+            await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                .bind(targetUser, 'PRUEBA_ADMIN', testPayload.title, testPayload.body, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
+        } catch(e) {}
+
+        if (pushRes.success) {
+            return jsonResponse({ status: 'success', message: `✅ Notificación enviada con éxito a @${targetUser}` });
+        } else {
+            return jsonResponse({ status: 'error', message: `❌ Error enviando Push: ${pushRes.error || ('HTTP ' + pushRes.status)}` }, 500);
+        }
+    }
+
+    if (action === 'cron_recordatorio_2horas') {
+        let isTriggeredByAdmin = false;
+        if (usuario && password) {
+            const adminCheck = await db.prepare('SELECT i."Admin Web" FROM "Usuarios" u LEFT JOIN "Insignias" i ON u.Usuario = i.Usuario WHERE u.Usuario = ? AND u.Password = ?').bind(usuario, password).first();
+            if (adminCheck && adminCheck["Admin Web"] === "X") isTriggeredByAdmin = true;
+        }
+
+        let soloAdmin = true;
+        try {
+            const rowModo = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'NOTIF_SOLO_ADMIN'").first();
+            if (rowModo && rowModo.valor !== undefined) {
+                soloAdmin = (rowModo.valor === 'SI' || rowModo.valor === '1' || rowModo.valor === 'true');
+            }
+        } catch(e) {}
+        if (body.solo_admin !== undefined) {
+            soloAdmin = Boolean(body.solo_admin);
+        }
+
+        const now = Date.now();
+        const margenMinutos = parseInt(body.margen_minutos) || 135;
+        const maxTs = now + (margenMinutos * 60 * 1000);
+
+        const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes" WHERE "Visibilidad" = \'MOSTRAR\'').all();
+        const resMap = {};
+        const partidos = (rawPartidos || []).map(r => formatMatch(r, resMap));
+
+        let partidosObjetivo = [];
+        if (body.forzar_partido_id) {
+            partidosObjetivo = partidos.filter(p => p.id_partido === body.forzar_partido_id);
+        } else {
+            partidosObjetivo = partidos.filter(p => p.timestamp && p.timestamp > now && p.timestamp <= maxTs);
+        }
+
+        if (partidosObjetivo.length === 0) {
+            return jsonResponse({
+                status: 'success',
+                message: 'No hay partidos programados en las próximas 2 horas.',
+                partidos_encontrados: 0,
+                enviados: 0,
+                solo_admin: soloAdmin
+            });
+        }
+
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
+            "Usuario" TEXT PRIMARY KEY, "Suscripcion_JSON" TEXT NOT NULL, "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1, "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Equipos_Permitidos" TEXT DEFAULT '[]', "Ultima_Actualizacion" TEXT
+        )`).run();
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Notificaciones" (
+            "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
+        )`).run();
+
+        const { results: subs } = await db.prepare('SELECT * FROM "Suscripciones_Push" WHERE "Opciones_2Horas" = 1 AND LENGTH("Suscripcion_JSON") > 20').all();
+        if (!subs || subs.length === 0) {
+            return jsonResponse({
+                status: 'success',
+                message: 'Hay partidos en 2 horas, pero ningún usuario tiene activada la suscripción de 2h.',
+                partidos_encontrados: partidosObjetivo.length,
+                enviados: 0,
+                solo_admin: soloAdmin
+            });
+        }
+
+        const { results: permRows } = await db.prepare('SELECT * FROM "Permisos_Equipos"').all();
+        const permMap = {};
+        for (const pr of permRows || []) permMap[pr.Jugador] = pr;
+
+        const { results: insRows } = await db.prepare('SELECT * FROM "Insignias"').all();
+        const insMap = {};
+        for (const ir of insRows || []) insMap[ir.Usuario] = ir;
+
+        const { results: allPorras } = await db.prepare('SELECT * FROM "Porras"').all();
+        const porrasMap = {};
+        for (const po of allPorras || []) porrasMap[`${po.Usuario}_${po["ID Partido"]}`] = po;
+
+        const { results: recentLogs } = await db.prepare('SELECT Usuario, Tipo FROM "Log_Notificaciones" WHERE "Estado" = \'ENVIADO\'').all();
+        const sentSet = new Set((recentLogs || []).map(l => `${l.Usuario}_${l.Tipo}`));
+
+        let totalEnviados = 0;
+        let detalleEnvios = [];
+        const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+
+        for (const p of partidosObjetivo) {
+            const loc = p.equipo_local;
+            const riv = p.rival;
+            const tipoLog = `2HORAS_${p.id_partido}`;
+
+            for (const subRow of subs) {
+                const u = subRow.Usuario;
+                const userIns = insMap[u] || {};
+                const isUserAdmin = (userIns["Admin Web"] === "X");
+
+                // FILTRO CLAVE: Si el modo pruebas está activo, SOLO enviar a administradores
+                if (soloAdmin && !isUserAdmin) {
+                    continue;
+                }
+
+                if (sentSet.has(`${u}_${tipoLog}`)) {
+                    continue;
+                }
+
+                const uPerm = permMap[u] || {};
+                const hasTeamPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X') || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
+                if (!hasTeamPerm) continue;
+
+                // COMPROBACIÓN ESPECÍFICA POR EQUIPO (Equipos_Permitidos)
+                let userEqCfg = null;
+                if (subRow.Equipos_Permitidos) {
+                    try { userEqCfg = JSON.parse(subRow.Equipos_Permitidos); } catch(e) {}
+                }
+
+                // Determinar el equipo del usuario en este partido
+                const teamKey = (userEqCfg && userEqCfg[loc] !== undefined) ? loc : ((userEqCfg && userEqCfg[riv] !== undefined) ? riv : loc);
+                const cfgForTeam = userEqCfg ? userEqCfg[teamKey] : null;
+
+                // Si el usuario configuró el equipo y lo tiene desactivado, saltar
+                if (cfgForTeam !== null && cfgForTeam !== undefined) {
+                    if (typeof cfgForTeam === 'object' && cfgForTeam.activo === false) {
+                        continue; // Desactivado para este equipo específico
+                    } else if (cfgForTeam === false) {
+                        continue;
+                    }
+                } else if (Array.isArray(userEqCfg) && userEqCfg.length > 0) {
+                    if (!userEqCfg.includes(loc) && !userEqCfg.includes(riv)) {
+                        continue;
+                    }
+                }
+
+                const userPred = porrasMap[`${u}_${p.id_partido}`];
+                const hasPredicted = Boolean(userPred && userPred.Sets);
+
+                // Comprobar filtro "Solo si aún no he pronosticado" (específico por equipo o global):
+                const teamSoloOlvidos = (typeof cfgForTeam === 'object' && cfgForTeam.solo_olvidos !== undefined)
+                    ? Boolean(cfgForTeam.solo_olvidos)
+                    : Boolean(subRow.Opciones_SoloOlvidos);
+
+                if (teamSoloOlvidos && hasPredicted) {
+                    continue;
+                }
+
+                let subObj;
+                try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { continue; }
+
+                let title = `🏐 ¡Tu partido empieza en 2 horas!`;
+                let bodyNotif = hasPredicted
+                    ? `Tienes pronosticado (${userPred.Sets}): ${loc} vs ${riv}. ¡A punto de comenzar!`
+                    : `⚠️ ¡Aún no has pronosticado el ${loc} vs ${riv}! Entra a pronosticar antes de que empiece.`;
+
+                const payload = {
+                    title: title,
+                    body: bodyNotif,
+                    data: { url: "/dev.html" }
+                };
+
+                const pushRes = await sendWebPushNotification(subObj, payload, env);
+
+                await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(u, tipoLog, title, bodyNotif, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
+
+                if (pushRes.success) {
+                    totalEnviados++;
+                    sentSet.add(`${u}_${tipoLog}`);
+                    detalleEnvios.push({ usuario: u, partido: p.id_partido, estado: 'ENVIADO' });
+                } else {
+                    detalleEnvios.push({ usuario: u, partido: p.id_partido, estado: 'FALLIDO', error: pushRes.error });
+                }
+            }
+        }
+
+        return jsonResponse({
+            status: 'success',
+            message: `Proceso completado: ${totalEnviados} notificaciones enviadas.`,
+            partidos_encontrados: partidosObjetivo.length,
+            enviados: totalEnviados,
+            solo_admin: soloAdmin,
+            detalles: detalleEnvios
+        });
+    }
+
+    if (action === 'obtener_log_notificaciones') {
+        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        try {
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Notificaciones" (
+                "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
+            )`).run();
+            const { results } = await db.prepare('SELECT * FROM "Log_Notificaciones" ORDER BY "ID" DESC LIMIT 50').all();
+            return jsonResponse({ status: 'success', logs: results || [] });
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: e.message }, 500);
+        }
     }
 
     return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
