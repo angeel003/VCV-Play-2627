@@ -118,11 +118,12 @@
             if (typeof fetchSeguro === 'function' && window.scriptURL) {
                 const res = await fetchSeguro(window.scriptURL, {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'obtener_config_push',
                         usuario: usr,
                         password: pwd
-                    }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    })
                 });
                 const data = await res.json();
                 if (data && data.status === 'success' && data.config) {
@@ -223,11 +224,12 @@
                 try {
                     const res = await fetchSeguro(window.scriptURL, {
                         method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
                             action: 'guardar_suscripcion_push',
                             usuario: usr,
                             password: pwd,
-                            suscripcion: sub.toJSON(), headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            suscripcion: sub.toJSON(),
                             opciones_2horas: op2h,
                             opciones_solo_olvidos: opOlv,
                             opciones_viernes: opVie,
@@ -276,11 +278,12 @@
                 try {
                     await fetchSeguro(window.scriptURL, {
                         method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
                             action: 'eliminar_suscripcion_push',
                             usuario: usr,
                             password: pwd
-                        }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                        })
                     });
                 } catch(e) {}
 
@@ -399,11 +402,12 @@
         try {
             const res = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'guardar_suscripcion_push',
                     usuario: usr,
                     password: pwd,
-                    suscripcion: sub ? sub.toJSON(), headers: { 'Content-Type': 'text/plain;charset=utf-8' } : 'dummy_pref_only',
+                    suscripcion: sub ? sub.toJSON() : 'dummy_pref_only',
                     opciones_2horas: op2h,
                     opciones_solo_olvidos: opOlv,
                     opciones_viernes: opVie,
@@ -606,7 +610,8 @@
         try {
             const resModo = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'get_modo_pruebas_notif', usuario: usr, password: pwd }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'get_modo_pruebas_notif', usuario: usr, password: pwd })
             });
             const dataModo = await resModo.json();
             const swModo = document.getElementById('adminSoloAdminsPushSwitch');
@@ -650,12 +655,13 @@
         try {
             const res = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'set_modo_pruebas_notif',
                     usuario: usr,
                     password: pwd,
                     solo_admin: activarSoloAdmin
-                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -694,6 +700,7 @@
         try {
             const res = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'enviar_push_prueba_admin',
                     usuario: usr,
@@ -701,7 +708,7 @@
                     target_usuario: usr,
                     titulo: '🏐 VCV Play - Notificación de Prueba',
                     mensaje: `¡Hola @${usr}! Tu navegador y dispositivo reciben alertas nativas a la perfección.`
-                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -743,12 +750,13 @@
         try {
             const res = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'cron_recordatorio_2horas',
                     usuario: usr,
                     password: pwd,
                     forzar_partido_id: forzarId
-                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -785,11 +793,12 @@
         try {
             const res = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({
                     action: 'obtener_log_notificaciones',
                     usuario: usr,
                     password: pwd
-                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
             });
             const data = await res.json();
             if (data && data.status === 'success' && Array.isArray(data.logs)) {
