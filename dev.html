@@ -2078,9 +2078,16 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
         height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      #contenedorPartidos .vcv-card-v2.is-hidden,
+      #contenedorPartidos .vcv-card-v2[style*="display: none"],
+      #contenedorPartidos .vcv-card-v2[style*="display:none"],
+      #contenedorPartidos .card.mb-3[style*="display: none"],
+      #contenedorPartidos .card.mb-3[style*="display:none"] {
+        display: none !important;
       }
 
       /* Filtro de categorías centrado en pantallas grandes */
@@ -2134,9 +2141,14 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
         height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      #calendarResults .vcv-card-v2.is-hidden,
+      #calendarResults .vcv-card-v2[style*="display: none"],
+      #calendarResults .vcv-card-v2[style*="display:none"] {
+        display: none !important;
       }
       .calendar-date-separator {
         grid-column: 1 / -1 !important;
@@ -2163,9 +2175,14 @@
         max-width: 100% !important;
         margin-bottom: 0 !important;
         height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .historial-matches-grid .vcv-card-v2.is-hidden,
+      .historial-matches-grid .vcv-card-v2[style*="display: none"],
+      .historial-matches-grid .vcv-card-v2[style*="display:none"] {
+        display: none !important;
       }
 
       /* PESTAÑA CLASIFICACIONES: Podio con mayor presencia y centrado */
@@ -3741,8 +3758,8 @@
 <script src="js/cartelera.js?v=20261031_v13"></script>
 <script src="js/ranking.js?v=20261031_v20"></script>
 <script src="js/calendario.js?v=20261031_v20"></script>
-<script src="js/cartelera_interactive.js?v=20261031_v19"></script>
-<script src="js/ui_gestures.js?v=20261030_v11"></script>
+<script src="js/cartelera_interactive.js?v=20261031_v20"></script>
+<script src="js/ui_gestures.js?v=20261031_v20"></script>
 <script src="js/auth.js?v=20261031_v12"></script>
 <script src="js/push_notifications.js?v=20261031_v23_dev"></script>
 

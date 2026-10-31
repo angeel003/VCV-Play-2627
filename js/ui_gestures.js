@@ -224,7 +224,7 @@ window.aplicarIndicesBD = async function(e) {
     window.addEventListener('mousemove', function(e) {
         if (!activeDragSlider) return;
         const walk = e.pageX - dragStartX;
-        if (Math.abs(walk) > 4) {
+        if (Math.abs(walk) > 10) {
             didDrag = true;
         }
         activeDragSlider.scrollLeft = dragInitialScroll - walk;

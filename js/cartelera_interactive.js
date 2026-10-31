@@ -2194,9 +2194,11 @@ window.updateProgressBar = function() {
                     // Filter cards
                     cards.forEach(card => {
                         if(filter === 'all' || card._normalizedCat === filter) {
-                            card.style.display = ''; // Reset display
+                            card.classList.remove('is-hidden');
+                            card.style.removeProperty('display');
                         } else {
-                            card.style.display = 'none';
+                            card.classList.add('is-hidden');
+                            card.style.setProperty('display', 'none', 'important');
                         }
                     });
                 });
