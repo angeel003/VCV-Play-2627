@@ -44,7 +44,16 @@
         return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
     }
 
-    function renderDeviceHelpBanner(devInfo) {
+    function renderDeviceHelpBanner(devInfo, isActivo = false) {
+        if (isActivo) {
+            return `
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 9px; padding: 10px 14px; margin-bottom: 14px; font-size:0.76rem; color:#10b981; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.15rem; flex-shrink:0;">✅</span>
+                    <span style="line-height:1.35;"><b>Dispositivo sincronizado</b>: Recibirás recordatorios automáticos de tus partidos directamente en la pantalla de este <b>${devInfo.name}</b>.</span>
+                </div>
+            `;
+        }
+
         if (devInfo.isIOS) {
             if (!devInfo.isStandalone) {
                 return `
@@ -668,8 +677,20 @@
         }
         setTimeout(() => {
             const el = document.getElementById('userPushSettingsContainer');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 180);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const card = el.querySelector('div');
+                if (card) {
+                    card.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+                    card.style.boxShadow = '0 0 24px rgba(212, 175, 55, 0.65)';
+                    card.style.borderColor = '#f5c542';
+                    setTimeout(() => {
+                        card.style.boxShadow = '';
+                        card.style.borderColor = '';
+                    }, 1600);
+                }
+            }
+        }, 200);
     };
 
     // --- RENDERIZAR INTERFAZ DE USUARIO EN LA PESTAÑA PERFIL ---
@@ -736,9 +757,9 @@
                             <input type="checkbox" class="chk-team-push-active" data-team="${t}" ${isTeamActivo ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="accent-color: var(--secondary-color); transform: scale(1.15); cursor:pointer;">
                             <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t}</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap: 4px; margin: 0; cursor: pointer; white-space: nowrap;">
+                        <label style="display:flex; align-items:center; gap: 5px; margin: 0; cursor: pointer; white-space: nowrap;">
                             <input type="checkbox" class="chk-team-push-olvido" data-team="${t}" ${isTeamOlvido ? 'checked' : ''} ${!isTeamActivo ? 'disabled' : ''} onchange="window.guardarAjustesPush()" style="accent-color: #f59e0b; transform: scale(0.95); cursor:pointer;">
-                            <span style="font-size: 0.70rem; font-weight: 600; color: ${isTeamActivo ? '#f59e0b' : 'var(--text-muted)'};" title="Avisar solo si aún no has hecho tu predicción en partidos de este equipo">Solo olvidos</span>
+                            <span style="font-size: 0.69rem; font-weight: 700; color: ${isTeamActivo ? '#f59e0b' : 'var(--text-muted)'}; background: ${isTeamActivo ? 'rgba(245, 158, 11, 0.12)' : 'transparent'}; border: 1px solid ${isTeamActivo ? 'rgba(245, 158, 11, 0.25)' : 'transparent'}; padding: 2px 6px; border-radius: 5px;" title="Avisar únicamente si todavía no tienes predicción para los partidos de este equipo">⚠️ Solo si falta predicción</span>
                         </label>
                     </div>
                 `;
@@ -761,7 +782,7 @@
                     Recibe recordatorios automáticos en tu dispositivo antes de que comiencen los partidos de tus equipos para que nunca te quedes sin hacer tu predicción.
                 </p>
 
-                ${renderDeviceHelpBanner(devInfo)}
+                ${renderDeviceHelpBanner(devInfo, isActivo)}
 
                 <!-- SWITCH PRINCIPAL: ACTIVAR EN ESTE DISPOSITIVO -->
                 <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(28, 10, 38, 0.85); border: 1px solid rgba(192, 132, 252, 0.25); padding: 12px 14px; border-radius: 10px; margin-bottom: 12px; gap: 12px; width: 100%; box-sizing: border-box;">
@@ -798,14 +819,14 @@
                                 <span style="font-size: 0.76rem; font-weight: 800; color: #f5c542; display:flex; align-items:center; gap: 4px;">
                                     🏐 Configuración por equipo:
                                 </span>
-                                <div style="display:flex; gap: 4px;">
-                                    <button type="button" onclick="window.pushMarcarTodosEquipos(true)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; cursor: pointer;">Todos</button>
-                                    <button type="button" onclick="window.pushMarcarTodosEquipos(false)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; cursor: pointer;">Ninguno</button>
-                                    <button type="button" onclick="window.pushMarcarTodosSoloOlvidos()" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; border-radius: 4px; cursor: pointer;">Solo olvidos</button>
+                                <div style="display:flex; gap: 5px; flex-wrap: wrap;">
+                                    <button type="button" onclick="window.pushMarcarTodosEquipos(true)" style="padding: 4px 9px; font-size: 0.70rem; font-weight: 600; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer;">Todos</button>
+                                    <button type="button" onclick="window.pushMarcarTodosEquipos(false)" style="padding: 4px 9px; font-size: 0.70rem; font-weight: 600; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 6px; cursor: pointer;">Ninguno</button>
+                                    <button type="button" onclick="window.pushMarcarTodosSoloOlvidos()" style="padding: 4px 9px; font-size: 0.70rem; font-weight: 700; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; border-radius: 6px; cursor: pointer;">Solo si falta predicción</button>
                                 </div>
                             </div>
 
-                            <div style="display:flex; flex-direction:column; gap: 6px; max-height: 190px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin;">
+                            <div style="display:flex; flex-direction:column; gap: 6px; max-height: 250px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin;">
                                 ${teamsRowsHtml}
                             </div>
                         </div>

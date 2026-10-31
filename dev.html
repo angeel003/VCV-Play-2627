@@ -1326,6 +1326,7 @@
       align-items: center;
       flex: 1;
       text-align: center;
+      min-width: 0;
     }
     .team-avatar-v2 {
       width: 52px;
@@ -1638,11 +1639,11 @@
     #appSection > section {
         display: none;
         padding-top: 13px;
-        padding-bottom: calc(66px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
     }
-    /* En cartelera la última tarjeta no tiene margen propio; se compensa para que libre la isla con el mismo margen que las demás */
+    /* En cartelera y demás pestañas se mantiene holgura completa para librar la isla flotante */
     #appSection > section#carteleraSection {
-        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
     }
     #contenedorPartidos { margin-bottom: 0 !important; }
     #appSection > section.active-tab {
@@ -2222,7 +2223,7 @@
         <div id="rankingEnConstruccion" style="padding: 60px 20px; text-align: center; color: var(--text-muted); display: none;"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hammer" style="color: var(--vcv-dorado); margin-bottom: 16px;"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L13.586 10.586"/><path d="m18 10.5-2.5-2.5"/><path d="M12 21 3 12"/><path d="m12 6.5 2.5 2.5"/><path d="m19 11.5-8-8c-1-1-3-1-4 0a3.18 3.18 0 0 0 0 4.5l8 8c1 1 3 1 4 0a3.18 3.18 0 0 0 0-4.5z"/></svg><h3 style="color: var(--text-main); margin-bottom: 8px;">En construcción</h3><p>¡Estoy trabajando en implementar esto cuanto antes! 🚀</p></div>
             <div id="tablasClasificacionContainer"></div>
     </section>
-    <section id="enlacesRfevbSection" style=" padding-bottom:30px;">
+    <section id="enlacesRfevbSection">
 
 <div class="vcv-card" id="adminPanelWrapper" style="display: none; margin-bottom:20px; border: 2px dashed #e67e22; background: rgba(230, 126, 34, 0.08); border-radius: 16px; padding: 0; overflow: hidden;">
     <details id="adminMainDetails" style="width: 100%;">
@@ -2817,16 +2818,16 @@
       <!-- TARJETA DE NOTIFICACIONES PUSH -->
       <div id="userPushSettingsContainer" style="margin-bottom: 20px;"></div>
 
-        <div style="background: var(--bg-general); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h3 style="font-size:1rem; margin-top:0; color:var(--vcv-morado); display:flex; align-items:center; gap:6px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        <div class="vcv-card-v2" style="margin-bottom: 20px; border: 1px solid rgba(192, 132, 252, 0.2); background: linear-gradient(135deg, rgba(46, 16, 73, 0.35) 0%, rgba(26, 11, 38, 0.6) 100%); border-radius: 14px; padding: 18px;">
+          <h3 style="font-size: 1rem; font-weight: 800; margin-top: 0; margin-bottom: 8px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary-color);"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Recuperación de Cuenta (Opcional)
           </h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
-          <div id="currentEmailDisplay" style="font-size: 0.85rem; margin-bottom: 10px; color: var(--text-main); display:none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">Guarda tu correo electrónico para poder recuperar tu cuenta en caso de que olvides tu usuario o contraseña más adelante.</p>
+          <div id="currentEmailDisplay" style="font-size: 0.82rem; margin-bottom: 10px; color: var(--secondary-color); background: rgba(212, 175, 55, 0.1); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.25); display: none;"><strong>Correo actual:</strong> <span id="currentEmailText"></span></div>
           <form id="formSaveEmail">
-            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo" required style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
-            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: var(--vcv-morado); color: white; border: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(44,62,80,0.2);">Guardar Correo</button>
+            <input type="email" id="txtEmail" class="form-control" placeholder="Introduce tu correo electrónico" required style="width: 100%; padding: 10px 12px; margin-bottom: 10px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+            <button type="submit" class="btn" style="width: 100%; padding: 10px; font-size: 0.85rem; background: linear-gradient(135deg, var(--primary-color), #4a175f); color: white; border: 1px solid var(--border-color); border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.2s;">💾 Guardar Correo</button>
           </form>
         </div>
 
@@ -3453,7 +3454,7 @@
 <script src="js/cartelera_interactive.js?v=20261031_v19"></script>
 <script src="js/ui_gestures.js?v=20261030_v11"></script>
 <script src="js/auth.js?v=20261031_v12"></script>
-<script src="js/push_notifications.js?v=20261031_v22"></script>
+<script src="js/push_notifications.js?v=20261031_v23_dev"></script>
 
 
 
