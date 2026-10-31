@@ -2579,8 +2579,11 @@ export async function onRequestPost(context) {
         }
 
         const now = Date.now();
-        const margenMinutos = parseInt(body.margen_minutos) || 135;
+        // Margen exacto: 121 minutos (permite enviar exactamente a las 2 horas antes y nunca con 2 horas y cuarto de antelación)
+        const margenMinutos = parseInt(body.margen_minutos) || 121;
         const maxTs = now + (margenMinutos * 60 * 1000);
+        // Filtro mínimo: solo partidos que estén a más de 45 minutos (para que el mensaje 'en 2 horas' tenga sentido y no avise tarde)
+        const minTs = now + (45 * 60 * 1000);
 
         const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes"').all();
         const resMap = {};
@@ -2590,7 +2593,7 @@ export async function onRequestPost(context) {
         if (body.forzar_partido_id) {
             partidosObjetivo = partidos.filter(p => String(p.id_partido).trim() === String(body.forzar_partido_id).trim());
         } else {
-            partidosObjetivo = partidos.filter(p => p.visibilidad === 'MOSTRAR' && p.timestamp && p.timestamp > now && p.timestamp <= maxTs);
+            partidosObjetivo = partidos.filter(p => p.visibilidad === 'MOSTRAR' && p.timestamp && p.timestamp >= minTs && p.timestamp <= maxTs);
         }
 
         if (partidosObjetivo.length === 0) {
