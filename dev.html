@@ -2006,6 +2006,129 @@
     }
 
   </style>
+<style>
+    /* ============================================================================
+       ADAPTACIÓN MODERNA PARA ORDENADORES Y TABLETS (>= 800px)
+       ============================================================================ */
+    @media (min-width: 800px) {
+      /* Expansión del contenedor en pantallas grandes */
+      #appSection {
+        max-width: 1040px !important;
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+      }
+      .header-container-v2 {
+        max-width: 1040px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+      #carteleraSection .form-container {
+        max-width: 100% !important;
+      }
+
+      /* Cartelera de Partidos: Cuadrícula responsive de 2 columnas */
+      #contenedorPartidos {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)) !important;
+        gap: 16px !important;
+        align-items: stretch !important;
+      }
+      #contenedorPartidos .vcv-card-v2 {
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+      }
+
+      /* Filtro de categorías centrado en pantallas grandes */
+      .category-filter-strip {
+        max-width: 100% !important;
+        justify-content: center !important;
+      }
+
+      /* Contenedores de Perfil, Ranking y Calendario proporcionados y centrados */
+      #enlacesRfevbSection {
+        max-width: 720px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      #clasificacionesSection,
+      #historialSection,
+      #calendarioSection {
+        max-width: 860px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+
+      /* Barra de navegación flotante más cómoda y espaciosa en escritorio */
+      .bottom-nav-v2 {
+        max-width: 560px !important;
+        padding: 10px 14px !important;
+        border-radius: 32px !important;
+      }
+      .nav-item-v2 span {
+        font-size: 0.72rem !important;
+      }
+      .nav-item-v2 i {
+        width: 24px !important;
+        height: 24px !important;
+      }
+    }
+
+    /* ============================================================================
+       MICRO-INTERACCIONES Y DETALLES MODERNOS PARA PC (Ratón / Hover / Scroll)
+       ============================================================================ */
+    @media (hover: hover) and (pointer: fine) {
+      .vcv-card-v2 {
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
+      }
+      .vcv-card-v2:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 18px rgba(123, 44, 191, 0.2) !important;
+        border-color: rgba(192, 132, 252, 0.35) !important;
+      }
+
+      .nav-item-v2:hover {
+        color: #fff !important;
+        transform: translateY(-1.5px) !important;
+      }
+
+      /* Botones con sutil micro-interacción */
+      .btn, button {
+        transition: filter 0.2s ease, transform 0.15s ease !important;
+      }
+      .btn:hover:not(:disabled), button:hover:not(:disabled) {
+        filter: brightness(1.08) !important;
+      }
+      .btn:active:not(:disabled), button:active:not(:disabled) {
+        transform: scale(0.98) !important;
+      }
+    }
+
+    /* Scrollbars modernos oscuros estilo VCV Play */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #140718;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(192, 132, 252, 0.25);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(212, 175, 55, 0.5);
+    }
+    html {
+      scrollbar-color: rgba(192, 132, 252, 0.25) #140718;
+      scrollbar-width: thin;
+    }
+
+</style>
 </head>
 <body>
 
