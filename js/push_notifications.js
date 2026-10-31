@@ -630,15 +630,16 @@
     };
 
     window.irAjustesNotificacionesPerfil = function() {
+        const navBtn = document.querySelector('.nav-item-v2[onclick*="enlacesRfevbSection"]');
         if (typeof window.switchTabV2 === 'function') {
-            window.switchTabV2('perfil');
+            window.switchTabV2('enlacesRfevbSection', navBtn);
         } else if (typeof window.switchTab === 'function') {
-            window.switchTab('perfil');
+            window.switchTab('enlacesRfevbSection');
         }
         setTimeout(() => {
             const el = document.getElementById('userPushSettingsContainer');
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 150);
+        }, 180);
     };
 
     // --- RENDERIZAR INTERFAZ DE USUARIO EN LA PESTAÑA PERFIL ---

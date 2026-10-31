@@ -137,6 +137,14 @@
 
     function switchTabV2(sectionId, btn) {
         if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
+        
+        // Mapear alias amigables de pestañas
+        if (sectionId === 'perfil' || sectionId === 'perfilSection') sectionId = 'enlacesRfevbSection';
+        if (sectionId === 'partidos' || sectionId === 'cartelera') sectionId = 'carteleraSection';
+        if (sectionId === 'ranking' || sectionId === 'clasificaciones') sectionId = 'clasificacionesSection';
+        if (sectionId === 'calendario') sectionId = 'calendarioSection';
+        if (sectionId === 'predicciones' || sectionId === 'historial') sectionId = 'historialSection';
+
         // Hide all sections in appSection
         const sections = ['carteleraSection', 'clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection', 'guestInfoSection', 'patrosGuestSection'];
         sections.forEach(s => {
@@ -152,6 +160,9 @@
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
 
         // Update active button state
+        if (!btn) {
+            btn = document.querySelector(`.nav-item-v2[onclick*="${sectionId}"]`);
+        }
         document.querySelectorAll('.nav-item-v2').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
 
