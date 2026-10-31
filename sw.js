@@ -47,13 +47,17 @@ self.addEventListener('push', function(event) {
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    const targetUrl = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/dev.html';
+    const payloadData = event.notification.data || {};
+    const targetUrl = payloadData.url || '/dev.html';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
             for (let i = 0; i < clientList.length; i++) {
                 const client = clientList[i];
                 if (client.url.includes('dev.html') && 'focus' in client) {
+                    if (payloadData.id_partido) {
+                        client.postMessage({ action: 'scrollToPartido', id_partido: payloadData.id_partido });
+                    }
                     return client.focus();
                 }
             }

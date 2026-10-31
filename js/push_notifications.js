@@ -909,4 +909,65 @@
         }
     };
 
+
+    // ============================================================================
+    // 🎯 DESPLAZAMIENTO INTELIGENTE AL PARTIDO DESDE LA NOTIFICACIÓN
+    // ============================================================================
+
+    window.scrollToPartido = function(idPartido) {
+        if (!idPartido) return;
+
+        // 1. Cambiar a la pestaña de Partidos si no estamos en ella
+        if (typeof window.switchTabV2 === 'function') {
+            const navBtn = document.querySelector('[onclick*="carteleraSection"]');
+            window.switchTabV2('carteleraSection', navBtn);
+        }
+
+        // 2. Esperar a que el elemento del partido esté en el DOM y hacer scroll
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            const card = document.getElementById('card-v2-' + idPartido);
+            if (card) {
+                clearInterval(interval);
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Efecto visual de resplandor dorado
+                const prevTransition = card.style.transition;
+                const prevBoxShadow = card.style.boxShadow;
+                const prevBorder = card.style.border;
+                card.style.transition = 'all 0.4s ease';
+                card.style.border = '2px solid var(--vcv-dorado)';
+                card.style.boxShadow = '0 0 24px rgba(212, 175, 55, 0.7)';
+                setTimeout(() => {
+                    card.style.boxShadow = prevBoxShadow;
+                    card.style.border = prevBorder;
+                    card.style.transition = prevTransition;
+                }, 3000);
+            } else if (attempts > 20) {
+                clearInterval(interval);
+            }
+        }, 150);
+    };
+
+    // Escuchar mensajes del Service Worker (cuando la app ya estaba abierta)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.action === 'scrollToPartido' && event.data.id_partido) {
+                window.scrollToPartido(event.data.id_partido);
+            }
+        });
+    }
+
+    // Comprobar parámetro ?partido=... en la URL al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pId = urlParams.get('partido');
+            if (pId) {
+                setTimeout(() => window.scrollToPartido(pId), 600);
+            }
+        } catch(e) {}
+    });
+
 })();
