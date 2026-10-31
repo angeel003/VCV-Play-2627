@@ -452,16 +452,7 @@
             return;
         }
 
-        // Doble escudo: mientras Modo Pruebas esté activo, usuarios normales no ven la tarjeta
-        const isUserAdmin = Boolean(
-            (window.appData && window.appData.admin) ||
-            (window.appData && window.appData.insignias && window.appData.insignias["Admin Web"] === "X") ||
-            (document.getElementById('adminPanelWrapper'))
-        );
-        if (currentPushConfig.solo_admin && !isUserAdmin) {
-            container.innerHTML = '';
-            return;
-        }
+// Protección gestionada en servidor
 
         const supported = isPushSupported();
         let perm = supported ? Notification.permission : 'unsupported';
@@ -987,5 +978,11 @@
             }
         } catch(e) {}
     });
+
+
+    // Ejecutar render automáticamente al cargar
+    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 100);
+    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 800);
+    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 2000);
 
 })();

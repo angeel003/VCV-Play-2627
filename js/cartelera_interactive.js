@@ -155,8 +155,9 @@
         document.querySelectorAll('.nav-item-v2').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
 
-        if (sectionId === 'enlacesRfevbSection' && typeof window.renderMyProfileCard === 'function') {
-            window.renderMyProfileCard();
+        if (sectionId === 'enlacesRfevbSection') {
+            if (typeof window.renderMyProfileCard === 'function') window.renderMyProfileCard();
+            if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings();
         }
         
         if (window.lucide) setTimeout(() => lucide.createIcons(), 30);
@@ -1134,8 +1135,6 @@
                     </div>
                 </div>
 
-                <!-- RECORDATORIOS Y NOTIFICACIONES PUSH -->
-                <div id="userPushSettingsContainer"></div>
             </div>
         `;
         if (typeof window.renderUserPushSettings === 'function') {
