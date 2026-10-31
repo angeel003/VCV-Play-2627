@@ -49,6 +49,22 @@
         public_key: DEFAULT_VAPID_PUBKEY
     };
 
+    function getCredentials() {
+        let usr = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || (window.appData && window.appData.usuario) || '');
+        let pwd = (typeof currentPassword !== 'undefined' && currentPassword) ? currentPassword : (window.currentPassword || '');
+        if (!pwd) {
+            try {
+                const s = localStorage.getItem('vcv_saved_session');
+                if (s) {
+                    const parsed = JSON.parse(s);
+                    if (!usr) usr = parsed.usuario;
+                    pwd = parsed.password;
+                }
+            } catch(e) {}
+        }
+        return { usr, pwd };
+    }
+
     // Helper para obtener la lista de equipos disponibles para el usuario
     function getAvailableTeamsForUser() {
         const usr = window.currentUser || (window.appData && window.appData.usuario);
@@ -88,8 +104,7 @@
         } catch(e) {}
 
         if (!isPushSupported()) return currentPushConfig;
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         if (!usr || usr === 'lectura' || usr === 'Invitado') return currentPushConfig;
 
         try {
@@ -107,7 +122,7 @@
                         action: 'obtener_config_push',
                         usuario: usr,
                         password: pwd
-                    })
+                    }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                 });
                 const data = await res.json();
                 if (data && data.status === 'success' && data.config) {
@@ -143,8 +158,7 @@
             return;
         }
 
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         if (!usr || usr === 'lectura' || usr === 'Invitado') {
             alert('Debes iniciar sesión para activar las notificaciones.');
             return;
@@ -213,7 +227,7 @@
                             action: 'guardar_suscripcion_push',
                             usuario: usr,
                             password: pwd,
-                            suscripcion: sub.toJSON(),
+                            suscripcion: sub.toJSON(), headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                             opciones_2horas: op2h,
                             opciones_solo_olvidos: opOlv,
                             opciones_viernes: opVie,
@@ -266,7 +280,7 @@
                             action: 'eliminar_suscripcion_push',
                             usuario: usr,
                             password: pwd
-                        })
+                        }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                     });
                 } catch(e) {}
 
@@ -341,8 +355,7 @@
     // --- GUARDAR AJUSTES DE PREFERENCIAS (2 Horas, Olvidos, Viernes, Equipos) ---
     window.guardarAjustesPush = async function() {
         const feedbackDiv = document.getElementById('pushConfigFeedback');
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         if (!usr || usr === 'lectura' || usr === 'Invitado') return;
 
         const chk2h = document.getElementById('chkPush2Horas');
@@ -390,7 +403,7 @@
                     action: 'guardar_suscripcion_push',
                     usuario: usr,
                     password: pwd,
-                    suscripcion: sub ? sub.toJSON() : 'dummy_pref_only',
+                    suscripcion: sub ? sub.toJSON(), headers: { 'Content-Type': 'text/plain;charset=utf-8' } : 'dummy_pref_only',
                     opciones_2horas: op2h,
                     opciones_solo_olvidos: opOlv,
                     opciones_viernes: opVie,
@@ -586,15 +599,14 @@
         const adminWrapper = document.getElementById('adminPushLogsTable');
         if (!adminWrapper) return;
 
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         if (!usr || !pwd) return;
 
         // 1. Cargar estado de 'Modo Pruebas (Solo Administradores)'
         try {
             const resModo = await fetchSeguro(window.scriptURL, {
                 method: 'POST',
-                body: JSON.stringify({ action: 'get_modo_pruebas_notif', usuario: usr, password: pwd })
+                body: JSON.stringify({ action: 'get_modo_pruebas_notif', usuario: usr, password: pwd }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const dataModo = await resModo.json();
             const swModo = document.getElementById('adminSoloAdminsPushSwitch');
@@ -631,8 +643,7 @@
     };
 
     window.adminCambiarModoPruebas = async function(activarSoloAdmin) {
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         const txtModo = document.getElementById('adminSoloAdminsStatusText');
         const feedback = document.getElementById('adminPushActionFeedback');
 
@@ -644,7 +655,7 @@
                     usuario: usr,
                     password: pwd,
                     solo_admin: activarSoloAdmin
-                })
+                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -670,8 +681,7 @@
     };
 
     window.adminEnviarPushPrueba = async function() {
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         const feedback = document.getElementById('adminPushActionFeedback');
 
         if (feedback) {
@@ -691,7 +701,7 @@
                     target_usuario: usr,
                     titulo: '🏐 VCV Play - Notificación de Prueba',
                     mensaje: `¡Hola @${usr}! Tu navegador y dispositivo reciben alertas nativas a la perfección.`
-                })
+                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -718,8 +728,7 @@
     };
 
     window.adminDispararCron2Horas = async function(forzarPartido = false) {
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         const feedback = document.getElementById('adminPushActionFeedback');
         const selPart = document.getElementById('adminSelectPartidoPushPrueba');
         const forzarId = (forzarPartido && selPart && selPart.value) ? selPart.value : undefined;
@@ -739,7 +748,7 @@
                     usuario: usr,
                     password: pwd,
                     forzar_partido_id: forzarId
-                })
+                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const data = await res.json();
             if (data && data.status === 'success') {
@@ -770,8 +779,7 @@
         const tableContainer = document.getElementById('adminPushLogsTable');
         if (!tableContainer) return;
 
-        const usr = window.currentUser || (window.appData && window.appData.usuario);
-        const pwd = window.currentPassword;
+        const { usr, pwd } = getCredentials();
         if (!usr || !pwd) return;
 
         try {
@@ -781,7 +789,7 @@
                     action: 'obtener_log_notificaciones',
                     usuario: usr,
                     password: pwd
-                })
+                }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             const data = await res.json();
             if (data && data.status === 'success' && Array.isArray(data.logs)) {
