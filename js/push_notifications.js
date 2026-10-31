@@ -839,4 +839,38 @@
         }
     };
 
+
+    window.probarNotificacionLocal = async function() {
+        if (!('Notification' in window)) {
+            alert('Tu navegador no soporta notificaciones emergentes.');
+            return;
+        }
+        let perm = Notification.permission;
+        if (perm === 'default') {
+            perm = await Notification.requestPermission();
+        }
+        if (perm !== 'granted') {
+            alert('Las notificaciones no están permitidas. Revisa el icono del candado en la barra de direcciones o la configuración de Windows.');
+            return;
+        }
+        try {
+            const reg = await getServiceWorkerRegistration();
+            if (reg && reg.showNotification) {
+                await reg.showNotification('🏐 VCV Play (Prueba Pantalla)', {
+                    body: '¡La alerta emergente de Windows/dispositivo funciona correctamente!',
+                    icon: 'files/images/icon_192.png',
+                    tag: 'local-test-' + Date.now(),
+                    renotify: true
+                });
+            } else {
+                new Notification('🏐 VCV Play (Prueba Pantalla)', {
+                    body: '¡La alerta emergente de Windows/dispositivo funciona correctamente!',
+                    icon: 'files/images/icon_192.png'
+                });
+            }
+        } catch(e) {
+            alert('Error mostrando notificación local: ' + e.message);
+        }
+    };
+
 })();
