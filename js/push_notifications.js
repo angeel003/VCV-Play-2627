@@ -20,8 +20,123 @@
         return outputArray;
     }
 
+    function getDeviceInfo() {
+        const ua = navigator.userAgent || '';
+        const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/i.test(ua);
+        const isWindows = /Windows/i.test(ua);
+        const isMac = /Macintosh|Mac OS X/i.test(ua) && !isIOS;
+        const isStandalone = (window.navigator.standalone === true) || 
+                             Boolean(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+        let type = 'pc';
+        let name = 'Ordenador';
+        let icon = '💻';
+        if (isIOS) { type = 'ios'; name = 'iPhone / iPad'; icon = '🍏'; }
+        else if (isAndroid) { type = 'android'; name = 'Android'; icon = '🤖'; }
+        else if (isWindows) { type = 'windows'; name = 'Windows'; icon = '💻'; }
+        else if (isMac) { type = 'mac'; name = 'Mac'; icon = '🍎'; }
+
+        return { isIOS, isAndroid, isWindows, isMac, isStandalone, type, name, icon };
+    }
+
     function isPushSupported() {
         return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+    }
+
+    function renderDeviceHelpBanner(devInfo) {
+        if (devInfo.isIOS) {
+            if (!devInfo.isStandalone) {
+                return `
+                    <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; text-align: left;">
+                        <div style="display:flex; align-items:center; gap:8px; font-weight:800; color:#f59e0b; font-size:0.83rem; margin-bottom: 6px;">
+                            <span>📲</span> <span>Paso previo necesario en iPhone / iPad (iOS):</span>
+                        </div>
+                        <p style="margin: 0 0 8px 0; font-size: 0.74rem; color: #fde68a; line-height: 1.4;">
+                            Apple no permite notificaciones en pestañas normales de Safari. Para recibirlas debes instalar la web en tu pantalla de inicio:
+                        </p>
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 8px 10px; font-size: 0.72rem; color: var(--text-main); line-height: 1.55;">
+                            <b>1.</b> Pulsa el botón <b>Compartir</b> de Safari <svg style="display:inline; vertical-align:middle; width:13px; height:13px; margin:0 2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> (icono cuadrado con flecha hacia arriba).<br>
+                            <b>2.</b> Desplaza el menú hacia abajo y toca <b>"Añadir a la pantalla de inicio"</b>.<br>
+                            <b>3.</b> Abre <b>VCV Play</b> desde ese nuevo icono y activa las notificaciones aquí.
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size:0.75rem; color:#10b981; display:flex; align-items:center; gap:8px;">
+                        <span>🍏</span> <span><b>Acceso directo activo en iPhone</b>: Pulsa "Activar en este dispositivo" y luego confirma <b>"Permitir"</b> en el aviso de iOS.</span>
+                    </div>
+                `;
+            }
+        } else if (devInfo.isAndroid) {
+            return `
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size:0.74rem; color:#93c5fd; display:flex; align-items:center; gap:8px;">
+                    <span>🤖</span> <span><b>En Android</b>: Pulsa el interruptor de abajo y selecciona <b>"Permitir"</b> cuando tu navegador te solicite permiso.</span>
+                </div>
+            `;
+        } else if (devInfo.isWindows || devInfo.isMac) {
+            return `
+                <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size:0.74rem; color:#d8b4fe; display:flex; align-items:center; gap:8px;">
+                    <span>💻</span> <span><b>En Ordenador</b>: Al activar, haz clic en <b>"Permitir"</b> en el aviso emergente superior de tu navegador.</span>
+                </div>
+            `;
+        }
+        return '';
+    }
+
+    function renderDeviceGuideDetails(devInfo) {
+        return `
+            <details id="pushDeviceGuideDetails" style="margin-top: 14px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 10px; padding: 10px 12px; font-size: 0.75rem;">
+                <summary style="font-weight: 700; color: #f5c542; cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <span>ℹ️</span> <span>¿Cómo activar en cada tipo de dispositivo?</span>
+                    </span>
+                    <span style="font-size: 0.68rem; color: var(--text-muted);">(ver ayuda)</span>
+                </summary>
+                <div style="margin-top: 10px; display:flex; flex-direction:column; gap:10px;">
+                    <!-- iPhone / iPad -->
+                    <div style="background: rgba(28, 10, 38, 0.6); border-radius: 8px; padding: 10px 12px; border-left: 3px solid #f59e0b; ${devInfo.isIOS ? 'box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong style="color: #f5c542; font-size: 0.78rem;">🍏 iPhone / iPad (iOS 16.4 o superior):</strong>
+                            ${devInfo.isIOS ? '<span style="font-size:0.65rem; background:#f59e0b; color:#000; padding:1px 6px; border-radius:4px; font-weight:800;">Tu dispositivo</span>' : ''}
+                        </div>
+                        <div style="color: #d1d5db; line-height: 1.5; font-size: 0.72rem;">
+                            1. Abre <b>vcvplay.com</b> en <b>Safari</b>.<br>
+                            2. Toca el botón <b>Compartir</b> [ ↑ ] en la barra inferior del navegador.<br>
+                            3. Baja y selecciona <b>"Añadir a la pantalla de inicio"</b>.<br>
+                            4. Abre la app desde el nuevo icono en tu pantalla de inicio, ve a tu <b>Perfil</b> y activa el interruptor de notificaciones. Cuando el sistema pregunte si deseas permitirlas, pulsa <b>Permitir</b>.
+                        </div>
+                    </div>
+
+                    <!-- Android -->
+                    <div style="background: rgba(28, 10, 38, 0.6); border-radius: 8px; padding: 10px 12px; border-left: 3px solid #3b82f6; ${devInfo.isAndroid ? 'box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong style="color: #60a5fa; font-size: 0.78rem;">🤖 Móviles Android (Chrome, Edge, Samsung Internet):</strong>
+                            ${devInfo.isAndroid ? '<span style="font-size:0.65rem; background:#3b82f6; color:#fff; padding:1px 6px; border-radius:4px; font-weight:800;">Tu dispositivo</span>' : ''}
+                        </div>
+                        <div style="color: #d1d5db; line-height: 1.5; font-size: 0.72rem;">
+                            1. Pulsa el interruptor <b>"Activar en este dispositivo"</b>.<br>
+                            2. En la ventana emergente que aparece en pantalla, selecciona <b>"Permitir"</b>.<br>
+                            <i>(Consejo: Puedes pulsar el menú ⋮ de Chrome y seleccionar <b>"Instalar aplicación"</b> para tenerla como app en tu móvil).</i>
+                        </div>
+                    </div>
+
+                    <!-- PC / Mac -->
+                    <div style="background: rgba(28, 10, 38, 0.6); border-radius: 8px; padding: 10px 12px; border-left: 3px solid #a855f7; ${(devInfo.isWindows || devInfo.isMac) ? 'box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <strong style="color: #c084fc; font-size: 0.78rem;">💻 Ordenador (Windows / Mac - Chrome, Edge, Firefox, Brave):</strong>
+                            ${(devInfo.isWindows || devInfo.isMac) ? '<span style="font-size:0.65rem; background:#a855f7; color:#fff; padding:1px 6px; border-radius:4px; font-weight:800;">Tu dispositivo</span>' : ''}
+                        </div>
+                        <div style="color: #d1d5db; line-height: 1.5; font-size: 0.72rem;">
+                            1. Pulsa el interruptor <b>"Activar en este dispositivo"</b>.<br>
+                            2. En la esquina superior izquierda de tu navegador, pulsa <b>"Permitir"</b>.<br>
+                            <i>Si por error las bloqueaste anteriormente, haz clic en el icono del candado 🔒 junto a la URL del navegador y cambia el permiso de Notificaciones a "Permitir".</i>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        `;
     }
 
     async function getServiceWorkerRegistration() {
@@ -152,12 +267,32 @@
         const feedbackDiv = document.getElementById('pushConfigFeedback');
         const optionsBox = document.getElementById('pushSubOptionsBox');
 
+        const devInfo = getDeviceInfo();
+        if (activar && devInfo.isIOS && !devInfo.isStandalone) {
+            if (feedbackDiv) {
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.style.color = '#f59e0b';
+                feedbackDiv.innerHTML = '⚠️ <b>En iPhone / iPad</b>: Apple exige añadir primero la app a tu pantalla de inicio pulsando <b>Compartir [↑]</b> en Safari y eligiendo <b>"Añadir a la pantalla de inicio"</b>.';
+            }
+            const toggleInput = document.getElementById('switchPushDispositivo');
+            if (toggleInput) toggleInput.checked = false;
+            const guide = document.getElementById('pushDeviceGuideDetails');
+            if (guide) guide.open = true;
+            return;
+        }
+
         if (!isPushSupported()) {
             if (feedbackDiv) {
                 feedbackDiv.style.display = 'block';
                 feedbackDiv.style.color = '#ef4444';
-                feedbackDiv.textContent = '❌ Tu navegador no es compatible con notificaciones Push nativas.';
+                if (devInfo.isIOS) {
+                    feedbackDiv.innerHTML = '📱 <b>En iPhone / iPad</b>: Apple requiere que añadas VCV Play a la <b>pantalla de inicio</b> (Botón Compartir [↑] -> "Añadir a pantalla de inicio") para habilitar notificaciones push.';
+                } else {
+                    feedbackDiv.textContent = '❌ Tu navegador actual no es compatible con notificaciones Push nativas.';
+                }
             }
+            const toggleInput = document.getElementById('switchPushDispositivo');
+            if (toggleInput) toggleInput.checked = false;
             return;
         }
 
@@ -454,6 +589,7 @@
 
 // Protección gestionada en servidor
 
+        const devInfo = getDeviceInfo();
         const supported = isPushSupported();
         let perm = supported ? Notification.permission : 'unsupported';
         await window.cargarEstadoPush();
@@ -465,9 +601,15 @@
         let statusColor = 'var(--text-muted)';
 
         if (!supported) {
-            statusText = 'No compatible';
-            statusBg = 'rgba(239, 68, 68, 0.15)';
-            statusColor = '#ef4444';
+            if (devInfo.isIOS && !devInfo.isStandalone) {
+                statusText = 'Añadir a pantalla de inicio';
+                statusBg = 'rgba(245, 158, 11, 0.2)';
+                statusColor = '#f59e0b';
+            } else {
+                statusText = 'No compatible';
+                statusBg = 'rgba(239, 68, 68, 0.15)';
+                statusColor = '#ef4444';
+            }
         } else if (isActivo) {
             statusText = 'Activas';
             statusBg = 'rgba(16, 185, 129, 0.2)';
@@ -523,6 +665,8 @@
                     Recibe recordatorios automáticos en tu dispositivo antes de que comiencen los partidos de tus equipos para que nunca te quedes sin hacer tu predicción.
                 </p>
 
+                ${renderDeviceHelpBanner(devInfo)}
+
                 <!-- SWITCH PRINCIPAL: ACTIVAR EN ESTE DISPOSITIVO -->
                 <div style="display:flex; align-items:center; justify-content:space-between; background: rgba(28, 10, 38, 0.8); border: 1px solid rgba(192, 132, 252, 0.25); padding: 12px 14px; border-radius: 10px; margin-bottom: 12px;">
                     <div>
@@ -530,7 +674,7 @@
                         <span style="font-size: 0.72rem; color: var(--text-muted);">Alertas nativas de VCV Play</span>
                     </div>
                     <label style="position: relative; display: inline-block; width: 46px; height: 26px; margin: 0; cursor: pointer;">
-                        <input type="checkbox" id="switchPushDispositivo" ${isActivo ? 'checked' : ''} ${!supported ? 'disabled' : ''} onchange="window.togglePushDispositivo(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                        <input type="checkbox" id="switchPushDispositivo" ${isActivo ? 'checked' : ''} ${(!supported && (!devInfo.isIOS || devInfo.isStandalone)) ? 'disabled' : ''} onchange="window.togglePushDispositivo(this.checked)" style="opacity: 0; width: 0; height: 0;">
                         <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${isActivo ? '#10b981' : 'rgba(255,255,255,0.2)'}; transition: .3s; border-radius: 34px;">
                             <span style="position: absolute; content: ''; height: 20px; width: 20px; left: ${isActivo ? '23px' : '3px'}; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></span>
                         </span>
@@ -584,6 +728,8 @@
                 </div>
 
                 <div id="pushConfigFeedback" style="font-size: 0.75rem; margin-top: 10px; display: none; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.3);"></div>
+
+                ${renderDeviceGuideDetails(devInfo)}
             </div>
         `;
 
