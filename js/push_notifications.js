@@ -271,10 +271,14 @@
                 }
             } else {
                 // Desactivar
+                let endpointToDelete = undefined;
                 const reg = await getServiceWorkerRegistration();
                 if (reg) {
                     const sub = await reg.pushManager.getSubscription();
-                    if (sub) await sub.unsubscribe();
+                    if (sub) {
+                        endpointToDelete = sub.endpoint;
+                        await sub.unsubscribe();
+                    }
                 }
 
                 try {
@@ -284,7 +288,8 @@
                         body: JSON.stringify({
                             action: 'eliminar_suscripcion_push',
                             usuario: usr,
-                            password: pwd
+                            password: pwd,
+                            endpoint: endpointToDelete
                         })
                     });
                 } catch(e) {}

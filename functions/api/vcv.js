@@ -2312,8 +2312,9 @@ export async function onRequestPost(context) {
         if (!suscripcion) return jsonResponse({ status: 'error', message: 'Datos de suscripción requeridos' }, 400);
 
         try {
-            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
-                "Usuario" TEXT PRIMARY KEY,
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
+                "Endpoint" TEXT PRIMARY KEY,
+                "Usuario" TEXT NOT NULL,
                 "Suscripcion_JSON" TEXT NOT NULL,
                 "Opciones_Viernes" INTEGER DEFAULT 1,
                 "Opciones_2Horas" INTEGER DEFAULT 1,
@@ -2322,6 +2323,9 @@ export async function onRequestPost(context) {
                 "Ultima_Actualizacion" TEXT
             )`).run();
 
+            let subObj = null;
+            try { subObj = (typeof suscripcion === 'string') ? JSON.parse(suscripcion) : suscripcion; } catch(e){}
+            const endpoint = (subObj && subObj.endpoint) ? subObj.endpoint : (usuario + '_pref_only');
             const subJson = typeof suscripcion === 'string' ? suscripcion : JSON.stringify(suscripcion);
             const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
             const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
@@ -2330,12 +2334,19 @@ export async function onRequestPost(context) {
             const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
             const nowIso = new Date().toISOString();
 
-            await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push" 
-                ("Usuario", "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Equipos_Permitidos", "Ultima_Actualizacion")
-                VALUES (?, ?, ?, ?, ?, ?, ?)`
-            ).bind(usuario, subJson, opVie, op2h, opOlv, eqPerm, nowIso).run();
+            // Insertar o actualizar este dispositivo concreto por su Endpoint único
+            await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push_Dispositivos" 
+                ("Endpoint", "Usuario", "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Equipos_Permitidos", "Ultima_Actualizacion")
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(endpoint, usuario, subJson, opVie, op2h, opOlv, eqPerm, nowIso).run();
 
-            return jsonResponse({ status: 'success', message: 'Suscripción y preferencias guardadas correctamente' });
+            // Sincronizar preferencias de usuario en todos sus dispositivos
+            await db.prepare(`UPDATE "Suscripciones_Push_Dispositivos" 
+                SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Equipos_Permitidos" = ?
+                WHERE "Usuario" = ?`
+            ).bind(opVie, op2h, opOlv, eqPerm, usuario).run();
+
+            return jsonResponse({ status: 'success', message: 'Dispositivo y preferencias multidispositivo guardadas' });
         } catch(e) {
             return jsonResponse({ status: 'error', message: 'Error guardando suscripción: ' + e.message }, 500);
         }
@@ -2346,8 +2357,8 @@ export async function onRequestPost(context) {
         const pubKey = (env && env.VAPID_PUBLIC_KEY) || DEFAULT_VAPID_PUBLIC;
 
         try {
-            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
-                "Usuario" TEXT PRIMARY KEY,
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
+                "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL,
                 "Suscripcion_JSON" TEXT NOT NULL,
                 "Opciones_Viernes" INTEGER DEFAULT 1,
                 "Opciones_2Horas" INTEGER DEFAULT 1,
@@ -2356,7 +2367,7 @@ export async function onRequestPost(context) {
                 "Ultima_Actualizacion" TEXT
             )`).run();
 
-            const row = await db.prepare('SELECT * FROM "Suscripciones_Push" WHERE "Usuario" = ?').bind(usuario).first();
+            const row = await db.prepare('SELECT * FROM "Suscripciones_Push_Dispositivos" WHERE "Usuario" = ? ORDER BY "Ultima_Actualizacion" DESC LIMIT 1').bind(usuario).first();
             let equiposCfg = {};
             if (row && row.Equipos_Permitidos) {
                 try { equiposCfg = JSON.parse(row.Equipos_Permitidos); } catch(e){}
@@ -2388,8 +2399,18 @@ export async function onRequestPost(context) {
     if (action === 'eliminar_suscripcion_push') {
         if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
         try {
-            await db.prepare('UPDATE "Suscripciones_Push" SET "Opciones_2Horas" = 0, "Opciones_Viernes" = 0, "Suscripcion_JSON" = "" WHERE "Usuario" = ?').bind(usuario).run();
-            return jsonResponse({ status: 'success', message: 'Notificaciones desactivadas para este usuario' });
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
+                "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL, "Suscripcion_JSON" TEXT NOT NULL,
+                "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1,
+                "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Equipos_Permitidos" TEXT DEFAULT '{}', "Ultima_Actualizacion" TEXT
+            )`).run();
+
+            if (body.endpoint) {
+                await db.prepare('DELETE FROM "Suscripciones_Push_Dispositivos" WHERE "Endpoint" = ?').bind(body.endpoint).run();
+            } else {
+                await db.prepare('DELETE FROM "Suscripciones_Push_Dispositivos" WHERE "Usuario" = ?').bind(usuario).run();
+            }
+            return jsonResponse({ status: 'success', message: 'Notificaciones desactivadas para este dispositivo' });
         } catch(e) {
             return jsonResponse({ status: 'error', message: e.message }, 500);
         }
@@ -2423,47 +2444,65 @@ export async function onRequestPost(context) {
 
     if (action === 'enviar_push_prueba_admin') {
         try {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
-        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
-        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
-        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+            const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+            if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+            const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+            if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
 
-        const targetUser = (body.target_usuario || usuario).trim();
-        const subRow = await db.prepare('SELECT Suscripcion_JSON FROM "Suscripciones_Push" WHERE "Usuario" = ?').bind(targetUser).first();
-        if (!subRow || !subRow.Suscripcion_JSON || subRow.Suscripcion_JSON.length < 20) {
-            return jsonResponse({ status: 'error', message: `El usuario @${targetUser} no tiene ninguna suscripción Push registrada en su dispositivo aún.` }, 400);
-        }
+            const targetUser = (body.target_usuario || usuario).trim();
+            await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
+                "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL, "Suscripcion_JSON" TEXT NOT NULL,
+                "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1,
+                "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Equipos_Permitidos" TEXT DEFAULT '{}', "Ultima_Actualizacion" TEXT
+            )`).run();
 
-        let subObj;
-        try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { return jsonResponse({ status: 'error', message: 'Formato de suscripción corrupto' }, 500); }
-
-        const testPayload = {
-            title: body.titulo || "🏐 Notificación de Prueba VCV Play",
-            body: body.mensaje || `¡Hola @${targetUser}! Las notificaciones Push nativas funcionan correctamente en tu dispositivo.`,
-            data: {
-                url: body.forzar_partido_id ? `/?partido=${body.forzar_partido_id}` : "/",
-                id_partido: body.forzar_partido_id || null
+            const { results: subRows } = await db.prepare('SELECT Endpoint, Suscripcion_JSON FROM "Suscripciones_Push_Dispositivos" WHERE "Usuario" = ?').bind(targetUser).all();
+            if (!subRows || subRows.length === 0) {
+                return jsonResponse({ status: 'error', message: `El usuario @${targetUser} no tiene ningún dispositivo registrado aún.` }, 400);
             }
-        };
 
-        const pushRes = await sendWebPushNotification(subObj, testPayload, env);
+            const testPayload = {
+                title: body.titulo || "🏐 Notificación de Prueba VCV Play",
+                body: body.mensaje || `¡Hola @${targetUser}! Las notificaciones Push nativas funcionan correctamente en tu dispositivo.`,
+                data: {
+                    url: body.forzar_partido_id ? `/?partido=${body.forzar_partido_id}` : "/",
+                    id_partido: body.forzar_partido_id || null
+                }
+            };
 
-        const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
-        try {
+            const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
             await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Notificaciones" (
                 "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
             )`).run();
-            await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
-                .bind(targetUser, 'PRUEBA_ADMIN', testPayload.title, testPayload.body, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
-        } catch(e) {}
 
-        if (pushRes.success) {
-            return jsonResponse({ status: 'success', message: `✅ Notificación enviada con éxito a @${targetUser}` });
-        } else {
-            return jsonResponse({ status: 'error', message: `❌ Error enviando Push: ${pushRes.error || ('HTTP ' + pushRes.status)}` }, 500);
-        }
-        } catch(errPush) {
-            return jsonResponse({ status: 'error', message: 'Error procesando push: ' + errPush.message }, 500);
+            let enviadasOk = 0;
+            let errores = [];
+
+            for (const row of subRows) {
+                let subObj;
+                try { subObj = JSON.parse(row.Suscripcion_JSON); } catch(e) { continue; }
+                const pushRes = await sendWebPushNotification(subObj, testPayload, env);
+                if (pushRes.success) {
+                    enviadasOk++;
+                    await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                        .bind(targetUser, 'PRUEBA_ADMIN', testPayload.title, testPayload.body, nowMadrid, 'ENVIADO').run();
+                } else {
+                    errores.push(pushRes.error || pushRes.status);
+                    if (pushRes.status === 404 || pushRes.status === 410) {
+                        await db.prepare('DELETE FROM "Suscripciones_Push_Dispositivos" WHERE "Endpoint" = ?').bind(row.Endpoint).run();
+                    }
+                    await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                        .bind(targetUser, 'PRUEBA_ADMIN', testPayload.title, testPayload.body, nowMadrid, `FALLIDO (${pushRes.status || pushRes.error})`).run();
+                }
+            }
+
+            if (enviadasOk > 0) {
+                return jsonResponse({ status: 'success', message: `✅ ¡Enviada con éxito a ${enviadasOk} dispositivo(s) de @${targetUser}!` });
+            } else {
+                return jsonResponse({ status: 'error', message: `❌ Fallo al entregar Push (${errores.join(', ')}).` }, 502);
+            }
+        } catch(e) {
+            return jsonResponse({ status: 'error', message: 'Error en prueba push: ' + e.message }, 500);
         }
     }
 
@@ -2517,7 +2556,7 @@ export async function onRequestPost(context) {
             "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
         )`).run();
 
-        const { results: subs } = await db.prepare('SELECT * FROM "Suscripciones_Push" WHERE "Opciones_2Horas" = 1 AND LENGTH("Suscripcion_JSON") > 20').all();
+        const { results: subs } = await db.prepare('SELECT * FROM "Suscripciones_Push_Dispositivos" WHERE "Opciones_2Horas" = 1 AND LENGTH("Suscripcion_JSON") > 20').all();
         if (!subs || subs.length === 0) {
             return jsonResponse({
                 status: 'success',
