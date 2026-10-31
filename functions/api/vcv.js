@@ -2350,11 +2350,28 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'guardar_suscripcion_push') {
-        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_config, equipos_permitidos } = body;
+        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_config, equipos_permitidos, solo_preferencias } = body;
         if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
-        if (!suscripcion) return jsonResponse({ status: 'error', message: 'Datos de suscripción requeridos' }, 400);
 
         try {
+            const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
+            const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
+            const opOlv = (opciones_solo_olvidos !== undefined) ? (opciones_solo_olvidos ? 1 : 0) : 0;
+            const rawEq = (equipos_config !== undefined) ? equipos_config : equipos_permitidos;
+            const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
+            const nowIso = new Date().toISOString();
+
+            // Si es solo actualización de preferencias (cambio de checkbox o equipos), hacer 1 solo UPDATE ultra-rápido sin tocar suscripciones
+            if (solo_preferencias) {
+                await db.prepare(`UPDATE "Suscripciones_Push_Dispositivos" 
+                    SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Equipos_Permitidos" = ?, "Ultima_Actualizacion" = ?
+                    WHERE "Usuario" = ?`
+                ).bind(opVie, op2h, opOlv, eqPerm, nowIso, usuario).run();
+                return jsonResponse({ status: 'success', message: 'Preferencias sincronizadas' });
+            }
+
+            if (!suscripcion) return jsonResponse({ status: 'error', message: 'Datos de suscripción requeridos' }, 400);
+
             await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
                 "Endpoint" TEXT PRIMARY KEY,
                 "Usuario" TEXT NOT NULL,
@@ -2365,21 +2382,11 @@ export async function onRequestPost(context) {
                 "Equipos_Permitidos" TEXT DEFAULT '{}',
                 "Ultima_Actualizacion" TEXT
             )`).run();
-            try {
-                await db.prepare('CREATE INDEX IF NOT EXISTS idx_push_disp_usuario ON "Suscripciones_Push_Dispositivos"("Usuario")').run();
-                await db.prepare('CREATE INDEX IF NOT EXISTS idx_push_disp_2h ON "Suscripciones_Push_Dispositivos"("Opciones_2Horas")').run();
-            } catch(e) {}
 
             let subObj = null;
             try { subObj = (typeof suscripcion === 'string') ? JSON.parse(suscripcion) : suscripcion; } catch(e){}
             const endpoint = (subObj && subObj.endpoint) ? subObj.endpoint : (usuario + '_pref_only');
             const subJson = typeof suscripcion === 'string' ? suscripcion : JSON.stringify(suscripcion);
-            const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
-            const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
-            const opOlv = (opciones_solo_olvidos !== undefined) ? (opciones_solo_olvidos ? 1 : 0) : 0;
-            const rawEq = (equipos_config !== undefined) ? equipos_config : equipos_permitidos;
-            const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
-            const nowIso = new Date().toISOString();
 
             // Insertar o actualizar este dispositivo concreto por su Endpoint único
             await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push_Dispositivos" 

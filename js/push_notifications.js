@@ -302,6 +302,9 @@
             return;
         }
 
+        const toggleInput = document.getElementById('switchPushDispositivo');
+        if (toggleInput) toggleInput.disabled = true;
+
         try {
             if (activar) {
                 if (feedbackDiv) {
@@ -459,6 +462,9 @@
             }
             const toggleInput = document.getElementById('switchPushDispositivo');
             if (toggleInput) toggleInput.checked = currentPushConfig.dispositivo_suscrito;
+        } finally {
+            const toggleInput = document.getElementById('switchPushDispositivo');
+            if (toggleInput) toggleInput.disabled = false;
         }
     };
 
@@ -502,8 +508,10 @@
         window.guardarAjustesPush();
     };
 
-    // --- GUARDAR AJUSTES DE PREFERENCIAS (2 Horas, Olvidos, Viernes, Equipos) ---
-    window.guardarAjustesPush = async function() {
+    // --- GUARDAR AJUSTES DE PREFERENCIAS (Con Anti-rebote / Debounce de 600ms para proteger la base de datos) ---
+    let guardarPushDebounceTimer = null;
+
+    window.guardarAjustesPush = function(inmediato = false) {
         const feedbackDiv = document.getElementById('pushConfigFeedback');
         const { usr, pwd } = getCredentials();
         if (!usr || usr === 'lectura' || usr === 'Invitado') return;
@@ -521,10 +529,10 @@
         currentPushConfig.opciones_viernes = opVie;
         currentPushConfig.equipos_config = eqCfg;
 
-        // Persistir copia local
+        // Persistir copia local inmediatamente
         try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e){}
 
-        // Actualizar estado disabled de los checkboxes de olvidos según si el equipo está activo
+        // Actualizar interfaz visual al instante
         document.querySelectorAll('.chk-team-push-active').forEach(chk => {
             const team = chk.getAttribute('data-team');
             const olvidoChk = document.querySelector(`.chk-team-push-olvido[data-team="${team}"]`);
@@ -537,47 +545,64 @@
             }
         });
 
-        // Mostrar / ocultar caja de equipos según si la opción 2h está activa
         const eqCard = document.getElementById('pushEquiposCard');
         if (eqCard) {
             eqCard.style.display = op2h ? 'block' : 'none';
         }
 
-        const reg = await getServiceWorkerRegistration();
-        let sub = reg ? await reg.pushManager.getSubscription() : null;
+        // Si el usuario sigue pulsando, reiniciamos el temporizador para enviar 1 sola petición final
+        if (guardarPushDebounceTimer) {
+            clearTimeout(guardarPushDebounceTimer);
+            guardarPushDebounceTimer = null;
+        }
 
-        try {
-            const res = await fetchSeguro(window.scriptURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({
-                    action: 'guardar_suscripcion_push',
-                    usuario: usr,
-                    password: pwd,
-                    suscripcion: sub ? sub.toJSON() : 'dummy_pref_only',
-                    opciones_2horas: op2h,
-                    opciones_solo_olvidos: opOlv,
-                    opciones_viernes: opVie,
-                    equipos_config: eqCfg
-                })
-            });
-            const data = await res.json();
-            if (data && data.status === 'success') {
+        if (feedbackDiv) {
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.style.color = '#38bdf8';
+            feedbackDiv.textContent = '⏳ Guardando cambios...';
+        }
+
+        const enviarServidor = async () => {
+            try {
+                const res = await fetchSeguro(window.scriptURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'guardar_suscripcion_push',
+                        usuario: usr,
+                        password: pwd,
+                        solo_preferencias: true,
+                        opciones_2horas: op2h,
+                        opciones_solo_olvidos: opOlv,
+                        opciones_viernes: opVie,
+                        equipos_config: eqCfg
+                    })
+                });
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    if (feedbackDiv) {
+                        feedbackDiv.style.display = 'block';
+                        feedbackDiv.style.color = '#10b981';
+                        feedbackDiv.textContent = '💾 Preferencias guardadas';
+                        setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2000);
+                    }
+                }
+            } catch (e) {
+                console.warn('[Push] Error guardando preferencias en servidor:', e);
                 if (feedbackDiv) {
                     feedbackDiv.style.display = 'block';
                     feedbackDiv.style.color = '#10b981';
-                    feedbackDiv.textContent = '💾 Preferencias guardadas';
-                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2500);
+                    feedbackDiv.textContent = '💾 Preferencias guardadas localmente';
+                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2000);
                 }
             }
-        } catch (e) {
-            console.warn('[Push] Error guardando preferencias en servidor:', e);
-            if (feedbackDiv) {
-                feedbackDiv.style.display = 'block';
-                feedbackDiv.style.color = '#10b981';
-                feedbackDiv.textContent = '💾 Preferencias guardadas localmente';
-                setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2500);
-            }
+        };
+
+        if (inmediato === true) {
+            enviarServidor();
+        } else {
+            // Anti-rebote: Espera 600ms desde el último clic antes de escribir en la base de datos
+            guardarPushDebounceTimer = setTimeout(enviarServidor, 600);
         }
     };
 
