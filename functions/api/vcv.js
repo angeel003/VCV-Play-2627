@@ -441,7 +441,10 @@ export async function onRequestPost(context) {
             'CREATE UNIQUE INDEX IF NOT EXISTS idx_monitor_usuarios_user ON "Monitor_Usuarios"("usuario")',
             'CREATE INDEX IF NOT EXISTS idx_monitor_usuarios_activo ON "Monitor_Usuarios"("activo")',
             'CREATE INDEX IF NOT EXISTS idx_log_accesos_user_ts ON "Log_Accesos"("usuario", "timestamp" DESC)',
-            'CREATE INDEX IF NOT EXISTS idx_log_accesos_ts ON "Log_Accesos"("timestamp" DESC)'
+            'CREATE INDEX IF NOT EXISTS idx_log_accesos_ts ON "Log_Accesos"("timestamp" DESC)',
+            'CREATE INDEX IF NOT EXISTS idx_push_disp_usuario ON "Suscripciones_Push_Dispositivos"("Usuario")',
+            'CREATE INDEX IF NOT EXISTS idx_push_disp_2h ON "Suscripciones_Push_Dispositivos"("Opciones_2Horas")',
+            'CREATE INDEX IF NOT EXISTS idx_log_notif_estado ON "Log_Notificaciones"("Estado", "Usuario", "Tipo")'
         ];
         const created = [];
         const errors = [];
@@ -2362,6 +2365,10 @@ export async function onRequestPost(context) {
                 "Equipos_Permitidos" TEXT DEFAULT '{}',
                 "Ultima_Actualizacion" TEXT
             )`).run();
+            try {
+                await db.prepare('CREATE INDEX IF NOT EXISTS idx_push_disp_usuario ON "Suscripciones_Push_Dispositivos"("Usuario")').run();
+                await db.prepare('CREATE INDEX IF NOT EXISTS idx_push_disp_2h ON "Suscripciones_Push_Dispositivos"("Opciones_2Horas")').run();
+            } catch(e) {}
 
             let subObj = null;
             try { subObj = (typeof suscripcion === 'string') ? JSON.parse(suscripcion) : suscripcion; } catch(e){}
