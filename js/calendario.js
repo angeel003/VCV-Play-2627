@@ -260,7 +260,7 @@ window.renderCalendar = function() {
             
             if (dateLabel !== lastDateLabel) {
                 html_res += `
-                <div style="display:flex; align-items:center; gap:10px; margin: 30px 0 15px 0;">
+                <div class="calendar-date-separator" style="display:flex; align-items:center; gap:10px; margin: 30px 0 15px 0;">
                     <div style="flex:1; height:1px; background:linear-gradient(90deg, transparent, var(--border-color));"></div>
                     <div style="color: var(--vcv-dorado); font-size: 0.85rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
                         ${dateLabel}

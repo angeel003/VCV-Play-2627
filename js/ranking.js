@@ -372,7 +372,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     let statsHTML = `
       <!-- Resumen Métricas (Oscuro y alto contraste) -->
       <div style="background: linear-gradient(180deg, #180622 0%, #0d0314 100%); padding: 15px; border-radius:14px; margin-bottom:20px; color:white; border:1px solid rgba(212,175,55,0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        <div class="historial-metrics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           
           <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
             <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Pts Ganados</div>
@@ -409,7 +409,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             <p style="font-weight:600; margin:0;">No hay predicciones ni partidos que coincidan con estos filtros.</p>
         </div>`;
     } else {
-        listHTML = `<div style="display: flex; flex-direction: column; gap: 12px;">` + partidosEvaluados.join("") + `</div>`;
+        listHTML = `<div class="historial-matches-grid" style="display: flex; flex-direction: column; gap: 12px;">` + partidosEvaluados.join("") + `</div>`;
     }
 
     // Mini botón para avanzar a la Predicción de Puntos Totales
