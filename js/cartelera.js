@@ -91,8 +91,8 @@ window.renderCarteleraHTML = function(data) {
 
                 let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
                 let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261030_v6" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261030_v6" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-                let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261030_v6" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261030_v6" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261031_v7" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261031_v7" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261031_v7" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261031_v7" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
                 
                 let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; word-break:break-word; overflow-wrap:break-word; line-height:1.25;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> <span>${eq.pabellon}</span></div>` : '';
 
@@ -247,8 +247,8 @@ window.renderCarteleraHTML = function(data) {
                             <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
                                 <span>+${pPts} pts</span>
                                 <picture style="display:inline-flex; vertical-align:middle;">
-                                    <source srcset="files/images/escudos/${winnerSafe}.webp?v=20261030_v6" type="image/webp">
-                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261030_v6" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
+                                    <source srcset="files/images/escudos/${winnerSafe}.webp?v=20261031_v7" type="image/webp">
+                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261031_v7" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
                                 </picture>
                             </div>`;
                         } else {
