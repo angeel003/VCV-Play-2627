@@ -2750,30 +2750,38 @@
                 </div>
               </div>
 
-              <!-- BOTONES DE ACCIÓN DE PRUEBA -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                <button type="button" class="btn" onclick="window.adminEnviarPushPrueba()" style="padding:10px; font-size:0.8rem; background:var(--vcv-morado); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
-                  📲 Push a Mi Usuario
-                </button>
-                <button type="button" class="btn" onclick="window.adminDispararCron2Horas(false)" style="padding:10px; font-size:0.8rem; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
-                  ⏱️ Cron 2 Horas
-                </button>
-                <button type="button" class="btn" onclick="window.probarNotificacionLocal()" style="grid-column: span 2; padding:8px; font-size:0.75rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:var(--text-main); border-radius:8px; font-weight:600; cursor:pointer;">
-                  🖥️ Probar Popup Directo en Pantalla
-                </button>
-              </div>
-
               <!-- SELECTOR DE PARTIDO MANUAL -->
-              <div style="margin-bottom: 12px;">
+              <div style="margin-bottom: 14px;">
                 <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">
-                  Forzar prueba con un partido concreto (opcional):
+                  Seleccionar partido para pruebas de recordatorio:
                 </label>
-                <div style="display:flex; gap:6px;">
-                  <select id="adminSelectPartidoPushPrueba" onfocus="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" onclick="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" style="flex:1; padding:7px; font-size:0.78rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-                    <option value="">-- Próximos partidos en 2h (Automático) --</option>
-                  </select>
-                  <button type="button" onclick="window.adminDispararCron2Horas(true)" style="padding:7px 12px; font-size:0.75rem; font-weight:700; background:rgba(37,99,235,0.2); border:1px solid #3b82f6; color:#93c5fd; border-radius:6px; cursor:pointer;">
-                    ⚡ Forzar
+                <select id="adminSelectPartidoPushPrueba" onfocus="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" onclick="if(window.poblarSelectorPartidosAdmin) window.poblarSelectorPartidosAdmin()" style="width:100%; box-sizing:border-box; padding:8px 10px; font-size:0.78rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); margin-bottom:8px; text-overflow:ellipsis;">
+                  <option value="">-- Próximos partidos en 2h (Automático) --</option>
+                </select>
+
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                  <input type="checkbox" id="chkAdminIgnorarFiltros" checked style="cursor:pointer;">
+                  <label for="chkAdminIgnorarFiltros" style="font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
+                    Modo prueba: ignorar si ya se envió hoy o ya pronostiqué
+                  </label>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN DE PRUEBA -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <button type="button" class="btn" onclick="window.adminDispararCron2Horas(false)" style="padding:10px; font-size:0.8rem; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                    ⏱️ Cron 2 Horas
+                  </button>
+                  <button type="button" class="btn" onclick="window.adminDispararCron2Horas(true)" style="padding:10px; font-size:0.8rem; background:rgba(37,99,235,0.25); border:1px solid #3b82f6; color:#93c5fd; border-radius:8px; font-weight:bold; cursor:pointer;">
+                    ⚡ Forzar Partido
+                  </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <button type="button" class="btn" onclick="window.adminEnviarPushPrueba()" style="padding:8px; font-size:0.75rem; background:var(--vcv-morado); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
+                    📲 Push a Mi Usuario
+                  </button>
+                  <button type="button" class="btn" onclick="window.probarNotificacionLocal()" style="padding:8px; font-size:0.75rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); color:var(--text-main); border-radius:8px; font-weight:600; cursor:pointer;">
+                    🖥️ Popup Directo
                   </button>
                 </div>
               </div>
@@ -3437,7 +3445,7 @@
 <script src="js/cartelera_interactive.js?v=20261030_v13"></script>
 <script src="js/ui_gestures.js?v=20261030_v11"></script>
 <script src="js/auth.js?v=20261030_v11"></script>
-<script src="js/push_notifications.js?v=20261031_v9"></script>
+<script src="js/push_notifications.js?v=20261031_v10"></script>
 
 
 

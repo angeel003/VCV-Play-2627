@@ -2533,6 +2533,8 @@ export async function onRequestPost(context) {
 
         let totalEnviados = 0;
         let detalleEnvios = [];
+        let motivosOmision = [];
+        const ignorarFiltros = Boolean(body.ignorar_filtros_prueba || body.forzar_partido_id);
         const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
 
         for (const p of partidosObjetivo) {
@@ -2550,7 +2552,8 @@ export async function onRequestPost(context) {
                     continue;
                 }
 
-                if (!body.forzar_partido_id && sentSet.has(`${u}_${tipoLog}`)) {
+                if (!ignorarFiltros && sentSet.has(`${u}_${tipoLog}`)) {
+                    motivosOmision.push(`@${u}: ya se le envió hoy el recordatorio de ${p.id_partido}`);
                     continue;
                 }
 
@@ -2596,7 +2599,8 @@ export async function onRequestPost(context) {
                     (!rivCfg.activo || rivCfg.solo_olvidos)
                 );
 
-                if (shouldSkipPredicted && hasPredicted) {
+                if (!ignorarFiltros && shouldSkipPredicted && hasPredicted) {
+                    motivosOmision.push(`@${u}: ya pronosticó ${p.id_partido} y tiene activo 'Solo si aún no he pronosticado'`);
                     continue;
                 }
 
@@ -2633,9 +2637,15 @@ export async function onRequestPost(context) {
             }
         }
 
+        let finalMsg = totalEnviados > 0
+            ? `¡Éxito! Se han enviado ${totalEnviados} notificaciones push.`
+            : (motivosOmision.length > 0
+                ? `0 enviadas (${motivosOmision.join('; ')}).`
+                : `Proceso completado: 0 notificaciones enviadas.`);
+
         return jsonResponse({
             status: 'success',
-            message: `Proceso completado: ${totalEnviados} notificaciones enviadas.`,
+            message: finalMsg,
             partidos_encontrados: partidosObjetivo.length,
             enviados: totalEnviados,
             solo_admin: soloAdmin,

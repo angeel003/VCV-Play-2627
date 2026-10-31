@@ -761,8 +761,10 @@
         const { usr, pwd } = getCredentials();
         const feedback = document.getElementById('adminPushActionFeedback');
         const selPart = document.getElementById('adminSelectPartidoPushPrueba');
+        const chkIgn = document.getElementById('chkAdminIgnorarFiltros');
         const selectedVal = selPart ? selPart.value : '';
         const forzarId = (forzarPartido || selectedVal) ? selectedVal : undefined;
+        const ignorarFiltros = chkIgn ? chkIgn.checked : true;
 
         if (feedback) {
             feedback.style.display = 'block';
@@ -781,7 +783,8 @@
                     action: 'cron_recordatorio_2horas',
                     usuario: usr,
                     password: pwd,
-                    forzar_partido_id: forzarId
+                    forzar_partido_id: forzarId,
+                    ignorar_filtros_prueba: ignorarFiltros
                 })
             });
             const data = await res.json();
