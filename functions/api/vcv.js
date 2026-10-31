@@ -2309,7 +2309,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'guardar_suscripcion_push') {
-        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_permitidos } = body;
+        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_config, equipos_permitidos } = body;
         if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
         if (!suscripcion) return jsonResponse({ status: 'error', message: 'Datos de suscripción requeridos' }, 400);
 
@@ -2320,7 +2320,7 @@ export async function onRequestPost(context) {
                 "Opciones_Viernes" INTEGER DEFAULT 1,
                 "Opciones_2Horas" INTEGER DEFAULT 1,
                 "Opciones_SoloOlvidos" INTEGER DEFAULT 0,
-                "Equipos_Permitidos" TEXT DEFAULT '[]',
+                "Equipos_Permitidos" TEXT DEFAULT '{}',
                 "Ultima_Actualizacion" TEXT
             )`).run();
 
@@ -2328,7 +2328,8 @@ export async function onRequestPost(context) {
             const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
             const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
             const opOlv = (opciones_solo_olvidos !== undefined) ? (opciones_solo_olvidos ? 1 : 0) : 0;
-            const eqPerm = Array.isArray(equipos_permitidos) ? JSON.stringify(equipos_permitidos) : (typeof equipos_permitidos === 'string' ? equipos_permitidos : '[]');
+            const rawEq = (equipos_config !== undefined) ? equipos_config : equipos_permitidos;
+            const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
             const nowIso = new Date().toISOString();
 
             await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push" 
@@ -2353,17 +2354,22 @@ export async function onRequestPost(context) {
                 "Opciones_Viernes" INTEGER DEFAULT 1,
                 "Opciones_2Horas" INTEGER DEFAULT 1,
                 "Opciones_SoloOlvidos" INTEGER DEFAULT 0,
-                "Equipos_Permitidos" TEXT DEFAULT '[]',
+                "Equipos_Permitidos" TEXT DEFAULT '{}',
                 "Ultima_Actualizacion" TEXT
             )`).run();
 
             const row = await db.prepare('SELECT * FROM "Suscripciones_Push" WHERE "Usuario" = ?').bind(usuario).first();
+            let equiposCfg = {};
+            if (row && row.Equipos_Permitidos) {
+                try { equiposCfg = JSON.parse(row.Equipos_Permitidos); } catch(e){}
+            }
             let config = {
                 tiene_suscripcion: Boolean(row && row.Suscripcion_JSON && row.Suscripcion_JSON.length > 20),
                 opciones_2horas: row ? Boolean(row.Opciones_2Horas) : true,
                 opciones_viernes: row ? Boolean(row.Opciones_Viernes) : true,
                 opciones_solo_olvidos: row ? Boolean(row.Opciones_SoloOlvidos) : false,
-                equipos_permitidos: (row && row.Equipos_Permitidos) ? (function(){ try { return JSON.parse(row.Equipos_Permitidos); } catch(e){ return []; } })() : [],
+                equipos_config: equiposCfg,
+                equipos_permitidos: Array.isArray(equiposCfg) ? equiposCfg : Object.keys(equiposCfg),
                 public_key: pubKey
             };
             return jsonResponse({ status: 'success', config });
@@ -2550,10 +2556,38 @@ export async function onRequestPost(context) {
                 const hasTeamPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X') || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
                 if (!hasTeamPerm) continue;
 
+                // COMPROBACIÓN ESPECÍFICA POR EQUIPO (Equipos_Permitidos)
+                let userEqCfg = null;
+                if (subRow.Equipos_Permitidos) {
+                    try { userEqCfg = JSON.parse(subRow.Equipos_Permitidos); } catch(e) {}
+                }
+
+                // Determinar el equipo del usuario en este partido
+                const teamKey = (userEqCfg && userEqCfg[loc] !== undefined) ? loc : ((userEqCfg && userEqCfg[riv] !== undefined) ? riv : loc);
+                const cfgForTeam = userEqCfg ? userEqCfg[teamKey] : null;
+
+                // Si el usuario configuró el equipo y lo tiene desactivado, saltar
+                if (cfgForTeam !== null && cfgForTeam !== undefined) {
+                    if (typeof cfgForTeam === 'object' && cfgForTeam.activo === false) {
+                        continue; // Desactivado para este equipo específico
+                    } else if (cfgForTeam === false) {
+                        continue;
+                    }
+                } else if (Array.isArray(userEqCfg) && userEqCfg.length > 0) {
+                    if (!userEqCfg.includes(loc) && !userEqCfg.includes(riv)) {
+                        continue;
+                    }
+                }
+
                 const userPred = porrasMap[`${u}_${p.id_partido}`];
                 const hasPredicted = Boolean(userPred && userPred.Sets);
 
-                if (subRow.Opciones_SoloOlvidos === 1 && hasPredicted) {
+                // Comprobar filtro "Solo si aún no he pronosticado" (específico por equipo o global):
+                const teamSoloOlvidos = (typeof cfgForTeam === 'object' && cfgForTeam.solo_olvidos !== undefined)
+                    ? Boolean(cfgForTeam.solo_olvidos)
+                    : Boolean(subRow.Opciones_SoloOlvidos);
+
+                if (teamSoloOlvidos && hasPredicted) {
                     continue;
                 }
 

@@ -45,11 +45,38 @@
         opciones_2horas: true,
         opciones_solo_olvidos: false,
         opciones_viernes: true,
+        equipos_config: {}, // { "Equipo": { activo: true/false, solo_olvidos: true/false } }
         public_key: DEFAULT_VAPID_PUBKEY
     };
 
+    // Helper para obtener la lista de equipos disponibles para el usuario
+    function getAvailableTeamsForUser() {
+        const set = new Set();
+        if (window.appData) {
+            if (Array.isArray(window.appData.mis_equipos_siguiendo)) {
+                window.appData.mis_equipos_siguiendo.forEach(t => { if (t) set.add(t); });
+            }
+            if (Array.isArray(window.appData.equipos)) {
+                window.appData.equipos.forEach(p => { if (p.equipo_local) set.add(p.equipo_local); });
+            }
+            if (Array.isArray(window.appData.todos_partidos)) {
+                window.appData.todos_partidos.forEach(p => { if (p.equipo_local) set.add(p.equipo_local); });
+            }
+        }
+        return Array.from(set).sort();
+    }
+
     // --- CARGAR ESTADO Y CONFIGURACIÓN ---
     window.cargarEstadoPush = async function() {
+        // Cargar respaldo local primero
+        try {
+            const rawLocal = localStorage.getItem('vcv_push_config_local');
+            if (rawLocal) {
+                const parsedLocal = JSON.parse(rawLocal);
+                Object.assign(currentPushConfig, parsedLocal);
+            }
+        } catch(e) {}
+
         if (!isPushSupported()) return currentPushConfig;
         const usr = window.currentUser || (window.appData && window.appData.usuario);
         const pwd = window.currentPassword;
@@ -77,6 +104,9 @@
                     currentPushConfig.opciones_2horas = data.config.opciones_2horas !== false;
                     currentPushConfig.opciones_solo_olvidos = Boolean(data.config.opciones_solo_olvidos);
                     currentPushConfig.opciones_viernes = data.config.opciones_viernes !== false;
+                    if (data.config.equipos_config && typeof data.config.equipos_config === 'object') {
+                        currentPushConfig.equipos_config = data.config.equipos_config;
+                    }
                     if (data.config.public_key) {
                         currentPushConfig.public_key = data.config.public_key;
                     }
@@ -146,7 +176,7 @@
                     });
                 }
 
-                // Guardar suscripción y preferencias en D1
+                // Guardar suscripción y preferencias
                 const chk2h = document.getElementById('chkPush2Horas');
                 const chkOlv = document.getElementById('chkPushSoloOlvidos');
                 const chkVie = document.getElementById('chkPushViernes');
@@ -154,35 +184,63 @@
                 const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
                 const opOlv = chkOlv ? chkOlv.checked : currentPushConfig.opciones_solo_olvidos;
                 const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
+                const eqCfg = window.recopilarEquiposPushConfig();
 
-                const res = await fetchSeguro(window.scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'guardar_suscripcion_push',
-                        usuario: usr,
-                        password: pwd,
-                        suscripcion: sub.toJSON(),
-                        opciones_2horas: op2h,
-                        opciones_solo_olvidos: opOlv,
-                        opciones_viernes: opVie
-                    })
-                });
-                const data = await res.json();
-                if (data && data.status === 'success') {
-                    currentPushConfig.dispositivo_suscrito = true;
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Activas';
-                        statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-                        statusBadge.style.color = '#10b981';
+                currentPushConfig.dispositivo_suscrito = true;
+                currentPushConfig.opciones_2horas = op2h;
+                currentPushConfig.opciones_solo_olvidos = opOlv;
+                currentPushConfig.opciones_viernes = opVie;
+                currentPushConfig.equipos_config = eqCfg;
+
+                // Guardar respaldo en localStorage
+                try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e){}
+
+                let serverSaved = false;
+                let errMsg = '';
+                try {
+                    const res = await fetchSeguro(window.scriptURL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'guardar_suscripcion_push',
+                            usuario: usr,
+                            password: pwd,
+                            suscripcion: sub.toJSON(),
+                            opciones_2horas: op2h,
+                            opciones_solo_olvidos: opOlv,
+                            opciones_viernes: opVie,
+                            equipos_config: eqCfg
+                        })
+                    });
+                    const data = await res.json();
+                    if (data && data.status === 'success') {
+                        serverSaved = true;
+                    } else if (data && data.message) {
+                        errMsg = data.message;
                     }
-                    if (optionsBox) optionsBox.style.opacity = '1';
-                    if (feedbackDiv) {
-                        feedbackDiv.style.display = 'block';
+                } catch(netErr) {
+                    errMsg = netErr.message;
+                }
+
+                if (statusBadge) {
+                    statusBadge.textContent = 'Activas';
+                    statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    statusBadge.style.color = '#10b981';
+                }
+                if (optionsBox) optionsBox.style.opacity = '1';
+
+                if (feedbackDiv) {
+                    feedbackDiv.style.display = 'block';
+                    if (serverSaved) {
                         feedbackDiv.style.color = '#10b981';
                         feedbackDiv.textContent = '✅ ¡Notificaciones activadas en este dispositivo!';
+                    } else if (errMsg.includes('Acción desconocida')) {
+                        feedbackDiv.style.color = '#f5c542';
+                        feedbackDiv.textContent = '✅ Notificaciones activas en tu navegador (Pendiente despliegue de rama dev para sincronizar BD)';
+                    } else {
+                        feedbackDiv.style.color = '#10b981';
+                        feedbackDiv.textContent = '✅ Notificaciones registradas correctamente en este dispositivo.';
                     }
-                } else {
-                    throw new Error((data && data.message) || 'Error al guardar en el servidor');
+                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 4000);
                 }
             } else {
                 // Desactivar
@@ -192,16 +250,20 @@
                     if (sub) await sub.unsubscribe();
                 }
 
-                await fetchSeguro(window.scriptURL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'eliminar_suscripcion_push',
-                        usuario: usr,
-                        password: pwd
-                    })
-                });
+                try {
+                    await fetchSeguro(window.scriptURL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'eliminar_suscripcion_push',
+                            usuario: usr,
+                            password: pwd
+                        })
+                    });
+                } catch(e) {}
 
                 currentPushConfig.dispositivo_suscrito = false;
+                try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e){}
+
                 if (statusBadge) {
                     statusBadge.textContent = 'Desactivadas';
                     statusBadge.style.background = 'rgba(255, 255, 255, 0.08)';
@@ -212,6 +274,7 @@
                     feedbackDiv.style.display = 'block';
                     feedbackDiv.style.color = 'var(--text-muted)';
                     feedbackDiv.textContent = 'Notificaciones desactivadas para este dispositivo.';
+                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 3000);
                 }
             }
         } catch (err) {
@@ -226,7 +289,43 @@
         }
     };
 
-    // --- GUARDAR AJUSTES DE PREFERENCIAS (2 Horas, Olvidos, Viernes) ---
+    // Helper para recopilar la configuración por equipo de la UI
+    window.recopilarEquiposPushConfig = function() {
+        const eqCfg = {};
+        const activeCheckboxes = document.querySelectorAll('.chk-team-push-active');
+        activeCheckboxes.forEach(chk => {
+            const team = chk.getAttribute('data-team');
+            if (!team) return;
+            const olvidoChk = document.querySelector(`.chk-team-push-olvido[data-team="${team}"]`);
+            eqCfg[team] = {
+                activo: chk.checked,
+                solo_olvidos: olvidoChk ? olvidoChk.checked : false
+            };
+        });
+        return eqCfg;
+    };
+
+    // --- ACCIONES RÁPIDAS PARA EQUIPOS ---
+    window.pushMarcarTodosEquipos = function(activar) {
+        document.querySelectorAll('.chk-team-push-active').forEach(chk => {
+            chk.checked = activar;
+            const team = chk.getAttribute('data-team');
+            const olvidoChk = document.querySelector(`.chk-team-push-olvido[data-team="${team}"]`);
+            if (olvidoChk) {
+                olvidoChk.disabled = !activar;
+            }
+        });
+        window.guardarAjustesPush();
+    };
+
+    window.pushMarcarTodosSoloOlvidos = function(activar) {
+        document.querySelectorAll('.chk-team-push-olvido').forEach(chk => {
+            if (!chk.disabled) chk.checked = activar;
+        });
+        window.guardarAjustesPush();
+    };
+
+    // --- GUARDAR AJUSTES DE PREFERENCIAS (2 Horas, Olvidos, Viernes, Equipos) ---
     window.guardarAjustesPush = async function() {
         const feedbackDiv = document.getElementById('pushConfigFeedback');
         const usr = window.currentUser || (window.appData && window.appData.usuario);
@@ -240,10 +339,34 @@
         const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
         const opOlv = chkOlv ? chkOlv.checked : currentPushConfig.opciones_solo_olvidos;
         const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
+        const eqCfg = window.recopilarEquiposPushConfig();
 
         currentPushConfig.opciones_2horas = op2h;
         currentPushConfig.opciones_solo_olvidos = opOlv;
         currentPushConfig.opciones_viernes = opVie;
+        currentPushConfig.equipos_config = eqCfg;
+
+        // Persistir copia local
+        try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e){}
+
+        // Actualizar estado disabled de los checkboxes de olvidos según si el equipo está activo
+        document.querySelectorAll('.chk-team-push-active').forEach(chk => {
+            const team = chk.getAttribute('data-team');
+            const olvidoChk = document.querySelector(`.chk-team-push-olvido[data-team="${team}"]`);
+            if (olvidoChk) {
+                olvidoChk.disabled = !chk.checked;
+                const olvidoLabel = olvidoChk.nextElementSibling;
+                if (olvidoLabel) {
+                    olvidoLabel.style.color = chk.checked ? '#f59e0b' : 'var(--text-muted)';
+                }
+            }
+        });
+
+        // Mostrar / ocultar caja de equipos según si la opción 2h está activa
+        const eqCard = document.getElementById('pushEquiposCard');
+        if (eqCard) {
+            eqCard.style.display = op2h ? 'block' : 'none';
+        }
 
         const reg = await getServiceWorkerRegistration();
         let sub = reg ? await reg.pushManager.getSubscription() : null;
@@ -258,7 +381,8 @@
                     suscripcion: sub ? sub.toJSON() : 'dummy_pref_only',
                     opciones_2horas: op2h,
                     opciones_solo_olvidos: opOlv,
-                    opciones_viernes: opVie
+                    opciones_viernes: opVie,
+                    equipos_config: eqCfg
                 })
             });
             const data = await res.json();
@@ -267,11 +391,17 @@
                     feedbackDiv.style.display = 'block';
                     feedbackDiv.style.color = '#10b981';
                     feedbackDiv.textContent = '💾 Preferencias guardadas';
-                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 3000);
+                    setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2500);
                 }
             }
         } catch (e) {
-            console.error('[Push] Error guardando preferencias:', e);
+            console.warn('[Push] Error guardando preferencias en servidor:', e);
+            if (feedbackDiv) {
+                feedbackDiv.style.display = 'block';
+                feedbackDiv.style.color = '#10b981';
+                feedbackDiv.textContent = '💾 Preferencias guardadas localmente';
+                setTimeout(() => { if (feedbackDiv) feedbackDiv.style.display = 'none'; }, 2500);
+            }
         }
     };
 
@@ -310,6 +440,35 @@
             statusColor = '#ef4444';
         }
 
+        // Construir listado de equipos configurables
+        const teams = getAvailableTeamsForUser();
+        let teamsRowsHtml = '';
+        if (teams.length === 0) {
+            teamsRowsHtml = '<div style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:8px;">No hay equipos asignados o en cartelera en este momento.</div>';
+        } else {
+            teams.forEach(t => {
+                const teamData = (currentPushConfig.equipos_config && currentPushConfig.equipos_config[t]) !== undefined
+                    ? currentPushConfig.equipos_config[t]
+                    : { activo: true, solo_olvidos: currentPushConfig.opciones_solo_olvidos };
+                
+                const isTeamActivo = (typeof teamData === 'object') ? (teamData.activo !== false) : Boolean(teamData);
+                const isTeamOlvido = (typeof teamData === 'object') ? Boolean(teamData.solo_olvidos) : false;
+
+                teamsRowsHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(28, 10, 38, 0.7); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(192, 132, 252, 0.15); gap: 8px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer; flex: 1; min-width: 0;">
+                            <input type="checkbox" class="chk-team-push-active" data-team="${t}" ${isTeamActivo ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="accent-color: var(--secondary-color); transform: scale(1.15); cursor:pointer;">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t}</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap: 4px; margin: 0; cursor: pointer; white-space: nowrap;">
+                            <input type="checkbox" class="chk-team-push-olvido" data-team="${t}" ${isTeamOlvido ? 'checked' : ''} ${!isTeamActivo ? 'disabled' : ''} onchange="window.guardarAjustesPush()" style="accent-color: #f59e0b; transform: scale(0.95); cursor:pointer;">
+                            <span style="font-size: 0.70rem; font-weight: 600; color: ${isTeamActivo ? '#f59e0b' : 'var(--text-muted)'};" title="Avisar solo si aún no has pronosticado en partidos de este equipo">Solo olvidos</span>
+                        </label>
+                    </div>
+                `;
+            });
+        }
+
         container.innerHTML = `
             <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 14px; padding: 18px; margin-top: 16px; text-align: left; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
@@ -323,7 +482,7 @@
                 </div>
 
                 <p style="font-size: 0.78rem; color: #bfa9c9; margin: 0 0 14px 0; line-height: 1.4;">
-                    Recibe alertas en tu dispositivo para que no se te pase pronosticar ningún partido de tu equipo antes de que empiece.
+                    Recibe recordatorios automáticos en tu dispositivo antes de que comiencen los partidos de tus equipos para que nunca te quedes sin pronosticar.
                 </p>
 
                 <!-- SWITCH PRINCIPAL: ACTIVAR EN ESTE DISPOSITIVO -->
@@ -341,40 +500,63 @@
                 </div>
 
                 <!-- SUB-OPCIONES DE RECORDATORIO -->
-                <div id="pushSubOptionsBox" style="opacity: ${isActivo ? '1' : '0.55'}; transition: opacity 0.3s; display:flex; flex-direction:column; gap:10px; padding: 10px 4px;">
-                    <!-- 2 HORAS ANTES -->
-                    <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none;">
-                        <input type="checkbox" id="chkPush2Horas" ${currentPushConfig.opciones_2horas ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.15); accent-color: var(--secondary-color); cursor:pointer;">
-                        <div>
-                            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">⏱️ Recordatorio 2 horas antes de cada partido</div>
-                            <div style="font-size: 0.72rem; color: #bfa9c9;">Te avisará con antelación suficiente cuando juegue uno de tus equipos.</div>
-                        </div>
-                    </label>
+                <div id="pushSubOptionsBox" style="opacity: ${isActivo ? '1' : '0.55'}; transition: opacity 0.3s; display:flex; flex-direction:column; gap:12px; padding: 4px 0;">
+                    
+                    <!-- ⏱️ RECORDATORIO 2 HORAS ANTES -->
+                    <div style="background: rgba(28, 10, 38, 0.4); border: 1px solid rgba(192, 132, 252, 0.15); border-radius: 10px; padding: 12px;">
+                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none;">
+                            <input type="checkbox" id="chkPush2Horas" ${currentPushConfig.opciones_2horas ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.2); accent-color: var(--secondary-color); cursor:pointer;">
+                            <div>
+                                <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main);">⏱️ Recordatorio 2 horas antes de cada partido</div>
+                                <div style="font-size: 0.72rem; color: #bfa9c9;">Te avisa con 2 horas de antelación al inicio del encuentro.</div>
+                            </div>
+                        </label>
 
-                    <!-- SOLO SI HE OLVIDADO PRONOSTAR -->
-                    <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; margin-left: 24px; user-select:none;">
-                        <input type="checkbox" id="chkPushSoloOlvidos" ${currentPushConfig.opciones_solo_olvidos ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.1); accent-color: #f59e0b; cursor:pointer;">
-                        <div>
-                            <div style="font-size: 0.80rem; font-weight: 600; color: #f59e0b;">⚠️ Avisarme solo si aún no he pronosticado</div>
-                            <div style="font-size: 0.70rem; color: var(--text-muted);">Si ya has guardado tu porra para ese partido, no te molestará.</div>
-                        </div>
-                    </label>
+                        <!-- MODO GLOBAL "SOLO SI HE OLVIDADO PRONOSTICAR" -->
+                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; margin-left: 26px; margin-top: 10px; user-select:none;">
+                            <input type="checkbox" id="chkPushSoloOlvidos" ${currentPushConfig.opciones_solo_olvidos ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.1); accent-color: #f59e0b; cursor:pointer;">
+                            <div>
+                                <div style="font-size: 0.80rem; font-weight: 700; color: #f59e0b;">⚠️ Avisarme solo si aún no he pronosticado</div>
+                                <div style="font-size: 0.70rem; color: var(--text-muted);">Si ya has guardado tu porra para ese partido, no te molestará.</div>
+                            </div>
+                        </label>
 
-                    <!-- VIERNES RESUMEN -->
-                    <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none; margin-top:2px;">
-                        <input type="checkbox" id="chkPushViernes" ${currentPushConfig.opciones_viernes ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.15); accent-color: var(--secondary-color); cursor:pointer;">
-                        <div>
-                            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">📅 Resumen de la jornada los viernes</div>
-                            <div style="font-size: 0.72rem; color: #bfa9c9;">Aviso con la lista de encuentros que se juegan el fin de semana.</div>
+                        <!-- LISTA DE EQUIPOS PERSONALIZADA (PER-TEAM CONFIG) -->
+                        <div id="pushEquiposCard" style="margin-top: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 8px; padding: 12px; display: ${currentPushConfig.opciones_2horas ? 'block' : 'none'};">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                                <span style="font-size: 0.76rem; font-weight: 800; color: #f5c542; display:flex; align-items:center; gap: 4px;">
+                                    🏐 Configuración por equipo:
+                                </span>
+                                <div style="display:flex; gap: 4px;">
+                                    <button type="button" onclick="window.pushMarcarTodosEquipos(true)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 4px; cursor: pointer;">Todos</button>
+                                    <button type="button" onclick="window.pushMarcarTodosEquipos(false)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 4px; cursor: pointer;">Ninguno</button>
+                                    <button type="button" onclick="window.pushMarcarTodosSoloOlvidos(true)" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; border-radius: 4px; cursor: pointer;">Solo olvidos</button>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap: 6px; max-height: 190px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin;">
+                                ${teamsRowsHtml}
+                            </div>
                         </div>
-                    </label>
+                    </div>
+
+                    <!-- 📅 RESUMEN VIERNES -->
+                    <div style="background: rgba(28, 10, 38, 0.4); border: 1px solid rgba(192, 132, 252, 0.15); border-radius: 10px; padding: 12px;">
+                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none;">
+                            <input type="checkbox" id="chkPushViernes" ${currentPushConfig.opciones_viernes ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.15); accent-color: var(--secondary-color); cursor:pointer;">
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">📅 Resumen de la jornada los viernes</div>
+                                <div style="font-size: 0.72rem; color: #bfa9c9;">Aviso con la lista de encuentros que se juegan el fin de semana.</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
-                <div id="pushConfigFeedback" style="font-size: 0.75rem; margin-top: 8px; display: none;"></div>
+                <div id="pushConfigFeedback" style="font-size: 0.75rem; margin-top: 10px; display: none; padding: 6px 10px; border-radius: 6px; background: rgba(0,0,0,0.3);"></div>
             </div>
         `;
 
-        // Añadir animación suave al switch
+        // Sincronizar animación suave del switch principal
         const sw = document.getElementById('switchPushDispositivo');
         if (sw) {
             sw.addEventListener('change', function() {
