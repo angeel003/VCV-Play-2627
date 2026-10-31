@@ -522,51 +522,26 @@ function cargarDatosAntiguos() {
     });
 }
 
+// Prevenir envío global de formulario heredado de la V1 (cada partido se guarda individualmente en V2)
 const prediccionFormEl = document.getElementById('prediccionForm');
-if (prediccionFormEl) prediccionFormEl.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const btnSubmit = document.getElementById('btnSubmit'); 
-    const msgBox = document.getElementById('appMessage');
-    msgBox.style.display = "none";
-
-    const getVal = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
-    let prediccionesList = {};
-    
-    equiposTotalesInfo.forEach(eq => {
-        const elSet = document.getElementById(`e${eq.id_partido}_sets`);
-        if(elSet && !elSet.disabled) {
-            let vSet = getVal(`e${eq.id_partido}_sets`);
-            let vPuntos = getVal(`e${eq.id_partido}_puntos`);
-            let vSigno = getVal(`e${eq.id_partido}_signo`);
-
-            // ONLY send this prediction if the user has actually made one (or is modifying an existing one).
-            // This prevents overwriting valid backend predictions with empty ones.
-            if (vSet !== "") {
-                prediccionesList[eq.id_partido] = { sets: vSet, puntos: vPuntos, signo: vSigno };
-            }
-        }
+if (prediccionFormEl) {
+    prediccionFormEl.addEventListener('submit', function(e) {
+        e.preventDefault();
+        return false;
     });
+}
 
-    
-
-    btnSubmit.disabled = true; 
-    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...'; 
-
-    fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'save', usuario: currentUser, password: currentPassword, jornada: currentJornadaGlobal, predicciones: prediccionesList }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-    .then(res => res.json())
-    .then(data => {
-        msgBox.style.display = "block";
-        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
-          updateProgressBar();
-        if (data.status === "success") { msgBox.className = "alert-box alert-success"; msgBox.innerText = "✅ " + data.message; } 
-        else { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "❌ " + data.message; }
-    })
-    .catch(() => { msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message + " | " + (err.stack || ""); msgBox.style.display = "block";
-        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
-          updateProgressBar(); })
-    .finally(() => { btnSubmit.disabled = false; btnSubmit.innerText = "💾 Guardar Mis Predicciones"; });
+// Al pulsar Enter en el input de puntos de un partido, guardar solo ese partido de forma natural en V2
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target && e.target.id && e.target.id.startsWith('val-v2-')) {
+        e.preventDefault();
+        e.target.blur();
+        const idPart = e.target.id.replace('val-v2-', '');
+        if (typeof window.handleSaveOrModifyV2 === 'function') {
+            window.handleSaveOrModifyV2(idPart);
+        }
+    }
 });
-
 const btnToggleSortEl = document.getElementById('btnToggleSort');
 if (btnToggleSortEl) btnToggleSortEl.addEventListener('click', function(e) {
     e.preventDefault();
