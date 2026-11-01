@@ -955,24 +955,26 @@ export async function onRequestPost(context) {
             // Helper para separar múltiples equipos manteniendo equipo y categoría en el mismo punto
             const parseTeamsString = (raw) => {
                 if (!raw) return [];
-                let chunks = String(raw).split(/\s+y\s+|;\s*|\n/i).map(t => t.trim()).filter(Boolean);
-                let finalTeams = [];
-                chunks.forEach(chunk => {
+                let rawStr = String(raw).trim();
+                if (!rawStr) return [];
+                let initialChunks = rawStr.split(/[;\n]|\s+y\s+/i).map(s => s.trim()).filter(Boolean);
+                let teams = [];
+                initialChunks.forEach(chunk => {
                     const parts = chunk.split(',').map(p => p.trim()).filter(Boolean);
-                    if (parts.length <= 2) {
-                        finalTeams.push(chunk);
-                    } else {
-                        for (let i = 0; i < parts.length; i++) {
-                            if (i + 1 < parts.length && /^(1ª|2ª|superliga|sm2|sf2|primera|segunda|división|nacional|masc|fem|juvenil|cadete|infantil)/i.test(parts[i+1])) {
-                                finalTeams.push(parts[i] + ', ' + parts[i+1]);
-                                i++;
-                            } else {
-                                finalTeams.push(parts[i]);
-                            }
+                    for (let i = 0; i < parts.length; i++) {
+                        let part = parts[i];
+                        let nextPart = parts[i + 1];
+                        const isStrictCategoryOnly = nextPart && /^(SM2|SF2|Superliga\s*2|1[ªa]\s*Nacional(\s*(Masc\.?|Fem\.?))?|2[ªa]\s*(División\s*)?(Masc\.?|Fem\.?))$/i.test(nextPart.trim());
+                        const partAlreadyHasCat = part.includes(' - ') || part.includes(' – ');
+                        if (isStrictCategoryOnly && !partAlreadyHasCat) {
+                            teams.push(part + ' - ' + nextPart);
+                            i++;
+                        } else {
+                            teams.push(part);
                         }
                     }
                 });
-                return finalTeams;
+                return teams.filter(Boolean);
             };
 
             // Entrenador / Entrenadora de

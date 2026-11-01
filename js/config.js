@@ -267,41 +267,53 @@ function stripLeadingBadgeEmoji(str, emoji) {
 }
 window.stripLeadingBadgeEmoji = stripLeadingBadgeEmoji;
 
+function extractTeamsList(raw) {
+    if (!raw) return [];
+    let rawStr = String(raw).trim();
+    if (!rawStr) return [];
+    let initialChunks = rawStr.split(/[;\n]|\s+y\s+/i).map(s => s.trim()).filter(Boolean);
+    let teams = [];
+    initialChunks.forEach(chunk => {
+        let commaParts = chunk.split(',').map(p => p.trim()).filter(Boolean);
+        for (let i = 0; i < commaParts.length; i++) {
+            let part = commaParts[i];
+            let nextPart = commaParts[i + 1];
+            const isStrictCategoryOnly = nextPart && /^(SM2|SF2|Superliga\s*2|1[ªa]\s*Nacional(\s*(Masc\.?|Fem\.?))?|2[ªa]\s*(División\s*)?(Masc\.?|Fem\.?))$/i.test(nextPart.trim());
+            const partAlreadyHasCat = part.includes(' - ') || part.includes(' – ');
+            if (isStrictCategoryOnly && !partAlreadyHasCat) {
+                teams.push(part + ' - ' + nextPart);
+                i++;
+            } else {
+                teams.push(part);
+            }
+        }
+    });
+    return teams.filter(Boolean);
+}
+window.extractTeamsList = extractTeamsList;
+
 function renderBadgeItemHtml(b, iconSize = "24px") {
     if (!b || b.type === 'permiso_mvp' || b.type === 'permiso_resultados') {
         return '';
     }
-    // Si la insignia contiene una lista estructurada de varios partidos o equipos
+
+    let items = [];
     if (b.items && Array.isArray(b.items) && b.items.length > 0) {
-        // Defensive check: si los items vinieron erróneamente separados por comas (equipo en uno y categoría en otro), agruparlos juntos
-        let fixedItems = [];
-        for (let i = 0; i < b.items.length; i++) {
-            let it = b.items[i];
-            let next = b.items[i + 1];
-            if (next && /^(\d+[ªa]|superliga|sm2|sf2|primera|segunda|división|division|nacional|masc|fem|juvenil|cadete|infantil)/i.test(next.trim())) {
-                fixedItems.push(`${it}, ${next}`);
-                i++;
-            } else {
-                fixedItems.push(it);
-            }
-        }
+        b.items.forEach(it => {
+            let sub = extractTeamsList(it);
+            items.push(...sub);
+        });
+    } else if ((b.type === 'jugador' || b.type === 'entrenador') && b.text) {
+        let rawTeams = b.text.replace(/^(Jugador|Jugadora|Entrenador|Entrenadora)\s+de\s*:?\s*/i, '').trim();
+        items = extractTeamsList(rawTeams);
+    }
 
-        // Si tras agrupar solo hay un equipo, renderizarlo en una sola línea elegante sin viñetas
-        if (fixedItems.length === 1 && (b.type === 'jugador' || b.type === 'entrenador')) {
-            let rolePrefix = b.roleTitle ? b.roleTitle.replace(/:$/, '').replace(/\s+de$/i, '') : (b.type === 'entrenador' ? 'Entrenador' : 'Jugador');
-            return `
-                <div style="display:flex; align-items:center; gap: 12px;">
-                    <div style="flex-shrink:0;">
-                        ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`) }
-                    </div>
-                    <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align:left;">${rolePrefix} de ${fixedItems[0]}</span>
-                </div>
-            `;
-        }
-
-        let rawTitle = b.roleTitle || b.text || ((b.type === 'entrenador') ? 'Entrenador de:' : (b.type === 'mvp' ? 'MVP de:' : 'Jugador de:'));
+    // Si contiene 2 o más equipos, mostrarlos organizados en viñetas elegantes
+    if (items.length > 1) {
+        let rawTitle = b.roleTitle || b.title || ((b.type === 'entrenador') ? 'Entrenador de:' : (b.type === 'mvp' ? 'MVP de:' : 'Jugador de:'));
         let title = stripLeadingBadgeEmoji(rawTitle, b.emoji);
-        let itemsHtml = fixedItems.map(it => `
+        if (!title.endsWith(':')) title += ':';
+        let itemsHtml = items.map(it => `
             <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--text-muted); margin-top:3px; padding-left:2px;">
                 <span style="color:var(--secondary-color); font-size:0.7rem; line-height:1;">•</span>
                 <span style="color:var(--text-main); font-weight:500;">${it}</span>
@@ -319,6 +331,19 @@ function renderBadgeItemHtml(b, iconSize = "24px") {
                         ${itemsHtml}
                     </div>
                 </div>
+            </div>
+        `;
+    }
+
+    // Si tras normalizar solo hay 1 equipo para jugador o entrenador
+    if (items.length === 1 && (b.type === 'jugador' || b.type === 'entrenador')) {
+        let rolePrefix = b.roleTitle ? b.roleTitle.replace(/:$/, '').replace(/\s+de$/i, '') : (b.type === 'entrenador' ? 'Entrenador' : 'Jugador');
+        return `
+            <div style="display:flex; align-items:center; gap: 12px;">
+                <div style="flex-shrink:0;">
+                    ${renderBadgeIcon(b, "badge-icon", `width:${iconSize}; height:${iconSize};`) }
+                </div>
+                <span style="font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align:left;">${rolePrefix} de ${items[0]}</span>
             </div>
         `;
     }
