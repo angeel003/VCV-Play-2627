@@ -261,7 +261,7 @@ async function getNotificacionesPublicas(db) {
 
         // Eliminar duplicado generado automáticamente si existía
         try {
-            await db.prepare('DELETE FROM "Notificaciones" WHERE "ID" = 6').run();
+            await db.prepare('DELETE FROM "Notificaciones" WHERE "Titulo" = \'🔔 ¡Novedad! Recordatorios y Notificaciones\'').run();
         } catch(e) {}
 
         const { results } = await db.prepare(`
