@@ -247,24 +247,38 @@ async function getNotificacionesPublicas(db) {
             "Tipo" TEXT,
             "Importancia" TEXT,
             "Visibilidad" TEXT,
-            "timestamp" INTEGER
+            "timestamp" INTEGER,
+            "Activa" INTEGER DEFAULT 1
         )`).run();
+
+        // Asegurar que la columna "Activa" existe si la tabla ya existía
+        try {
+            await db.prepare('ALTER TABLE "Notificaciones" ADD COLUMN "Activa" INTEGER DEFAULT 1').run();
+        } catch(e) {}
+        try {
+            await db.prepare('UPDATE "Notificaciones" SET "Activa" = 1 WHERE "Activa" IS NULL').run();
+        } catch(e) {}
 
         // Asegurar que la notificación de aviso de recordatorios push esté presente
         const rowCheck = await db.prepare('SELECT "ID" FROM "Notificaciones" WHERE "Titulo" LIKE ?').bind('%Notificaciones%').first();
         if (!rowCheck) {
-            await db.prepare('INSERT INTO "Notificaciones" ("Titulo", "Mensaje", "Tipo", "Importancia", "Visibilidad", "timestamp") VALUES (?, ?, ?, ?, ?, ?)')
+            await db.prepare('INSERT INTO "Notificaciones" ("Titulo", "Mensaje", "Tipo", "Importancia", "Visibilidad", "timestamp", "Activa") VALUES (?, ?, ?, ?, ?, ?, ?)')
                 .bind(
                     '🔔 ¡Novedad! Recordatorios y Notificaciones',
                     'Ya puedes recibir avisos automáticos 2 horas antes de los partidos de tus equipos para no quedarte sin hacer tus predicciones. ¡Actívalas y configúralas a tu gusto desde tu pestaña de Perfil!',
                     'Aviso',
                     'ALTA',
                     'MOSTRAR',
-                    Date.now()
+                    Date.now(),
+                    1
                 ).run();
         }
 
-        const { results } = await db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" = \'MOSTRAR\' ORDER BY "timestamp" DESC, "ID" DESC').all();
+        const { results } = await db.prepare(`
+            SELECT * FROM "Notificaciones" 
+            WHERE "Visibilidad" IS NULL OR ("Visibilidad" != 'OCULTAR' AND "Visibilidad" != 'BORRADA' AND "Visibilidad" != 'ELIMINADA') 
+            ORDER BY "timestamp" DESC, "ID" DESC
+        `).all();
         return results || [];
     } catch (e) {
         console.warn('Error fetching notificaciones:', e);

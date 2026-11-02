@@ -182,6 +182,157 @@ window.cerrarSesionApp = function() {
 
 // ------------------------------------------------------------------
 
+// ============================================================================
+// GESTOR DE AVISOS Y NOTIFICACIONES (ACTIVOS VS HISTORIAL / INACTIVOS)
+// ============================================================================
+window.esNotificacionActiva = function(n) {
+    if (!n) return false;
+    // Si la columna Activa es explícitamente 0, false, "0", "NO", "no" o "INACTIVA"
+    if (n.Activa === 0 || n.Activa === '0' || n.Activa === false || n.Activa === 'NO' || n.Activa === 'no' || n.Activa === 'INACTIVA' || n.Activa === 'inactiva') {
+        return false;
+    }
+    // Si Visibilidad se define como INACTIVA, PASADA, HISTORICO, 0, NO
+    const vis = String(n.Visibilidad || '').toUpperCase().trim();
+    if (vis === 'INACTIVA' || vis === 'PASADA' || vis === 'HISTORICO' || vis === 'HISTÓRICO' || vis === 'NO' || vis === '0') {
+        return false;
+    }
+    // Si Estado se define como INACTIVA, PASADA, HISTORICO
+    const est = String(n.Estado || '').toUpperCase().trim();
+    if (est === 'INACTIVA' || est === 'PASADA' || est === 'HISTORICO' || est === 'HISTÓRICO' || est === 'NO' || est === '0') {
+        return false;
+    }
+    return true;
+};
+
+window.renderNotificaciones = function(notifList) {
+    if (!Array.isArray(notifList)) notifList = [];
+    window.appNotificaciones = notifList;
+
+    // Ordenar de más reciente a más antigua
+    const todas = [...notifList].sort((a, b) => {
+        const tsA = a.timestamp || 0;
+        const tsB = b.timestamp || 0;
+        if (tsB !== tsA) return tsB - tsA;
+        return (b.ID || 0) - (a.ID || 0);
+    });
+
+    const activas = todas.filter(window.esNotificacionActiva);
+    const inactivas = todas.filter(n => !window.esNotificacionActiva(n));
+
+    // 1. Campanita: Solo suma las notificaciones ACTIVAS
+    const notifBadge = document.querySelector('.header-bell-badge');
+    if (notifBadge) {
+        if (activas.length > 0) {
+            notifBadge.style.display = 'flex';
+            notifBadge.innerText = activas.length;
+            const hasHigh = activas.some(n => String(n.Importancia || '').toUpperCase() === 'ALTA');
+            notifBadge.style.animation = hasHigh ? 'pulse-badge 2s infinite' : 'none';
+        } else {
+            notifBadge.style.display = 'none';
+            notifBadge.innerText = '';
+            notifBadge.style.animation = 'none';
+        }
+    }
+
+    // 2. Contenedor del Modal
+    const notifContainer = document.getElementById('notificacionesContainer');
+    if (!notifContainer) return;
+
+    if (todas.length === 0) {
+        notifContainer.innerHTML = '<div style="text-align:center; padding: 25px 0; color:var(--text-muted); font-size:0.88rem;">No hay avisos ni notificaciones disponibles.</div>';
+        return;
+    }
+
+    // Formateador de fecha
+    function formatFechaRelativa(ts) {
+        if (!ts) return '';
+        try {
+            const d = new Date(ts);
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMin = Math.floor(diffMs / 60000);
+            const diffHoras = Math.floor(diffMin / 60);
+
+            if (diffMin < 2) return 'Ahora mismo';
+            if (diffMin < 60) return `Hace ${diffMin} min`;
+            if (diffHoras < 24 && d.getDate() === now.getDate() && d.getMonth() === now.getMonth()) {
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mm = String(d.getMinutes()).padStart(2, '0');
+                return `Hoy, ${hh}:${mm}`;
+            }
+            const dia = String(d.getDate()).padStart(2, '0');
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${dia}/${mes} ${hh}:${mm}`;
+        } catch(e) {
+            return '';
+        }
+    }
+
+    let html = '';
+
+    // 1. ACTIVAS (arriba, color normal nítido, sin etiquetas rojas ni texto de aviso activo)
+    if (activas.length > 0) {
+        activas.forEach((n) => {
+            const iconColor = n.Tipo === 'Aviso' ? '#f59e0b' : 'var(--primary-color, #a855f7)';
+            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
+            const fechaStr = formatFechaRelativa(n.timestamp);
+
+            html += `
+            <div class="notif-card notif-active" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px;">
+                <i data-lucide="${iconType}" style="width: 20px; height: 20px; color: ${iconColor}; flex-shrink: 0; margin-top: 2px;"></i>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+                        <strong style="color: var(--text-main); font-size: 0.95rem; line-height: 1.3;">${n.Titulo || ''}</strong>
+                        ${fechaStr ? `<span style="font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0;">${fechaStr}</span>` : ''}
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.45; word-break: break-word;">${n.Mensaje || ''}</p>
+                </div>
+            </div>`;
+        });
+    }
+
+    // Separador sutil si hay tanto activas como desactivadas
+    if (activas.length > 0 && inactivas.length > 0) {
+        html += `<div style="height: 1px; background: rgba(255, 255, 255, 0.07); width: 100%; margin: 4px 0;"></div>`;
+    }
+
+    // 2. DESACTIVADAS (más abajo, en gris, no suman al número de la campanita)
+    if (inactivas.length > 0) {
+        inactivas.forEach((n) => {
+            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
+            const fechaStr = formatFechaRelativa(n.timestamp);
+
+            html += `
+            <div class="notif-card notif-inactive" style="display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 10px; opacity: 0.55;">
+                <i data-lucide="${iconType}" style="width: 18px; height: 18px; color: #71717a; flex-shrink: 0; margin-top: 2px;"></i>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px;">
+                        <strong style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.3;">${n.Titulo || ''}</strong>
+                        ${fechaStr ? `<span style="font-size: 0.7rem; color: #71717a; flex-shrink: 0;">${fechaStr}</span>` : ''}
+                    </div>
+                    <p style="color: #71717a; font-size: 0.82rem; margin: 0; line-height: 1.4; word-break: break-word;">${n.Mensaje || ''}</p>
+                </div>
+            </div>`;
+        });
+    }
+
+    notifContainer.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.abrirModalNotificaciones = function() {
+    const modal = document.getElementById('notificacionesModal');
+    if (!modal) return;
+    const list = window.appNotificaciones || (window.appData && window.appData.notificaciones) || [];
+    if (typeof window.renderNotificaciones === 'function') {
+        window.renderNotificaciones(list);
+    }
+    modal.style.display = 'flex';
+};
+
+
 // LOGICA MODO INVITADO
 const btnGuestEl = document.getElementById('btnGuest');
 if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
@@ -345,12 +496,9 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             window.renderCarteleraHTML(data);
 
             // Notifications
-            if (data.notificaciones && data.notificaciones.length > 0) {
-                const notifBadge = document.querySelector('.header-bell-badge');
-                if (notifBadge) {
-                    notifBadge.style.display = 'flex';
-                    notifBadge.innerText = data.notificaciones.length;
-                }
+            window.appNotificaciones = data.notificaciones || [];
+            if (typeof window.renderNotificaciones === 'function') {
+                window.renderNotificaciones(window.appNotificaciones);
             }
 
             // Activate cartelera tab
@@ -419,45 +567,9 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 localStorage.removeItem('vcv_saved_session');
             }
             // --- NOTIFICACIONES ---
-            if (data.notificaciones) {
-                const notifBadge = document.querySelector('.header-bell-badge');
-                const notifContainer = document.getElementById('notificacionesContainer');
-                
-                if (data.notificaciones.length > 0) {
-                    if (notifBadge) {
-                        notifBadge.style.display = 'flex';
-                        notifBadge.innerText = data.notificaciones.length;
-                        const hasHigh = data.notificaciones.some(n => n.Importancia === 'ALTA');
-                        notifBadge.style.animation = hasHigh ? 'pulse-badge 2s infinite' : 'none';
-                    }
-                    
-                    if (notifContainer) {
-                        let html = '';
-                        data.notificaciones.forEach((n, idx) => {
-                            const iconColor = n.Tipo === 'Aviso' ? '#e67e22' : 'var(--primary-color)';
-                            const iconType = n.Tipo === 'Aviso' ? 'alert-triangle' : 'info';
-                            const isLast = idx === data.notificaciones.length - 1;
-                            
-                            html += `
-                            <div style="display: flex; align-items: flex-start; gap: 10px;">
-                                <i data-lucide="${iconType}" style="width: 20px; height: 20px; color: ${iconColor}; flex-shrink: 0; margin-top: 2px;"></i>
-                                <div>
-                                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block; margin-bottom: 4px;">${n.Titulo}</strong>
-                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; line-height: 1.4;">${n.Mensaje}</p>
-                                </div>
-                            </div>`;
-                            
-                            if (!isLast) {
-                                html += `<div style="height:1px; background:rgba(255, 255, 255, 0.1); width:100%;"></div>`;
-                            }
-                        });
-                        notifContainer.innerHTML = html;
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    }
-                } else {
-                    if (notifBadge) notifBadge.style.display = 'none';
-                    if (notifContainer) notifContainer.innerHTML = '<div style="text-align:center; padding: 20px 0;">No hay notificaciones nuevas.</div>';
-                }
+            window.appNotificaciones = data.notificaciones || [];
+            if (typeof window.renderNotificaciones === 'function') {
+                window.renderNotificaciones(window.appNotificaciones);
             }
             
             
