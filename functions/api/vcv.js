@@ -259,20 +259,10 @@ async function getNotificacionesPublicas(db) {
             await db.prepare('UPDATE "Notificaciones" SET "Activa" = 1 WHERE "Activa" IS NULL').run();
         } catch(e) {}
 
-        // Asegurar que la notificación de aviso de recordatorios push esté presente
-        const rowCheck = await db.prepare('SELECT "ID" FROM "Notificaciones" WHERE "Titulo" LIKE ?').bind('%Notificaciones%').first();
-        if (!rowCheck) {
-            await db.prepare('INSERT INTO "Notificaciones" ("Titulo", "Mensaje", "Tipo", "Importancia", "Visibilidad", "timestamp", "Activa") VALUES (?, ?, ?, ?, ?, ?, ?)')
-                .bind(
-                    '🔔 ¡Novedad! Recordatorios y Notificaciones',
-                    'Ya puedes recibir avisos automáticos 2 horas antes de los partidos de tus equipos para no quedarte sin hacer tus predicciones. ¡Actívalas y configúralas a tu gusto desde tu pestaña de Perfil!',
-                    'Aviso',
-                    'ALTA',
-                    'MOSTRAR',
-                    Date.now(),
-                    1
-                ).run();
-        }
+        // Eliminar duplicado generado automáticamente si existía
+        try {
+            await db.prepare('DELETE FROM "Notificaciones" WHERE "ID" = 6').run();
+        } catch(e) {}
 
         const { results } = await db.prepare(`
             SELECT * FROM "Notificaciones" 
