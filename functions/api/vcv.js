@@ -364,15 +364,19 @@ export async function onRequestPost(context) {
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/02/2027 16:00', "timestamp" = 1801926000000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2755'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/10/2026 16:00', "timestamp" = 1793458800000 WHERE "ID_Partido" = 'RFEVB_2561'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '19/12/2026 18:30', "timestamp" = 1797701400000 WHERE "ID_Partido" = 'RFEVB_2753'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 15:00', "timestamp" = 1806843600000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2M007_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 17:00', "timestamp" = 1800806400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID', "Equipo_Local" = 'VCV Meseta', "Rival" = 'Pegamo Abanto', "Ubicacion" = 'LOCAL' WHERE "ID_Partido" = 'FVCL_2M008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/01/2027 20:00', "timestamp" = 1801422000000, "Pabellon" = 'POLIDEPORTIVO, JULIÁN SÁNCHEZ EL CHARRO, SALAMANCA' WHERE "ID_Partido" = 'FVCL_2M009_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2M014_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/11/2026 17:30', "timestamp" = 1794069000000, "Pabellon" = 'Pabellón Enrique Serichol, Segovia' WHERE "ID_Partido" = 'FVCL_2M003_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '28/11/2026 16:00', "timestamp" = 1795878000000, "Pabellon" = 'Polideportivo Cristo Rey, Valladolid' WHERE "ID_Partido" = 'FVCL_2F004'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '28/11/2026 18:00', "timestamp" = 1795885200000, "Pabellon" = 'Polideportivo Cristo Rey, Valladolid' WHERE "ID_Partido" = 'FVCL_2M004_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Pabellon" = 'Campus Deportivo Fuente la Mora' WHERE "ID_Partido" = 'RFEVB_2583'`).run();
         } catch(e) { console.error("Error sincronizando ajustes:", e); }
 
         // Sembrar plantilla inicial si está vacía
@@ -477,11 +481,11 @@ export async function onRequestPost(context) {
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '25/10/2026 12:30', "timestamp" = 1792927800000, "Pabellon" = 'PILAR FDEZ VALDERRAMA' WHERE "ID_Partido" = 'RFEVB_2555'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/02/2027 12:45', "timestamp" = 1802000700000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2623'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/02/2027 16:00', "timestamp" = 1801926000000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2755'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`).run();
-            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, ÁÁvila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
+            await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 12:30', "timestamp" = 1797161400000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 15:00', "timestamp" = 1806843600000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2M007_MES'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 17:00', "timestamp" = 1800806400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID', "Equipo_Local" = 'VCV Meseta', "Rival" = 'Pegamo Abanto', "Ubicacion" = 'LOCAL' WHERE "ID_Partido" = 'FVCL_2M008'`).run();
             await db.prepare(`UPDATE "Ajustes" SET "Fecha" = '31/01/2027 20:00', "timestamp" = 1801422000000, "Pabellon" = 'POLIDEPORTIVO, JULIÁN SÁNCHEZ EL CHARRO, SALAMANCA' WHERE "ID_Partido" = 'FVCL_2M009_MES'`).run();
@@ -590,6 +594,23 @@ export async function onRequestPost(context) {
             r.Fecha = '19/12/2026 18:30';
             r.timestamp = 1797701400000;
             ts = 1797701400000;
+        } else if (idPart === 'FVCL_2M003_MES') {
+            r.Fecha = '07/11/2026 17:30';
+            r.timestamp = 1794069000000;
+            r.Pabellon = 'Pabellón Enrique Serichol, Segovia';
+            ts = 1794069000000;
+        } else if (idPart === 'FVCL_2F004') {
+            r.Fecha = '28/11/2026 16:00';
+            r.timestamp = 1795878000000;
+            r.Pabellon = 'Polideportivo Cristo Rey, Valladolid';
+            ts = 1795878000000;
+        } else if (idPart === 'FVCL_2M004_MES') {
+            r.Fecha = '28/11/2026 18:00';
+            r.timestamp = 1795885200000;
+            r.Pabellon = 'Polideportivo Cristo Rey, Valladolid';
+            ts = 1795885200000;
+        } else if (idPart === 'RFEVB_2583') {
+            r.Pabellon = 'Campus Deportivo Fuente la Mora';
         }
 
         return {
