@@ -238,7 +238,174 @@ export async function onRequestOptions() {
     });
 }
 
-async function getNotificacionesPublicas(db) {
+async function broadcastPushToAll(db, env, { title, body, url, tipo }) {
+    try {
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
+            "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL, "Suscripcion_JSON" TEXT NOT NULL, "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1, "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Equipos_Permitidos" TEXT DEFAULT '[]', "Ultima_Actualizacion" TEXT
+        )`).run();
+        const { results: subs } = await db.prepare('SELECT Endpoint, Usuario, Suscripcion_JSON FROM "Suscripciones_Push_Dispositivos" WHERE LENGTH("Suscripcion_JSON") > 20').all();
+        if (!subs || subs.length === 0) return 0;
+        const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+        const payload = {
+            title: title,
+            body: body,
+            data: { url: url || '/' }
+        };
+        let sent = 0;
+        for (const subRow of subs) {
+            try {
+                const subObj = JSON.parse(subRow.Suscripcion_JSON);
+                const pushRes = await sendWebPushNotification(subObj, payload, env);
+                try {
+                    await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                        .bind(subRow.Usuario || 'Todos', tipo || 'PUSH_GENERAL', title, body, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
+                } catch(e) {}
+                if (pushRes && pushRes.success) sent++;
+            } catch(e) {}
+        }
+        return sent;
+    } catch(e) {
+        console.warn('Error en broadcastPushToAll:', e);
+        return 0;
+    }
+}
+
+async function crearNotificacion(db, { titulo, mensaje, tipo = 'Aviso', importancia = 'ALTA', visibilidad = 'MOSTRAR', activa = 1 }) {
+    try {
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Notificaciones" (
+            "ID" INTEGER PRIMARY KEY AUTOINCREMENT,
+            "Titulo" TEXT,
+            "Mensaje" TEXT,
+            "Tipo" TEXT,
+            "Importancia" TEXT,
+            "Visibilidad" TEXT,
+            "timestamp" INTEGER,
+            "Activa" INTEGER DEFAULT 1
+        )`).run();
+        try {
+            await db.prepare('ALTER TABLE "Notificaciones" ADD COLUMN "Activa" INTEGER DEFAULT 1').run();
+        } catch(e) {}
+
+        const nowTs = Date.now();
+        await db.prepare('INSERT INTO "Notificaciones" ("Titulo", "Mensaje", "Tipo", "Importancia", "Visibilidad", "timestamp", "Activa") VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .bind(titulo, mensaje, tipo, importancia, visibilidad, nowTs, activa).run();
+        return true;
+    } catch(e) {
+        console.error('Error al crear notificacion:', e);
+        return false;
+    }
+}
+
+function getLunesSemanaClave(date = new Date()) {
+    try {
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Madrid',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(date);
+        const [y, m, d] = parts.split('-').map(Number);
+        const madridDate = new Date(Date.UTC(y, m - 1, d));
+        const day = madridDate.getUTCDay();
+        const diff = (day === 0 ? -6 : 1 - day);
+        const monday = new Date(madridDate);
+        monday.setUTCDate(madridDate.getUTCDate() + diff);
+        return monday.toISOString().slice(0, 10);
+    } catch(e) {
+        return new Date(date).toISOString().slice(0, 10);
+    }
+}
+
+async function verificarDescongelacionAutomatica(db, env, context) {
+    try {
+        await db.prepare('CREATE TABLE IF NOT EXISTS "Cache_App" ("clave" TEXT PRIMARY KEY, "valor" TEXT, "timestamp" INTEGER)').run();
+
+        const now = new Date();
+        const utcDay = now.getUTCDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+
+        // Comprobar si hay un override manual de FREEZE
+        let freezeOverride = null;
+        try {
+            const rowOverride = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").first();
+            if (rowOverride && rowOverride.valor) {
+                const parsed = JSON.parse(rowOverride.valor);
+                if (parsed.expires_at && now.getTime() > parsed.expires_at) {
+                    await db.prepare("DELETE FROM Cache_App WHERE clave = 'FREEZE_OVERRIDE'").run();
+                } else {
+                    freezeOverride = parsed.mode;
+                }
+            }
+        } catch(e) {}
+
+        if (freezeOverride === 'FREEZE') {
+            return;
+        }
+
+        // Si es sábado o domingo, las clasificaciones están congeladas durante la jornada de partidos
+        if (utcDay === 6 || utcDay === 0) {
+            return;
+        }
+
+        // Si es lunes, comprobar si ya han pasado las 18:00 de Madrid (16:00/17:00 UTC)
+        if (utcDay === 1) {
+            let hourMadrid = 0;
+            try {
+                const hourStr = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: 'numeric', hour12: false }).format(now);
+                hourMadrid = parseInt(hourStr, 10);
+            } catch(e) {
+                hourMadrid = now.getUTCHours() + 1;
+            }
+            if (hourMadrid < 18) {
+                return;
+            }
+        }
+
+        // Lunes >= 18:00 o Martes a Viernes: clasificaciones descongeladas
+        const lunesClave = getLunesSemanaClave(now);
+        const autoKey = 'AUTO_UNFREEZE_' + lunesClave;
+
+        const yaEmitida = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(autoKey).first();
+        if (yaEmitida) {
+            return;
+        }
+
+        // Marcar en Cache_App para evitar duplicados concurrentes
+        await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(autoKey, 'DONE_AUTO_' + Date.now(), Date.now()).run();
+
+        // Desactivar notificaciones anteriores de descongelación
+        try {
+            await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%descongelad%\' OR "Titulo" LIKE \'%Clasificaciones Descongeladas%\' OR "Titulo" LIKE \'%Rankings y Clasificaciones%\'').run();
+        } catch(e) {}
+
+        const titUnfreeze = '🏆 ¡Rankings y Clasificaciones Descongelados!';
+        const msgUnfreeze = 'Ya se han actualizado todas las clasificaciones con los puntos definitivos de la jornada. ¡Comprueba tu posición en la tabla!';
+        await crearNotificacion(db, {
+            titulo: titUnfreeze,
+            mensaje: msgUnfreeze,
+            tipo: 'Aviso',
+            importancia: 'ALTA',
+            visibilidad: 'MOSTRAR',
+            activa: 1
+        });
+
+        const pushPromise = broadcastPushToAll(db, env, {
+            title: titUnfreeze,
+            body: msgUnfreeze,
+            url: '/?tab=clasificaciones',
+            tipo: 'UNFREEZE_AUTO'
+        });
+
+        if (context && typeof context.waitUntil === 'function') {
+            context.waitUntil(pushPromise);
+        } else {
+            await pushPromise.catch(e => console.warn('Error push auto unfreeze:', e));
+        }
+    } catch(err) {
+        console.warn('Error en verificarDescongelacionAutomatica:', err);
+    }
+}
+
+async function getNotificacionesPublicas(db, env = null, context = null) {
     try {
         await db.prepare(`CREATE TABLE IF NOT EXISTS "Notificaciones" (
             "ID" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -259,10 +426,20 @@ async function getNotificacionesPublicas(db) {
             await db.prepare('UPDATE "Notificaciones" SET "Activa" = 1 WHERE "Activa" IS NULL').run();
         } catch(e) {}
 
+        // Desactivar notificaciones de MVP de hace más de 24 horas si siguen activas
+        try {
+            await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\' AND "Activa" = 1 AND "timestamp" < ?').bind(Date.now() - 24 * 3600 * 1000).run();
+        } catch(e) {}
+
         // Eliminar duplicado generado automáticamente si existía
         try {
             await db.prepare('DELETE FROM "Notificaciones" WHERE "Titulo" = \'🔔 ¡Novedad! Recordatorios y Notificaciones\'').run();
         } catch(e) {}
+
+        // Verificar si toca descongelar clasificaciones automáticamente
+        if (env) {
+            await verificarDescongelacionAutomatica(db, env, context);
+        }
 
         const { results } = await db.prepare(`
             SELECT * FROM "Notificaciones" 
@@ -736,7 +913,7 @@ export async function onRequestPost(context) {
         }
 
         // Notificaciones públicas
-        let notificaciones = await getNotificacionesPublicas(db);
+        let notificaciones = await getNotificacionesPublicas(db, env, context);
 
         return jsonResponse({
             status: "success",
@@ -1548,7 +1725,7 @@ export async function onRequestPost(context) {
         }
 
         // Fetch Notificaciones
-        let notificaciones = await getNotificacionesPublicas(db);
+        let notificaciones = await getNotificacionesPublicas(db, env, context);
 
         return jsonResponse({
             status: "success",
@@ -1718,6 +1895,42 @@ export async function onRequestPost(context) {
 
         // Limpiar caché de clasificaciones para que el cambio surta efecto de inmediato
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
+
+        if (mode === 'UNFREEZE') {
+            const lunesClave = getLunesSemanaClave(new Date());
+            const autoKey = 'AUTO_UNFREEZE_' + lunesClave;
+
+            try {
+                await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(autoKey, 'DONE_MANUAL_' + Date.now(), Date.now()).run();
+            } catch(e) {}
+
+            try {
+                await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%descongelad%\' OR "Titulo" LIKE \'%Clasificaciones Descongeladas%\' OR "Titulo" LIKE \'%Rankings y Clasificaciones%\'').run();
+            } catch(e) {}
+
+            const titUnfreeze = '🏆 ¡Rankings y Clasificaciones Descongelados!';
+            const msgUnfreeze = 'Ya se han actualizado todas las clasificaciones con los puntos definitivos de la jornada. ¡Comprueba tu posición en la tabla!';
+            await crearNotificacion(db, {
+                titulo: titUnfreeze,
+                mensaje: msgUnfreeze,
+                tipo: 'Aviso',
+                importancia: 'ALTA',
+                visibilidad: 'MOSTRAR',
+                activa: 1
+            });
+
+            const pushPromise = broadcastPushToAll(db, env, {
+                title: titUnfreeze,
+                body: msgUnfreeze,
+                url: '/?tab=clasificaciones',
+                tipo: 'UNFREEZE_MANUAL'
+            });
+            if (context && typeof context.waitUntil === 'function') {
+                context.waitUntil(pushPromise);
+            } else {
+                await pushPromise.catch(e => console.warn(e));
+            }
+        }
 
         let mensajeExito = "Horario restablecido a AUTOMÁTICO.";
         if (mode === 'UNFREEZE') mensajeExito = "Clasificaciones DESCONGELADAS con éxito. Todos los puntos se muestran en vivo.";
@@ -1908,6 +2121,75 @@ export async function onRequestPost(context) {
             if (sets) { try { await db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(id_partido).run(); } catch(e) {} }
             try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
+            // Si la votación de MVP se oculta o se proclama ganador oficial, desactivar la notificación activa
+            if (visibleVal === 0 || (mvp_oficial && String(mvp_oficial).trim() !== '')) {
+                try {
+                    await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\'').run();
+                    if (visibleVal === 0) {
+                        await db.prepare("DELETE FROM Cache_App WHERE clave = ?").bind('NOTIF_MVP_OPEN_' + id_partido).run();
+                    }
+                } catch(e) {}
+            }
+
+            // Comprobar si se ha iniciado/publicado la votación del MVP VALCYL de SM2
+            if (isMvpAction && visibleVal === 1 && candStr && candStr.length > 5 && candStr !== '[]') {
+                try {
+                    const mMatch = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(id_partido).first();
+                    const cat = String(mMatch?.Categoria || '').toUpperCase();
+                    const eqLoc = String(mMatch?.Equipo_Local || '').toUpperCase();
+                    const isSM2 = cat.includes('SM2') || cat.includes('SUPERLIGA') || String(id_partido).startsWith('RFEVB_') || eqLoc.includes('VALCYL') || eqLoc.includes('UNIVERSIDAD DE VALLADOLID');
+
+                    if (isSM2) {
+                        const notifKey = 'NOTIF_MVP_OPEN_' + id_partido;
+                        const alreadyNotif = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(notifKey).first();
+                        if (!alreadyNotif) {
+                            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(notifKey, String(Date.now()), Date.now()).run();
+
+                            try {
+                                await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\'').run();
+                            } catch(e) {}
+
+                            let horaCierreStr = "las 12:00";
+                            const cierreTs = parseInt(mvp_cierre_votacion_ts) || (exist ? parseInt(exist.mvp_cierre_votacion_ts) : 0);
+                            if (cierreTs > 0) {
+                                try {
+                                    const dCierre = new Date(cierreTs);
+                                    const hh = dCierre.toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' });
+                                    horaCierreStr = `las ${hh}`;
+                                } catch(e) {}
+                            }
+
+                            const rivalStr = (mMatch && mMatch.Rival) ? ` contra ${mMatch.Rival}` : '';
+                            const titMVP = '👑 ¡Votación MVP VALCYL abierta!';
+                            const msgMVP = `¡Ya puedes votar al MVP VALCYL de Superliga 2 Masculino${rivalStr}! Entra a la Cartelera para apoyar a tu jugador favorito. Recuerda que tienes hasta ${horaCierreStr} para emitir tu voto.`;
+
+                            await crearNotificacion(db, {
+                                titulo: titMVP,
+                                mensaje: msgMVP,
+                                tipo: 'Aviso',
+                                importancia: 'ALTA',
+                                visibilidad: 'MOSTRAR',
+                                activa: 1
+                            });
+
+                            const pushPromise = broadcastPushToAll(db, env, {
+                                title: titMVP,
+                                body: msgMVP,
+                                url: `/?partido=${id_partido}`,
+                                tipo: 'MVP_OPEN'
+                            });
+                            if (context && typeof context.waitUntil === 'function') {
+                                context.waitUntil(pushPromise);
+                            } else {
+                                await pushPromise.catch(e => console.warn(e));
+                            }
+                        }
+                    }
+                } catch(eMvpNotif) {
+                    console.warn("Error generando notificacion de MVP VALCYL:", eMvpNotif);
+                }
+            }
+
             return jsonResponse({ status: 'success', message: 'Resultados y datos guardados con éxito' });
         } catch(sqlErr) {
             console.error("Error SQL en save_resultado_admin:", sqlErr);
@@ -1988,6 +2270,12 @@ export async function onRequestPost(context) {
 
         // Invalidar caché de clasificaciones y estadísticas para reflejar el +10% de bonus de inmediato
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
+
+        if (proclamadoTs > 0) {
+            try {
+                await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\'').run();
+            } catch(e) {}
+        }
 
         return jsonResponse({ status: 'success', message: 'MVP Oficial, estadísticas y recuento de votos guardados con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs, mvp_publicacion_ts: publicacionTs, recuento: JSON.parse(recuentoJson) });
     }
