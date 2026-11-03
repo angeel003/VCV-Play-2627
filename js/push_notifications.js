@@ -171,6 +171,8 @@
         opciones_2horas: true,
         opciones_solo_olvidos: false,
         opciones_viernes: true,
+        opciones_descongelacion: true,
+        opciones_mvp: true,
         equipos_config: {}, // { "Equipo": { activo: true/false, solo_olvidos: true/false } }
         public_key: DEFAULT_VAPID_PUBKEY
     };
@@ -256,6 +258,8 @@
                     currentPushConfig.opciones_2horas = data.config.opciones_2horas !== false;
                     currentPushConfig.opciones_solo_olvidos = Boolean(data.config.opciones_solo_olvidos);
                     currentPushConfig.opciones_viernes = data.config.opciones_viernes !== false;
+                    currentPushConfig.opciones_descongelacion = data.config.opciones_descongelacion !== false;
+                    currentPushConfig.opciones_mvp = data.config.opciones_mvp !== false;
                     if (data.config.equipos_config && typeof data.config.equipos_config === 'object') {
                         currentPushConfig.equipos_config = data.config.equipos_config;
                     }
@@ -354,15 +358,22 @@
                 const chk2h = document.getElementById('chkPush2Horas');
                 const chkVie = document.getElementById('chkPushViernes');
 
+                const chkDescong = document.getElementById('chkPushDescongelacion');
+                const chkMvp = document.getElementById('chkPushMvp');
+
                 const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
                 const opOlv = 0;
                 const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
+                const opDescong = chkDescong ? chkDescong.checked : (currentPushConfig.opciones_descongelacion !== false);
+                const opMvp = chkMvp ? chkMvp.checked : (currentPushConfig.opciones_mvp !== false);
                 const eqCfg = window.recopilarEquiposPushConfig();
 
                 currentPushConfig.dispositivo_suscrito = true;
                 currentPushConfig.opciones_2horas = op2h;
                 currentPushConfig.opciones_solo_olvidos = opOlv;
                 currentPushConfig.opciones_viernes = opVie;
+                currentPushConfig.opciones_descongelacion = opDescong;
+                currentPushConfig.opciones_mvp = opMvp;
                 currentPushConfig.equipos_config = eqCfg;
 
                 // Guardar respaldo en localStorage
@@ -382,6 +393,8 @@
                             opciones_2horas: op2h,
                             opciones_solo_olvidos: opOlv,
                             opciones_viernes: opVie,
+                            opciones_descongelacion: opDescong,
+                            opciones_mvp: opMvp,
                             equipos_config: eqCfg
                         })
                     });
@@ -528,15 +541,27 @@
         const chk2h = document.getElementById('chkPush2Horas');
         const chkVie = document.getElementById('chkPushViernes');
 
+        const chkDescong = document.getElementById('chkPushDescongelacion');
+        const chkMvp = document.getElementById('chkPushMvp');
+
         const op2h = chk2h ? chk2h.checked : currentPushConfig.opciones_2horas;
         const opOlv = 0;
         const opVie = chkVie ? chkVie.checked : currentPushConfig.opciones_viernes;
+        const opDescong = chkDescong ? chkDescong.checked : (currentPushConfig.opciones_descongelacion !== false);
+        const opMvp = chkMvp ? chkMvp.checked : (currentPushConfig.opciones_mvp !== false);
         const eqCfg = window.recopilarEquiposPushConfig();
 
         currentPushConfig.opciones_2horas = op2h;
         currentPushConfig.opciones_solo_olvidos = opOlv;
         currentPushConfig.opciones_viernes = opVie;
+        currentPushConfig.opciones_descongelacion = opDescong;
+        currentPushConfig.opciones_mvp = opMvp;
         currentPushConfig.equipos_config = eqCfg;
+
+        // Actualizar la campanita e in-app notificaciones si están renderizadas
+        if (typeof window.renderNotificaciones === 'function' && window.appNotificaciones) {
+            window.renderNotificaciones(window.appNotificaciones);
+        }
 
         // Persistir copia local inmediatamente
         try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e){}
@@ -584,6 +609,8 @@
                         opciones_2horas: op2h,
                         opciones_solo_olvidos: opOlv,
                         opciones_viernes: opVie,
+                        opciones_descongelacion: opDescong,
+                        opciones_mvp: opMvp,
                         equipos_config: eqCfg
                     })
                 });
@@ -839,6 +866,28 @@
                             <div>
                                 <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">📅 Resumen de la jornada los viernes</div>
                                 <div style="font-size: 0.72rem; color: #bfa9c9;">Aviso con la lista de encuentros que se juegan el fin de semana.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 🏆 DESCONGELACIÓN DE CLASIFICACIONES -->
+                    <div style="background: rgba(28, 10, 38, 0.4); border: 1px solid rgba(192, 132, 252, 0.15); border-radius: 10px; padding: 12px;">
+                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none;">
+                            <input type="checkbox" id="chkPushDescongelacion" ${currentPushConfig.opciones_descongelacion !== false ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.15); accent-color: var(--secondary-color); cursor:pointer;">
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">🏆 Clasificaciones actualizadas de la jornada</div>
+                                <div style="font-size: 0.72rem; color: #bfa9c9;">Te avisa cuando las clasificaciones se descongelan y se publican los puntos definitivos.</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 👑 VOTACIÓN MVP VALCYL (SM2) -->
+                    <div style="background: rgba(28, 10, 38, 0.4); border: 1px solid rgba(192, 132, 252, 0.15); border-radius: 10px; padding: 12px;">
+                        <label style="display:flex; align-items:flex-start; gap: 10px; cursor: pointer; user-select:none;">
+                            <input type="checkbox" id="chkPushMvp" ${currentPushConfig.opciones_mvp !== false ? 'checked' : ''} onchange="window.guardarAjustesPush()" style="margin-top: 2px; transform: scale(1.15); accent-color: var(--secondary-color); cursor:pointer;">
+                            <div>
+                                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">👑 Votación MVP VALCYL (Superliga 2)</div>
+                                <div style="font-size: 0.72rem; color: #bfa9c9;">Avisos de apertura y recordatorio 1 hora antes de que finalice la votación si no has votado.</div>
                             </div>
                         </label>
                     </div>

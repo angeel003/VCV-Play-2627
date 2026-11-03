@@ -201,6 +201,25 @@ window.esNotificacionActiva = function(n) {
     if (est === 'INACTIVA' || est === 'PASADA' || est === 'HISTORICO' || est === 'HISTÓRICO' || est === 'NO' || est === '0') {
         return false;
     }
+    // Comprobar preferencias personalizadas del usuario (si ha desactivado clasificaciones o MVP en sus ajustes)
+    try {
+        let pCfg = null;
+        if (typeof currentPushConfig !== 'undefined' && currentPushConfig) pCfg = currentPushConfig;
+        else {
+            const raw = localStorage.getItem('vcv_push_config_local');
+            if (raw) pCfg = JSON.parse(raw);
+        }
+        if (pCfg) {
+            const tit = String(n.Titulo || '').toLowerCase();
+            if (pCfg.opciones_descongelacion === false && (tit.includes('descongelad') || tit.includes('clasificaciones'))) {
+                return false;
+            }
+            if (pCfg.opciones_mvp === false && tit.includes('mvp valcyl')) {
+                return false;
+            }
+        }
+    } catch(e) {}
+
     return true;
 };
 

@@ -241,9 +241,18 @@ export async function onRequestOptions() {
 async function broadcastPushToAll(db, env, { title, body, url, tipo }) {
     try {
         await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push_Dispositivos" (
-            "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL, "Suscripcion_JSON" TEXT NOT NULL, "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1, "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Equipos_Permitidos" TEXT DEFAULT '[]', "Ultima_Actualizacion" TEXT
+            "Endpoint" TEXT PRIMARY KEY, "Usuario" TEXT NOT NULL, "Suscripcion_JSON" TEXT NOT NULL, "Opciones_Viernes" INTEGER DEFAULT 1, "Opciones_2Horas" INTEGER DEFAULT 1, "Opciones_SoloOlvidos" INTEGER DEFAULT 0, "Opciones_Descongelacion" INTEGER DEFAULT 1, "Opciones_Mvp" INTEGER DEFAULT 1, "Equipos_Permitidos" TEXT DEFAULT '[]', "Ultima_Actualizacion" TEXT
         )`).run();
-        const { results: subs } = await db.prepare('SELECT Endpoint, Usuario, Suscripcion_JSON FROM "Suscripciones_Push_Dispositivos" WHERE LENGTH("Suscripcion_JSON") > 20').all();
+        try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Descongelacion" INTEGER DEFAULT 1').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Mvp" INTEGER DEFAULT 1').run(); } catch(e) {}
+
+        let sql = 'SELECT Endpoint, Usuario, Suscripcion_JSON, Opciones_Descongelacion, Opciones_Mvp FROM "Suscripciones_Push_Dispositivos" WHERE LENGTH("Suscripcion_JSON") > 20';
+        if (tipo === 'UNFREEZE_AUTO' || tipo === 'UNFREEZE_MANUAL') {
+            sql += ' AND (Opciones_Descongelacion IS NULL OR Opciones_Descongelacion = 1)';
+        } else if (tipo === 'MVP_OPEN') {
+            sql += ' AND (Opciones_Mvp IS NULL OR Opciones_Mvp = 1)';
+        }
+        const { results: subs } = await db.prepare(sql).all();
         if (!subs || subs.length === 0) return 0;
         const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
         const payload = {
@@ -341,23 +350,26 @@ async function verificarDescongelacionAutomatica(db, env, context) {
             return;
         }
 
-        // Si es sábado o domingo, las clasificaciones están congeladas durante la jornada de partidos
-        if (utcDay === 6 || utcDay === 0) {
+        // La descongelación automática ÚNICAMENTE debe dispararse los LUNES (utcDay === 1) a partir de las 18:00 hora peninsular española
+        // Si no es lunes (es martes, miércoles, jueves, viernes, sábado o domingo), no es el momento del corte automático
+        if (utcDay !== 1) {
             return;
         }
 
-        // Si es lunes, comprobar si ya han pasado las 18:00 de Madrid (16:00/17:00 UTC)
-        if (utcDay === 1) {
-            let hourMadrid = 0;
-            try {
-                const hourStr = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: 'numeric', hour12: false }).format(now);
-                hourMadrid = parseInt(hourStr, 10);
-            } catch(e) {
-                hourMadrid = now.getUTCHours() + 1;
-            }
-            if (hourMadrid < 18) {
-                return;
-            }
+        // Si el admin ya lo ha descongelado manualmente (override UNFREEZE), o está en FREEZE forzado, no ejecutar
+        if (freezeOverride === 'FREEZE' || freezeOverride === 'UNFREEZE') {
+            return;
+        }
+
+        let hourMadrid = 0;
+        try {
+            const hourStr = new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: 'numeric', hour12: false }).format(now);
+            hourMadrid = parseInt(hourStr, 10);
+        } catch(e) {
+            hourMadrid = now.getUTCHours() + 1;
+        }
+        if (hourMadrid < 18) {
+            return;
         }
 
         // Lunes >= 18:00 o Martes a Viernes: clasificaciones descongeladas
@@ -431,9 +443,9 @@ async function getNotificacionesPublicas(db, env = null, context = null) {
             await db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\' AND "Activa" = 1 AND "timestamp" < ?').bind(Date.now() - 24 * 3600 * 1000).run();
         } catch(e) {}
 
-        // Eliminar duplicado generado automáticamente si existía
+        // Eliminar duplicado generado automáticamente si existía y limpiar ID 8 erróneo
         try {
-            await db.prepare('DELETE FROM "Notificaciones" WHERE "Titulo" = \'🔔 ¡Novedad! Recordatorios y Notificaciones\'').run();
+            await db.prepare('DELETE FROM "Notificaciones" WHERE "Titulo" = \'🔔 ¡Novedad! Recordatorios y Notificaciones\' OR "ID" = 8').run();
         } catch(e) {}
 
         // Verificar si toca descongelar clasificaciones automáticamente
@@ -502,6 +514,11 @@ async function procesarRecordatorioMvp1Hora(db, env, body = {}, subs = [], insMa
                 const isUserAdmin = (userIns["Admin Web"] === "X");
 
                 if (soloAdmin && !isUserAdmin) continue;
+
+                // Si el usuario tiene desactivadas las notificaciones de MVP, omitir
+                if (subRow.Opciones_Mvp !== undefined && (subRow.Opciones_Mvp === 0 || subRow.Opciones_Mvp === '0' || subRow.Opciones_Mvp === false)) {
+                    continue;
+                }
 
                 // Solo enviar a los usuarios que NO hayan votado
                 if (votedUsers.has(u) && !ignorarFiltros) {
@@ -2827,23 +2844,28 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'guardar_suscripcion_push') {
-        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, equipos_config, equipos_permitidos, solo_preferencias } = body;
+        const { suscripcion, opciones_2horas, opciones_viernes, opciones_solo_olvidos, opciones_descongelacion, opciones_mvp, equipos_config, equipos_permitidos, solo_preferencias } = body;
         if (!usuario) return jsonResponse({ status: 'error', message: 'Usuario no autenticado' }, 401);
 
         try {
             const op2h = (opciones_2horas !== undefined) ? (opciones_2horas ? 1 : 0) : 1;
             const opVie = (opciones_viernes !== undefined) ? (opciones_viernes ? 1 : 0) : 1;
             const opOlv = (opciones_solo_olvidos !== undefined) ? (opciones_solo_olvidos ? 1 : 0) : 0;
+            const opDescong = (opciones_descongelacion !== undefined) ? (opciones_descongelacion ? 1 : 0) : 1;
+            const opMvp = (opciones_mvp !== undefined) ? (opciones_mvp ? 1 : 0) : 1;
             const rawEq = (equipos_config !== undefined) ? equipos_config : equipos_permitidos;
             const eqPerm = (typeof rawEq === 'object') ? JSON.stringify(rawEq) : (typeof rawEq === 'string' ? rawEq : '{}');
             const nowIso = new Date().toISOString();
 
+            try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Descongelacion" INTEGER DEFAULT 1').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Mvp" INTEGER DEFAULT 1').run(); } catch(e) {}
+
             // Si es solo actualización de preferencias (cambio de checkbox o equipos), hacer 1 solo UPDATE ultra-rápido sin tocar suscripciones
             if (solo_preferencias) {
                 await db.prepare(`UPDATE "Suscripciones_Push_Dispositivos" 
-                    SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Equipos_Permitidos" = ?, "Ultima_Actualizacion" = ?
+                    SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Opciones_Descongelacion" = ?, "Opciones_Mvp" = ?, "Equipos_Permitidos" = ?, "Ultima_Actualizacion" = ?
                     WHERE "Usuario" = ?`
-                ).bind(opVie, op2h, opOlv, eqPerm, nowIso, usuario).run();
+                ).bind(opVie, op2h, opOlv, opDescong, opMvp, eqPerm, nowIso, usuario).run();
                 return jsonResponse({ status: 'success', message: 'Preferencias sincronizadas' });
             }
 
@@ -2856,6 +2878,8 @@ export async function onRequestPost(context) {
                 "Opciones_Viernes" INTEGER DEFAULT 1,
                 "Opciones_2Horas" INTEGER DEFAULT 1,
                 "Opciones_SoloOlvidos" INTEGER DEFAULT 0,
+                "Opciones_Descongelacion" INTEGER DEFAULT 1,
+                "Opciones_Mvp" INTEGER DEFAULT 1,
                 "Equipos_Permitidos" TEXT DEFAULT '{}',
                 "Ultima_Actualizacion" TEXT
             )`).run();
@@ -2867,15 +2891,15 @@ export async function onRequestPost(context) {
 
             // Insertar o actualizar este dispositivo concreto por su Endpoint único
             await db.prepare(`INSERT OR REPLACE INTO "Suscripciones_Push_Dispositivos" 
-                ("Endpoint", "Usuario", "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Equipos_Permitidos", "Ultima_Actualizacion")
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-            ).bind(endpoint, usuario, subJson, opVie, op2h, opOlv, eqPerm, nowIso).run();
+                ("Endpoint", "Usuario", "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Opciones_Descongelacion", "Opciones_Mvp", "Equipos_Permitidos", "Ultima_Actualizacion")
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(endpoint, usuario, subJson, opVie, op2h, opOlv, opDescong, opMvp, eqPerm, nowIso).run();
 
             // Sincronizar preferencias de usuario en todos sus dispositivos
             await db.prepare(`UPDATE "Suscripciones_Push_Dispositivos" 
-                SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Equipos_Permitidos" = ?
+                SET "Opciones_Viernes" = ?, "Opciones_2Horas" = ?, "Opciones_SoloOlvidos" = ?, "Opciones_Descongelacion" = ?, "Opciones_Mvp" = ?, "Equipos_Permitidos" = ?
                 WHERE "Usuario" = ?`
-            ).bind(opVie, op2h, opOlv, eqPerm, usuario).run();
+            ).bind(opVie, op2h, opOlv, opDescong, opMvp, eqPerm, usuario).run();
 
             return jsonResponse({ status: 'success', message: 'Dispositivo y preferencias multidispositivo guardadas' });
         } catch(e) {
@@ -2911,11 +2935,16 @@ export async function onRequestPost(context) {
                 }
             } catch(e) {}
 
+            try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Descongelacion" INTEGER DEFAULT 1').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Suscripciones_Push_Dispositivos" ADD COLUMN "Opciones_Mvp" INTEGER DEFAULT 1').run(); } catch(e) {}
+
             let config = {
                 tiene_suscripcion: Boolean(row && row.Suscripcion_JSON && row.Suscripcion_JSON.length > 20),
                 opciones_2horas: row ? Boolean(row.Opciones_2Horas) : true,
                 opciones_viernes: row ? Boolean(row.Opciones_Viernes) : true,
                 opciones_solo_olvidos: row ? Boolean(row.Opciones_SoloOlvidos) : false,
+                opciones_descongelacion: (row && row.Opciones_Descongelacion !== undefined) ? Boolean(row.Opciones_Descongelacion) : true,
+                opciones_mvp: (row && row.Opciones_Mvp !== undefined) ? Boolean(row.Opciones_Mvp) : true,
                 equipos_config: equiposCfg,
                 equipos_permitidos: Array.isArray(equiposCfg) ? equiposCfg : Object.keys(equiposCfg),
                 public_key: pubKey,
