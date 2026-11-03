@@ -142,41 +142,32 @@ window.renderCarteleraHTML = function(data) {
                 let mvpHtml = '';
                 let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
                 let pubTs = eq.mvp_publicacion_ts ? parseInt(eq.mvp_publicacion_ts) : 0;
+                let cierreTs = eq.mvp_cierre_votacion_ts ? parseInt(eq.mvp_cierre_votacion_ts) : 0;
                 let nowMs = Date.now();
-                let isCountdownActive = pubTs > 0 && nowMs < pubTs;
-                let isDeadlineReachedWithoutWinner = pubTs > 0 && nowMs >= pubTs && !mvpOficial;
 
-                if (isSuperliga && isMvpVisible && (pubTs > 0 || mvpCands.length >= 2 || mvpOficial)) {
-                    if (isCountdownActive) {
-                        // 1. Cuenta atrás activa (con o sin ganador ya subido en el sistema)
-                        let widgetHtml = (mvpCands.length >= 2 && mvpCands.length <= 3 && typeof window.renderMvpWidgetContent === 'function') 
-                            ? `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}</div>` 
-                            : '';
-                        mvpHtml = `
-                        <div class="reloj-mvp-card" style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 5px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted);">
-                                <span style="color: var(--secondary-color); font-weight: 800;">👑 MVP:</span>
-                                <span>El ganador se revela en</span>
-                                <span class="reloj-mvp" data-target="${pubTs}" style="font-size: 0.75rem; font-weight: 800; color: var(--secondary-color); font-family: 'Space Grotesk', monospace;">...</span>
-                            </div>
-                            <span style="font-size: 0.85rem; opacity: 0.8;">⏳</span>
-                        </div>
-                        ${widgetHtml}`;
-                    } else if (isSuperliga && isMvpVisible && isDeadlineReachedWithoutWinner) {
-                        // 2. La hora ya llegó pero el admin todavía no ha subido el MVP oficial definitivo
-                        let widgetHtml = (mvpCands.length >= 2 && mvpCands.length <= 3 && typeof window.renderMvpWidgetContent === 'function') 
-                            ? `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}</div>` 
-                            : '';
-                        mvpHtml = `
-                        <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 5px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted);">
-                                <span style="color: var(--secondary-color); font-weight: 800;">👑 MVP:</span>
-                                <span style="color: #fff; font-weight: 700;">El ganador se publicará en breves</span>
-                            </div>
-                            <span style="font-size: 0.85rem; opacity: 0.8;">📢</span>
-                        </div>
-                        ${widgetHtml}`;
-                    } else if (isSuperliga && mvpOficial && isMvpVisible && !isCountdownActive) {
+                // Fallbacks si falta alguno pero el otro existe
+                if (!cierreTs && pubTs > 0) {
+                    let d = new Date(pubTs);
+                    if (d.getHours() === 12) {
+                        cierreTs = pubTs;
+                    } else {
+                        let d12 = new Date(pubTs);
+                        d12.setHours(12, 0, 0, 0);
+                        cierreTs = d12.getTime();
+                    }
+                }
+                if (!pubTs && cierreTs > 0) {
+                    let d15 = new Date(cierreTs);
+                    d15.setHours(15, 0, 0, 0);
+                    pubTs = d15.getTime();
+                }
+
+                let isVotingClosed = (cierreTs > 0 && nowMs >= cierreTs) || Boolean(mvpOficial && (pubTs <= 0 || nowMs >= pubTs));
+                let isWinnerPublished = Boolean(mvpOficial) && (pubTs <= 0 || nowMs >= pubTs);
+
+                if (isSuperliga && isMvpVisible && (pubTs > 0 || cierreTs > 0 || mvpCands.length >= 2 || mvpOficial)) {
+                    if (isWinnerPublished) {
+                        // 1. Ganador Oficial proclamado y publicado
                         let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
                         let myVoteNote = myMvpVote ? `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; word-break:break-word;">Tu voto en la jornada: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
                         mvpHtml = `
@@ -219,18 +210,52 @@ window.renderCarteleraHTML = function(data) {
                                 </button>
                             </div>
                         </div>`;
-                    } else if (mvpCands.length >= 2 && mvpCands.length <= 3) {
-                        if (typeof window.renderMvpWidgetContent === 'function') {
-                            mvpHtml = `
-                            <div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">
-                                ${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote)}
+                    } else if (!isVotingClosed) {
+                        // 2. Votación ABIERTA (cuenta atrás hasta el cierre de votaciones, por defecto 12:00)
+                        let widgetHtml = (mvpCands.length >= 2 && mvpCands.length <= 3 && typeof window.renderMvpWidgetContent === 'function') 
+                            ? `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote, false)}</div>` 
+                            : '';
+                        mvpHtml = `
+                        <div class="reloj-mvp-card" style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 6px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;">
+                                <span style="color: var(--secondary-color); font-weight: 800;">👑 MVP VALCYL:</span>
+                                <span>Votación abierta · Cierra en</span>
+                                <span class="reloj-mvp" data-target="${cierreTs}" data-type="cierre" style="font-size: 0.75rem; font-weight: 800; color: var(--secondary-color); font-family: 'Space Grotesk', monospace;">...</span>
+                            </div>
+                            <span style="font-size: 0.85rem; opacity: 0.8;" title="Votación abierta">🗳️</span>
+                        </div>
+                        ${widgetHtml}`;
+                    } else {
+                        // 3. Votación CERRADA, pero ganador aún no desvelado (entre las 12:00 y las 15:00 o pendiente de publicación por admin)
+                        let widgetHtml = (mvpCands.length >= 2 && mvpCands.length <= 3 && typeof window.renderMvpWidgetContent === 'function') 
+                            ? `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote, true)}</div>` 
+                            : '';
+                        
+                        let clockOrPendingHtml = '';
+                        if (pubTs > 0 && nowMs < pubTs) {
+                            clockOrPendingHtml = `
+                            <div class="reloj-mvp-card" style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 6px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;">
+                                    <span style="color: #e67e22; font-weight: 800;">🔒 Votación cerrada:</span>
+                                    <span>El ganador se revela en</span>
+                                    <span class="reloj-mvp" data-target="${pubTs}" data-type="publicacion" style="font-size: 0.75rem; font-weight: 800; color: var(--secondary-color); font-family: 'Space Grotesk', monospace;">...</span>
+                                </div>
+                                <span style="font-size: 0.85rem; opacity: 0.8;" title="Ganador programado">⏳</span>
                             </div>`;
                         } else {
-                            mvpHtml = `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;"></div>`;
+                            clockOrPendingHtml = `
+                            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 6px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;">
+                                    <span style="color: #e67e22; font-weight: 800;">🔒 Votación cerrada:</span>
+                                    <span style="color: #fff; font-weight: 700;">El ganador se publicará en breves</span>
+                                </div>
+                                <span style="font-size: 0.85rem; opacity: 0.8;">📢</span>
+                            </div>`;
                         }
+                        mvpHtml = `${clockOrPendingHtml}${widgetHtml}`;
                     }
                 }
-
+                
                 if (eq.estado === "CERRADO") {
                     let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : (window.isGuestMode ? 'Solo lectura' : 'Sin datos');
                     let miPronDetalle = window.isGuestMode ? '<span>Modo Invitado</span>' : 'Sin predicción';
@@ -485,17 +510,42 @@ window.renderCarteleraHTML = function(data) {
             let isSuperliga = catL.includes('sm2') || catL.includes('superliga');
             let mvpCands = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
             let isMvpVisible = eq.mvp_visible !== false && eq.mvp_visible !== 'OCULTAR';
-            return isSuperliga && isMvpVisible && mvpCands.length >= 2 && !eq.mvp_oficial;
+            let pubTs = eq.mvp_publicacion_ts ? parseInt(eq.mvp_publicacion_ts) : 0;
+            let isWinnerPublished = Boolean(eq.mvp_oficial) && (pubTs <= 0 || Date.now() >= pubTs);
+            return isSuperliga && isMvpVisible && mvpCands.length >= 2 && !isWinnerPublished;
         });
 
         if (activeMvpMatch) {
             let myVote = (data.mvp_votos && data.mvp_votos[activeMvpMatch.id_partido]) ? data.mvp_votos[activeMvpMatch.id_partido] : null;
             let rivalName = (activeMvpMatch.ubicacion === 'LOCAL') ? activeMvpMatch.rival : activeMvpMatch.equipo_local;
             let matchLabel = rivalName ? ` vs ${rivalName}` : '';
-            let subtitleText = myVote
-                ? `Ya has emitido tu voto. Toca aquí para ver o cambiar tu elección 👇`
-                : `¡Ya está disponible la votación del MVP VALCYL! Toca aquí para votar 👇`;
-            let btnLabel = myVote ? 'Ver voto ✨' : 'Votar MVP 👑';
+            
+            let cTs = activeMvpMatch.mvp_cierre_votacion_ts ? parseInt(activeMvpMatch.mvp_cierre_votacion_ts) : 0;
+            let pTs = activeMvpMatch.mvp_publicacion_ts ? parseInt(activeMvpMatch.mvp_publicacion_ts) : 0;
+            if (!cTs && pTs > 0) {
+                let d = new Date(pTs);
+                if (d.getHours() === 12) cTs = pTs;
+                else { let d12 = new Date(pTs); d12.setHours(12, 0, 0, 0); cTs = d12.getTime(); }
+            }
+            let isClosed = cTs > 0 && Date.now() >= cTs;
+
+            let subtitleText = '';
+            let btnLabel = '';
+            if (isClosed) {
+                const pad = n => String(n).padStart(2, '0');
+                let horaPub = '15:00';
+                if (pTs > 0) {
+                    const dPub = new Date(pTs);
+                    horaPub = `${pad(dPub.getHours())}:${pad(dPub.getMinutes())}`;
+                }
+                subtitleText = `Votaciones cerradas. El MVP VALCYL se publicará a las ${horaPub}. Toca para ver los nominados 👇`;
+                btnLabel = myVote ? 'Ver mi voto 🔒' : 'Ver nominados 🔒';
+            } else {
+                subtitleText = myVote
+                    ? `Ya has emitido tu voto. Toca aquí para ver o cambiar tu elección 👇`
+                    : `¡Ya está disponible la votación del MVP VALCYL! Toca aquí para votar 👇`;
+                btnLabel = myVote ? 'Ver voto ✨' : 'Votar MVP 👑';
+            }
 
             bannerContainer.innerHTML = `
             <div class="mvp-aviso-banner" onclick="window.scrollToMvpWidget('${activeMvpMatch.id_partido}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(93, 23, 137, 0.32)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.22); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseenter="this.style.transform='scale(1.01)';" onmouseleave="this.style.transform='none';">
@@ -545,8 +595,9 @@ function iniciarRelojes() {
             const targetTs = parseInt(el.getAttribute('data-target'));
             if (!targetTs) return;
             const diffMvp = targetTs - now;
+            const type = el.getAttribute('data-type');
             if (diffMvp <= 0) {
-                el.innerText = "⏳ Se publicará en breves...";
+                el.innerText = (type === 'cierre') ? "🔒 Cerrando..." : "⏳ Publicando...";
                 el.style.color = "var(--secondary-color)";
                 if (!el.getAttribute('data-refreshed')) {
                     el.setAttribute('data-refreshed', 'true');

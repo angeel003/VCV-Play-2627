@@ -336,6 +336,7 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_oficial TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_stats TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_proclamado_ts INTEGER").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_cierre_votacion_ts INTEGER").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_publicacion_ts INTEGER").run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
@@ -641,6 +642,7 @@ export async function onRequestPost(context) {
             mvp_oficial: oRes.mvp_oficial || "",
             mvp_stats: oRes.mvp_stats ? (function(){ try { return JSON.parse(oRes.mvp_stats); } catch(e){ return []; } })() : [],
             mvp_proclamado_ts: oRes.mvp_proclamado_ts ? parseInt(oRes.mvp_proclamado_ts) : 0,
+            mvp_cierre_votacion_ts: oRes.mvp_cierre_votacion_ts ? parseInt(oRes.mvp_cierre_votacion_ts) : 0,
             mvp_publicacion_ts: oRes.mvp_publicacion_ts ? parseInt(oRes.mvp_publicacion_ts) : 0,
             mvp_votos_recuento: oRes.mvp_votos_recuento ? (function(){ try { return JSON.parse(oRes.mvp_votos_recuento); } catch(e){ return []; } })() : [],
             mvp_visible: oRes.mvp_visible !== undefined ? (oRes.mvp_visible === 1 || oRes.mvp_visible === '1' || oRes.mvp_visible === true || oRes.mvp_visible === 'true' || oRes.mvp_visible === 'SI') : true
@@ -711,6 +713,16 @@ export async function onRequestPost(context) {
                     pCartelera.visibilidad = "OCULTAR";
                 } else {
                     pCartelera.visibilidad = "MOSTRAR";
+                }
+
+                // Si la hora de publicación del ganador aún no ha llegado, ocultar al MVP oficial a invitados
+                if (pCartelera.mvp_publicacion_ts && pCartelera.mvp_publicacion_ts > Date.now()) {
+                    pCartelera.mvp_oficial = "";
+                    pCartelera.mvp_stats = [];
+                    pCartelera.mvp_votos_recuento = [];
+                    pCopy.mvp_oficial = "";
+                    pCopy.mvp_stats = [];
+                    pCopy.mvp_votos_recuento = [];
                 }
 
                 if (pCartelera.visibilidad === "MOSTRAR") {
@@ -1056,6 +1068,7 @@ export async function onRequestPost(context) {
                     const sm2MvpMatches = [];
                     for (const p of partidos) {
                         if (!p.mvp_oficial) continue;
+                        if (p.mvp_publicacion_ts && p.mvp_publicacion_ts > Date.now()) continue;
                         const mvpOf = String(p.mvp_oficial).trim();
                         
                         // Extraer el dorsal exacto del string oficial del MVP (ej: "#21 ...")
@@ -1170,6 +1183,18 @@ export async function onRequestPost(context) {
                     pCartelera.visibilidad = "OCULTAR";
                 } else {
                     pCartelera.visibilidad = "MOSTRAR";
+                }
+
+                                // Si no es admin ni gestor MVP y aún no es la hora de publicación, ocultar el ganador oficial
+                if (!isUserAdmin && !isUserGestorMvp) {
+                    if (pCartelera.mvp_publicacion_ts && pCartelera.mvp_publicacion_ts > Date.now()) {
+                        pCartelera.mvp_oficial = "";
+                        pCartelera.mvp_stats = [];
+                        pCartelera.mvp_votos_recuento = [];
+                        pCopy.mvp_oficial = "";
+                        pCopy.mvp_stats = [];
+                        pCopy.mvp_votos_recuento = [];
+                    }
                 }
 
                 if (pCartelera.visibilidad === "MOSTRAR") {
@@ -1804,7 +1829,7 @@ export async function onRequestPost(context) {
 
         const candStr = Array.isArray(mvp_candidatos) ? JSON.stringify(mvp_candidatos) : (mvp_candidatos || '');
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
-        const { mvp_visible } = body;
+        const { mvp_visible, mvp_cierre_votacion_ts } = body;
         const visibleVal = (mvp_visible === false || mvp_visible === 0 || mvp_visible === '0' || mvp_visible === 'OCULTAR') ? 0 : 1;
 
         try {
@@ -1856,6 +1881,11 @@ export async function onRequestPost(context) {
                         sql += ', "mvp_visible" = ?';
                         params.push(visibleVal);
                     }
+                    if (mvp_cierre_votacion_ts !== undefined) {
+                        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_cierre_votacion_ts" INTEGER').run(); } catch(e) {}
+                        sql += ', "mvp_cierre_votacion_ts" = ?';
+                        params.push(parseInt(mvp_cierre_votacion_ts) || 0);
+                    }
                     if (mvp_publicacion_ts !== undefined) {
                         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER').run(); } catch(e) {}
                         sql += ', "mvp_publicacion_ts" = ?';
@@ -1865,10 +1895,12 @@ export async function onRequestPost(context) {
                     params.push(id_partido);
                     await db.prepare(sql).bind(...params).run();
                 } else {
+                    try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_cierre_votacion_ts" INTEGER').run(); } catch(e) {}
                     try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER').run(); } catch(e) {}
                     const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
                     const pubTs = (mvp_publicacion_ts !== undefined) ? (parseInt(mvp_publicacion_ts) || 0) : 0;
-                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, pubTs, usuario, nowTs, nowFechaHora).run();
+                    const cierreTs = (mvp_cierre_votacion_ts !== undefined) ? (parseInt(mvp_cierre_votacion_ts) || 0) : 0;
+                    await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, cierreTs, pubTs, usuario, nowTs, nowFechaHora).run();
                 }
             }
             
@@ -1882,9 +1914,9 @@ export async function onRequestPost(context) {
         }
     }
 
-    // ADMIN: GUARDAR / PROGRAMAR HORA DE PUBLICACIÓN DEL MVP (sin requerir ganador definitivo aún)
+    // ADMIN: GUARDAR / PROGRAMAR HORARIOS DE CIERRE DE VOTACIÓN Y PUBLICACIÓN DEL MVP
     if (action === 'set_mvp_publicacion_ts') {
-        const { id_partido, mvp_publicacion_ts } = body;
+        const { id_partido, mvp_publicacion_ts, mvp_cierre_votacion_ts } = body;
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
@@ -1893,19 +1925,32 @@ export async function onRequestPost(context) {
         if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para configurar el MVP.' }, 403);
 
         const pubTs = parseInt(mvp_publicacion_ts) || 0;
+        const cierreTs = parseInt(mvp_cierre_votacion_ts) || 0;
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_cierre_votacion_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER').run(); } catch(e) {}
-
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_visible" INTEGER DEFAULT 1').run(); } catch(e) {}
 
         const exist = await db.prepare('SELECT * FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first();
         if (exist) {
-            await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_publicacion_ts" = ?, "mvp_visible" = 1 WHERE "ID Partido" = ?').bind(pubTs, id_partido).run();
+            let sqlSet = [];
+            let bindParams = [];
+            if (mvp_cierre_votacion_ts !== undefined) {
+                sqlSet.push('"mvp_cierre_votacion_ts" = ?');
+                bindParams.push(cierreTs);
+            }
+            if (mvp_publicacion_ts !== undefined) {
+                sqlSet.push('"mvp_publicacion_ts" = ?');
+                bindParams.push(pubTs);
+            }
+            sqlSet.push('"mvp_visible" = 1');
+            bindParams.push(id_partido);
+            await db.prepare('UPDATE "Resultados_Oficiales" SET ' + sqlSet.join(', ') + ' WHERE "ID Partido" = ?').bind(...bindParams).run();
         } else {
-            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_publicacion_ts", "mvp_visible") VALUES (?, ?, 1)').bind(id_partido, pubTs).run();
+            await db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "mvp_visible") VALUES (?, ?, ?, 1)').bind(id_partido, cierreTs, pubTs).run();
         }
         try { await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); } catch(e) {}
 
-        return jsonResponse({ status: 'success', message: 'Hora de publicación guardada con éxito', mvp_publicacion_ts: pubTs });
+        return jsonResponse({ status: 'success', message: 'Horarios de votación y publicación guardados con éxito', mvp_cierre_votacion_ts: cierreTs, mvp_publicacion_ts: pubTs });
     }
 
     // ADMIN: SET MVP OFICIAL DE JORNADA / PARTIDO
@@ -1952,6 +1997,28 @@ export async function onRequestPost(context) {
         const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
+
+        // Comprobar si las votaciones para este partido ya están cerradas
+        const roMatch = await db.prepare('SELECT mvp_cierre_votacion_ts, mvp_publicacion_ts, mvp_oficial, mvp_visible FROM Resultados_Oficiales WHERE "ID Partido" = ?').bind(id_partido).first();
+        if (roMatch) {
+            if (roMatch.mvp_visible === 0 || roMatch.mvp_visible === '0' || roMatch.mvp_visible === false) {
+                return jsonResponse({ status: 'error', message: 'Las votaciones para el MVP no están activas.' }, 403);
+            }
+            const nowMs = Date.now();
+            let cTs = roMatch.mvp_cierre_votacion_ts ? parseInt(roMatch.mvp_cierre_votacion_ts) : 0;
+            let pTs = roMatch.mvp_publicacion_ts ? parseInt(roMatch.mvp_publicacion_ts) : 0;
+            if (!cTs && pTs > 0) {
+                let d = new Date(pTs);
+                if (d.getHours() === 12) cTs = pTs;
+                else { let d12 = new Date(pTs); d12.setHours(12, 0, 0, 0); cTs = d12.getTime(); }
+            }
+            if (cTs > 0 && nowMs >= cTs) {
+                return jsonResponse({ status: 'error', message: 'Las votaciones para el MVP ya están cerradas.' }, 403);
+            }
+            if (roMatch.mvp_oficial && (pTs <= 0 || nowMs >= pTs)) {
+                return jsonResponse({ status: 'error', message: 'El ganador del MVP ya ha sido publicado y la votación está cerrada.' }, 403);
+            }
+        }
 
         // Protección contra saturación: comprobar si el usuario ya votó hace menos de 3 segundos a este partido
         const prevVote = await db.prepare('SELECT jugador, timestamp FROM MVP_Votos WHERE id_partido = ? AND usuario = ?').bind(id_partido, usuario).first();

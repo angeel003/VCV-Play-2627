@@ -381,7 +381,7 @@
         return { dorsal, nombre, apodo, posicion, photoSrc, initials, raw: candStr };
     };
 
-    window.renderMvpWidgetContent = function(idPart, cands, myVote) {
+    window.renderMvpWidgetContent = function(idPart, cands, myVote, isClosed) {
         if (!Array.isArray(cands) || cands.length < 2 || cands.length > 3) return '';
         
         let votedIdx = -1;
@@ -415,10 +415,17 @@
                     cardStateClass = 'is-dimmed-state';
                 }
             }
+            if (isClosed) {
+                cardStateClass += ' is-closed-state';
+            }
+
+            let clickAttr = isClosed 
+                ? 'onclick="return false;" style="cursor: default;" title="' + (isThisVoted ? 'Tu voto registrado' : 'Votación cerrada') + '"' 
+                : `onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}"`;
 
             return `
             <div class="mvp-card-slot" id="mvp-slot-${idPart}-${idx}" data-idx="${idx}" style="${cands.length === 2 ? 'max-width: 220px;' : ''}">
-                <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" onclick="votarMvpPartido('${idPart}', '${cand.replace(/'/g, "\\'")}', ${idx}, '${encodeURIComponent(JSON.stringify(cands))}')" title="${isThisVoted ? 'Jugador votado' : 'Votar a ' + info.apodo}">
+                <div class="mvp-card-btn ${cardStateClass}" id="mvp-cand-${idPart}-${idx}" ${clickAttr}>
                     <div class="mvp-photo-wrapper">
                         <img loading="lazy" src="${info.photoSrc}" alt="${info.apodo}" class="mvp-photo-img" onerror="window.handleJugadorImgError(this, ${info.dorsal || 0}, '${info.initials}');">
                         ${info.dorsal ? `<span class="mvp-dorsal-tag">#${info.dorsal}</span>` : ''}
@@ -426,27 +433,67 @@
                     <div class="mvp-name-label" title="${info.nombre || info.apodo}">${info.apodo}</div>
                     ${info.nombre && info.nombre.toLowerCase() !== info.apodo.toLowerCase() ? `<div style="font-size:0.67rem; color:var(--text-muted); text-align:center; line-height:1.2; word-break:normal; overflow-wrap:normal; width:100%; box-sizing:border-box; padding:0 8px; font-weight:600;">${info.nombre}</div>` : ''}
                     ${displayPos ? `<div class="mvp-sub-label">${displayPos}</div>` : ''}
-                    ${isThisVoted ? '<span class="mvp-voted-badge">TU MVP VALCYL</span>' : ''}
+                    ${isThisVoted ? '<span class="mvp-voted-badge">TU MVP VALCYL</span>' : (isClosed && !isVoted ? '<span class="mvp-voted-badge" style="background: rgba(255,255,255,0.15); color: #ccc; border: 1px solid rgba(255,255,255,0.25);">NOMINADO</span>' : '')}
                 </div>
             </div>`;
         }).join('');
 
-        let headerText = isVoted ? '✨ Tu Voto para el MVP VALCYL' : '⭐ Elige al MVP VALCYL del Partido';
+        let headerText = '⭐ Elige al MVP VALCYL del Partido';
+        if (isClosed) {
+            headerText = isVoted ? '🔒 Votación Cerrada · Tu Elección' : '🔒 Votación Cerrada · Nominados';
+        } else if (isVoted) {
+            headerText = '✨ Tu Voto para el MVP VALCYL';
+        }
 
-        let bottomPanelHtml = `
-        <div class="mvp-bottom-confirmation-panel ${isVoted ? 'is-visible' : ''}" id="mvp-panel-${idPart}">
-            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
-                <div style="min-width: 0; flex: 1;">
-                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
-                        HAS VOTADO POR (MVP VALCYL)
+        let bottomPanelHtml = '';
+        if (isClosed) {
+            if (isVoted) {
+                bottomPanelHtml = `
+                <div class="mvp-bottom-confirmation-panel is-visible" id="mvp-panel-${idPart}" style="background: rgba(212, 175, 55, 0.08); border-color: rgba(212, 175, 55, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <div style="font-size: 1.3rem; flex-shrink: 0;">🔒</div>
+                        <div style="min-width: 0; flex: 1;">
+                            <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+                                VOTACIÓN CERRADA · TU VOTO REGISTRADO
+                            </div>
+                            <div id="mvp-panel-text-${idPart}" style="font-size: 0.88rem; font-weight: 800; color: #fff; line-height: 1.25; word-break: break-word;">
+                                ${votedInfo ? `${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo && votedInfo.nombre && votedInfo.apodo.toLowerCase() !== votedInfo.nombre.toLowerCase() ? `${votedInfo.apodo} - ${votedInfo.nombre}` : (votedInfo.nombre || votedInfo.apodo)} ${votedInfo.posicion ? `(${votedInfo.posicion})` : ''}` : ''}
+                            </div>
+                        </div>
                     </div>
-                    <div id="mvp-panel-text-${idPart}" style="font-size: 0.88rem; font-weight: 800; color: #fff; line-height: 1.25; word-break: break-word;">
-                        ${votedInfo ? `${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo && votedInfo.nombre && votedInfo.apodo.toLowerCase() !== votedInfo.nombre.toLowerCase() ? `${votedInfo.apodo} - ${votedInfo.nombre}` : (votedInfo.nombre || votedInfo.apodo)} ${votedInfo.posicion ? `(${votedInfo.posicion})` : ''}` : ''}
+                </div>`;
+            } else {
+                bottomPanelHtml = `
+                <div class="mvp-bottom-confirmation-panel is-visible" id="mvp-panel-${idPart}" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15);">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <div style="font-size: 1.2rem; flex-shrink: 0;">🔒</div>
+                        <div style="min-width: 0; flex: 1;">
+                            <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                                PLAZO DE VOTACIÓN FINALIZADO
+                            </div>
+                            <div style="font-size: 0.82rem; font-weight: 700; color: #ddd; line-height: 1.25;">
+                                Las votaciones para este partido han concluido.
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+        } else {
+            bottomPanelHtml = `
+            <div class="mvp-bottom-confirmation-panel ${isVoted ? 'is-visible' : ''}" id="mvp-panel-${idPart}">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
+                            HAS VOTADO POR (MVP VALCYL)
+                        </div>
+                        <div id="mvp-panel-text-${idPart}" style="font-size: 0.88rem; font-weight: 800; color: #fff; line-height: 1.25; word-break: break-word;">
+                            ${votedInfo ? `${votedInfo.dorsal ? '#' + votedInfo.dorsal + ' ' : ''}${votedInfo.apodo && votedInfo.nombre && votedInfo.apodo.toLowerCase() !== votedInfo.nombre.toLowerCase() ? `${votedInfo.apodo} - ${votedInfo.nombre}` : (votedInfo.nombre || votedInfo.apodo)} ${votedInfo.posicion ? `(${votedInfo.posicion})` : ''}` : ''}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>`;
+            </div>`;
+        }
 
         return `
         <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); position:relative;">
@@ -513,6 +560,24 @@
         if(window.isGuestMode) { alert("Modo invitado. Inicia sesión para votar."); return; }
         if(!currentUser) { alert("Tu sesión ha expirado."); window.location.reload(); return; }
         if(!idPart || !jugador) return;
+
+        // Comprobar si la votación para este partido está cerrada
+        let pMatch = null;
+        if (window.appData && Array.isArray(window.appData.equipos)) pMatch = window.appData.equipos.find(p => p.id_partido === idPart);
+        if (!pMatch && window.appData && Array.isArray(window.appData.todos_partidos)) pMatch = window.appData.todos_partidos.find(p => p.id_partido === idPart);
+        if (pMatch) {
+            let cierreTs = pMatch.mvp_cierre_votacion_ts ? parseInt(pMatch.mvp_cierre_votacion_ts) : 0;
+            let pubTs = pMatch.mvp_publicacion_ts ? parseInt(pMatch.mvp_publicacion_ts) : 0;
+            if (!cierreTs && pubTs > 0) {
+                let d = new Date(pubTs);
+                if (d.getHours() === 12) cierreTs = pubTs;
+                else { let d12 = new Date(pubTs); d12.setHours(12, 0, 0, 0); cierreTs = d12.getTime(); }
+            }
+            if ((cierreTs > 0 && Date.now() >= cierreTs) || (pMatch.mvp_oficial && (pubTs <= 0 || Date.now() >= pubTs))) {
+                if (typeof mostrarToast === 'function') mostrarToast("Las votaciones para el MVP ya están cerradas.");
+                return;
+            }
+        }
 
         // Si ya ha votado a este mismo jugador, no hacer nada
         if (window.appData && window.appData.mvp_votos && window.appData.mvp_votos[idPart] === jugador) {
@@ -589,6 +654,14 @@
             if(data && data.status === 'success') {
                 if (typeof window.vcvHaptic === 'function') window.vcvHaptic('success');
                 mostrarToast("¡Voto MVP registrado!");
+            } else if (data && data.status === 'error') {
+                mostrarToast(data.message || "Las votaciones para el MVP ya están cerradas.");
+                if (window.appData && window.appData.mvp_votos) {
+                    delete window.appData.mvp_votos[idPart];
+                }
+                if (typeof window.renderCarteleraHTML === 'function') {
+                    window.renderCarteleraHTML(window.appData);
+                }
             } else {
                 mostrarToast("¡Voto MVP registrado (modo pruebas)!");
             }

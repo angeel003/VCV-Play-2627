@@ -596,7 +596,15 @@ window.onDirectMvpJornadaChange = function(jorVal) {
 window.getMvpFechaDefaultManana12 = function() {
     const d = new Date();
     d.setDate(d.getDate() + 1); // Día siguiente
-    d.setHours(12, 0, 0, 0);   // A las 12:00 de la mañana
+    d.setHours(12, 0, 0, 0);   // A las 12:00 de la mañana (cierre de votación)
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+window.getMvpFechaDefaultManana15 = function() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1); // Día siguiente
+    d.setHours(15, 0, 0, 0);   // A las 15:00 de la tarde (publicación del ganador)
     const pad = n => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
@@ -606,21 +614,28 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
     const btn = document.getElementById('btnGuardarHoraMvp');
     const selPart = document.getElementById('directMvpPartidoSelect');
     const idPart = selPart ? selPart.value : '';
+    const inputCierre = document.getElementById('adminMvpFechaCierre');
     const inputPub = document.getElementById('adminMvpFechaPublicacion');
 
     if (!idPart) {
         alert("Por favor selecciona un partido de Superliga.");
         return;
     }
-    if (!inputPub || !inputPub.value) {
-        alert("Por favor introduce una fecha y hora válida.");
-        return;
+
+    let targetCierreTs = 0;
+    if (inputCierre && inputCierre.value) {
+        targetCierreTs = new Date(inputCierre.value).getTime();
+    }
+    let targetPubTs = 0;
+    if (inputPub && inputPub.value) {
+        targetPubTs = new Date(inputPub.value).getTime();
     }
 
-    const targetPubTs = new Date(inputPub.value).getTime();
+    if (!targetCierreTs || isNaN(targetCierreTs)) {
+        targetCierreTs = Date.now();
+    }
     if (!targetPubTs || isNaN(targetPubTs)) {
-        alert("Fecha u hora no válida.");
-        return;
+        targetPubTs = targetCierreTs + 3 * 3600000; // 3 horas después por defecto
     }
 
     // Actualizar en memoria en window.appData
@@ -635,13 +650,17 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
         window.setLocalMvpPubTs(idPart, targetPubTs);
     }
     if (pObj) {
+        pObj.mvp_cierre_votacion_ts = targetCierreTs;
         pObj.mvp_publicacion_ts = targetPubTs;
         pObj.mvp_visible = true;
         pObj.visibilidad = 'MOSTRAR';
     }
     if (Array.isArray(window.appData.todos_partidos)) {
         window.appData.todos_partidos.forEach(p => {
-            if (p.id_partido === idPart) p.mvp_publicacion_ts = targetPubTs;
+            if (p.id_partido === idPart) {
+                p.mvp_cierre_votacion_ts = targetCierreTs;
+                p.mvp_publicacion_ts = targetPubTs;
+            }
         });
     }
 
@@ -654,14 +673,15 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
             usuario: currentUser,
             password: currentPassword,
             id_partido: idPart,
+            mvp_cierre_votacion_ts: targetCierreTs,
             mvp_publicacion_ts: targetPubTs
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
     .then(r => r.json())
     .then(d => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Hora"; }
-        mostrarToast("¡Hora de publicación del MVP guardada con éxito!");
+        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Horarios de Votación y Publicación"; }
+        mostrarToast("¡Horarios de cierre y publicación guardados con éxito!");
         if (typeof window.actualizarBannerEstadoMvp === 'function') {
             window.actualizarBannerEstadoMvp(pObj);
         }
@@ -670,8 +690,8 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
         }
     })
     .catch(err => {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Hora"; }
-        mostrarToast("Hora guardada localmente");
+        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Horarios de Votación y Publicación"; }
+        mostrarToast("Horarios guardados localmente");
         if (typeof window.actualizarBannerEstadoMvp === 'function') {
             window.actualizarBannerEstadoMvp(pObj);
         }
@@ -719,15 +739,29 @@ window.onDirectMvpPartidoChange = function(idPart) {
     // Actualizar opciones del MVP Oficial para que SOLO salgan los candidatos seleccionados
     window.actualizarOpcionesMvpOficial(matchObj ? matchObj.mvp_oficial : '');
 
-    // Cargar fecha programada de publicación (por defecto: 12:00 del día siguiente)
+    // Cargar horarios programados: Cierre de votación (12:00) y Publicación (15:00)
+    const pad = n => String(n).padStart(2, '0');
+    const inputCierre = document.getElementById('adminMvpFechaCierre');
+    if (inputCierre) {
+        if (matchObj && matchObj.mvp_cierre_votacion_ts && matchObj.mvp_cierre_votacion_ts > 0) {
+            const d = new Date(matchObj.mvp_cierre_votacion_ts);
+            inputCierre.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        } else if (matchObj && matchObj.mvp_publicacion_ts && matchObj.mvp_publicacion_ts > 0) {
+            const d = new Date(matchObj.mvp_publicacion_ts);
+            d.setHours(12, 0, 0, 0);
+            inputCierre.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        } else {
+            inputCierre.value = window.getMvpFechaDefaultManana12();
+        }
+    }
+
     const inputPub = document.getElementById('adminMvpFechaPublicacion');
     if (inputPub) {
         if (matchObj && matchObj.mvp_publicacion_ts && matchObj.mvp_publicacion_ts > 0) {
             const d = new Date(matchObj.mvp_publicacion_ts);
-            const pad = n => String(n).padStart(2, '0');
             inputPub.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
         } else {
-            inputPub.value = window.getMvpFechaDefaultManana12();
+            inputPub.value = window.getMvpFechaDefaultManana15();
         }
     }
 
@@ -778,26 +812,46 @@ window.actualizarBannerEstadoMvp = function(matchObj) {
     let hasOficial = Boolean(matchObj && matchObj.mvp_oficial);
     
     let targetPubTs = (matchObj && matchObj.mvp_publicacion_ts) ? parseInt(matchObj.mvp_publicacion_ts) : 0;
-    let isPendingPublication = hasOficial && targetPubTs > Date.now();
+    let targetCierreTs = (matchObj && matchObj.mvp_cierre_votacion_ts) ? parseInt(matchObj.mvp_cierre_votacion_ts) : 0;
+    if (!targetCierreTs && targetPubTs > 0) {
+        let d = new Date(targetPubTs);
+        if (d.getHours() === 12) targetCierreTs = targetPubTs;
+        else { let d12 = new Date(targetPubTs); d12.setHours(12, 0, 0, 0); targetCierreTs = d12.getTime(); }
+    }
+    let now = Date.now();
+    let isPendingPublication = hasOficial && targetPubTs > now;
+
+    const pad = n => String(n).padStart(2, '0');
 
     if (hasOficial && !isPendingPublication) {
-        badge.innerText = '👑 GANADOR MVP PUBLICADO';
+        let winInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(matchObj.mvp_oficial) : { apodo: matchObj.mvp_oficial };
+        badge.innerText = `👑 GANADOR MVP PUBLICADO (${winInfo.apodo || matchObj.mvp_oficial})`;
         badge.style.background = 'rgba(46, 204, 113, 0.2)';
         badge.style.color = '#2ecc71';
         badge.style.border = '1px solid #2ecc71';
     } else if (hasOficial && isPendingPublication) {
         const dObj = new Date(targetPubTs);
-        const pad = n => String(n).padStart(2, '0');
         const horaStr = `${pad(dObj.getHours())}:${pad(dObj.getMinutes())}`;
-        badge.innerText = `⏳ PROGRAMADO (${horaStr})`;
+        badge.innerText = `⏳ GANADOR PROGRAMADO (se publica a las ${horaStr})`;
         badge.style.background = 'rgba(212, 175, 55, 0.2)';
         badge.style.color = 'var(--secondary-color)';
         badge.style.border = '1px solid var(--secondary-color)';
     } else if (isVisible && (cands.length === 2 || cands.length === 3)) {
-        badge.innerText = `🟢 PUBLICADO (${cands.length} CANDIDATOS)`;
-        badge.style.background = 'rgba(46, 204, 113, 0.2)';
-        badge.style.color = '#2ecc71';
-        badge.style.border = '1px solid #2ecc71';
+        if (targetCierreTs > now) {
+            const dCierre = new Date(targetCierreTs);
+            const horaCierre = `${pad(dCierre.getHours())}:${pad(dCierre.getMinutes())}`;
+            badge.innerText = `🟢 VOTACIÓN ABIERTA (cierra a las ${horaCierre})`;
+            badge.style.background = 'rgba(46, 204, 113, 0.2)';
+            badge.style.color = '#2ecc71';
+            badge.style.border = '1px solid #2ecc71';
+        } else {
+            const dPub = targetPubTs ? new Date(targetPubTs) : null;
+            const horaPub = dPub ? `${pad(dPub.getHours())}:${pad(dPub.getMinutes())}` : '15:00';
+            badge.innerText = `🔒 VOTACIÓN CERRADA (Ganador pendiente para las ${horaPub})`;
+            badge.style.background = 'rgba(230, 126, 34, 0.2)';
+            badge.style.color = '#e67e22';
+            badge.style.border = '1px solid #e67e22';
+        }
     } else if (!isVisible && (cands.length === 2 || cands.length === 3)) {
         badge.innerText = '🚫 OCULTO POR EL ADMIN';
         badge.style.background = 'rgba(231, 76, 60, 0.2)';
@@ -876,14 +930,22 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
         if (pObj.estado !== "CERRADO" && pObj.estado !== "FINALIZADO") pObj.estado = "CERRADO";
         if (!pObj.oficial_sets) pObj.oficial_sets = "3-1";
         if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-        // Si no tiene fecha de publicación programada, preestablecer las 12:00 del día siguiente
-        if (!pObj.mvp_publicacion_ts || pObj.mvp_publicacion_ts <= 0) {
+        // Preestablecer horarios por defecto: Cierre 12:00, Publicación 15:00 del día siguiente
+        if (!pObj.mvp_cierre_votacion_ts || pObj.mvp_cierre_votacion_ts <= 0) {
             const dManana12 = new Date();
             dManana12.setDate(dManana12.getDate() + 1);
             dManana12.setHours(12, 0, 0, 0);
-            pObj.mvp_publicacion_ts = dManana12.getTime();
+            pObj.mvp_cierre_votacion_ts = dManana12.getTime();
+            const inputCierreEl = document.getElementById('adminMvpFechaCierre');
+            if (inputCierreEl) inputCierreEl.value = window.getMvpFechaDefaultManana12();
+        }
+        if (!pObj.mvp_publicacion_ts || pObj.mvp_publicacion_ts <= 0) {
+            const dManana15 = new Date();
+            dManana15.setDate(dManana15.getDate() + 1);
+            dManana15.setHours(15, 0, 0, 0);
+            pObj.mvp_publicacion_ts = dManana15.getTime();
             const inputPubEl = document.getElementById('adminMvpFechaPublicacion');
-            if (inputPubEl) inputPubEl.value = window.getMvpFechaDefaultManana12();
+            if (inputPubEl) inputPubEl.value = window.getMvpFechaDefaultManana15();
         }
     } else {
         pObj.mvp_visible = false;
@@ -923,6 +985,7 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
             parciales: pObj ? (pObj.oficial_parciales || undefined) : undefined,
             mvp_candidatos: (cands.length >= 2 ? cands : (pObj.mvp_candidatos || [])),
             mvp_visible: hacerVisible,
+            mvp_cierre_votacion_ts: pObj ? pObj.mvp_cierre_votacion_ts : undefined,
             mvp_publicacion_ts: pObj ? pObj.mvp_publicacion_ts : undefined
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -990,10 +1053,13 @@ window.guardarMvpOficial = function(e) {
         pObj.permitido = true;
     }
 
-    // Obtener timestamp de publicación programada (si se indicó en el input)
+    // Comprobar si se ha marcado publicar inmediatamente o según la hora programada (por defecto 15:00)
+    const chkInmediato = document.getElementById('adminMvpPublicarInmediato');
     const inputPub = document.getElementById('adminMvpFechaPublicacion');
     let targetPubTs = 0;
-    if (inputPub && inputPub.value) {
+    if (chkInmediato && chkInmediato.checked) {
+        targetPubTs = Date.now();
+    } else if (inputPub && inputPub.value) {
         targetPubTs = new Date(inputPub.value).getTime();
     }
     if (!targetPubTs || isNaN(targetPubTs)) {
@@ -1041,7 +1107,13 @@ window.guardarMvpOficial = function(e) {
     .then(r => r.json())
     .then(d => {
         if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar Ganador MVP en BD"; }
-        mostrarToast("¡Ganador MVP y estadísticas guardadas con éxito!");
+        if (targetPubTs <= Date.now()) {
+            mostrarToast("¡Ganador MVP publicado de inmediato en Cartelera!");
+        } else {
+            const dPub = new Date(targetPubTs);
+            const pad = n => String(n).padStart(2, '0');
+            mostrarToast(`¡Ganador MVP guardado! Se publicará a las ${pad(dPub.getHours())}:${pad(dPub.getMinutes())}.`);
+        }
         if (typeof window.recalcularInsigniasMvpLocal === 'function') {
             window.recalcularInsigniasMvpLocal();
         }
