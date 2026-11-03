@@ -205,17 +205,25 @@ window.renderCarteleraHTML = function(data) {
                         </div>`;
                     } else if (!isVotingClosed) {
                         // 2. Votación ABIERTA (cuenta atrás hasta el cierre de votaciones, por defecto 12:00)
+                        let isLastHourCard = (!myMvpVote && cierreTs > 0 && (cierreTs - nowMs <= 3600000) && (cierreTs - nowMs > 0));
+                        let cardBg = isLastHourCard ? 'rgba(239, 68, 68, 0.12)' : 'rgba(212, 175, 55, 0.08)';
+                        let cardBorder = isLastHourCard ? '1.5px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(212, 175, 55, 0.35)';
+                        let labelColor = isLastHourCard ? '#f87171' : 'var(--secondary-color)';
+                        let labelText = isLastHourCard ? '⚠️ ¡ÚLTIMA HORA (Queda 1h)!' : '👑 MVP VALCYL:';
+                        let subLabelText = isLastHourCard ? 'Cierra en' : 'Votación abierta · Cierra en';
+
                         let widgetHtml = (mvpCands.length >= 2 && mvpCands.length <= 3 && typeof window.renderMvpWidgetContent === 'function') 
                             ? `<div id="mvp-widget-${eq.id_partido}" style="margin-top: 10px; width: 100%;">${window.renderMvpWidgetContent(eq.id_partido, mvpCands, myMvpVote, false)}</div>` 
                             : '';
                         mvpHtml = `
-                        <div class="reloj-mvp-card" style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 6px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <div class="reloj-mvp-card" style="background: ${cardBg}; border: ${cardBorder}; border-radius: 8px; padding: 6px 10px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                             <div style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); flex-wrap: wrap;">
-                                <span style="color: var(--secondary-color); font-weight: 800;">👑 MVP VALCYL:</span>
-                                <span>Votación abierta · Cierra en</span>
-                                <span class="reloj-mvp" data-target="${cierreTs}" data-type="cierre" style="font-size: 0.75rem; font-weight: 800; color: var(--secondary-color); font-family: 'Space Grotesk', monospace;">...</span>
+                                <span style="color: ${labelColor}; font-weight: 800;">${labelText}</span>
+                                <span>${subLabelText}</span>
+                                <span class="reloj-mvp" data-target="${cierreTs}" data-type="cierre" style="font-size: 0.75rem; font-weight: 800; color: ${labelColor}; font-family: 'Space Grotesk', monospace;">...</span>
+                                ${isLastHourCard ? '<span style="color: #facc15; font-weight: 800; margin-left: 2px;">· ¡Aún no has votado!</span>' : ''}
                             </div>
-                            <span style="font-size: 0.85rem; opacity: 0.8;" title="Votación abierta">🗳️</span>
+                            <span style="font-size: 0.85rem; opacity: 0.9;" title="${isLastHourCard ? 'Última hora para votar' : 'Votación abierta'}">${isLastHourCard ? '⏳' : '🗳️'}</span>
                         </div>
                         ${widgetHtml}`;
                     } else {
@@ -521,9 +529,16 @@ window.renderCarteleraHTML = function(data) {
                 else { let d12 = new Date(pTs); d12.setHours(12, 0, 0, 0); cTs = d12.getTime(); }
             }
             let isClosed = cTs > 0 && Date.now() >= cTs;
+            let isLastHour = !isClosed && cTs > 0 && (cTs - Date.now() <= 3600000) && (cTs - Date.now() > 0);
 
             let subtitleText = '';
             let btnLabel = '';
+            let badgeHtml = `<span style="font-size: 0.68rem; background: var(--secondary-color); color: #000; font-weight: 800; padding: 1px 6px; border-radius: 6px; text-transform: uppercase;">Activa</span>`;
+            let bannerBg = 'linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(93, 23, 137, 0.32))';
+            let bannerBorder = '1.5px solid var(--secondary-color)';
+            let titleText = '¡Votación MVP VALCYL disponible!';
+            let bannerIcon = '👑';
+
             if (isClosed) {
                 const pad = n => String(n).padStart(2, '0');
                 let horaPub = '15:00';
@@ -533,6 +548,23 @@ window.renderCarteleraHTML = function(data) {
                 }
                 subtitleText = `Votaciones cerradas. El MVP VALCYL se publicará a las ${horaPub}. Toca para ver los nominados 👇`;
                 btnLabel = myVote ? 'Ver mi voto 🔒' : 'Ver nominados 🔒';
+                badgeHtml = `<span style="font-size: 0.68rem; background: rgba(255, 255, 255, 0.2); color: #fff; font-weight: 800; padding: 1px 6px; border-radius: 6px; text-transform: uppercase;">Cerrada</span>`;
+            } else if (isLastHour && !myVote) {
+                subtitleText = `⚠️ ¡Queda menos de 1 hora para el cierre de votación! Aún no has votado 👇`;
+                btnLabel = '¡Votar ya! ⚡';
+                badgeHtml = `<span style="font-size: 0.68rem; background: #ef4444; color: #fff; font-weight: 800; padding: 2px 7px; border-radius: 6px; text-transform: uppercase; animation: pulse-badge 1.5s infinite;">⚠️ Queda 1h</span>`;
+                bannerBg = 'linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(212, 175, 55, 0.28))';
+                bannerBorder = '1.5px solid #f59e0b';
+                titleText = '¡Última hora para votar al MVP VALCYL!';
+                bannerIcon = '⏳';
+
+                if (typeof mostrarToast === 'function') {
+                    const toastKey = 'toast_mvp_1h_' + activeMvpMatch.id_partido;
+                    if (!sessionStorage.getItem(toastKey)) {
+                        sessionStorage.setItem(toastKey, '1');
+                        mostrarToast('👑 ¡Queda menos de 1 hora para votar al MVP VALCYL! No olvides emitir tu voto.', 5000);
+                    }
+                }
             } else {
                 subtitleText = myVote
                     ? `Ya has emitido tu voto. Toca aquí para ver o cambiar tu elección 👇`
@@ -541,15 +573,15 @@ window.renderCarteleraHTML = function(data) {
             }
 
             bannerContainer.innerHTML = `
-            <div class="mvp-aviso-banner" onclick="window.scrollToMvpWidget('${activeMvpMatch.id_partido}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(93, 23, 137, 0.32)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.22); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseenter="this.style.transform='scale(1.01)';" onmouseleave="this.style.transform='none';">
+            <div class="mvp-aviso-banner" onclick="window.scrollToMvpWidget('${activeMvpMatch.id_partido}')" style="background: ${bannerBg}; border: ${bannerBorder}; border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.22); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseenter="this.style.transform='scale(1.01)';" onmouseleave="this.style.transform='none';">
                 <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
                     <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(212, 175, 55, 0.22); border: 1px solid var(--secondary-color); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
-                        👑
+                        ${bannerIcon}
                     </div>
                     <div style="min-width: 0; text-align: left;">
                         <div style="font-size: 0.88rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 6px;">
-                            <span>¡Votación MVP VALCYL disponible!</span>
-                            <span style="font-size: 0.68rem; background: var(--secondary-color); color: #000; font-weight: 800; padding: 1px 6px; border-radius: 6px; text-transform: uppercase;">Activa</span>
+                            <span>${titleText}</span>
+                            ${badgeHtml}
                         </div>
                         <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             ${subtitleText}

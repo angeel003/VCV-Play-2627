@@ -453,17 +453,113 @@ async function getNotificacionesPublicas(db, env = null, context = null) {
     }
 }
 
+async function procesarRecordatorioMvp1Hora(db, env, body = {}, subs = [], insMap = {}, sentSet = new Set(), soloAdmin = false, nowMadrid = '') {
+    let totalEnviadosMvp = 0;
+    let detalleMvp = [];
+    const now = Date.now();
+    const ignorarFiltros = Boolean(body.ignorar_filtros_prueba || body.forzar_partido_id);
+
+    try {
+        // Buscar partidos que tengan votación MVP activa y hora de cierre programada
+        const { results: roList } = await db.prepare('SELECT "ID Partido" as id_partido, mvp_cierre_votacion_ts, mvp_publicacion_ts, mvp_visible, mvp_candidatos, mvp_oficial FROM "Resultados_Oficiales" WHERE "mvp_visible" = 1 AND LENGTH("mvp_candidatos") > 5 AND "mvp_cierre_votacion_ts" > 0').all();
+
+        if (!roList || roList.length === 0) return { totalEnviadosMvp: 0, detalleMvp: [] };
+
+        for (const ro of roList) {
+            // Si ya hay ganador oficial proclamado, la votación ya concluyó
+            if (ro.mvp_oficial && String(ro.mvp_oficial).trim() !== '') continue;
+
+            const idPart = ro.id_partido;
+            const cierreTs = parseInt(ro.mvp_cierre_votacion_ts) || 0;
+            if (cierreTs <= 0) continue;
+
+            const diffMs = cierreTs - now;
+            // Ventana de 1 hora: entre 65 minutos y 5 minutos antes del cierre (o forzado para prueba)
+            const enVentana1Hora = (diffMs <= 65 * 60 * 1000 && diffMs >= 5 * 60 * 1000);
+            const forzarEstePartido = body.forzar_partido_id && (String(body.forzar_partido_id).trim() === String(idPart).trim());
+
+            if (!enVentana1Hora && !forzarEstePartido) continue;
+
+            // Obtener información del partido para el rival
+            const mMatch = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPart).first();
+            const rivalName = (mMatch && mMatch.Rival) ? mMatch.Rival : 'rival';
+
+            let horaCierreStr = "las 12:00";
+            try {
+                const dC = new Date(cierreTs);
+                horaCierreStr = "las " + dC.toLocaleTimeString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' });
+            } catch(e) {}
+
+            // Obtener lista de usuarios que YA han votado en este partido
+            const { results: votedRows } = await db.prepare('SELECT DISTINCT usuario FROM "MVP_Votos" WHERE id_partido = ?').bind(idPart).all();
+            const votedUsers = new Set((votedRows || []).map(r => r.usuario));
+
+            const tipoLog = `MVP1H_${idPart}`;
+
+            for (const subRow of subs) {
+                const u = subRow.Usuario;
+                const userIns = insMap[u] || {};
+                const isUserAdmin = (userIns["Admin Web"] === "X");
+
+                if (soloAdmin && !isUserAdmin) continue;
+
+                // Solo enviar a los usuarios que NO hayan votado
+                if (votedUsers.has(u) && !ignorarFiltros) {
+                    continue;
+                }
+
+                // Evitar duplicados si ya se le envió hoy para este cierre
+                if (!ignorarFiltros && sentSet.has(`${u}_${tipoLog}`)) {
+                    continue;
+                }
+
+                let subObj;
+                try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { continue; }
+
+                const title = `👑 ¡Queda 1 hora para votar al MVP VALCYL!`;
+                const bodyNotif = `¡Aún no has votado! Tienes hasta ${horaCierreStr} para elegir al MVP del partido contra ${rivalName}. ¡Entra ya y no te quedes sin tu bonus!`;
+                const payload = {
+                    title: title,
+                    body: bodyNotif,
+                    data: {
+                        url: `/?partido=${idPart}`,
+                        id_partido: idPart
+                    }
+                };
+
+                const pushRes = await sendWebPushNotification(subObj, payload, env);
+
+                await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(u, tipoLog, title, bodyNotif, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
+
+                if (pushRes.success) {
+                    totalEnviadosMvp++;
+                    sentSet.add(`${u}_${tipoLog}`);
+                    detalleMvp.push({ usuario: u, tipo: 'MVP_1H', partido: idPart, estado: 'ENVIADO' });
+                } else {
+                    detalleMvp.push({ usuario: u, tipo: 'MVP_1H', partido: idPart, estado: 'FALLIDO', error: pushRes.error });
+                }
+            }
+        }
+    } catch(err) {
+        console.error("Error en procesarRecordatorioMvp1Hora:", err);
+    }
+
+    return { totalEnviadosMvp, detalleMvp };
+}
+
 export async function onRequestGet(context) {
     const { request, env } = context;
     try {
         const url = new URL(request.url);
         const cronParam = url.searchParams.get("cron") || url.searchParams.get("action");
-        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas") {
+        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas" || cronParam === "mvp" || cronParam === "mvp_1hora") {
+            const targetAction = (cronParam === "mvp" || cronParam === "mvp_1hora") ? "cron_recordatorio_mvp_1hora" : "cron_recordatorio_2horas";
             const fakeContext = {
                 request: new Request(request.url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "cron_recordatorio_2horas" })
+                    body: JSON.stringify({ action: targetAction })
                 }),
                 env: env
             };
@@ -2941,7 +3037,7 @@ export async function onRequestPost(context) {
         }
     }
 
-    if (action === 'cron_recordatorio_2horas') {
+    if (action === 'cron_recordatorio_2horas' || action === 'cron_recordatorio_mvp_1hora') {
         let isTriggeredByAdmin = false;
         if (usuario && password) {
             const adminCheck = await db.prepare('SELECT i."Admin Web" FROM "Usuarios" u LEFT JOIN "Insignias" i ON u.Usuario = i.Usuario WHERE u.Usuario = ? AND u.Password = ?').bind(usuario, password).first();
@@ -2971,20 +3067,12 @@ export async function onRequestPost(context) {
         const partidos = (rawPartidos || []).map(r => formatMatch(r, resMap));
 
         let partidosObjetivo = [];
-        if (body.forzar_partido_id) {
-            partidosObjetivo = partidos.filter(p => String(p.id_partido).trim() === String(body.forzar_partido_id).trim());
-        } else {
-            partidosObjetivo = partidos.filter(p => p.visibilidad === 'MOSTRAR' && p.timestamp && p.timestamp >= minTs && p.timestamp <= maxTs);
-        }
-
-        if (partidosObjetivo.length === 0) {
-            return jsonResponse({
-                status: 'success',
-                message: body.forzar_partido_id ? `Partido '${body.forzar_partido_id}' no encontrado en la base de datos.` : 'No hay partidos programados en las próximas 2 horas.',
-                partidos_encontrados: 0,
-                enviados: 0,
-                solo_admin: soloAdmin
-            });
+        if (action === 'cron_recordatorio_2horas') {
+            if (body.forzar_partido_id) {
+                partidosObjetivo = partidos.filter(p => String(p.id_partido).trim() === String(body.forzar_partido_id).trim());
+            } else {
+                partidosObjetivo = partidos.filter(p => p.visibilidad === 'MOSTRAR' && p.timestamp && p.timestamp >= minTs && p.timestamp <= maxTs);
+            }
         }
 
         await db.prepare(`CREATE TABLE IF NOT EXISTS "Suscripciones_Push" (
@@ -2994,11 +3082,11 @@ export async function onRequestPost(context) {
             "ID" INTEGER PRIMARY KEY AUTOINCREMENT, "Usuario" TEXT, "Tipo" TEXT, "Titulo" TEXT, "Mensaje" TEXT, "Fecha" TEXT, "Estado" TEXT
         )`).run();
 
-        const { results: subs } = await db.prepare('SELECT * FROM "Suscripciones_Push_Dispositivos" WHERE "Opciones_2Horas" = 1 AND LENGTH("Suscripcion_JSON") > 20').all();
+        const { results: subs } = await db.prepare('SELECT * FROM "Suscripciones_Push_Dispositivos" WHERE LENGTH("Suscripcion_JSON") > 20').all();
         if (!subs || subs.length === 0) {
             return jsonResponse({
                 status: 'success',
-                message: 'Hay partidos en 2 horas, pero ningún usuario tiene activada la suscripción de 2h.',
+                message: 'No hay usuarios suscritos a notificaciones Push.',
                 partidos_encontrados: partidosObjetivo.length,
                 enviados: 0,
                 solo_admin: soloAdmin
@@ -3152,8 +3240,15 @@ export async function onRequestPost(context) {
             }
         }
 
+        // Procesar además el recordatorio de 1 hora para cierre de votación MVP (solo a quienes no han votado)
+        const mvpRes = await procesarRecordatorioMvp1Hora(db, env, body, subs, insMap, sentSet, soloAdmin, nowMadrid);
+        totalEnviados += mvpRes.totalEnviadosMvp;
+        if (mvpRes.detalleMvp && mvpRes.detalleMvp.length > 0) {
+            detalleEnvios = detalleEnvios.concat(mvpRes.detalleMvp);
+        }
+
         let finalMsg = totalEnviados > 0
-            ? `¡Éxito! Se han enviado ${totalEnviados} notificaciones push.`
+            ? `¡Éxito! Se han enviado ${totalEnviados} notificaciones push (partidos y/o MVP 1h).`
             : (motivosOmision.length > 0
                 ? `0 enviadas (${motivosOmision.join('; ')}).`
                 : `Proceso completado: 0 notificaciones enviadas.`);
@@ -3163,6 +3258,7 @@ export async function onRequestPost(context) {
             message: finalMsg,
             partidos_encontrados: partidosObjetivo.length,
             enviados: totalEnviados,
+            enviados_mvp: mvpRes.totalEnviadosMvp,
             solo_admin: soloAdmin,
             detalles: detalleEnvios
         });
