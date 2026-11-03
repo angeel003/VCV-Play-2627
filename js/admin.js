@@ -649,6 +649,9 @@ window.guardarSoloHoraPublicacionMvp = function(e) {
     if (typeof window.setLocalMvpPubTs === 'function') {
         window.setLocalMvpPubTs(idPart, targetPubTs);
     }
+    if (typeof window.setLocalMvpCierreTs === 'function') {
+        window.setLocalMvpCierreTs(idPart, targetCierreTs);
+    }
     if (pObj) {
         pObj.mvp_cierre_votacion_ts = targetCierreTs;
         pObj.mvp_publicacion_ts = targetPubTs;
@@ -747,8 +750,7 @@ window.onDirectMvpPartidoChange = function(idPart) {
             const d = new Date(matchObj.mvp_cierre_votacion_ts);
             inputCierre.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
         } else if (matchObj && matchObj.mvp_publicacion_ts && matchObj.mvp_publicacion_ts > 0) {
-            const d = new Date(matchObj.mvp_publicacion_ts);
-            d.setHours(12, 0, 0, 0);
+            const d = new Date(matchObj.mvp_publicacion_ts - 3 * 3600000);
             inputCierre.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
         } else {
             inputCierre.value = window.getMvpFechaDefaultManana12();
@@ -930,23 +932,29 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
         if (pObj.estado !== "CERRADO" && pObj.estado !== "FINALIZADO") pObj.estado = "CERRADO";
         if (!pObj.oficial_sets) pObj.oficial_sets = "3-1";
         if (!pObj.oficial_parciales) pObj.oficial_parciales = "25-21, 23-25, 25-18, 25-20";
-        // Preestablecer horarios por defecto: Cierre 12:00, Publicación 15:00 del día siguiente
-        if (!pObj.mvp_cierre_votacion_ts || pObj.mvp_cierre_votacion_ts <= 0) {
+        // Leer horarios configurados en pantalla o preestablecer por defecto
+        const inputCierreEl = document.getElementById('adminMvpFechaCierre');
+        const inputPubEl = document.getElementById('adminMvpFechaPublicacion');
+        if (inputCierreEl && inputCierreEl.value) {
+            pObj.mvp_cierre_votacion_ts = new Date(inputCierreEl.value).getTime();
+        } else if (!pObj.mvp_cierre_votacion_ts || pObj.mvp_cierre_votacion_ts <= 0) {
             const dManana12 = new Date();
             dManana12.setDate(dManana12.getDate() + 1);
             dManana12.setHours(12, 0, 0, 0);
             pObj.mvp_cierre_votacion_ts = dManana12.getTime();
-            const inputCierreEl = document.getElementById('adminMvpFechaCierre');
             if (inputCierreEl) inputCierreEl.value = window.getMvpFechaDefaultManana12();
         }
-        if (!pObj.mvp_publicacion_ts || pObj.mvp_publicacion_ts <= 0) {
+        if (inputPubEl && inputPubEl.value) {
+            pObj.mvp_publicacion_ts = new Date(inputPubEl.value).getTime();
+        } else if (!pObj.mvp_publicacion_ts || pObj.mvp_publicacion_ts <= 0) {
             const dManana15 = new Date();
             dManana15.setDate(dManana15.getDate() + 1);
             dManana15.setHours(15, 0, 0, 0);
             pObj.mvp_publicacion_ts = dManana15.getTime();
-            const inputPubEl = document.getElementById('adminMvpFechaPublicacion');
             if (inputPubEl) inputPubEl.value = window.getMvpFechaDefaultManana15();
         }
+        if (typeof window.setLocalMvpPubTs === 'function') window.setLocalMvpPubTs(idPart, pObj.mvp_publicacion_ts);
+        if (typeof window.setLocalMvpCierreTs === 'function') window.setLocalMvpCierreTs(idPart, pObj.mvp_cierre_votacion_ts);
     } else {
         pObj.mvp_visible = false;
         // Mantener los candidatos existentes para que no se pierdan al volver a mostrar
@@ -961,6 +969,8 @@ window.cambiarVisibilidadVotacionMvp = function(hacerVisible) {
             arr.forEach(p => {
                 if (p.id_partido === idPart) {
                     p.mvp_visible = hacerVisible;
+                    p.mvp_cierre_votacion_ts = pObj.mvp_cierre_votacion_ts;
+                    p.mvp_publicacion_ts = pObj.mvp_publicacion_ts;
                     if (cands.length >= 2) p.mvp_candidatos = cands;
                 }
             });

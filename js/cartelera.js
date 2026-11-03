@@ -147,14 +147,7 @@ window.renderCarteleraHTML = function(data) {
 
                 // Fallbacks si falta alguno pero el otro existe
                 if (!cierreTs && pubTs > 0) {
-                    let d = new Date(pubTs);
-                    if (d.getHours() === 12) {
-                        cierreTs = pubTs;
-                    } else {
-                        let d12 = new Date(pubTs);
-                        d12.setHours(12, 0, 0, 0);
-                        cierreTs = d12.getTime();
-                    }
+                    cierreTs = pubTs - 3 * 3600000;
                 }
                 if (!pubTs && cierreTs > 0) {
                     let d15 = new Date(cierreTs);

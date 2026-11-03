@@ -45,7 +45,7 @@ var scriptURL = (isLocalStaticServer)
     : ((window.location.hostname.includes('pages.dev') || window.location.hostname.includes('vcvplay.com') || window.location.port === '8788') ? '/api/vcv' : 'https://vcvplay.com/api/vcv');
 window.scriptURL = scriptURL;
 
-// --- PERSISTENCIA LOCAL / CACHÉ DE HORA MVP ---
+// --- PERSISTENCIA LOCAL / CACHÉ DE HORA MVP (CIERRE Y PUBLICACIÓN) ---
 window.getLocalMvpPubMap = function() {
     try {
         const raw = localStorage.getItem('vcv_local_mvp_pub_map');
@@ -60,18 +60,38 @@ window.setLocalMvpPubTs = function(idPart, pubTs) {
         localStorage.setItem('vcv_local_mvp_pub_map', JSON.stringify(map));
     } catch(e) {}
 };
+window.getLocalMvpCierreMap = function() {
+    try {
+        const raw = localStorage.getItem('vcv_local_mvp_cierre_map');
+        return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+};
+window.setLocalMvpCierreTs = function(idPart, cierreTs) {
+    if (!idPart) return;
+    try {
+        const map = window.getLocalMvpCierreMap();
+        map[idPart] = cierreTs;
+        localStorage.setItem('vcv_local_mvp_cierre_map', JSON.stringify(map));
+    } catch(e) {}
+};
 window.aplicarHorasMvpLocales = function(data) {
     if (!data) return;
-    const map = window.getLocalMvpPubMap();
-    if (!map || Object.keys(map).length === 0) return;
+    const pubMap = window.getLocalMvpPubMap();
+    const cierreMap = window.getLocalMvpCierreMap();
     
     const applyToMatch = p => {
         if (!p || !p.id_partido) return;
-        if (map[p.id_partido] && map[p.id_partido] > 0) {
-            // Si la BD remota aún no tiene el valor nuevo o está desactualizado, aplicar la hora guardada
-            p.mvp_publicacion_ts = map[p.id_partido];
+        if (pubMap && pubMap[p.id_partido] && pubMap[p.id_partido] > 0) {
+            p.mvp_publicacion_ts = pubMap[p.id_partido];
             p.mvp_visible = true;
             p.visibilidad = 'MOSTRAR';
+        }
+        if (cierreMap && cierreMap[p.id_partido] && cierreMap[p.id_partido] > 0) {
+            p.mvp_cierre_votacion_ts = cierreMap[p.id_partido];
+        }
+        // Fallback automático si falta cierre: 3 horas antes de la publicación (ej: 12:00 si pub es 15:00)
+        if (!p.mvp_cierre_votacion_ts && p.mvp_publicacion_ts > 0) {
+            p.mvp_cierre_votacion_ts = p.mvp_publicacion_ts - 3 * 3600000;
         }
     };
     if (Array.isArray(data.equipos)) data.equipos.forEach(applyToMatch);
