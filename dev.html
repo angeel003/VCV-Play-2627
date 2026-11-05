@@ -2377,6 +2377,16 @@
           <p style="font-size: 0.85rem; font-weight:600; color: var(--text-muted); margin-top: 4px;">App oficial del club</p>
         </div>
 
+        <!-- Banner de Modo Mantenimiento en Login -->
+        <div id="mantenimientoBannerLogin" style="display:none; background: rgba(243, 156, 18, 0.15); border: 1.5px solid #f39c12; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; text-align: center;">
+          <div style="font-size: 0.92rem; font-weight: 800; color: #f39c12; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px;">
+            <span>🚧</span> Modo Mantenimiento
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-main); line-height: 1.4;">
+            La plataforma se encuentra temporalmente en mantenimiento y optimización. El acceso está restringido exclusivamente a <b>administradores</b>.
+          </div>
+        </div>
+
         <div>
           <div class="form-group text-left" style="margin-bottom:10px;">
             <label style="font-size:0.85rem; font-weight:600;">Usuario</label>
@@ -2645,6 +2655,30 @@
             </div>
           </details>
           
+          <!-- 0. Modo Mantenimiento Web -->
+          <div style="background: rgba(243, 156, 18, 0.12); border: 1.5px solid #f39c12; border-radius: 12px; margin-bottom: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.2rem;">🚧</span>
+                <div>
+                  <strong style="color: #f39c12; font-size: 0.92rem;">Modo Mantenimiento</strong>
+                  <div style="font-size: 0.72rem; color: var(--text-muted);">Restringe el acceso web exclusivamente a administradores</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="badgeEstadoMantenimientoAdmin" style="padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: #e74c3c; color: #fff;">
+                  ACTIVO
+                </span>
+                <button type="button" class="btn" id="btnToggleMantenimientoAdmin" onclick="window.adminToggleMantenimiento()" style="padding: 7px 14px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 1px solid #f39c12; background: rgba(243, 156, 18, 0.2); color: #f39c12;">
+                  Desactivar
+                </button>
+              </div>
+            </div>
+            <div id="descMantenimientoAdmin" style="font-size: 0.75rem; color: var(--text-main); margin-top: 2px; line-height: 1.35;">
+              ⚠️ El modo mantenimiento está actualmente <b>ACTIVADO</b>. Los usuarios no administradores verán un aviso en el inicio de sesión y no podrán entrar a la plataforma.
+            </div>
+          </div>
+
           <!-- 1. Botones de Control Servidor -->
           <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2786,6 +2820,17 @@
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;">
                 Otorga permisos a usuarios específicos para que puedan gestionar el MVP de Superliga 2 o subir resultados y links de sus equipos, <b>sin darles acceso al resto de la administración</b>.
               </p>
+              <!-- Restablecimiento Rápido de Contraseña por Admin -->
+              <div style="background: rgba(231, 76, 60, 0.08); border: 1px dashed rgba(231, 76, 60, 0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                <span style="font-size: 0.78rem; font-weight: 800; color: #e74c3c; display:flex; align-items:center; gap:4px;">
+                  🔑 Restablecer Contraseña por Olvido:
+                </span>
+                <input type="text" id="adminResetTargetUser" placeholder="@usuario (ej. juan99)" style="padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 150px;">
+                <input type="text" id="adminResetNewPass" placeholder="Nueva clave" value="vcv1234" style="padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 120px;">
+                <button type="button" class="btn" onclick="window.adminEjecutarResetPasswordRapido()" style="padding: 6px 14px; font-size: 0.78rem; background: #e74c3c; color: #fff; font-weight: 800; border-radius: 6px; cursor: pointer; border: none;">
+                  Restablecer
+                </button>
+              </div>
               <button type="button" id="btnCargarPermisosUsuarios" class="btn" onclick="window.cargarListaPermisosUsuarios()" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 8px; width: 100%; font-size: 0.82rem;">
                 🔄 Cargar Lista de Usuarios y Permisos
               </button>
@@ -3792,13 +3837,13 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
 <script src="js/config.js?v=20261103_v2"></script>
-<script src="js/admin.js?v=20261103_v2"></script>
+<script src="js/admin.js?v=20261105_maint1"></script>
 <script src="js/cartelera.js?v=20261103_v3"></script>
 <script src="js/ranking.js?v=20261031_v21"></script>
 <script src="js/calendario.js?v=20261102_v21"></script>
 <script src="js/cartelera_interactive.js?v=20261103_v2"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
-<script src="js/auth.js?v=20261103_notif3"></script>
+<script src="js/auth.js?v=20261105_maint1"></script>
 <script src="js/push_notifications.js?v=20261103_v25"></script>
 
 

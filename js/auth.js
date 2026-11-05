@@ -571,6 +571,13 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
         if(data.status === "success") {
             
             currentUser = usr; currentPassword = pwd;
+            if (data.modo_mantenimiento !== undefined) {
+                window.appData = window.appData || {};
+                window.appData.modo_mantenimiento = data.modo_mantenimiento;
+                if (typeof window.adminActualizarUiMantenimiento === 'function') {
+                    window.adminActualizarUiMantenimiento(data.modo_mantenimiento);
+                }
+            }
             
             // Guardar sesión persistente si el checkbox está marcado
             const chkRec = document.getElementById('chkRecordarSesion');
@@ -1042,6 +1049,18 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             }, 400);
             return;
         } else {
+            // Si el servidor rechaza por Modo Mantenimiento
+            if (data.code === 'MODO_MANTENIMIENTO') {
+                document.documentElement.classList.remove('vcv-auto-logging-in');
+                const mb = document.getElementById('mantenimientoBannerLogin');
+                if (mb) mb.style.display = 'block';
+                msgBox.className = "alert-box alert-danger";
+                msgBox.innerHTML = `<b>🚧 Modo Mantenimiento Activo</b><br><span style="font-size:0.8rem;">${data.message || 'El acceso está reservado exclusivamente a administradores.'}</span>`;
+                msgBox.style.display = "block";
+                if (typeof updateProgressBar === 'function') updateProgressBar();
+                return;
+            }
+
             // Si el servidor rechaza las credenciales, limpiar la sesión guardada
             const msgLower = (data.message || '').toLowerCase();
             const isCredsError = msgLower.includes('incorrect') || msgLower.includes('inválid') || msgLower.includes('no existe');
@@ -1150,3 +1169,36 @@ if (document.readyState === 'loading') {
     window.verificarAutoLogin();
 }
 
+
+// -------------------------------------------------------------
+// VERIFICAR ESTADO PÚBLICO DE MODO MANTENIMIENTO
+// -------------------------------------------------------------
+window.verificarEstadoMantenimientoPublico = function() {
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'get_mantenimiento_status' }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d && d.status === 'success') {
+            const banner = document.getElementById('mantenimientoBannerLogin');
+            if (banner) {
+                banner.style.display = d.activo ? 'block' : 'none';
+            }
+            const btnGuest = document.getElementById('btnGuest');
+            if (btnGuest && d.activo) {
+                btnGuest.style.opacity = '0.5';
+                btnGuest.title = 'No disponible durante modo mantenimiento';
+            }
+        }
+    })
+    .catch(() => {});
+};
+
+// Comprobar estado en carga inicial
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.verificarEstadoMantenimientoPublico);
+} else {
+    window.verificarEstadoMantenimientoPublico();
+}

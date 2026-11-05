@@ -228,6 +228,98 @@ async function sendWebPushNotification(subObj, payloadObj, env) {
 }
 
 
+// ==============================================================================
+// GESTIÓN DE CONTRASEÑAS SEGURAS (PBKDF2 SHA-256 + LAZY MIGRATION)
+// ==============================================================================
+async function hashPassword(password) {
+    if (!password) return "";
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+    );
+    const derivedBits = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial, 256
+    );
+    const hashHex = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return 'v1$' + saltHex + '$' + hashHex;
+}
+
+async function verifyPasswordHash(password, storedHash) {
+    if (!password || !storedHash) return false;
+    const parts = storedHash.split('$');
+    if (parts.length !== 3 || parts[0] !== 'v1') return false;
+    const saltHex = parts[1];
+    const originalHashHex = parts[2];
+    const match = saltHex.match(/.{1,2}/g);
+    if (!match) return false;
+    const salt = new Uint8Array(match.map(byte => parseInt(byte, 16)));
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+    );
+    const derivedBits = await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial, 256
+    );
+    const hashHex = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (hashHex.length !== originalHashHex.length) return false;
+    let diff = 0;
+    for (let i = 0; i < hashHex.length; i++) {
+        diff |= (hashHex.charCodeAt(i) ^ originalHashHex.charCodeAt(i));
+    }
+    return diff === 0;
+}
+
+async function verifyAndMigrateUser(db, usuario, password) {
+    if (!usuario || !password) return null;
+    const userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE "Usuario" = ?').bind(usuario).first();
+    if (!userRow) return null;
+
+    const storedPwd = (userRow.Password || "").toString().trim();
+    const inputPwd = password.toString().trim();
+
+    // 1. Si la contraseña ya está en formato hash v1$
+    if (storedPwd.startsWith("v1$")) {
+        const isValid = await verifyPasswordHash(inputPwd, storedPwd);
+        return isValid ? userRow : null;
+    }
+
+    // 2. Si es contraseña legacy en texto plano
+    if (storedPwd === inputPwd) {
+        // MIGRACIÓN PEREZOSA (Lazy Migration): Generar hash y actualizar D1 de inmediato
+        try {
+            const newHashed = await hashPassword(inputPwd);
+            await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(newHashed, usuario).run();
+            userRow.Password = newHashed;
+        } catch(e) {
+            console.error("Error en lazy migration de contraseña:", e);
+        }
+        return userRow;
+    }
+
+    return null;
+}
+
+async function isModoMantenimientoActivo(db) {
+    try {
+        await db.prepare('CREATE TABLE IF NOT EXISTS "Cache_App" ("clave" TEXT PRIMARY KEY, "valor" TEXT, "timestamp" INTEGER)').run();
+        const row = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'MODO_MANTENIMIENTO'").first();
+        if (!row) {
+            // Por defecto activo inicialmente para permitir verificación del administrador
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('MODO_MANTENIMIENTO', '1', ?)")
+                .bind(Date.now()).run();
+            return true;
+        }
+        return row.valor === '1';
+    } catch(e) {
+        console.error("Error comprobando modo mantenimiento:", e);
+        return true;
+    }
+}
+
 export async function onRequestOptions() {
     return new Response(null, {
         headers: {
@@ -610,6 +702,19 @@ export async function onRequestPost(context) {
     const usuario = (body.usuario || "").trim();
     const password = (body.password || "").trim();
 
+    let authUserCache = undefined;
+    async function getAuthUser(targetU = usuario, targetP = password) {
+        if (!targetU || !targetP) return null;
+        if (targetU === usuario && targetP === password && authUserCache !== undefined) {
+            return authUserCache;
+        }
+        const res = await verifyAndMigrateUser(db, targetU, targetP);
+        if (targetU === usuario && targetP === password) {
+            authUserCache = res;
+        }
+        return res;
+    }
+
     // 1. PING & MIGRACIONES / ÍNDICES
     if (action === 'migrate_db' || action === 'apply_indexes') {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Genero TEXT DEFAULT 'M'").run(); } catch(e) {}
@@ -802,7 +907,7 @@ export async function onRequestPost(context) {
     }
         // ADMIN: OBTENER LISTA DE MONITORIZACIÓN Y SUS ACCESOS
     if (action === "get_monitor_data") {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -834,7 +939,7 @@ export async function onRequestPost(context) {
             await db.prepare(`CREATE TABLE IF NOT EXISTS "Monitor_Usuarios" ("usuario" TEXT PRIMARY KEY, "activo" INTEGER DEFAULT 1, "fecha_alta" TEXT, "notas" TEXT)`).run();
             await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Accesos" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "usuario" TEXT, "fecha_hora" TEXT, "timestamp" INTEGER, "origen" TEXT, "dispositivo" TEXT)`).run();
         } catch(e) {}
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -1067,17 +1172,21 @@ export async function onRequestPost(context) {
     if (action === "change_password") {
         const oldPwd = (body.old_password || "").trim();
         const newPwd = (body.new_password || "").trim();
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, oldPwd).first();
+        const user = await verifyAndMigrateUser(db, usuario, oldPwd);
         if (!user) {
             return jsonResponse({ status: "error", message: "La contraseña actual no es correcta." });
         }
-        await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(newPwd, usuario).run();
+        if (!newPwd || newPwd.length < 3) {
+            return jsonResponse({ status: "error", message: "La nueva contraseña debe tener al menos 3 caracteres." });
+        }
+        const hashedNew = await hashPassword(newPwd);
+        await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(hashedNew, usuario).run();
         return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
     }
 
     // 4. GUARDAR PREDICCIONES (Porras)
     if (action === "save") {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
 
         const preds = body.predicciones || {};
@@ -1110,7 +1219,7 @@ export async function onRequestPost(context) {
 
     // 5. GUARDAR PREDICCIONES SECRETAS (Puntos totales temporada)
     if (action === "save_totales") {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
 
         const deadline = new Date("2026-10-10T12:00:00").getTime();
@@ -1137,7 +1246,7 @@ export async function onRequestPost(context) {
 
     // 6. HISTORIAL DE PARTIDOS
     if (action === "get_history") {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
 
         const { results: rawPartidos } = await db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all();
@@ -1195,9 +1304,22 @@ export async function onRequestPost(context) {
 
     // 7. LOGIN Y CARGA PRINCIPAL (action === "login" || action === "get_data")
     if (action === "login" || action === "get_data") {
-        const userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const userRow = await getAuthUser();
         if (!userRow) {
             return jsonResponse({ status: "error", message: "Usuario o contraseña incorrectos." });
+        }
+
+        // CONTROL DE MODO MANTENIMIENTO: Restringido exclusivamente a administradores
+        const mantenimientoActivo = await isModoMantenimientoActivo(db);
+        const adminCheckBadge = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const esAdmin = adminCheckBadge && adminCheckBadge["Admin Web"] === "X";
+
+        if (mantenimientoActivo && !esAdmin) {
+            return jsonResponse({
+                status: "error",
+                code: "MODO_MANTENIMIENTO",
+                message: "🚧 La plataforma se encuentra temporalmente en modo mantenimiento. El acceso está restringido exclusivamente a administradores del club."
+            }, 403);
         }
 
                 // Actualizar último acceso si es un inicio de sesión (throttled a 1 hora para ahorrar escrituras)
@@ -1867,6 +1989,7 @@ export async function onRequestPost(context) {
         return jsonResponse({
             status: "success",
             usuario: usuario,
+            modo_mantenimiento: mantenimientoActivo,
             notificaciones: notificaciones,
             mvp_votos: misVotosMvp,
             plantilla_superliga: plantillaSuperliga,
@@ -1905,7 +2028,7 @@ export async function onRequestPost(context) {
     
     // ADMIN: SYNC PERMISOS
     if (action === 'sync_permisos') {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         // 1. Fetch Ligas, Ligas_Equipos
@@ -1989,7 +2112,7 @@ export async function onRequestPost(context) {
 
     if (action === 'save_ligas_config') {
         const { config } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -2004,7 +2127,7 @@ export async function onRequestPost(context) {
 
     if (action === 'set_freeze_override') {
         const { mode } = body; // 'UNFREEZE', 'FREEZE', o 'AUTO'
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -2077,7 +2200,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'clear_cache') {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         try { 
@@ -2090,13 +2213,14 @@ export async function onRequestPost(context) {
     // ADMIN: ADD USER
     if (action === 'add_user') {
         const { new_u, new_p, new_n, ligas_seleccionadas } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 401);
         
         const exist = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ?').bind(new_u).first();
         if (exist) return jsonResponse({ status: 'error', message: 'El usuario ya existe' });
 
-        await db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(new_u, new_p, new_n || new_u).run();
+        const hashedNewP = await hashPassword(new_p);
+        await db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(new_u, hashedNewP, new_n || new_u).run();
         await db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u).run();
         await db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u).run();
         await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(new_u).run();
@@ -2138,10 +2262,71 @@ export async function onRequestPost(context) {
         return jsonResponse({ status: 'success', message: 'Usuario creado con éxito en la BD de Cloudflare' });
     }
 
+    // PUBLIC: ESTADO MODO MANTENIMIENTO
+    if (action === 'get_mantenimiento_status') {
+        const activo = await isModoMantenimientoActivo(db);
+        return jsonResponse({ status: 'success', activo });
+    }
+
+    // ADMIN: TOGGLE MODO MANTENIMIENTO
+    if (action === 'toggle_modo_mantenimiento') {
+        const authUser = await getAuthUser();
+        if (!authUser) return jsonResponse({ status: 'error', message: 'Credenciales de administrador incorrectas.' }, 401);
+
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
+        if (!isAdmin) return jsonResponse({ status: 'error', message: 'Acceso denegado. Se requieren permisos de administrador.' }, 403);
+
+        const nuevoActivo = (body.activo === true || body.activo === 1 || body.activo === '1');
+        const valStr = nuevoActivo ? '1' : '0';
+        await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('MODO_MANTENIMIENTO', ?, ?)")
+            .bind(valStr, Date.now()).run();
+
+        return jsonResponse({
+            status: 'success',
+            activo: nuevoActivo,
+            message: nuevoActivo ? 'Modo mantenimiento ACTIVADO en la plataforma' : 'Modo mantenimiento DESACTIVADO en la plataforma'
+        });
+    }
+
+    // ADMIN: RESET USER PASSWORD
+    if (action === 'admin_reset_password') {
+        const authUser = await getAuthUser();
+        if (!authUser) return jsonResponse({ status: 'error', message: 'Credenciales de administrador incorrectas.' }, 401);
+
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
+        if (!isAdmin) return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const targetUser = (body.target_user || "").trim();
+        const newPassword = (body.new_password || "").trim();
+
+        if (!targetUser) {
+            return jsonResponse({ status: 'error', message: 'Debes indicar el usuario al que cambiar la contraseña.' });
+        }
+        if (!newPassword || newPassword.length < 3) {
+            return jsonResponse({ status: 'error', message: 'La contraseña debe tener al menos 3 caracteres.' });
+        }
+
+        const targetRow = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ?').bind(targetUser).first();
+        if (!targetRow) {
+            return jsonResponse({ status: 'error', message: `El usuario "${targetUser}" no existe en la base de datos.` });
+        }
+
+        const hashedNew = await hashPassword(newPassword);
+        await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(hashedNew, targetUser).run();
+
+        return jsonResponse({
+            status: 'success',
+            message: `Contraseña de @${targetUser} restablecida correctamente a: ${newPassword}`,
+            target_user: targetUser
+        });
+    }
+
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
         const { id_partido, sets, parciales, streaming, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
@@ -2337,7 +2522,7 @@ export async function onRequestPost(context) {
     // ADMIN: GUARDAR / PROGRAMAR HORARIOS DE CIERRE DE VOTACIÓN Y PUBLICACIÓN DEL MVP
     if (action === 'set_mvp_publicacion_ts') {
         const { id_partido, mvp_publicacion_ts, mvp_cierre_votacion_ts } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
@@ -2376,7 +2561,7 @@ export async function onRequestPost(context) {
     // ADMIN: SET MVP OFICIAL DE JORNADA / PARTIDO
     if (action === 'set_mvp_oficial') {
         const { id_partido, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
@@ -2420,7 +2605,7 @@ export async function onRequestPost(context) {
     // VOTAR MVP DE PARTIDO
     if (action === 'vote_mvp') {
         const { id_partido, jugador } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
 
@@ -2466,7 +2651,7 @@ export async function onRequestPost(context) {
     // ADMIN: OBTENER RECUENTO DE VOTOS MVP DE UN PARTIDO
     if (action === 'get_mvp_votos_summary') {
         const { id_partido } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
@@ -2479,7 +2664,7 @@ export async function onRequestPost(context) {
     // ADMIN: GESTIONAR PLANTILLA SUPERLIGA 2 MASCULINO
     if (action === 'save_plantilla_superliga') {
         const { jugadores } = body; // Array de { id?: number, dorsal: number, nombre: string, apodo: string, posicion: string, usuario: string }
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
@@ -2558,7 +2743,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'get_sugerencias') {
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos de administrador'}, 403);
@@ -2581,7 +2766,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'marcar_sugerencia_estado' || action === 'update_sugerencia_estado') {
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos de administrador'}, 403);
@@ -2604,7 +2789,7 @@ export async function onRequestPost(context) {
     if (action === 'request_name_change') {
         const { new_usuario, new_nombre } = body;
         
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         if (!new_usuario && !new_nombre) {
@@ -2627,7 +2812,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'get_name_change_requests') {
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
@@ -2646,7 +2831,7 @@ export async function onRequestPost(context) {
     if (action === 'resolve_name_change') {
         const { target_user, resolution } = body;
         
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({status: 'error', message: 'No tienes permisos'}, 403);
@@ -2699,7 +2884,7 @@ export async function onRequestPost(context) {
         }
     }
     if (action === 'delete_avatar') {
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Avatar" = \'\', "Avatar_Url" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
@@ -2707,7 +2892,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'delete_custom_badge') {
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('UPDATE "Insignias" SET "Custom_Badge" = \'\', "Custom_Emoji" = \'\', "Custom_Desc" = \'\' WHERE "Usuario" = ?').bind(usuario).run();
@@ -2716,7 +2901,7 @@ export async function onRequestPost(context) {
 
     if (action === 'request_badge_update') {
         const { payload } = body;
-        const auth = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const auth = await getAuthUser();
         if(!auth) return jsonResponse({status: 'error', message: 'Credenciales inválidas'}, 401);
 
         await db.prepare('INSERT INTO "Peticiones_Insignias" ("Usuario", "Tipo", "Equipo_Externo", "Estado", "Fecha") VALUES (?, ?, ?, ?, ?)')
@@ -2779,7 +2964,7 @@ export async function onRequestPost(context) {
 
     if (action === 'save_email') {
         const { email } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         try {
@@ -2795,7 +2980,7 @@ export async function onRequestPost(context) {
 
     // GESTIÓN DE PERMISOS ESPECÍFICOS (MVP Y RESULTADOS/LINKS)
     if (action === 'get_usuarios_permisos') {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -2840,7 +3025,7 @@ export async function onRequestPost(context) {
 
     if (action === 'save_usuario_permisos') {
         const { target_usuario, permiso_mvp, permiso_resultados } = body;
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -3012,7 +3197,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'set_modo_pruebas_notif') {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -3028,7 +3213,7 @@ export async function onRequestPost(context) {
 
     if (action === 'enviar_push_prueba_admin') {
         try {
-            const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+            const user = await getAuthUser();
             if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
             const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
             if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
@@ -3093,8 +3278,11 @@ export async function onRequestPost(context) {
     if (action === 'cron_recordatorio_2horas' || action === 'cron_recordatorio_mvp_1hora') {
         let isTriggeredByAdmin = false;
         if (usuario && password) {
-            const adminCheck = await db.prepare('SELECT i."Admin Web" FROM "Usuarios" u LEFT JOIN "Insignias" i ON u.Usuario = i.Usuario WHERE u.Usuario = ? AND u.Password = ?').bind(usuario, password).first();
-            if (adminCheck && adminCheck["Admin Web"] === "X") isTriggeredByAdmin = true;
+            const authUser = await getAuthUser();
+            if (authUser) {
+                const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+                if (adminCheck && adminCheck["Admin Web"] === "X") isTriggeredByAdmin = true;
+            }
         }
 
         let soloAdmin = true;
@@ -3318,7 +3506,7 @@ export async function onRequestPost(context) {
     }
 
     if (action === 'obtener_log_notificaciones') {
-        const user = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ? AND "Password" = ?').bind(usuario, password).first();
+        const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);

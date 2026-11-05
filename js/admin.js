@@ -71,6 +71,11 @@ window.adminCambiarFiltroJornada = function(val) {
 };
 
 function renderAdminPanel(equiposParam) {
+    if (window.appData && window.appData.modo_mantenimiento !== undefined) {
+        if (typeof window.adminActualizarUiMantenimiento === 'function') {
+            window.adminActualizarUiMantenimiento(window.appData.modo_mantenimiento);
+        }
+    }
     // Tomar la fuente adecuada: si 'Ver todos' está activo, usar todos_partidos para tener toda la temporada
     let pool = (window.adminVerTodosPartidos && window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
         ? window.appData.todos_partidos
@@ -1650,7 +1655,10 @@ window.cargarListaPermisosUsuarios = function() {
                     </div>
                 </div>
 
-                <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; flex-wrap:wrap;">
+                    <button type="button" class="btn" onclick="window.adminRestablecerPasswordUsuario('${u.usuario.replace(/'/g, "\\'")}')" style="padding:6px 12px; font-size:0.75rem; background:rgba(231,76,60,0.12); border:1px solid #e74c3c; color:#e74c3c; font-weight:800; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;" title="Restablecer contraseña de este usuario">
+                        🔑 Cambiar Contraseña
+                    </button>
                     <button type="button" id="btn_save_perm_${idx}" class="btn" onclick="window.guardarPermisosUsuarioEspecifico('${u.usuario.replace(/'/g, "\\'")}', ${idx})" style="padding:6px 14px; font-size:0.75rem; background:rgba(230,126,34,0.15); border:1px solid #e67e22; color:#e67e22; font-weight:800; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
                         💾 Guardar Permisos
                     </button>
@@ -1734,6 +1742,109 @@ window.guardarPermisosUsuarioEspecifico = function(targetUser, idx) {
     });
 };
 // ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// RESTABLECIMIENTO DE CONTRASEÑA POR EL ADMINISTRADOR
+// ------------------------------------------------------------------
+window.adminRestablecerPasswordUsuario = function(targetUser) {
+    if (!targetUser) return;
+    const nuevaClave = prompt(`Introduce la nueva contraseña temporal para @${targetUser} (mínimo 3 caracteres):`, "vcv1234");
+    if (nuevaClave === null) return;
+    const pwdTrim = nuevaClave.trim();
+    if (!pwdTrim || pwdTrim.length < 3) {
+        alert("⚠️ La contraseña debe tener al menos 3 caracteres.");
+        return;
+    }
+
+    if (!confirm(`¿Estás seguro de que deseas cambiar la contraseña de @${targetUser} a "${pwdTrim}"?`)) {
+        return;
+    }
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'admin_reset_password',
+            usuario: currentUser,
+            password: currentPassword,
+            target_user: targetUser,
+            new_password: pwdTrim
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            alert(`✅ ¡Contraseña restablecida con éxito!
+
+Usuario: @${targetUser}
+Nueva Contraseña: ${pwdTrim}
+
+Ya puedes facilitársela al usuario para que inicie sesión.`);
+        } else {
+            alert(`❌ Error al restablecer la contraseña:
+
+${d.message || 'Error desconocido'}`);
+        }
+    })
+    .catch(err => {
+        alert(`❌ Error de conexión al restablecer contraseña: ${err.message}`);
+    });
+};
+
+window.adminEjecutarResetPasswordRapido = function() {
+    const userInp = document.getElementById('adminResetTargetUser');
+    const passInp = document.getElementById('adminResetNewPass');
+    if (!userInp || !passInp) return;
+
+    let targetUser = (userInp.value || '').trim();
+    if (targetUser.startsWith('@')) targetUser = targetUser.substring(1).trim();
+    const newPass = (passInp.value || '').trim();
+
+    if (!targetUser) {
+        alert("⚠️ Por favor, introduce el nombre de @usuario.");
+        userInp.focus();
+        return;
+    }
+    if (!newPass || newPass.length < 3) {
+        alert("⚠️ La nueva contraseña debe tener al menos 3 caracteres.");
+        passInp.focus();
+        return;
+    }
+
+    if (!confirm(`¿Restablecer la contraseña de @${targetUser} a "${newPass}"?`)) {
+        return;
+    }
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'admin_reset_password',
+            usuario: currentUser,
+            password: currentPassword,
+            target_user: targetUser,
+            new_password: newPass
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.status === 'success') {
+            alert(`✅ ¡Contraseña restablecida con éxito!
+
+Usuario: @${targetUser}
+Nueva Contraseña: ${newPass}
+
+El usuario ya puede acceder con esta clave.`);
+            userInp.value = '';
+            passInp.value = 'vcv1234';
+        } else {
+            alert(`❌ Error: ${d.message || 'No se pudo restablecer la contraseña.'}`);
+        }
+    })
+    .catch(err => {
+        alert(`❌ Error de red: ${err.message}`);
+    });
+};
+
 
 function getCategoryHTML(catName) {
     if (!catName) return "";
@@ -2309,4 +2420,74 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         if (modal) modal.style.display = 'flex';
         await window.dibujarTarjetaCompartir();
     }
+};
+
+// ------------------------------------------------------------------
+// MODO MANTENIMIENTO: CONTROL Y ESTADO PARA ADMINISTRADORES
+// ------------------------------------------------------------------
+window.adminActualizarUiMantenimiento = function(activo) {
+    const badge = document.getElementById('badgeEstadoMantenimientoAdmin');
+    const btn = document.getElementById('btnToggleMantenimientoAdmin');
+    const desc = document.getElementById('descMantenimientoAdmin');
+    if (!badge || !btn) return;
+
+    if (activo) {
+        badge.style.background = '#e74c3c';
+        badge.style.color = '#fff';
+        badge.innerText = 'ACTIVO';
+        btn.innerText = 'Desactivar Mantenimiento';
+        btn.style.background = 'rgba(39, 174, 96, 0.2)';
+        btn.style.borderColor = '#27ae60';
+        btn.style.color = '#27ae60';
+        if (desc) desc.innerHTML = '⚠️ El modo mantenimiento está actualmente <b>ACTIVADO</b>. Los usuarios no administradores ven un aviso y no pueden iniciar sesión.';
+    } else {
+        badge.style.background = '#27ae60';
+        badge.style.color = '#fff';
+        badge.innerText = 'DESACTIVADO';
+        btn.innerText = 'Activar Mantenimiento';
+        btn.style.background = 'rgba(231, 76, 60, 0.2)';
+        btn.style.borderColor = '#e74c3c';
+        btn.style.color = '#e74c3c';
+        if (desc) desc.innerHTML = '✅ El modo mantenimiento está <b>DESACTIVADO</b>. La plataforma está abierta con total normalidad para todos los usuarios.';
+    }
+};
+
+window.adminToggleMantenimiento = function() {
+    const badge = document.getElementById('badgeEstadoMantenimientoAdmin');
+    const isCurrentlyActive = badge ? (badge.innerText === 'ACTIVO') : false;
+    const nuevoEstado = !isCurrentlyActive;
+
+    const actionText = nuevoEstado ? 'ACTIVAR' : 'DESACTIVAR';
+    if (!confirm(`¿Estás seguro de que deseas ${actionText} el Modo Mantenimiento en toda la web?`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btnToggleMantenimientoAdmin');
+    if (btn) btn.disabled = true;
+
+    fetchSeguro(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'toggle_modo_mantenimiento',
+            usuario: currentUser,
+            password: currentPassword,
+            activo: nuevoEstado
+        }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (btn) btn.disabled = false;
+        if (d.status === 'success') {
+            window.adminActualizarUiMantenimiento(d.activo);
+            if (window.appData) window.appData.modo_mantenimiento = d.activo;
+            alert(`✅ ${d.message}`);
+        } else {
+            alert(`❌ Error: ${d.message || 'No se pudo cambiar el modo mantenimiento'}`);
+        }
+    })
+    .catch(err => {
+        if (btn) btn.disabled = false;
+        alert(`❌ Error de red: ${err.message}`);
+    });
 };
