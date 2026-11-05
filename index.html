@@ -2768,6 +2768,30 @@
             </div>
           </details>
 
+          <!-- Restablecer Contraseña de Usuario por Olvido -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(231, 76, 60, 0.18), var(--bg-card)); border: 1px solid rgba(231, 76, 60, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e74c3c; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🔑 Restablecer Contraseña por Olvido</span>
+              <span style="font-size: 0.72rem; background: rgba(231, 76, 60, 0.2); color: #e74c3c; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Seguridad</span>
+            </summary>
+            <div style="padding: 14px 16px 16px 16px; border-top: 1px solid rgba(231, 76, 60, 0.2);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                Si un usuario ha olvidado su contraseña, introduce su nombre de usuario y defínele una nueva clave provisional (por defecto <code>123</code>). Se actualizará al instante con cifrado seguro (PBKDF2 SHA-256) en la base de datos.
+              </p>
+              <div class="form-group" style="margin-bottom:8px;">
+                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Nombre de Usuario:</label>
+                <input type="text" id="adminResetTargetUser" placeholder="@usuario (ej. juan99)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem;">
+              </div>
+              <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Nueva Contraseña Provisional:</label>
+                <input type="text" id="adminResetNewPass" placeholder="Nueva clave" value="123" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem;">
+              </div>
+              <button type="button" class="btn" onclick="window.adminEjecutarResetPasswordRapido()" style="width:100%; padding: 11px; font-size: 0.85rem; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                🔑 Restablecer Contraseña Ahora
+              </button>
+            </div>
+          </details>
+
           <!-- Buzón de Sugerencias y Reportes de Errores -->
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.2), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2820,17 +2844,7 @@
               <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;">
                 Otorga permisos a usuarios específicos para que puedan gestionar el MVP de Superliga 2 o subir resultados y links de sus equipos, <b>sin darles acceso al resto de la administración</b>.
               </p>
-              <!-- Restablecimiento Rápido de Contraseña por Admin -->
-              <div style="background: rgba(231, 76, 60, 0.08); border: 1px dashed rgba(231, 76, 60, 0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-                <span style="font-size: 0.78rem; font-weight: 800; color: #e74c3c; display:flex; align-items:center; gap:4px;">
-                  🔑 Restablecer Contraseña por Olvido:
-                </span>
-                <input type="text" id="adminResetTargetUser" placeholder="@usuario (ej. juan99)" style="padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 150px;">
-                <input type="text" id="adminResetNewPass" placeholder="Nueva clave" value="vcv1234" style="padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); width: 120px;">
-                <button type="button" class="btn" onclick="window.adminEjecutarResetPasswordRapido()" style="padding: 6px 14px; font-size: 0.78rem; background: #e74c3c; color: #fff; font-weight: 800; border-radius: 6px; cursor: pointer; border: none;">
-                  Restablecer
-                </button>
-              </div>
+              
               <button type="button" id="btnCargarPermisosUsuarios" class="btn" onclick="window.cargarListaPermisosUsuarios()" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 9px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 8px; width: 100%; font-size: 0.82rem;">
                 🔄 Cargar Lista de Usuarios y Permisos
               </button>
@@ -3837,7 +3851,7 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
 <script src="js/config.js?v=20261103_v2"></script>
-<script src="js/admin.js?v=20261105_maint1"></script>
+<script src="js/admin.js?v=20261105_maint2"></script>
 <script src="js/cartelera.js?v=20261103_v3"></script>
 <script src="js/ranking.js?v=20261031_v21"></script>
 <script src="js/calendario.js?v=20261102_v21"></script>
