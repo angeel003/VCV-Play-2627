@@ -1116,12 +1116,14 @@ export async function onRequestPost(context) {
 
                 if (hasMvpAssignment) {
                     if (pCartelera.mvp_oficial) {
-                        let baseTime = pCartelera.mvp_proclamado_ts || pCartelera.timestamp || 0;
-                        if (baseTime && (Date.now() - baseTime > 48 * 60 * 60 * 1000)) {
+                        let baseTime = pCartelera.mvp_proclamado_ts || pCartelera.mvp_publicacion_ts || pCartelera.timestamp || 0;
+                        if (baseTime && (Date.now() - baseTime > 24 * 60 * 60 * 1000)) {
                             isTooOld = true;
                         }
                     } else if (pCartelera.mvp_publicacion_ts && pCartelera.mvp_publicacion_ts > Date.now()) {
                         isTooOld = false;
+                    } else if (pCartelera.timestamp && (Date.now() - pCartelera.timestamp > 72 * 60 * 60 * 1000)) {
+                        isTooOld = true;
                     } else {
                         isTooOld = false;
                     }

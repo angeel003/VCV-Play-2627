@@ -79,19 +79,24 @@ window.aplicarHorasMvpLocales = function(data) {
     const pubMap = window.getLocalMvpPubMap();
     const cierreMap = window.getLocalMvpCierreMap();
     
-    const applyToMatch = p => {
+        const applyToMatch = p => {
         if (!p || !p.id_partido) return;
         if (pubMap && pubMap[p.id_partido] && pubMap[p.id_partido] > 0) {
             p.mvp_publicacion_ts = pubMap[p.id_partido];
-            p.mvp_visible = true;
-            p.visibilidad = 'MOSTRAR';
         }
         if (cierreMap && cierreMap[p.id_partido] && cierreMap[p.id_partido] > 0) {
             p.mvp_cierre_votacion_ts = cierreMap[p.id_partido];
         }
-        // Fallback automático si falta cierre: 3 horas antes de la publicación (ej: 12:00 si pub es 15:00)
+        // Fallback automatico si falta cierre: 3 horas antes de la publicacion (ej: 12:00 si pub es 15:00)
         if (!p.mvp_cierre_votacion_ts && p.mvp_publicacion_ts > 0) {
             p.mvp_cierre_votacion_ts = p.mvp_publicacion_ts - 3 * 3600000;
+        }
+
+        // CADUCIDAD: Si ya hay ganador oficial y han transcurrido mas de 24 horas desde la publicacion o proclamacion, ocultar
+        const refPub = p.mvp_publicacion_ts || p.mvp_proclamado_ts || 0;
+        if (p.mvp_oficial && refPub > 0 && (Date.now() - refPub > 24 * 60 * 60 * 1000)) {
+            p.visibilidad = 'OCULTAR';
+            p.mvp_visible = false;
         }
     };
     if (Array.isArray(data.equipos)) data.equipos.forEach(applyToMatch);

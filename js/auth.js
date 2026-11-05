@@ -410,12 +410,14 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
 
                     if (hasMvpAssignment) {
                         if (p.mvp_oficial) {
-                            let baseTime = p.mvp_proclamado_ts || p.timestamp || 0;
-                            if (baseTime && (now - baseTime > 48 * 60 * 60 * 1000)) {
+                            let baseTime = p.mvp_proclamado_ts || p.mvp_publicacion_ts || p.timestamp || 0;
+                            if (baseTime && (now - baseTime > 24 * 60 * 60 * 1000)) {
                                 isTooOld = true;
                             }
                         } else if (p.mvp_publicacion_ts && p.mvp_publicacion_ts > now) {
                             isTooOld = false;
+                        } else if (p.timestamp && (now - p.timestamp > 72 * 60 * 60 * 1000)) {
+                            isTooOld = true;
                         } else {
                             isTooOld = false;
                         }
