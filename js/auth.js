@@ -1204,17 +1204,55 @@ if (document.readyState === 'loading') {
 }
 
 
-// FAQ DESPLEGABLE Y SCROLL SUAVE (Patrón patros.html)
+
+// FAQ DESPLEGABLE, CIERRE AUTOMATICO Y SCROLL SUAVE
+window.cerrarFaqDesplegado = function() {
+    var wrap = document.getElementById('faqContainerWrapper');
+    var faq = document.getElementById('masterFaq');
+    if (faq) faq.open = false;
+    if (wrap) wrap.style.display = 'none';
+    var loginCard = document.querySelector('.login-card') || document.getElementById('loginSection');
+    if (loginCard) {
+        loginCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+};
+
 window.abrirFaqDesplegado = function() {
     var wrap = document.getElementById('faqContainerWrapper');
     var faq = document.getElementById('masterFaq');
-    if (wrap) {
+    if (!wrap || !faq) return;
+
+    if (wrap.style.display !== 'none' && faq.open) {
+        // Si ya está abierto, lo cerramos y volvemos a ocultar
+        window.cerrarFaqDesplegado();
+    } else {
+        // Si está cerrado, lo mostramos, abrimos y hacemos scroll suave
         wrap.style.display = 'block';
-    }
-    if (faq) {
         faq.open = true;
         setTimeout(function() {
             faq.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 50);
     }
 };
+
+function initFaqAutoClose() {
+    var faq = document.getElementById('masterFaq');
+    var wrap = document.getElementById('faqContainerWrapper');
+    if (faq && wrap) {
+        faq.addEventListener('toggle', function() {
+            if (!faq.open) {
+                wrap.style.display = 'none';
+                var loginCard = document.querySelector('.login-card') || document.getElementById('loginSection');
+                if (loginCard) {
+                    loginCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFaqAutoClose);
+} else {
+    initFaqAutoClose();
+}
