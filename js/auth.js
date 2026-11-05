@@ -1202,3 +1202,19 @@ if (document.readyState === 'loading') {
 } else {
     window.verificarEstadoMantenimientoPublico();
 }
+
+
+// FAQ DESPLEGABLE Y SCROLL SUAVE (Patrón patros.html)
+window.abrirFaqDesplegado = function() {
+    var wrap = document.getElementById('faqContainerWrapper');
+    var faq = document.getElementById('masterFaq');
+    if (wrap) {
+        wrap.style.display = 'block';
+    }
+    if (faq) {
+        faq.open = true;
+        setTimeout(function() {
+            faq.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+    }
+};
