@@ -349,7 +349,30 @@ window.abrirModalNotificaciones = function() {
         window.renderNotificaciones(list);
     }
     modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
 };
+
+window.cerrarModalNotificaciones = function() {
+    const modal = document.getElementById('notificacionesModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+};
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+        const nModal = document.getElementById('notificacionesModal');
+        if (nModal) {
+            nModal.addEventListener('touchmove', function(e) {
+                const container = document.getElementById('notificacionesContainer');
+                if (!container || !container.contains(e.target)) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+        }
+    });
+}
 
 
 // LOGICA MODO INVITADO
