@@ -657,13 +657,172 @@ async function procesarRecordatorioMvp1Hora(db, env, body = {}, subs = [], insMa
     return { totalEnviadosMvp, detalleMvp };
 }
 
+
+async function procesarResumenViernes(db, env, body, subs, insMap, sentSet, soloAdmin, nowMadrid, permMap, clubTeams, partidos, porrasMap) {
+    let totalEnviadosViernes = 0;
+    let detalleViernes = [];
+    const now = Date.now();
+    const ignorarFiltros = Boolean(body.ignorar_filtros_prueba);
+    const forzarViernes = Boolean(body.forzar_viernes || body.action === 'cron_resumen_viernes');
+
+    try {
+        // Comprobar si en hora peninsular (Europe/Madrid) es viernes >= 18:00
+        const dMadrid = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+        const diaSemanaMadrid = dMadrid.getDay(); // 5 = Viernes
+        const horaMadrid = dMadrid.getHours();
+
+        const esViernesTarde = (diaSemanaMadrid === 5 && horaMadrid >= 18);
+
+        if (!esViernesTarde && !forzarViernes) {
+            return { totalEnviadosViernes: 0, detalleViernes: [] };
+        }
+
+        // Clave única para hoy en Cache_App (evita duplicar el aviso del mismo viernes)
+        const fechaClave = `${dMadrid.getFullYear()}_${String(dMadrid.getMonth() + 1).padStart(2, '0')}_${String(dMadrid.getDate()).padStart(2, '0')}`;
+        const claveCache = 'NOTIF_VIERNES_ENVIADO_' + fechaClave;
+
+        if (!forzarViernes && !ignorarFiltros) {
+            const yaEnviado = await db.prepare("SELECT valor FROM Cache_App WHERE clave = ?").bind(claveCache).first();
+            if (yaEnviado) {
+                return { totalEnviadosViernes: 0, detalleViernes: [] };
+            }
+        }
+
+        // Buscar partidos que se jueguen este fin de semana (desde viernes tarde hasta domingo 23:59:59)
+        const minFindeTs = now - (6 * 60 * 60 * 1000);
+        const maxFindeTs = now + (60 * 60 * 60 * 1000);
+
+        const partidosFinde = (partidos || []).filter(p => {
+            if (!p.timestamp) return false;
+            if (p.timestamp < minFindeTs || p.timestamp > maxFindeTs) return false;
+            if (p.estado === 'FINALIZADO' || p.estado === 'CERRADO' || (p.oficial_sets && String(p.oficial_sets).trim() !== '')) return false;
+            return true;
+        });
+
+        if (partidosFinde.length === 0 && !forzarViernes) {
+            return { totalEnviadosViernes: 0, detalleViernes: [] };
+        }
+
+        for (const subRow of subs) {
+            const u = subRow.Usuario;
+            const userIns = insMap[u] || {};
+            const isUserAdmin = (userIns["Admin Web"] === "X");
+
+            if (soloAdmin && !isUserAdmin) continue;
+
+            // Comprobar preferencia de viernes del usuario
+            if (subRow.Opciones_Viernes !== undefined && (subRow.Opciones_Viernes === 0 || subRow.Opciones_Viernes === '0' || subRow.Opciones_Viernes === false)) {
+                continue;
+            }
+
+            // Evitar duplicados por usuario
+            const tipoLogUser = `VIERNES_${fechaClave}`;
+            if (!ignorarFiltros && sentSet.has(`${u}_${tipoLogUser}`)) {
+                continue;
+            }
+
+            // Filtrar partidos del fin de semana para los equipos que sigue este usuario
+            const uPerm = permMap[u] || {};
+            let userEqCfg = null;
+            if (subRow.Equipos_Permitidos) {
+                try { userEqCfg = JSON.parse(subRow.Equipos_Permitidos); } catch(e) {}
+            }
+
+            const getTeamSetting = (teamName) => {
+                if (!userEqCfg || typeof userEqCfg !== 'object') return true;
+                if (Array.isArray(userEqCfg)) {
+                    return userEqCfg.length === 0 || userEqCfg.includes(teamName);
+                }
+                const val = userEqCfg[teamName];
+                if (val === undefined) return true;
+                if (typeof val === 'object') return val.activo !== false;
+                return Boolean(val);
+            };
+
+            const userMatches = partidosFinde.filter(p => {
+                const loc = p.equipo_local;
+                const riv = p.rival;
+                const locPerm = isUserAdmin || Boolean(uPerm[loc] && uPerm[loc].toString().toUpperCase() === 'X');
+                const rivPerm = isUserAdmin || Boolean(uPerm[riv] && uPerm[riv].toString().toUpperCase() === 'X');
+                if (!locPerm && !rivPerm) return false;
+
+                const locActivo = getTeamSetting(loc);
+                const rivActivo = getTeamSetting(riv);
+                return locActivo || rivActivo;
+            });
+
+            if (userMatches.length === 0 && !forzarViernes) continue;
+
+            // Comprobar cuántos partidos tiene pendientes de pronosticar
+            const pendientes = userMatches.filter(p => !porrasMap[`${u}_${p.id_partido}`]);
+
+            // Resumen de nombres de equipos del club
+            const equiposDelUsuario = new Set();
+            userMatches.forEach(p => {
+                if (clubTeams.has(p.equipo_local)) equiposDelUsuario.add(p.equipo_local);
+                else if (clubTeams.has(p.rival)) equiposDelUsuario.add(p.rival);
+                else equiposDelUsuario.add(p.equipo_local);
+            });
+            const listaEquipos = Array.from(equiposDelUsuario);
+            const equiposTexto = listaEquipos.length > 0 
+                ? (listaEquipos.slice(0, 2).join(', ') + (listaEquipos.length > 2 ? '...' : ''))
+                : 'tus equipos';
+
+            let subObj;
+            try { subObj = JSON.parse(subRow.Suscripcion_JSON); } catch(e) { continue; }
+
+            const title = `🏐 ¡Jornada este fin de semana!`;
+            let bodyNotif = '';
+            if (pendientes.length > 0) {
+                bodyNotif = `Juegan ${equiposTexto}. Tienes ${pendientes.length} pronóstico${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''}. ¡Haz tus porras en VCV Play!`;
+            } else {
+                bodyNotif = `Juegan ${equiposTexto}. ¡Tus pronósticos ya están listos! ¡A por la jornada!`;
+            }
+
+            const payload = {
+                title: title,
+                body: bodyNotif,
+                data: {
+                    url: `/?tab=cartelera`
+                }
+            };
+
+            const pushRes = await sendWebPushNotification(subObj, payload, env);
+
+            await db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                .bind(u, tipoLogUser, title, bodyNotif, nowMadrid, pushRes.success ? 'ENVIADO' : `FALLIDO (${pushRes.status || pushRes.error})`).run();
+
+            if (pushRes.success) {
+                totalEnviadosViernes++;
+                sentSet.add(`${u}_${tipoLogUser}`);
+                detalleViernes.push({ usuario: u, tipo: 'RESUMEN_VIERNES', partidos: userMatches.length, pendientes: pendientes.length, estado: 'ENVIADO' });
+            } else {
+                detalleViernes.push({ usuario: u, tipo: 'RESUMEN_VIERNES', estado: 'FALLIDO', error: pushRes.error });
+            }
+        }
+
+        // Marcar en Cache_App que hoy ya se envió
+        if (totalEnviadosViernes > 0 && !forzarViernes && !ignorarFiltros) {
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, '1', ?)")
+                .bind(claveCache, Date.now()).run();
+        }
+
+    } catch(e) {
+        console.error('Error procesando resumen viernes:', e);
+    }
+
+    return { totalEnviadosViernes, detalleViernes };
+}
+
 export async function onRequestGet(context) {
     const { request, env } = context;
     try {
         const url = new URL(request.url);
         const cronParam = url.searchParams.get("cron") || url.searchParams.get("action");
-        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas" || cronParam === "mvp" || cronParam === "mvp_1hora") {
-            const targetAction = (cronParam === "mvp" || cronParam === "mvp_1hora") ? "cron_recordatorio_mvp_1hora" : "cron_recordatorio_2horas";
+        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas" || cronParam === "mvp" || cronParam === "mvp_1hora" || cronParam === "viernes" || cronParam === "cron_resumen_viernes") {
+            let targetAction = "cron_recordatorio_2horas";
+            if (cronParam === "mvp" || cronParam === "mvp_1hora") targetAction = "cron_recordatorio_mvp_1hora";
+            else if (cronParam === "viernes" || cronParam === "cron_resumen_viernes") targetAction = "cron_resumen_viernes";
             const fakeContext = {
                 request: new Request(request.url, {
                     method: "POST",
@@ -3277,7 +3436,7 @@ export async function onRequestPost(context) {
         }
     }
 
-    if (action === 'cron_recordatorio_2horas' || action === 'cron_recordatorio_mvp_1hora') {
+    if (action === 'cron_recordatorio_2horas' || action === 'cron_recordatorio_mvp_1hora' || action === 'cron_resumen_viernes') {
         let isTriggeredByAdmin = false;
         if (usuario && password) {
             const authUser = await getAuthUser();
@@ -3490,6 +3649,13 @@ export async function onRequestPost(context) {
             detalleEnvios = detalleEnvios.concat(mvpRes.detalleMvp);
         }
 
+        // Procesar además el resumen de jornada de los viernes (a partir de las 18:00 hora peninsular)
+        const resumenViernesRes = await procesarResumenViernes(db, env, body, subs, insMap, sentSet, soloAdmin, nowMadrid, permMap, clubTeams, partidos, porrasMap);
+        totalEnviados += resumenViernesRes.totalEnviadosViernes;
+        if (resumenViernesRes.detalleViernes && resumenViernesRes.detalleViernes.length > 0) {
+            detalleEnvios = detalleEnvios.concat(resumenViernesRes.detalleViernes);
+        }
+
         let finalMsg = totalEnviados > 0
             ? `¡Éxito! Se han enviado ${totalEnviados} notificaciones push (partidos y/o MVP 1h).`
             : (motivosOmision.length > 0
@@ -3502,6 +3668,7 @@ export async function onRequestPost(context) {
             partidos_encontrados: partidosObjetivo.length,
             enviados: totalEnviados,
             enviados_mvp: mvpRes.totalEnviadosMvp,
+            enviados_viernes: resumenViernesRes.totalEnviadosViernes,
             solo_admin: soloAdmin,
             detalles: detalleEnvios
         });

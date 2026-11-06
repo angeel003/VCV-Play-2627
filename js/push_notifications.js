@@ -1140,7 +1140,61 @@
         }
     };
 
-    window.adminCargarLogsNotificaciones = async function() {
+    
+    window.adminDispararCronViernes = async function(forzar = true) {
+        const { usr, pwd } = getCredentials();
+        const feedback = document.getElementById('adminPushActionFeedback');
+        const chkIgn = document.getElementById('chkAdminIgnorarFiltros');
+        const ignorarFiltros = chkIgn ? chkIgn.checked : true;
+
+        if (feedback) {
+            feedback.style.display = 'block';
+            feedback.style.background = 'rgba(16, 185, 129, 0.15)';
+            feedback.style.color = '#6ee7b7';
+            feedback.textContent = '📅 Evaluando y enviando resumen de la jornada de los viernes...';
+        }
+
+        try {
+            const res = await fetchSeguro(window.scriptURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'cron_resumen_viernes',
+                    usuario: usr,
+                    password: pwd,
+                    forzar_viernes: forzar,
+                    ignorar_filtros_prueba: ignorarFiltros
+                })
+            });
+            const data = await res.json();
+            if (data && data.status === 'success') {
+                if (feedback) {
+                    const hasSent = data.enviados > 0;
+                    feedback.style.background = hasSent ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)';
+                    feedback.style.color = hasSent ? '#10b981' : '#facc15';
+                    let extra = data.solo_admin ? ' [Modo Admins: Solo administradores evaluados]' : '';
+                    feedback.textContent = `📅 ${data.message} (${data.enviados_viernes !== undefined ? data.enviados_viernes : data.enviados} envíos de viernes)${extra}`;
+                }
+            } else {
+                if (feedback) {
+                    feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+                    feedback.style.color = '#ef4444';
+                    feedback.textContent = '❌ ' + (data.message || 'Error en resumen viernes');
+                }
+            }
+            if (typeof window.adminCargarLogsNotificaciones === 'function') {
+                window.adminCargarLogsNotificaciones();
+            }
+        } catch(e) {
+            if (feedback) {
+                feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+                feedback.style.color = '#ef4444';
+                feedback.textContent = '❌ Error de conexión: ' + e.message;
+            }
+        }
+    };
+
+window.adminCargarLogsNotificaciones = async function() {
         const tableContainer = document.getElementById('adminPushLogsTable');
         if (!tableContainer) return;
 
