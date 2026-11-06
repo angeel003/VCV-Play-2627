@@ -774,7 +774,7 @@ async function procesarResumenViernes(db, env, body, subs, insMap, sentSet, solo
             const title = `🏐 ¡Jornada este fin de semana!`;
             let bodyNotif = '';
             if (pendientes.length > 0) {
-                bodyNotif = `Juegan ${equiposTexto}. Tienes ${pendientes.length} pronóstico${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''}. ¡Haz tus porras en VCV Play!`;
+                bodyNotif = `Juegan ${equiposTexto}. Tienes ${pendientes.length} pronóstico${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''}. ¡Haz tus pronósticos en VCV Play!`;
             } else {
                 bodyNotif = `Juegan ${equiposTexto}. ¡Tus pronósticos ya están listos! ¡A por la jornada!`;
             }
