@@ -1536,16 +1536,19 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
         }
 
         // 1. Obtener los pronósticos reales del backend D1
-        const resp = await fetchSeguro(scriptURL, {
+        const rawRes = await fetchSeguro(scriptURL, {
             method: 'POST',
             body: JSON.stringify({
                 action: 'get_pronosticos_partido_data',
                 id_partido: idPartido
-            })
+            }),
+            headers: { 'Content-Type': 'application/json' }
         });
 
+        const resp = (rawRes && typeof rawRes.json === 'function') ? await rawRes.json() : rawRes;
+
         if (!resp || resp.status !== 'success') {
-            alert("Error al cargar los pronósticos del partido: " + (resp && resp.message ? resp.message : "Error de red"));
+            alert("Error al cargar los pronósticos del partido: " + (resp && resp.message ? resp.message : "Error de respuesta del servidor"));
             if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
             return;
         }
@@ -1636,8 +1639,11 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
         });
 
         // 5. Construir documento PDF institucional
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
+        const PDFClass = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : (typeof jsPDF !== 'undefined' ? jsPDF : null);
+        if (!PDFClass) {
+            throw new Error("Librería jsPDF no disponible.");
+        }
+        const doc = new PDFClass({
             orientation: 'portrait',
             unit: 'pt',
             format: 'a4'
@@ -1646,7 +1652,7 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
 
-        doc.autoTable({
+        const autoTableConfig = {
             startY: 65,
             head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador', 'Diferencia', 'A Favor de', 'Fecha']],
             body: tableRows,
@@ -1712,7 +1718,15 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
                 doc.text(`VCV Play • Página ${data.pageNumber}`, pageWidth - 20, pageHeight - 14, { align: 'right' });
             },
             margin: { top: 62, left: 20, right: 20, bottom: 25 }
-        });
+        };
+
+        if (typeof doc.autoTable === 'function') {
+            doc.autoTable(autoTableConfig);
+        } else if (window.jspdf && typeof window.jspdf.autoTable === 'function') {
+            window.jspdf.autoTable(doc, autoTableConfig);
+        } else {
+            throw new Error("No se pudo inicializar el generador de tablas PDF.");
+        }
 
         // 6. Descargar PDF automáticamente
         const safeLoc = (locName || 'Local').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
