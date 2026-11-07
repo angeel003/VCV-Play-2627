@@ -1633,9 +1633,9 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             let aFavorDe = '-';
             const sigL = (p.signo || '').trim().toLowerCase();
             if (sigL === 'a favor' || sigL.includes('a favor')) {
-                aFavorDe = `${teamLocal} (A favor)`;
+                aFavorDe = teamLocal;
             } else if (sigL === 'en contra' || sigL.includes('en contra')) {
-                aFavorDe = `${teamVisit} (En contra)`;
+                aFavorDe = teamVisit;
             } else if (p.puntos_dif === 0 || p.puntos_dif === '0' || sigL === 'empate') {
                 aFavorDe = 'Empate (0 pts)';
             } else if (p.signo) {
@@ -1670,7 +1670,7 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
 
         const autoTableConfig = {
             startY: 65,
-            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador (Sets)', 'Diferencia', 'A Favor de (Puntos)', 'Fecha Predicción']],
+            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador (Sets)', 'Diferencia', 'Puntos a Favor de', 'Fecha Predicción']],
             body: tableRows,
             theme: 'striped',
             headStyles: {
