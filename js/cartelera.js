@@ -413,41 +413,11 @@ window.renderCarteleraHTML = function(data) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                     </button>`;
 
-                    let headerStripHtml = "";
-                    let footerPabellonHtml = "";
-
-                    if (curHeaderStyle === 'opt4') {
-                        headerStripHtml = `
-                        <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
-                                <div style="display:flex; align-items:center; gap:6px; min-width:0;">
-                                    ${catLogoHtml}
-                                </div>
-                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
-                                    ${btnShareHtml}
-                                    <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; white-space:nowrap;">
-                                        <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
-                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                                    ${outcomeBadge}
-                                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
-                                </div>
-                                ${cleanPab ? `
-                                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
-                                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
-                                </div>` : ''}
-                            </div>
-                        </div>`;
-                    } else {
-                        headerStripHtml = `
-                        <div class="match-header-strip-v2 opt1-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; min-height:30px; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:nowrap;">
+                    let headerStripHtml = `
+                    <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:6px; min-width:0;">
                                 ${catLogoHtml}
-                                ${outcomeBadge ? `<div style="flex-shrink:0;">${outcomeBadge}</div>` : ''}
-                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; flex-shrink:0; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                             </div>
                             <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
                                 ${btnShareHtml}
@@ -455,19 +425,21 @@ window.renderCarteleraHTML = function(data) {
                                     <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}
                                 </div>
                             </div>
-                        </div>`;
-
-                        if (cleanPab) {
-                            footerPabellonHtml = `
-                            <div class="match-footer-pabellon-opt1" style="margin-top:12px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; align-items:center; justify-content:center; gap:5px; font-size:0.73rem; color:var(--text-muted); text-align:center;">
-                                <i data-lucide="map-pin" style="width: 12px; height: 12px; flex-shrink:0; opacity:0.8; color:var(--vcv-dorado);"></i>
-                                <span style="font-weight:500;">${cleanPab}</span>
-                            </div>`;
-                        }
-                    }
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+                            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                                ${outcomeBadge}
+                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                            </div>
+                            ${cleanPab ? `
+                            <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                                <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>`;
 
                     htmlPartidos += `
-                    <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${cardBorderHighlight}">
+                    <div class="vcv-card-v2" id="card-v2-${eq.id_partido}"  data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${cardBorderHighlight}">
                         ${headerStripHtml}
 
                         <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
@@ -504,7 +476,6 @@ window.renderCarteleraHTML = function(data) {
                         ${parcialesHtml}
                         ${tuPronosticoBannerHtml}
                         ${mvpHtml}
-                        ${footerPabellonHtml}
                     </div>`;
                 } else {
                     // PARTIDO ABIERTO / PROXIMO
@@ -598,39 +569,11 @@ window.renderCarteleraHTML = function(data) {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                     </button>`;
 
-                    let headerStripHtml = "";
-                    let footerPabellonHtml = "";
-
-                    if (curHeaderStyle === 'opt4') {
-                        headerStripHtml = `
-                        <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
-                                <div style="display:flex; align-items:center; gap:6px; min-width:0;">
-                                    ${catLogoHtml}
-                                </div>
-                                <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
-                                    ${btnShareHtml}
-                                    <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; white-space:nowrap;">
-                                        <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
-                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : '<span style="color:var(--text-muted); font-size:0.7rem; font-weight:700;">PROXIMO</span>'}
-                                </div>
-                                ${cleanPab ? `
-                                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
-                                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
-                                </div>` : ''}
-                            </div>
-                        </div>`;
-                    } else {
-                        headerStripHtml = `
-                        <div class="match-header-strip-v2 opt1-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; min-height:30px; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
-                            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:nowrap;">
+                    let headerStripHtml = `
+                    <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                            <div style="display:flex; align-items:center; gap:6px; min-width:0;">
                                 ${catLogoHtml}
-                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; flex-shrink:0; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                             </div>
                             <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
                                 ${btnShareHtml}
@@ -638,19 +581,21 @@ window.renderCarteleraHTML = function(data) {
                                     <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> ${fechaFormateada}
                                 </div>
                             </div>
-                        </div>`;
-
-                        if (cleanPab) {
-                            footerPabellonHtml = `
-                            <div class="match-footer-pabellon-opt1" style="margin-top:12px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; align-items:center; justify-content:center; gap:5px; font-size:0.73rem; color:var(--text-muted); text-align:center;">
-                                <i data-lucide="map-pin" style="width: 12px; height: 12px; flex-shrink:0; opacity:0.8; color:var(--vcv-dorado);"></i>
-                                <span style="font-weight:500;">${cleanPab}</span>
-                            </div>`;
-                        }
-                    }
+                        </div>
+                        ${(eq.es_derby || cleanPab) ? `
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+                            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:14px; height:14px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
+                            </div>
+                            ${cleanPab ? `
+                            <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                                <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+                            </div>` : ''}
+                        </div>` : ''}
+                    </div>`;
 
                     htmlPartidos += `
-                    <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
+                    <div class="vcv-card-v2 ${isPredicted ? 'collapsed' : ''}" id="card-v2-${eq.id_partido}"  data-category="${eq.categoria}" ${eq.es_derby ? 'style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);"' : ''}>
                         ${headerStripHtml}
 
                         <div class="teams-versus-container-v2">
@@ -677,7 +622,6 @@ window.renderCarteleraHTML = function(data) {
                         ${inputsControlHtml}
                         ${mvpHtml}
                         ${destacadoHtml}
-                        ${footerPabellonHtml}
                     </div>`;
                 }
             }
