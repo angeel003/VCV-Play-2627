@@ -199,6 +199,10 @@ ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); 
                 <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
                     Guardar Cambios
                 </button>
+                <button type="button" class="btn" id="btn_export_pdf_${eq.id_partido}" style="width: 100%; padding: 7px 10px; font-size: 0.78rem; background: rgba(93, 23, 137, 0.22); color: #dcd6f7; border: 1px solid rgba(142, 68, 173, 0.5); border-radius: 6px; font-weight: 700; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: all 0.2s;" onclick="window.adminExportarPdfPartido(event, '${eq.id_partido}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#e74c3c;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>Exportar PDF Pronósticos</span>
+                </button>
             </div>`;
         }
     });
@@ -1517,6 +1521,222 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
         mostrarToast("❌ Error de red: " + (err.message || "No se pudo conectar"));
     });
 }
+
+window.adminExportarPdfPartido = async function(event, idPartido) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const btn = document.getElementById('btn_export_pdf_' + idPartido) || (event && event.currentTarget);
+    const origHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.innerHTML = '<span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Obteniendo pronósticos...';
+            btn.disabled = true;
+        }
+
+        // 1. Obtener los pronósticos reales del backend D1
+        const resp = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_pronosticos_partido_data',
+                id_partido: idPartido
+            })
+        });
+
+        if (!resp || resp.status !== 'success') {
+            alert("Error al cargar los pronósticos del partido: " + (resp && resp.message ? resp.message : "Error de red"));
+            if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+            return;
+        }
+
+        const pronosticos = resp.pronosticos || [];
+        if (pronosticos.length === 0) {
+            alert("Este partido no tiene ningún pronóstico registrado todavía en la base de datos.");
+            if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+            return;
+        }
+
+        // 2. Extraer datos del partido
+        let matchInfo = resp.partido || {};
+        if (!matchInfo.Equipo_Local && window.appData) {
+            const all = (window.appData.todos_partidos || []).concat(window.appData.equipos || []);
+            const f = all.find(m => m.id_partido === idPartido);
+            if (f) {
+                matchInfo = {
+                    Equipo_Local: (f.ubicacion === 'LOCAL') ? f.equipo_local : f.rival,
+                    Rival: (f.ubicacion === 'LOCAL') ? f.rival : f.equipo_local,
+                    Categoria: f.categoria,
+                    Jornada_Eq: f.jornada_eq || f.ronda_global,
+                    Fecha: f.fecha
+                };
+            }
+        }
+        const locName = matchInfo.Equipo_Local || 'Universidad de Valladolid VCV';
+        const rivName = matchInfo.Rival || 'Rival';
+        const categoria = matchInfo.Categoria || '';
+        const jornada = matchInfo.Jornada_Eq || matchInfo.Ronda_Global || '';
+        const fechaPartido = matchInfo.Fecha || '';
+
+        // 3. Asegurar que jsPDF y autoTable están cargados
+        if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') {
+            if (btn) btn.innerHTML = '<span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Cargando librerías...';
+            await new Promise((resolve, reject) => {
+                const s1 = document.createElement('script');
+                s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                s1.onload = () => {
+                    const s2 = document.createElement('script');
+                    s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+                    s2.onload = resolve;
+                    s2.onerror = reject;
+                    document.head.appendChild(s2);
+                };
+                s1.onerror = reject;
+                document.head.appendChild(s1);
+            });
+        }
+
+        // 4. Formatear filas para autoTable
+        const tableRows = pronosticos.map((p, idx) => {
+            const u = '@' + (p.usuario || '').replace(/^@/, '');
+            const nom = p.nombre_real || p.usuario || '';
+            const sets = p.sets || '-';
+            let ganador = '-';
+            if (sets && sets.includes('-')) {
+                const parts = sets.split('-');
+                const sLoc = parseInt(parts[0]);
+                const sRiv = parseInt(parts[1]);
+                if (!isNaN(sLoc) && !isNaN(sRiv)) {
+                    ganador = sLoc > sRiv ? locName : rivName;
+                }
+            }
+            const pts = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? `+${p.puntos_dif} pts` : '-';
+            let aFavorDe = '-';
+            const sigL = (p.signo || '').toLowerCase();
+            if (sigL.includes('a favor')) {
+                aFavorDe = `${locName} (Local)`;
+            } else if (sigL.includes('en contra')) {
+                aFavorDe = rivName;
+            } else if (p.puntos_dif === 0 || p.puntos_dif === '0') {
+                aFavorDe = 'Empate (0 pts)';
+            } else if (p.signo) {
+                aFavorDe = p.signo;
+            }
+            const ts = p.timestamp || '';
+            return [
+                idx + 1,
+                u,
+                nom,
+                sets,
+                ganador,
+                pts,
+                aFavorDe,
+                ts
+            ];
+        });
+
+        // 5. Construir documento PDF institucional
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'pt',
+            format: 'a4'
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        doc.autoTable({
+            startY: 65,
+            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador', 'Diferencia', 'A Favor de', 'Fecha']],
+            body: tableRows,
+            theme: 'striped',
+            headStyles: {
+                fillColor: [93, 23, 137], // #5D1789 Morado VCV
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 8,
+                halign: 'center',
+                valign: 'middle',
+                cellPadding: 4
+            },
+            styles: {
+                fontSize: 7.5,
+                cellPadding: 3.5,
+                textColor: [34, 34, 34],
+                lineColor: [224, 216, 234],
+                lineWidth: 0.5,
+                valign: 'middle',
+                overflow: 'linebreak'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 245, 250] // #F8F5FA
+            },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 22 }, // Nº
+                1: { fontStyle: 'bold', cellWidth: 74 }, // Usuario
+                2: { cellWidth: 84 }, // Nombre Real
+                3: { halign: 'center', fontStyle: 'bold', cellWidth: 36 }, // Sets
+                4: { cellWidth: 78 }, // Ganador
+                5: { halign: 'center', cellWidth: 50 }, // Diferencia
+                6: { cellWidth: 86 }, // A Favor de
+                7: { halign: 'center', cellWidth: 125 } // Fecha
+            },
+            didDrawPage: function(data) {
+                // Cabecera institucional VCV
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(13);
+                doc.setTextColor(93, 23, 137);
+                doc.text('VCV PLAY — PRONÓSTICOS OFICIALES', 20, 28);
+
+                // Subtítulo con datos del partido
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.setTextColor(30, 30, 30);
+                let subTitle = `Partido: ${locName} vs ${rivName}`;
+                if (jornada) subTitle += `  |  Jornada ${jornada}`;
+                if (categoria) subTitle += `  (${categoria})`;
+                doc.text(subTitle, 20, 42);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                let subDetails = `ID Partido: ${idPartido}  |  Total: ${pronosticos.length} pronósticos registrados`;
+                if (fechaPartido) subDetails += `  |  Fecha Partido: ${fechaPartido}`;
+                doc.text(subDetails, 20, 54);
+
+                // Pie de página con numeración
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.setTextColor(140, 140, 140);
+                doc.text(`VCV Play • Página ${data.pageNumber}`, pageWidth - 20, pageHeight - 14, { align: 'right' });
+            },
+            margin: { top: 62, left: 20, right: 20, bottom: 25 }
+        });
+
+        // 6. Descargar PDF automáticamente
+        const safeLoc = (locName || 'Local').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
+        const safeRiv = (rivName || 'Rival').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
+        const filename = `Pronosticos_${idPartido}_${safeLoc}_vs_${safeRiv}.pdf`;
+        doc.save(filename);
+
+        if (btn) {
+            btn.innerHTML = '✅ ¡PDF Descargado!';
+            setTimeout(() => {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }, 2500);
+        }
+    } catch(err) {
+        console.error("Error al exportar PDF de pronósticos:", err);
+        alert("Ocurrió un error al generar el PDF: " + err.message);
+        if (btn) {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+        }
+    }
+};
+
 window.crearUsuarioAdmin = function(e) {
     e.preventDefault();
     const btn = e.target;
