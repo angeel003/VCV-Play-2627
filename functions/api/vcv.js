@@ -2458,29 +2458,27 @@ export async function onRequestPost(context) {
 
             const partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
 
-            const { results: rawPronosticos } = await db.prepare('SELECT * FROM "Porras" WHERE "ID Partido" = ?').bind(idPartido).all();
-            const { results: allUsers } = await db.prepare('SELECT "Usuario", "Nombre Real" FROM "Usuarios"').all();
-            const userNames = {};
-            for (const u of allUsers || []) {
-                userNames[u.Usuario] = u["Nombre Real"] || u.Usuario;
-            }
-
-            let mvpMap = {};
-            try {
-                const { results: mvpRows } = await db.prepare('SELECT usuario, jugador FROM "MVP_Votos" WHERE id_partido = ?').bind(idPartido).all();
-                for (const mv of mvpRows || []) {
-                    mvpMap[mv.usuario] = mv.jugador;
-                }
-            } catch(eMvp) {}
+            // Consulta optimizada con LEFT JOIN: solo lee las filas de este partido en lugar de toda la tabla de usuarios
+            const { results: rawPronosticos } = await db.prepare(`
+                SELECT 
+                    p."Timestamp" as timestamp,
+                    p."Usuario" as usuario,
+                    COALESCE(u."Nombre Real", p."Usuario") as nombre_real,
+                    p."Sets" as sets,
+                    p."Puntos Dif" as puntos_dif,
+                    p."a favor o en contra del local" as signo
+                FROM "Porras" p
+                LEFT JOIN "Usuarios" u ON p."Usuario" = u."Usuario"
+                WHERE p."ID Partido" = ?
+            `).bind(idPartido).all();
 
             const pronosticos = (rawPronosticos || []).map(pr => ({
-                usuario: pr.Usuario,
-                nombre_real: userNames[pr.Usuario] || pr.Usuario,
-                sets: pr.Sets || '',
-                puntos_dif: pr["Puntos Dif"] !== undefined ? pr["Puntos Dif"] : (pr.Puntos || 0),
-                signo: pr["a favor o en contra del local"] || pr.Signo || '',
-                voto_mvp: mvpMap[pr.Usuario] || '',
-                timestamp: pr.Timestamp || ''
+                usuario: pr.usuario,
+                nombre_real: pr.nombre_real || pr.usuario,
+                sets: pr.sets || '',
+                puntos_dif: pr.puntos_dif !== undefined && pr.puntos_dif !== null ? pr.puntos_dif : 0,
+                signo: pr.signo || '',
+                timestamp: pr.timestamp || ''
             }));
 
             // Ordenar por usuario

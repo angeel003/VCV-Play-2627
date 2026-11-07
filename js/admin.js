@@ -1599,28 +1599,21 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             });
         }
 
-        // 4. Formatear filas para autoTable
+        // 4. Formatear filas con fidelidad 100% a la BD
         const tableRows = pronosticos.map((p, idx) => {
             const u = '@' + (p.usuario || '').replace(/^@/, '');
             const nom = p.nombre_real || p.usuario || '';
             const sets = p.sets || '-';
-            let ganador = '-';
-            if (sets && sets.includes('-')) {
-                const parts = sets.split('-');
-                const sLoc = parseInt(parts[0]);
-                const sRiv = parseInt(parts[1]);
-                if (!isNaN(sLoc) && !isNaN(sRiv)) {
-                    ganador = sLoc > sRiv ? locName : rivName;
-                }
-            }
             const pts = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? `+${p.puntos_dif} pts` : '-';
+            
+            // Signo exacto de la base de datos
             let aFavorDe = '-';
-            const sigL = (p.signo || '').toLowerCase();
-            if (sigL.includes('a favor')) {
-                aFavorDe = `${locName} (Local)`;
-            } else if (sigL.includes('en contra')) {
-                aFavorDe = rivName;
-            } else if (p.puntos_dif === 0 || p.puntos_dif === '0') {
+            const sigL = (p.signo || '').trim().toLowerCase();
+            if (sigL === 'a favor' || sigL.includes('a favor')) {
+                aFavorDe = `${locName} (A favor)`;
+            } else if (sigL === 'en contra' || sigL.includes('en contra')) {
+                aFavorDe = `${rivName} (En contra)`;
+            } else if (p.puntos_dif === 0 || p.puntos_dif === '0' || sigL === 'empate') {
                 aFavorDe = 'Empate (0 pts)';
             } else if (p.signo) {
                 aFavorDe = p.signo;
@@ -1631,7 +1624,6 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
                 u,
                 nom,
                 sets,
-                ganador,
                 pts,
                 aFavorDe,
                 ts
@@ -1654,7 +1646,7 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
 
         const autoTableConfig = {
             startY: 65,
-            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador', 'Diferencia', 'A Favor de', 'Fecha']],
+            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets Pronosticados', 'Dif. Puntos', 'A Favor de (Signo BD)', 'Fecha Predicción']],
             body: tableRows,
             theme: 'striped',
             headStyles: {
@@ -1680,13 +1672,12 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             },
             columnStyles: {
                 0: { halign: 'center', cellWidth: 22 }, // Nº
-                1: { fontStyle: 'bold', cellWidth: 74 }, // Usuario
-                2: { cellWidth: 84 }, // Nombre Real
-                3: { halign: 'center', fontStyle: 'bold', cellWidth: 36 }, // Sets
-                4: { cellWidth: 78 }, // Ganador
-                5: { halign: 'center', cellWidth: 50 }, // Diferencia
-                6: { cellWidth: 86 }, // A Favor de
-                7: { halign: 'center', cellWidth: 125 } // Fecha
+                1: { fontStyle: 'bold', cellWidth: 80 }, // Usuario
+                2: { cellWidth: 92 }, // Nombre Real
+                3: { halign: 'center', fontStyle: 'bold', cellWidth: 50 }, // Sets
+                4: { halign: 'center', cellWidth: 55 }, // Diferencia
+                5: { cellWidth: 130 }, // A Favor de (Signo)
+                6: { halign: 'center', cellWidth: 126 } // Fecha
             },
             didDrawPage: function(data) {
                 // Cabecera institucional VCV
