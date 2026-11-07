@@ -457,7 +457,7 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
                 });
 
                 data.equipos = guestMatches;
-                data.todos_partidos = guestMatches;
+                // Preserve full season matches in data.todos_partidos so Calendario and Resultados can show all season matches
             }
 
             window.appData = data;
@@ -543,6 +543,9 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             window.appNotificaciones = data.notificaciones || [];
             if (typeof window.renderNotificaciones === 'function') {
                 window.renderNotificaciones(window.appNotificaciones);
+            }
+            if (typeof window.initCalendar === 'function') {
+                window.initCalendar();
             }
 
             // Activate cartelera tab

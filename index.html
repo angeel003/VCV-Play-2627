@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="VCV Play 2627">
 <title>VCV Play 2627</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#160a19">
+<meta name="theme-color" content="#120517">
 <link rel="icon" type="image/png" href="files/images/logo_vcv_circle.png">
 <link rel="apple-touch-icon" href="files/images/logo_vcv_square_white.png">
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
@@ -41,6 +41,14 @@
   })();
 </script>
 <style>
+  html {
+    background-color: #120517 !important;
+    min-height: 100% !important;
+    min-height: -webkit-fill-available !important;
+  }
+  body {
+    background-color: #120517 !important;
+  }
   html.vcv-auto-logging-in #loginSection {
     display: none !important;
   }
@@ -50,13 +58,23 @@
   #vcvAutoLoginOverlay {
     display: none;
     position: fixed;
-    inset: 0;
-    background: var(--bg-general, #120517);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -100px;
+    width: 100vw;
+    height: calc(100% + 100px);
+    height: calc(100vh + 100px);
+    height: calc(100dvh + 100px);
+    min-height: -webkit-fill-available;
+    background: #120517 !important;
     z-index: 99999;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 14px;
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
   }
 
     /* SCROLLBAR ESTILIZADO PARA HISTORICO JORNADAS EN MODAL PERFIL */
@@ -1240,7 +1258,7 @@
     }
     
     body {
-      background-color: #08020a !important;
+      background-color: #120517 !important;
       background-image: none !important;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif !important;
       color: var(--text-main) !important;
@@ -2143,13 +2161,15 @@
       }
 
       /* PESTAÑA CALENDARIO: Cuadrícula responsive de 2 columnas y enlaces en 2 columnas */
-      #calendarResults {
+      #calendarResults,
+      #resultadosList {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)) !important;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)) !important;
         gap: 18px !important;
         align-items: stretch !important;
       }
-      #calendarResults .vcv-card-v2 {
+      #calendarResults .vcv-card-v2,
+      #resultadosList .vcv-card-v2 {
         max-width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
@@ -2160,10 +2180,14 @@
       }
       #calendarResults .vcv-card-v2.is-hidden,
       #calendarResults .vcv-card-v2[style*="display: none"],
-      #calendarResults .vcv-card-v2[style*="display:none"] {
+      #calendarResults .vcv-card-v2[style*="display:none"],
+      #resultadosList .vcv-card-v2.is-hidden,
+      #resultadosList .vcv-card-v2[style*="display: none"],
+      #resultadosList .vcv-card-v2[style*="display:none"] {
         display: none !important;
       }
-      .calendar-date-separator {
+      .calendar-date-separator,
+      .resultados-date-separator {
         grid-column: 1 / -1 !important;
         width: 100% !important;
       }
@@ -3517,28 +3541,61 @@
     </section>
     <section id="calendarioSection">
     <div class="vcv-card-v2" style="margin-bottom: 20px;">
-        <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main);">Calendario de Partidos</h2>
+        <h2 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text-main);">Calendario y Resultados</h2>
         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
-            Consulta los próximos partidos que quedan por jugar.
+            Consulta los próximos partidos programados y todos los resultados oficiales de la temporada.
         </p>
 
-        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-            <select id="calendarTeamSelect" class="form-control" style="flex:2 1 180px; font-weight:bold; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
-                <option value="">-- Todos los equipos --</option>
-            </select>
-            <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1 1 140px; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
-        </div>
-        
-        <div style="text-align: right; margin-top: -10px; margin-bottom: 25px;">
-            <button onclick="document.getElementById('enlacesOficialesBlock').scrollIntoView({behavior: 'smooth', block: 'start'});" style="background: transparent; border: none; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline;">
-                <i data-lucide="arrow-down-to-line" style="width: 12px; height: 12px;"></i>
-                Ir a los enlaces de la federación
+        <!-- Selector Sub-Tabs: Próximos vs Resultados -->
+        <div style="display:flex; background:rgba(0,0,0,0.25); padding:4px; border-radius:12px; margin-bottom:20px; border:1px solid var(--border-color); gap:4px;">
+            <button id="subtabCalendarioFuturos" onclick="window.cambiarSubTabCalendario && window.cambiarSubTabCalendario('futuros')" style="flex:1; padding:9px 12px; border-radius:9px; border:none; background:var(--vcv-morado); color:#fff; font-weight:800; font-size:0.82rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                <i data-lucide="calendar" style="width:15px; height:15px;"></i>
+                <span>Próximos Partidos</span>
+            </button>
+            <button id="subtabCalendarioResultados" onclick="window.cambiarSubTabCalendario && window.cambiarSubTabCalendario('resultados')" style="flex:1; padding:9px 12px; border-radius:9px; border:none; background:transparent; color:var(--text-muted); font-weight:800; font-size:0.82rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;">
+                <i data-lucide="trophy" style="width:15px; height:15px;"></i>
+                <span>Resultados Jugados</span>
+                <span id="badgeCountResultados" style="background:var(--vcv-dorado); color:#000; font-size:0.68rem; font-weight:900; padding:1px 6px; border-radius:10px; margin-left:3px; display:none;">0</span>
             </button>
         </div>
-<!-- Countdown Proximo Partido -->
-        <div id="nextMatchHighlighted" style="margin-bottom: 30px;"></div>
-        <!-- Lista -->
-        <div id="calendarResults" style="display:block;"></div>
+
+        <!-- VISTA 1: PRÓXIMOS PARTIDOS -->
+        <div id="calendarioFuturosView">
+            <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                <select id="calendarTeamSelect" class="form-control" style="flex:2 1 180px; font-weight:bold; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+                    <option value="">-- Todos los equipos --</option>
+                </select>
+                <input type="text" id="calendarSearchInput" class="form-control" placeholder="Buscar rival..." style="flex:1 1 140px; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+            </div>
+            
+            <div style="text-align: right; margin-top: -10px; margin-bottom: 25px;">
+                <button onclick="document.getElementById('enlacesOficialesBlock').scrollIntoView({behavior: 'smooth', block: 'start'});" style="background: transparent; border: none; color: var(--text-muted); font-weight: 600; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline;">
+                    <i data-lucide="arrow-down-to-line" style="width: 12px; height: 12px;"></i>
+                    Ir a los enlaces de la federación
+                </button>
+            </div>
+            <!-- Countdown Proximo Partido -->
+            <div id="nextMatchHighlighted" style="margin-bottom: 30px;"></div>
+            <!-- Lista -->
+            <div id="calendarResults" style="display:block;"></div>
+        </div>
+
+        <!-- VISTA 2: RESULTADOS JUGADOS -->
+        <div id="calendarioResultadosView" style="display:none;">
+            <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+                <select id="resultadosTeamSelect" class="form-control" style="flex:2 1 180px; font-weight:bold; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+                    <option value="">-- Todos los equipos --</option>
+                </select>
+                <select id="resultadosJornadaSelect" class="form-control" style="flex:1 1 130px; font-weight:bold; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+                    <option value="">-- Todas las jornadas --</option>
+                </select>
+                <input type="text" id="resultadosSearchInput" class="form-control" placeholder="Buscar rival o equipo..." style="flex:1 1 140px; min-width:0; width:100%; border:1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);">
+            </div>
+
+
+            <!-- Lista de Partidos Jugados -->
+            <div id="resultadosList" style="display:block;"></div>
+        </div>
     </div>
 
       
@@ -3896,12 +3953,12 @@
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
 <script src="js/config.js?v=20261105_v3"></script>
 <script src="js/admin.js?v=20261107_pdf5"></script>
-<script src="js/cartelera.js?v=20261107_v5"></script>
-<script src="js/ranking.js?v=20261031_v21"></script>
-<script src="js/calendario.js?v=20261105_v22"></script>
-<script src="js/cartelera_interactive.js?v=20261107_v3"></script>
+<script src="js/cartelera.js?v=20261108_v1"></script>
+<script src="js/ranking.js?v=20261107_v22"></script>
+<script src="js/calendario.js?v=20261108_v1"></script>
+<script src="js/cartelera_interactive.js?v=20261107_v4"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
-<script src="js/auth.js?v=20261106_v27"></script>
+<script src="js/auth.js?v=20261107_v28"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>
 
 

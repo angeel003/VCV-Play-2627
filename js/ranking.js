@@ -370,31 +370,31 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     `;
 
     let statsHTML = `
-      <!-- Resumen Métricas (Oscuro y alto contraste) -->
-      <div style="background: linear-gradient(180deg, #180622 0%, #0d0314 100%); padding: 15px; border-radius:14px; margin-bottom:20px; color:white; border:1px solid rgba(212,175,55,0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <div class="historial-metrics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+      <!-- Resumen Métricas Estilo Minimalista Elegante -->
+      <div style="background: rgba(0,0,0,0.22); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 10px; margin-bottom: 20px;">
+        <div class="historial-metrics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Pts Ganados</div>
-            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #f5c542; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${ptsTxt}</div>
+          <div>
+            <div class="metric-label" style="font-size: 0.68rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">Pts Ganados</div>
+            <div class="metric-val" style="font-size: 1.35rem; font-weight: 900; color: var(--vcv-dorado); font-family: 'Space Grotesk', sans-serif; margin-top: 2px;">${ptsTxt}</div>
           </div>
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; display:flex; align-items:center; flex-wrap:wrap; gap:4px; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">
+          <div>
+            <div class="metric-label" style="font-size: 0.68rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; display: flex; align-items: center; justify-content: center; gap: 4px;">
                 <span>Promedio</span>
                 ${derbyAvisoHtml}
             </div>
-            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #fcfaff; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${promedioTxt}</div>
+            <div class="metric-val" style="font-size: 1.35rem; font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif; margin-top: 2px;">${promedioTxt}</div>
           </div>
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Aciertos (Part.)</div>
-            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #38bdf8; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${aciertosTxt}</div>
+          <div>
+            <div class="metric-label" style="font-size: 0.68rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">Aciertos</div>
+            <div class="metric-val" style="font-size: 1.35rem; font-weight: 900; color: #38bdf8; font-family: 'Space Grotesk', sans-serif; margin-top: 2px;">${aciertosTxt}</div>
           </div>
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35);">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight:700; line-height:1.2; word-break: break-word; letter-spacing: 0.4px;">Sets Exactos</div>
-            <div class="metric-val" style="font-size: 1.45rem; font-weight: 900; color: #10b981; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${setsTxt}</div>
+          <div>
+            <div class="metric-label" style="font-size: 0.68rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">Sets Exactos</div>
+            <div class="metric-val" style="font-size: 1.35rem; font-weight: 900; color: #2ecc71; font-family: 'Space Grotesk', sans-serif; margin-top: 2px;">${setsTxt}</div>
           </div>
           
         </div>

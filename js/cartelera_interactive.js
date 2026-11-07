@@ -170,6 +170,9 @@
             if (typeof window.renderMyProfileCard === 'function') window.renderMyProfileCard();
             if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings();
         }
+        if (sectionId === 'calendarioSection' || sectionId === 'calendario') {
+            if (typeof window.initCalendar === 'function') window.initCalendar();
+        }
         
         if (window.lucide) setTimeout(() => lucide.createIcons(), 30);
         if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 40);

@@ -76,7 +76,7 @@ window.renderCarteleraHTML = function(data) {
             let categoryHtml = getCategoryHTML(eq.categoria);
             let destacadoHtml = "";
 
-            if (eq.estado === "ABIERTO" || eq.estado === "CERRADO") {
+            if (eq.estado === "ABIERTO" || eq.estado === "CERRADO" || eq.estado === "FINALIZADO") {
                 let dt = new Date(eq.timestamp);
                 let fechaFormateada = isNaN(dt) ? "" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
 
@@ -117,7 +117,7 @@ window.renderCarteleraHTML = function(data) {
                 if (isFvcl) {
                     catLogoHtml = `
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <img loading="lazy" src="files/images/${catFilename}" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                            <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
                             <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
                               ${eq.categoria.toUpperCase()}
                             </span>
@@ -126,7 +126,7 @@ window.renderCarteleraHTML = function(data) {
                     catLogoHtml = `
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                            <img loading="lazy" src="files/images/${catFilename}" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                            <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
                             <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
                               ${eq.categoria.toUpperCase()}
                             </span>
@@ -257,7 +257,8 @@ window.renderCarteleraHTML = function(data) {
                     }
                 }
                 
-                if (eq.estado === "CERRADO") {
+                let isPartidoFinalizado = eq.estado === "CERRADO" || eq.estado === "FINALIZADO" || (eq.oficial_sets && String(eq.oficial_sets).trim() !== "");
+                if (isPartidoFinalizado) {
                     let miPronSets = isPredicted ? (pSets || '-').replace('-', ' - ') : (window.isGuestMode ? 'Solo lectura' : 'Sin datos');
                     let miPronDetalle = window.isGuestMode ? '<span>Modo Invitado</span>' : 'Sin predicción';
                     if (isPredicted) {
@@ -274,7 +275,7 @@ window.renderCarteleraHTML = function(data) {
                                 <span>+${pPts} pts</span>
                                 <picture style="display:inline-flex; vertical-align:middle;">
                                     <source srcset="files/images/escudos/${winnerSafe}.webp?v=20261105_v12" type="image/webp">
-                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261105_v12" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:800; font-size:0.75rem;\\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
+                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261105_v12" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:800; font-size:0.75rem;\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
                                 </picture>
                             </div>`;
                         } else {
@@ -282,35 +283,133 @@ window.renderCarteleraHTML = function(data) {
                         }
                     }
 
-                    let cajaTuPronosticoHtml = window.isGuestMode ? `
-                        <div style="background: var(--bg-card-alt); border: 1px dashed var(--border-color); border-radius: 10px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; box-sizing: border-box; overflow: hidden;">
-                            <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                MODO INVITADO
+                    // Puntuación oficial de sets
+                    let setsL = 0;
+                    let setsV = 0;
+                    let hasOfficialSets = false;
+                    if (eq.oficial_sets && String(eq.oficial_sets).includes('-')) {
+                        let parts = String(eq.oficial_sets).split('-');
+                        setsL = parseInt(parts[0]) || 0;
+                        setsV = parseInt(parts[1]) || 0;
+                        hasOfficialSets = true;
+                    }
+
+                    let localGana = setsL > setsV;
+                    let visitGana = setsV > setsL;
+
+                    let misEquipos = (window.appData && Array.isArray(window.appData.mis_equipos_siguiendo) && window.appData.mis_equipos_siguiendo.length > 0)
+                        ? window.appData.mis_equipos_siguiendo
+                        : ['Universidad de Valladolid VCV', 'VALCYL VCV', 'Valladolid CV Vacceas', 'VCV Maria Molina', 'VCV Meseta'];
+
+                    let isDerby = Boolean(eq.es_derby || (misEquipos.includes(eq.equipo_local) && misEquipos.includes(eq.rival)));
+                    let isVcvLocal = (eq.ubicacion === 'LOCAL');
+                    let isVcvWin = (isVcvLocal && localGana) || (!isVcvLocal && visitGana);
+
+                    let outcomeBadge = "";
+                    let cardBorderHighlight = "";
+
+                    if (hasOfficialSets) {
+                        if (isDerby) {
+                            let winnerAbrev = localGana ? localAbrev : (visitGana ? visitAbrev : '');
+                            outcomeBadge = winnerAbrev
+                                ? `<span style="background: rgba(212, 175, 55, 0.16); color: var(--vcv-dorado); border: 1px solid rgba(212, 175, 55, 0.45); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="trophy" style="width:12px;height:12px;"></i> GANA ${winnerAbrev}</span>`
+                                : `<span style="background: rgba(212, 175, 55, 0.16); color: var(--vcv-dorado); border: 1px solid rgba(212, 175, 55, 0.45); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">DERBY</span>`;
+                            cardBorderHighlight = 'border-left: 4px solid var(--vcv-dorado); border-color: var(--secondary-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);';
+                        } else {
+                            outcomeBadge = isVcvWin
+                                ? `<span style="background: rgba(46, 204, 113, 0.16); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="check" style="width:12px;height:12px;"></i> VICTORIA</span>`
+                                : `<span style="background: rgba(231, 76, 60, 0.16); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.35); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">DERROTA</span>`;
+                            cardBorderHighlight = isVcvWin
+                                ? 'border-left: 4px solid #2ecc71;'
+                                : 'border-left: 4px solid rgba(231, 76, 60, 0.5);';
+                        }
+                    } else {
+                        outcomeBadge = `<span style="background: rgba(255, 255, 255, 0.08); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.2); padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">CERRADO</span>`;
+                        if (isDerby) cardBorderHighlight = 'border-color: var(--secondary-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);';
+                    }
+
+                    // Parciales formateados con chips elegantes y Total de Puntos
+                    let parcialesHtml = "";
+                    if (eq.oficial_parciales && String(eq.oficial_parciales).trim() !== "") {
+                        let rawChips = String(eq.oficial_parciales).split(/\s*,\s*|\s*;\s*/);
+                        let totalPtsL = 0;
+                        let totalPtsV = 0;
+                        let validSetsCount = 0;
+
+                        let chipsHtml = rawChips.map((pStr, idx) => {
+                            let pParts = pStr.trim().split('-');
+                            if (pParts.length === 2) {
+                                let pL = parseInt(pParts[0]);
+                                let pV = parseInt(pParts[1]);
+                                if (!isNaN(pL) && !isNaN(pV)) {
+                                    totalPtsL += pL;
+                                    totalPtsV += pV;
+                                    validSetsCount++;
+                                }
+                                let colL = pL > pV ? 'color: var(--vcv-dorado); font-weight: 800;' : 'color: var(--text-muted); font-weight: 600;';
+                                let colV = pV > pL ? 'color: var(--vcv-dorado); font-weight: 800;' : 'color: var(--text-muted); font-weight: 600;';
+                                return `<span title="Set ${idx+1}" style="display:inline-flex; align-items:center; gap:3px; padding:3px 7px; border-radius:6px; background:rgba(255,255,255,0.06); font-size:0.75rem; border:1px solid rgba(255,255,255,0.09);">
+                                    <span style="${colL}">${pL}</span>
+                                    <span style="color:var(--text-muted); opacity:0.6; font-size:0.65rem;">-</span>
+                                    <span style="${colV}">${pV}</span>
+                                </span>`;
+                            }
+                            return `<span style="padding:2px 6px; border-radius:6px; background:rgba(255,255,255,0.05); font-size:0.75rem; color:var(--text-muted);">${pStr}</span>`;
+                        }).join('');
+
+                        let totalBadgeHtml = "";
+                        if (validSetsCount > 0) {
+                            let diffOficial = Math.abs(totalPtsL - totalPtsV);
+                            let ganadorPuntosAbrev = totalPtsL > totalPtsV ? localAbrev : (totalPtsV > totalPtsL ? visitAbrev : '');
+                            let difLabel = diffOficial === 0 ? 'Empate' : `+${diffOficial}${ganadorPuntosAbrev ? ' ' + ganadorPuntosAbrev : ''}`;
+                            
+                            totalBadgeHtml = `
+                            <span title="Puntos totales oficiales del partido y diferencia final para comparar con tu pronóstico" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.35); font-size:0.75rem; font-weight:800; color:var(--text-main); margin-left:4px;">
+                                <span style="color:var(--vcv-dorado); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px;">Total:</span>
+                                <span style="${totalPtsL > totalPtsV ? 'color:var(--vcv-dorado); font-weight:900;' : 'color:var(--text-muted);'}">${totalPtsL}</span>
+                                <span style="color:var(--text-muted); opacity:0.6; font-size:0.65rem;">-</span>
+                                <span style="${totalPtsV > totalPtsL ? 'color:var(--vcv-dorado); font-weight:900;' : 'color:var(--text-muted);'}">${totalPtsV}</span>
+                                <span style="color:var(--vcv-dorado); font-size:0.72rem; font-weight:900;">(${difLabel})</span>
+                            </span>`;
+                        }
+
+                        parcialesHtml = `
+                        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px;">
+                            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-right:2px;">Parciales:</span>
+                            ${chipsHtml}
+                            ${totalBadgeHtml}
+                        </div>`;
+                    }
+
+                    // Tu Pronóstico: Banner integrado y estilizado
+                    let tuPronosticoBannerHtml = window.isGuestMode ? `
+                        <div style="margin-top:10px; padding:8px 12px; background:rgba(212,175,55,0.08); border:1px dashed rgba(212,175,55,0.35); border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <div style="font-size:0.75rem; color:var(--secondary-color); font-weight:800;">
+                                🔒 Modo Invitado
                             </div>
-                            <div style="font-size: 0.85rem; font-weight: 800; color: var(--secondary-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                🔒 ¡Únete!
-                            </div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; word-break: break-word; line-height: 1.15;">
-                                Regístrate para puntuar
+                            <div style="font-size:0.72rem; color:var(--text-muted);">
+                                Regístrate para guardar pronósticos
                             </div>
                         </div>` : `
-                        <div style="background: ${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card-alt)'}; border: 1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius: 10px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; box-sizing: border-box; overflow: hidden;">
-                            <div style="font-size: 0.65rem; font-weight: 800; color: ${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; gap: 4px; word-break: break-word; line-height: 1.15;">
-                                <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width: 12px; height: 12px; flex-shrink: 0;"></i> TU PREDICCIÓN
+                        <div style="margin-top:10px; padding:9px 12px; background:${isPredicted ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isPredicted ? 'rgba(16, 185, 129, 0.35)' : 'var(--border-color)'}; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <i data-lucide="${isPredicted ? 'check-circle-2' : 'help-circle'}" style="width:14px; height:14px; color:${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; flex-shrink:0;"></i>
+                                <span style="font-size:0.68rem; font-weight:800; color:${isPredicted ? 'var(--success)' : 'var(--text-muted)'}; text-transform:uppercase; letter-spacing:0.5px;">Tu Pronóstico:</span>
+                                <span style="font-size:1.05rem; font-weight:900; color:${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family:'Space Grotesk', sans-serif;">${miPronSets}</span>
                             </div>
-                            <div style="font-size: clamp(1.05rem, 4vw, 1.25rem); font-weight: 900; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-family: 'Space Grotesk', sans-serif;">
-                                ${miPronSets}
-                            </div>
-                            <div style="font-size: 0.72rem; color: ${isPredicted ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: 700; margin-top: 2px; word-break: break-word; line-height: 1.15;">
+                            <div style="font-size:0.75rem; color:var(--text-main); font-weight:700; margin-left:auto;">
                                 ${miPronDetalle}
                             </div>
                         </div>`;
 
                     htmlPartidos += `
-                    <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${eq.es_derby ? 'box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); border-color: var(--secondary-color);' : ''}">
+                    <div class="vcv-card-v2" id="card-v2-${eq.id_partido}" data-category="${eq.categoria}" style="padding: 16px; margin-bottom: 12px; ${cardBorderHighlight}">
                         <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
                             <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                                ${catLogoHtml}
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    ${catLogoHtml}
+                                    ${outcomeBadge}
+                                </div>
                                 ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">🔥 DERBY <span onclick="document.getElementById('infoDerbyModal').style.display='flex'; event.stopPropagation();" style="display:flex; align-items:center; justify-content:center; width:16px; height:16px; background:rgba(255,255,255,0.2); border-radius:50%; cursor:pointer;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5"/><circle cx="12" cy="12" r="10"/></svg></span></div>` : ''}
                             </div>
                             <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-left:auto; flex:1; min-width:0;">
@@ -327,34 +426,36 @@ window.renderCarteleraHTML = function(data) {
                         <div class="teams-versus-container-v2" style="margin-bottom: 12px;">
                             <div class="team-box-v2">
                                 <div class="team-avatar-v2">${localLogo}</div>
-                                <span class="team-name-v2">${localTeamName}</span>
-                                <span class="team-role-v2" style="color: var(--success); font-weight:800;">LOCAL</span>
+                                <span class="team-name-v2" style="${hasOfficialSets && localGana ? 'font-weight:900; color:var(--text-main);' : ''}">${localTeamName}</span>
+                                <span class="team-role-v2" style="color: var(--success); font-weight:800;">🏠 LOCAL${isDerby && localGana ? ' <span style="background:rgba(212,175,55,0.2); color:var(--vcv-dorado); font-size:0.65rem; padding:1px 5px; border-radius:4px; border:1px solid rgba(212,175,55,0.4);">🏆 GANA</span>' : ''}</span>
                             </div>
-                            <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                            <div class="vs-divider-v2" style="display:flex; flex-direction:column; align-items:center; gap:3px; min-width:85px;">
+                                <div style="font-size: 0.68rem; color:var(--vcv-dorado); font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">
+                                    J. ${eq.jornada_eq || '-'}
+                                </div>
+                                ${hasOfficialSets ? `
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:1.85rem; font-weight:900; color:${localGana ? 'var(--vcv-dorado)' : 'var(--text-muted)'}; line-height:1; font-family:'Space Grotesk', sans-serif;">${setsL}</span>
+                                    <span style="font-size:1.1rem; font-weight:800; color:var(--text-muted); opacity:0.6;">-</span>
+                                    <span style="font-size:1.85rem; font-weight:900; color:${visitGana ? 'var(--vcv-dorado)' : 'var(--text-muted)'}; line-height:1; font-family:'Space Grotesk', sans-serif;">${setsV}</span>
+                                </div>
+                                <span style="font-size:0.62rem; font-weight:800; letter-spacing:0.5px; padding:1px 6px; border-radius:4px; background:rgba(255,255,255,0.08); color:var(--text-muted);">
+                                    FINAL
+                                </span>` : `
                                 <div style="font-size: 0.85rem; font-weight:900; color:var(--text-muted);">VS</div>
+                                <span style="font-size:0.62rem; font-weight:800; padding:1px 6px; border-radius:4px; background:rgba(230,126,34,0.15); color:#e67e22; border:1px solid rgba(230,126,34,0.3);">EN JUEGO</span>
+                                `}
                                 ${btnStreaming}
                             </div>
                             <div class="team-box-v2">
                                 <div class="team-avatar-v2">${visitLogo}</div>
-                                <span class="team-name-v2">${visitTeamName}</span>
-                                <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">VISITANTE</span>
+                                <span class="team-name-v2" style="${hasOfficialSets && visitGana ? 'font-weight:900; color:var(--text-main);' : ''}">${visitTeamName}</span>
+                                <span class="team-role-v2" style="color: var(--text-muted); font-weight:800;">✈️ VISITANTE${isDerby && visitGana ? ' <span style="background:rgba(212,175,55,0.2); color:var(--vcv-dorado); font-size:0.65rem; padding:1px 5px; border-radius:4px; border:1px solid rgba(212,175,55,0.4);">🏆 GANA</span>' : ''}</span>
                             </div>
                         </div>
 
-                        <div class="match-results-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 10px; width: 100%; box-sizing: border-box;">
-                            <div style="background: var(--bg-card-alt); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px; text-align: center; display: flex; flex-direction: column; justify-content: center; min-width: 0; box-sizing: border-box; overflow: hidden;">
-                                <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    RESULTADO OFICIAL
-                                </div>
-                                <div style="font-size: clamp(1.05rem, 4vw, 1.25rem); font-weight: 900; color: var(--text-main); font-family: 'Space Grotesk', sans-serif;">
-                                    ${(eq.oficial_sets || 'Sin resultado').replace('-', ' - ')}
-                                </div>
-                                <div style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px; word-break: break-word; line-height: 1.15;" title="${eq.oficial_parciales || ''}">
-                                    ${eq.oficial_parciales || 'Parciales pendientes'}
-                                </div>
-                            </div>
-                            ${cajaTuPronosticoHtml}
-                        </div>
+                        ${parcialesHtml}
+                        ${tuPronosticoBannerHtml}
                         ${mvpHtml}
                     </div>`;
                 } else {
