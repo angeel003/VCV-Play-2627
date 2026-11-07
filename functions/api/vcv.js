@@ -2484,64 +2484,6 @@ export async function onRequestPost(context) {
         });
     }
 
-    // ADMIN: OBTENER PRONÓSTICOS DE UN PARTIDO PARA EXPORTACIÓN / RESUMEN
-    if (action === 'get_pronosticos_partido') {
-        const authUser = await getAuthUser();
-        if (!authUser) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas.' }, 401);
-
-        const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
-        const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
-        const hasResPerm = adminCheck && (adminCheck["Permiso_Resultados"] && adminCheck["Permiso_Resultados"] !== "");
-        if (!isAdmin && !hasResPerm) {
-            return jsonResponse({ status: 'error', message: 'No tienes permisos de administración o resultados.' }, 403);
-        }
-
-        const idPartido = (body.id_partido || "").trim();
-        if (!idPartido) return jsonResponse({ status: 'error', message: 'ID de partido no especificado.' }, 400);
-
-        // Datos del partido desde Ajustes
-        const partido = await db.prepare('SELECT "ID_Partido", "Equipo_Local", "Rival", "Categoria", "Jornada_Eq", "Ronda_Global", "Ubicacion", "Fecha", "Estado" FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
-
-        // Pronósticos del partido desde Porras con nombre real del usuario
-        const { results: rawPronosticos } = await db.prepare(`
-            SELECT p."Usuario", u."Nombre Real" as nombre_real, p."Sets" as sets, 
-                   COALESCE(p."Puntos Dif", p."Puntos", 0) as puntos_dif, 
-                   COALESCE(p."a favor o en contra del local", p."Signo", '') as signo, 
-                   p."Timestamp" as timestamp
-            FROM "Porras" p
-            LEFT JOIN "Usuarios" u ON p."Usuario" = u."Usuario"
-            WHERE p."ID Partido" = ?
-            ORDER BY p."Usuario" COLLATE NOCASE ASC
-        `).bind(idPartido).all();
-
-        // Votos MVP (si hubo votación para este partido)
-        let mvpMap = {};
-        try {
-            const { results: mvpRows } = await db.prepare('SELECT usuario, jugador FROM "MVP_Votos" WHERE id_partido = ?').bind(idPartido).all();
-            for (const mv of mvpRows || []) {
-                mvpMap[mv.usuario] = mv.jugador;
-            }
-        } catch(e) {}
-
-        const pronosticos = (rawPronosticos || []).map(pr => ({
-            usuario: pr.Usuario,
-            nombre_real: pr.nombre_real || '',
-            sets: pr.sets || '',
-            puntos_dif: pr.puntos_dif,
-            signo: pr.signo || '',
-            voto_mvp: mvpMap[pr.Usuario] || '',
-            timestamp: pr.timestamp || ''
-        }));
-
-        return jsonResponse({
-            status: 'success',
-            id_partido: idPartido,
-            partido: partido || null,
-            total: pronosticos.length,
-            pronosticos: pronosticos
-        });
-    }
-
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
         const { id_partido, sets, parciales, streaming, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
