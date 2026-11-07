@@ -1560,26 +1560,37 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             return;
         }
 
-        // 2. Extraer datos del partido
+        // 2. Extraer datos del partido teniendo en cuenta Ubicacion (LOCAL o VISITANTE)
         let matchInfo = resp.partido || {};
         if (!matchInfo.Equipo_Local && window.appData) {
             const all = (window.appData.todos_partidos || []).concat(window.appData.equipos || []);
             const f = all.find(m => m.id_partido === idPartido);
             if (f) {
                 matchInfo = {
-                    Equipo_Local: (f.ubicacion === 'LOCAL') ? f.equipo_local : f.rival,
-                    Rival: (f.ubicacion === 'LOCAL') ? f.rival : f.equipo_local,
+                    Equipo_Local: f.equipo_local,
+                    Rival: f.rival,
+                    Ubicacion: f.ubicacion,
                     Categoria: f.categoria,
                     Jornada_Eq: f.jornada_eq || f.ronda_global,
                     Fecha: f.fecha
                 };
             }
         }
-        const locName = matchInfo.Equipo_Local || 'Universidad de Valladolid VCV';
-        const rivName = matchInfo.Rival || 'Rival';
-        const categoria = matchInfo.Categoria || '';
-        const jornada = matchInfo.Jornada_Eq || matchInfo.Ronda_Global || '';
-        const fechaPartido = matchInfo.Fecha || '';
+
+        const rawLoc = matchInfo.Equipo_Local || 'Local';
+        const rawRiv = matchInfo.Rival || 'Rival';
+        const ubicacion = String(matchInfo.Ubicacion || matchInfo.ubicacion || 'LOCAL').trim().toUpperCase();
+        const isMatchLocal = (ubicacion === 'LOCAL' || ubicacion === 'CASA');
+
+        // En la cartelera:
+        // teamLocal = el equipo que juega en casa (izquierda de la tarjeta, primer número de los sets y 'A favor')
+        // teamVisit = el equipo que juega fuera (derecha de la tarjeta, segundo número de los sets y 'En contra')
+        const teamLocal = isMatchLocal ? rawLoc : rawRiv;
+        const teamVisit = isMatchLocal ? rawRiv : rawLoc;
+
+        const categoria = matchInfo.Categoria || matchInfo.categoria || '';
+        const jornada = matchInfo.Jornada_Eq || matchInfo.jornada_eq || matchInfo.Ronda_Global || matchInfo.ronda_global || '';
+        const fechaPartido = matchInfo.Fecha || matchInfo.fecha || '';
 
         // 3. Asegurar que jsPDF y autoTable están cargados
         if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') {
@@ -1599,20 +1610,32 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             });
         }
 
-        // 4. Formatear filas con fidelidad 100% a la BD
+        // 4. Formatear filas con fidelidad 100% a la Cartelera y a la BD
         const tableRows = pronosticos.map((p, idx) => {
             const u = '@' + (p.usuario || '').replace(/^@/, '');
             const nom = p.nombre_real || p.usuario || '';
             const sets = p.sets || '-';
+            
+            // Ganador deducido según los sets (primer número = teamLocal, segundo = teamVisit)
+            let ganadorSets = '-';
+            if (sets && sets.includes('-')) {
+                const parts = sets.split('-');
+                const sLoc = parseInt(parts[0]);
+                const sVis = parseInt(parts[1]);
+                if (!isNaN(sLoc) && !isNaN(sVis)) {
+                    ganadorSets = sLoc > sVis ? teamLocal : teamVisit;
+                }
+            }
+
             const pts = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? `+${p.puntos_dif} pts` : '-';
             
-            // Signo exacto de la base de datos
+            // Asignación correcta de 'A favor' y 'En contra' según la ubicación del partido
             let aFavorDe = '-';
             const sigL = (p.signo || '').trim().toLowerCase();
             if (sigL === 'a favor' || sigL.includes('a favor')) {
-                aFavorDe = `${locName} (A favor)`;
+                aFavorDe = `${teamLocal} (A favor)`;
             } else if (sigL === 'en contra' || sigL.includes('en contra')) {
-                aFavorDe = `${rivName} (En contra)`;
+                aFavorDe = `${teamVisit} (En contra)`;
             } else if (p.puntos_dif === 0 || p.puntos_dif === '0' || sigL === 'empate') {
                 aFavorDe = 'Empate (0 pts)';
             } else if (p.signo) {
@@ -1624,6 +1647,7 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
                 u,
                 nom,
                 sets,
+                ganadorSets,
                 pts,
                 aFavorDe,
                 ts
@@ -1646,7 +1670,7 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
 
         const autoTableConfig = {
             startY: 65,
-            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets Pronosticados', 'Dif. Puntos', 'A Favor de (Signo BD)', 'Fecha Predicción']],
+            head: [['Nº', 'Usuario', 'Nombre Real', 'Sets', 'Ganador (Sets)', 'Diferencia', 'A Favor de (Puntos)', 'Fecha Predicción']],
             body: tableRows,
             theme: 'striped',
             headStyles: {
@@ -1672,12 +1696,13 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             },
             columnStyles: {
                 0: { halign: 'center', cellWidth: 22 }, // Nº
-                1: { fontStyle: 'bold', cellWidth: 80 }, // Usuario
-                2: { cellWidth: 92 }, // Nombre Real
-                3: { halign: 'center', fontStyle: 'bold', cellWidth: 50 }, // Sets
-                4: { halign: 'center', cellWidth: 55 }, // Diferencia
-                5: { cellWidth: 130 }, // A Favor de (Signo)
-                6: { halign: 'center', cellWidth: 126 } // Fecha
+                1: { fontStyle: 'bold', cellWidth: 74 }, // Usuario
+                2: { cellWidth: 82 }, // Nombre Real
+                3: { halign: 'center', fontStyle: 'bold', cellWidth: 36 }, // Sets
+                4: { cellWidth: 76 }, // Ganador (Sets)
+                5: { halign: 'center', cellWidth: 48 }, // Diferencia
+                6: { cellWidth: 95 }, // A Favor de (Puntos)
+                7: { halign: 'center', cellWidth: 122 } // Fecha
             },
             didDrawPage: function(data) {
                 // Cabecera institucional VCV
@@ -1686,11 +1711,11 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
                 doc.setTextColor(93, 23, 137);
                 doc.text('VCV PLAY — PRONÓSTICOS OFICIALES', 20, 28);
 
-                // Subtítulo con datos del partido
+                // Subtítulo con datos del partido respetando quién juega de local
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(8.5);
                 doc.setTextColor(30, 30, 30);
-                let subTitle = `Partido: ${locName} vs ${rivName}`;
+                let subTitle = `Partido: ${teamLocal} (Local) vs ${teamVisit} (Visitante)`;
                 if (jornada) subTitle += `  |  Jornada ${jornada}`;
                 if (categoria) subTitle += `  (${categoria})`;
                 doc.text(subTitle, 20, 42);
@@ -1720,8 +1745,8 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
         }
 
         // 6. Descargar PDF automáticamente
-        const safeLoc = (locName || 'Local').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
-        const safeRiv = (rivName || 'Rival').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
+        const safeLoc = (teamLocal || 'Local').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
+        const safeRiv = (teamVisit || 'Visitante').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_');
         const filename = `Pronosticos_${idPartido}_${safeLoc}_vs_${safeRiv}.pdf`;
         doc.save(filename);
 
