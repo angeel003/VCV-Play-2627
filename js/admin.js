@@ -196,9 +196,14 @@ ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); 
                     <i class="fas fa-user-edit" style="color:#e67e22;"></i>
                     <span>Resultado anotado por <strong style="color:var(--text-main);">@${eq.actualizado_por}</strong>${eq.actualizado_fecha ? ` (${eq.actualizado_fecha})` : ''}</span>
                 </div>` : ''}
-                <button class="btn" style="width: 100%; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; margin-top: 4px; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
-                    Guardar Cambios
-                </button>
+                <div style="display:flex; gap:8px; margin-top:6px;">
+                    <button class="btn" style="flex:1; min-width:0; padding: 8px; font-size: 0.8rem; background: #e67e22; color: #fff; border: none; border-radius: 6px; font-weight: bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="guardarResultadoAdmin(event, '${eq.id_partido}')">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" class="btn" style="padding: 8px 12px; font-size: 0.8rem; background: #27ae60; color: #fff; border: none; border-radius: 6px; font-weight: bold; box-shadow: 0 4px 6px rgba(39,174,96,0.2); display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;" onclick="window.adminExportarPronosticos('${eq.id_partido}')" title="Ver y exportar pronósticos a Excel">
+                        <i class="fas fa-file-excel"></i> Exportar
+                    </button>
+                </div>
             </div>`;
         }
     });
@@ -2490,4 +2495,202 @@ window.adminToggleMantenimiento = function() {
         if (btn) btn.disabled = false;
         alert(`❌ Error de red: ${err.message}`);
     });
+};
+
+
+// ==================================================================
+// EXPORTACIÓN DE PRONÓSTICOS A EXCEL / CSV PARA ADMINISTRADORES
+// ==================================================================
+window._ultimoResumenPronosticos = null;
+
+window.adminExportarPronosticos = async function(idPartido) {
+    if (!idPartido) return;
+    
+    // Abrir modal en estado cargando
+    const modal = document.getElementById('adminExportModal');
+    const tituloEl = document.getElementById('adminExportTitulo');
+    const subtituloEl = document.getElementById('adminExportSubtitulo');
+    const tablaEl = document.getElementById('adminExportTablaContenedor');
+    const contadorEl = document.getElementById('adminExportContador');
+
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    if (tituloEl) tituloEl.innerText = 'Cargando pronósticos...';
+    if (subtituloEl) subtituloEl.innerText = 'Consultando base de datos Cloudflare D1...';
+    if (contadorEl) contadorEl.innerText = '...';
+    if (tablaEl) {
+        tablaEl.innerHTML = '<div style="text-align:center; padding:35px 15px; color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem; color:#27ae60; margin-bottom:8px; display:block;"></i> Obteniendo pronósticos...</div>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_pronosticos_partido',
+                id_partido: idPartido,
+                usuario: currentUser,
+                password: currentPassword
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (data.status !== 'success') {
+            alert(data.message || 'Error al obtener pronósticos');
+            window.cerrarAdminExportModal();
+            return;
+        }
+
+        window._ultimoResumenPronosticos = data;
+
+        const part = data.partido || {};
+        const loc = part.Equipo_Local || 'Local';
+        const riv = part.Rival || 'Rival';
+        const jor = part.Jornada_Eq || part.Ronda_Global || '';
+        const cat = part.Categoria || '';
+
+        if (tituloEl) tituloEl.innerText = `${loc} vs ${riv}`;
+        if (subtituloEl) subtituloEl.innerText = `${cat ? cat + ' • ' : ''}${jor ? 'Jornada ' + jor + ' • ' : ''}ID: ${idPartido}`;
+        if (contadorEl) contadorEl.innerText = `${data.total} pronóstico${data.total === 1 ? '' : 's'} registrado${data.total === 1 ? '' : 's'}`;
+
+        if (!data.pronosticos || data.pronosticos.length === 0) {
+            tablaEl.innerHTML = '<div style="text-align:center; padding:35px 15px; color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-info-circle" style="font-size:1.3rem; margin-bottom:8px; display:block; color:#f39c12;"></i> Aún ningún usuario ha guardado pronósticos para este partido.</div>';
+            return;
+        }
+
+        let hasMvp = data.pronosticos.some(p => p.voto_mvp);
+
+        let tableHtml = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
+            <thead>
+                <tr style="background:rgba(0,0,0,0.25); border-bottom:1px solid var(--border-color); color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:0.5px;">
+                    <th style="padding:10px 12px;">Usuario</th>
+                    <th style="padding:10px 12px;">Sets</th>
+                    <th style="padding:10px 12px;">Dif. Puntos</th>
+                    ${hasMvp ? '<th style="padding:10px 12px;">Voto MVP</th>' : ''}
+                    <th style="padding:10px 12px;">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+
+        data.pronosticos.forEach((p, idx) => {
+            const bgRow = idx % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : 'background:transparent;';
+            const setsBadge = p.sets ? `<span style="font-weight:bold; padding:2px 7px; border-radius:4px; background:rgba(39,174,96,0.15); color:#2ecc71;">${p.sets}</span>` : '<span style="color:var(--text-muted);">-</span>';
+            const ptsTxt = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? `${p.puntos_dif} pts (${p.signo || ''})` : '-';
+
+            tableHtml += `
+            <tr style="${bgRow} border-bottom:1px solid rgba(255,255,255,0.04);">
+                <td style="padding:8px 12px; white-space:nowrap;">
+                    <strong style="color:var(--text-main);">@${p.usuario}</strong>
+                    ${p.nombre_real && p.nombre_real !== p.usuario ? `<br><span style="font-size:0.72rem; color:var(--text-muted);">${p.nombre_real}</span>` : ''}
+                </td>
+                <td style="padding:8px 12px; white-space:nowrap;">${setsBadge}</td>
+                <td style="padding:8px 12px; white-space:nowrap; color:var(--text-main);">${ptsTxt}</td>
+                ${hasMvp ? `<td style="padding:8px 12px; white-space:nowrap; color:#f1c40f; font-weight:600;">${p.voto_mvp ? '⭐ ' + p.voto_mvp : '-'}</td>` : ''}
+                <td style="padding:8px 12px; white-space:nowrap; font-size:0.72rem; color:var(--text-muted);">${p.timestamp || '-'}</td>
+            </tr>
+            `;
+        });
+
+        tableHtml += '</tbody></table>';
+        tablaEl.innerHTML = tableHtml;
+
+    } catch(err) {
+        alert("Error de conexión al cargar pronósticos: " + err);
+        window.cerrarAdminExportModal();
+    }
+};
+
+window.cerrarAdminExportModal = function() {
+    const modal = document.getElementById('adminExportModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+};
+
+window.descargarExcelPronosticos = function() {
+    const data = window._ultimoResumenPronosticos;
+    if (!data || !data.pronosticos || data.pronosticos.length === 0) {
+        alert("No hay pronósticos disponibles para exportar.");
+        return;
+    }
+
+    const part = data.partido || {};
+    const loc = part.Equipo_Local || 'Local';
+    const riv = part.Rival || 'Rival';
+    const jor = part.Jornada_Eq || part.Ronda_Global || '';
+
+    let hasMvp = data.pronosticos.some(p => p.voto_mvp);
+
+    // Cabecera CSV en formato compatible Excel español (delimitador punto y coma y BOM UTF-8)
+    let csv = '\uFEFF';
+    csv += hasMvp 
+        ? "Usuario;Nombre Real;Partido;Sets Pronosticados;Diferencia Puntos;Signo;Voto MVP;Fecha Pronostico\r\n"
+        : "Usuario;Nombre Real;Partido;Sets Pronosticados;Diferencia Puntos;Signo;Fecha Pronostico\r\n";
+
+    data.pronosticos.forEach(p => {
+        const u = (p.usuario || '').replace(/;/g, ' ');
+        const nom = (p.nombre_real || '').replace(/;/g, ' ');
+        const partidoNom = `${loc} vs ${riv}`;
+        const sets = p.sets || '';
+        const pts = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? p.puntos_dif : '';
+        const sig = (p.signo || '').replace(/;/g, ' ');
+        const mvp = (p.voto_mvp || '').replace(/;/g, ' ');
+        const f = (p.timestamp || '').replace(/;/g, ' ');
+
+        if (hasMvp) {
+            csv += `"${u}";"${nom}";"${partidoNom}";"${sets}";"${pts}";"${sig}";"${mvp}";"${f}"\r\n`;
+        } else {
+            csv += `"${u}";"${nom}";"${partidoNom}";"${sets}";"${pts}";"${sig}";"${f}"\r\n`;
+        }
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeLoc = loc.replace(/[^a-zA-Z0-9]/g, '_');
+    const safeRiv = riv.replace(/[^a-zA-Z0-9]/g, '_');
+    a.href = url;
+    a.download = `Pronosticos_${safeLoc}_vs_${safeRiv}${jor ? '_J' + jor : ''}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+window.copiarPronosticosTexto = function() {
+    const data = window._ultimoResumenPronosticos;
+    if (!data || !data.pronosticos || data.pronosticos.length === 0) {
+        alert("No hay pronósticos disponibles para copiar.");
+        return;
+    }
+
+    const part = data.partido || {};
+    const loc = part.Equipo_Local || 'Local';
+    const riv = part.Rival || 'Rival';
+    const jor = part.Jornada_Eq || part.Ronda_Global || '';
+
+    let txt = `🏐 PRONÓSTICOS: ${loc} vs ${riv}${jor ? ' (Jornada ' + jor + ')' : ''}\n`;
+    txt += `Total pronósticos: ${data.total}\n\n`;
+
+    data.pronosticos.forEach(p => {
+        const nom = p.nombre_real && p.nombre_real !== p.usuario ? ` (${p.nombre_real})` : '';
+        const sets = p.sets ? ` [${p.sets}]` : '';
+        const pts = (p.puntos_dif !== undefined && p.puntos_dif !== null) ? ` | Dif: ${p.puntos_dif} pts (${p.signo || ''})` : '';
+        const mvp = p.voto_mvp ? ` | MVP: ⭐ ${p.voto_mvp}` : '';
+        txt += `• @${p.usuario}${nom}:${sets}${pts}${mvp}\n`;
+    });
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => {
+            alert("📋 ¡Lista de pronósticos copiada al portapapeles!");
+        }).catch(() => {
+            prompt("Copia los pronósticos manualmente:", txt);
+        });
+    } else {
+        prompt("Copia los pronósticos manualmente:", txt);
+    }
 };
