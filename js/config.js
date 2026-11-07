@@ -465,3 +465,86 @@ window.showMobileTooltip = showMobileTooltip;
 window.hideMobileTooltip = hideMobileTooltip;
 window.renderBadgeIcon = renderBadgeIcon;
 window.getBadgeCSS = getBadgeCSS;
+
+// ------------------------------------------------------------------
+// UTILIDADES PARA CABECERAS Y PABELLONES DE PARTIDO (PRUEBA OPCION 1 VS OPCION 4)
+// ------------------------------------------------------------------
+window.getShortCategory = function(cat) {
+    if (!cat) return "";
+    let c = String(cat).trim();
+    let lower = c.toLowerCase();
+    if (lower.includes("superliga 2") || lower.includes("sm2")) {
+        return lower.includes("fem") ? "SM2 FEM." : "SM2";
+    }
+    if ((lower.includes("primera") || lower.includes("1")) && lower.includes("masc")) {
+        return "1ª NAC. MASC.";
+    }
+    if ((lower.includes("primera") || lower.includes("1")) && lower.includes("fem")) {
+        return "1ª NAC. FEM.";
+    }
+    if ((lower.includes("segunda") || lower.includes("2")) && lower.includes("masc")) {
+        return "2ª DIV. MASC.";
+    }
+    if ((lower.includes("segunda") || lower.includes("2")) && lower.includes("fem")) {
+        return "2ª DIV. FEM.";
+    }
+    if (lower === "2ª masc." || lower === "2ª masc") return "2ª DIV. MASC.";
+    if (lower === "2ª fem." || lower === "2ª fem") return "2ª DIV. FEM.";
+    if (lower === "1ª masc." || lower === "1ª masc") return "1ª NAC. MASC.";
+    if (lower === "1ª fem." || lower === "1ª fem") return "1ª NAC. FEM.";
+    return c.toUpperCase();
+};
+
+window.cleanPabellon = function(pab) {
+    if (!pab) return "";
+    let s = String(pab).trim();
+    if (s.toLowerCase() === 'por definir' || s.toLowerCase() === 'pendiente') return "";
+    s = s.replace(/\s*\([^)]*(?:c\/|calle|avda|avenida|carretera|s\/n|\d{5})[^)]*\)/gi, '');
+    s = s.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+    if (s.length > 25 && s === s.toUpperCase()) {
+        s = s.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+        s = s.replace(/\bUbu\b/g, 'UBU').replace(/\bVcv\b/g, 'VCV').replace(/\bCdm\b/g, 'CDM').replace(/\bCeip\b/g, 'CEIP');
+    }
+    if (s.length > 26) {
+        s = s.replace(/Polideportivo Municipal/gi, 'Pol. Mun.')
+             .replace(/Polideportivo/gi, 'Pol.')
+             .replace(/Pabell[oó]n Municipal/gi, 'Pab. Mun.')
+             .replace(/Pabell[oó]n/gi, 'Pab.');
+    }
+    return s.trim();
+};
+
+window.getCardHeaderStyle = function() {
+    return localStorage.getItem('vcv_card_header_trial') || 'opt1';
+};
+
+window.setCardHeaderStyle = function(style) {
+    localStorage.setItem('vcv_card_header_trial', style);
+    if (typeof window.renderResultados === 'function') {
+        window.renderResultados();
+    }
+    if (typeof window.renderCalendar === 'function') {
+        window.renderCalendar();
+    }
+    if (typeof window.cargarCartelera === 'function') {
+        window.cargarCartelera();
+    }
+};
+
+window.renderHeaderTrialSwitcher = function() {
+    const cur = window.getCardHeaderStyle();
+    return `
+    <div class="header-trial-pill-bar" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px; margin:0 auto 16px auto; padding:8px 12px; background:linear-gradient(135deg, rgba(93,23,137,0.22), rgba(212,175,55,0.1)); border-radius:12px; border:1px solid rgba(212,175,55,0.3); max-width:540px; box-sizing:border-box;">
+        <span style="font-size:0.72rem; font-weight:800; color:var(--vcv-dorado); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center; gap:4px;">
+            <span>📐</span> Prueba Cabecera:
+        </span>
+        <div style="display:inline-flex; background:rgba(0,0,0,0.35); padding:3px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); gap:4px;">
+            <button type="button" onclick="window.setCardHeaderStyle('opt1')" style="padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:800; border:none; cursor:pointer; transition:all 0.2s; ${cur === 'opt1' ? 'background:var(--vcv-dorado); color:#1a002c; box-shadow:0 2px 6px rgba(212,175,55,0.35);' : 'background:transparent; color:var(--text-muted);'}">
+                Opción 1 (Pabellón pie)
+            </button>
+            <button type="button" onclick="window.setCardHeaderStyle('opt4')" style="padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:800; border:none; cursor:pointer; transition:all 0.2s; ${cur === 'opt4' ? 'background:var(--vcv-dorado); color:#1a002c; box-shadow:0 2px 6px rgba(212,175,55,0.35);' : 'background:transparent; color:var(--text-muted);'}">
+                Opción 4 (2 micro-filas)
+            </button>
+        </div>
+    </div>`;
+};

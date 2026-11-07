@@ -285,22 +285,26 @@ function renderMatchCardHtml(eq) {
         isFvcl = true;
     }
 
+    let shortCat = window.getShortCategory ? window.getShortCategory(eq.categoria) : (eq.categoria || "").toUpperCase();
+    let cleanPab = window.cleanPabellon ? window.cleanPabellon(eq.pabellon) : (eq.pabellon || "");
+    let curHeaderStyle = window.getCardHeaderStyle ? window.getCardHeaderStyle() : 'opt1';
+
     let catLogoHtml = "";
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 28px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
-                <span style="color: var(--secondary-color); font-weight: 800; line-height: 36px;">
-                  ${(eq.categoria || "").toUpperCase()}
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 24px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; white-space:nowrap;">
+                  ${shortCat}
                 </span>
             </div>`;
     } else {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 36px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 36px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
-                <span style="color: var(--secondary-color); font-weight: 800; display: none; line-height: 36px;">
-                  ${(eq.categoria || "").toUpperCase()}
+                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 28px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 28px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; display: none;">
+                  ${shortCat}
                 </span>
             </div>`;
     }
@@ -309,19 +313,57 @@ function renderMatchCardHtml(eq) {
     
     let localRoleHtml = `<span class="team-role-v2" style="color: var(--success); font-weight:800; display:flex; align-items:center; gap:4px;">🏠 LOCAL</span>`;
     let visitRoleHtml = `<span class="team-role-v2" style="color: var(--text-muted); font-weight:800; display:flex; align-items:center; gap:4px;">✈️ VISITANTE</span>`;
+
+    let headerStripHtml = "";
+    let footerPabellonHtml = "";
+
+    if (curHeaderStyle === 'opt4') {
+        // Opción 4: Cabecera en 2 micro-filas
+        headerStripHtml = `
+        <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+                    ${catLogoHtml}
+                </div>
+                <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
+                    <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : '<span style="color:var(--text-muted); font-size:0.7rem; font-weight:700;">PROXIMO</span>'}
+                </div>
+                ${cleanPab ? `
+                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+                </div>` : ''}
+            </div>
+        </div>`;
+    } else {
+        // Opción 1: Cabecera ultra-compacta (1 fila) + Pabellón en el pie
+        headerStripHtml = `
+        <div class="match-header-strip-v2 opt1-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; min-height:30px; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:nowrap;">
+                ${catLogoHtml}
+                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; flex-shrink:0; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
+            </div>
+            <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
+                <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+            </div>
+        </div>`;
+
+        if (cleanPab) {
+            footerPabellonHtml = `
+            <div class="match-footer-pabellon-opt1" style="margin-top:12px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; align-items:center; justify-content:center; gap:5px; font-size:0.73rem; color:var(--text-muted); text-align:center;">
+                <i data-lucide="map-pin" style="width: 12px; height: 12px; flex-shrink:0; opacity:0.8; color:var(--vcv-dorado);"></i>
+                <span style="font-weight:500;">${cleanPab}</span>
+            </div>`;
+        }
+    }
     
     return `
     <div class="vcv-card-v2" style="margin-bottom:20px; ${borderColor}">
-        <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
-            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                ${catLogoHtml}
-                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">⚡ DERBY</div>` : ''}
-            </div>
-            <div style="text-align: right; color:var(--text-muted); font-size:0.85rem; font-weight:600;">
-                <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
-                ${infoPabellon}
-            </div>
-        </div>
+        ${headerStripHtml}
 
         <div class="teams-versus-container-v2" style="margin-top: 15px;">
             <div class="team-box-v2">
@@ -340,6 +382,7 @@ function renderMatchCardHtml(eq) {
                 ${visitRoleHtml}
             </div>
         </div>
+        ${footerPabellonHtml}
     </div>`;
 }
 
@@ -381,13 +424,17 @@ function renderMatchResultCardHtml(eq) {
         isFvcl = true;
     }
 
+    let shortCat = window.getShortCategory ? window.getShortCategory(eq.categoria) : (eq.categoria || "").toUpperCase();
+    let cleanPab = window.cleanPabellon ? window.cleanPabellon(eq.pabellon) : (eq.pabellon || "");
+    let curHeaderStyle = window.getCardHeaderStyle ? window.getCardHeaderStyle() : 'opt1';
+
     let catLogoHtml = "";
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 26px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
-                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.78rem;">
-                  ${(eq.categoria || "").toUpperCase()}
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 24px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; white-space:nowrap;">
+                  ${shortCat}
                 </span>
             </div>`;
     } else {
@@ -395,8 +442,8 @@ function renderMatchResultCardHtml(eq) {
             <div style="display: flex; align-items: center; gap: 6px;">
                 <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 28px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
                 <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 28px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
-                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.78rem; display: none;">
-                  ${(eq.categoria || "").toUpperCase()}
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; display: none;">
+                  ${shortCat}
                 </span>
             </div>`;
     }
@@ -535,21 +582,58 @@ function renderMatchResultCardHtml(eq) {
         </div>`;
     }
 
+    let headerStripHtml = "";
+    let footerPabellonHtml = "";
+
+    if (curHeaderStyle === 'opt4') {
+        // Opción 4: Cabecera estructurada en 2 micro-filas
+        headerStripHtml = `
+        <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+                    ${catLogoHtml}
+                </div>
+                <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
+                    <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+                </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                    ${outcomeBadge}
+                    ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
+                </div>
+                ${cleanPab ? `
+                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+                </div>` : ''}
+            </div>
+        </div>`;
+    } else {
+        // Opción 1: Cabecera ultra-compacta (1 fila) + Pabellón en el pie
+        headerStripHtml = `
+        <div class="match-header-strip-v2 opt1-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; min-height:30px; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:nowrap;">
+                ${catLogoHtml}
+                <div style="flex-shrink:0;">${outcomeBadge}</div>
+                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; flex-shrink:0; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
+            </div>
+            <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
+                <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+            </div>
+        </div>`;
+
+        if (cleanPab) {
+            footerPabellonHtml = `
+            <div class="match-footer-pabellon-opt1" style="margin-top:12px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; align-items:center; justify-content:center; gap:5px; font-size:0.73rem; color:var(--text-muted); text-align:center;">
+                <i data-lucide="map-pin" style="width: 12px; height: 12px; flex-shrink:0; opacity:0.8; color:var(--vcv-dorado);"></i>
+                <span style="font-weight:500;">${cleanPab}</span>
+            </div>`;
+        }
+    }
+
     return `
     <div class="vcv-card-v2" style="margin-bottom:20px; ${cardBorderHighlight}">
-        <div class="match-header-strip-v2" style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
-            <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    ${catLogoHtml}
-                    ${outcomeBadge}
-                </div>
-                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 8px; border-radius:8px; font-size:0.72rem; font-weight:900; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.5);">⚡ DERBY</div>` : ''}
-            </div>
-            <div style="text-align: right; color:var(--text-muted); font-size:0.82rem; font-weight:600;">
-                <div><i data-lucide="calendar" style="width: 12px; height: 12px; display: inline; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}</div>
-                ${infoPabellon}
-            </div>
-        </div>
+        ${headerStripHtml}
 
         <div class="teams-versus-container-v2" style="margin-top: 15px;">
             <div class="team-box-v2">
@@ -582,6 +666,7 @@ function renderMatchResultCardHtml(eq) {
 
         ${parcialesHtml}
         ${mvpHtml}
+        ${footerPabellonHtml}
     </div>`;
 }
 
@@ -662,6 +747,10 @@ window.renderResultados = function() {
     });
 
     resultsContainer.innerHTML = html_res;
+
+    const mountCal = document.getElementById('headerTrialMountCalendario');
+    if (mountCal && window.renderHeaderTrialSwitcher) mountCal.innerHTML = window.renderHeaderTrialSwitcher();
+
     if (window.lucide) window.lucide.createIcons();
 };
 
@@ -756,6 +845,10 @@ window.renderCalendar = function() {
     
     const calResultsEl = document.getElementById('calendarResults');
     if (calResultsEl) calResultsEl.innerHTML = html_res;
+
+    const mountCal = document.getElementById('headerTrialMountCalendario');
+    if (mountCal && window.renderHeaderTrialSwitcher) mountCal.innerHTML = window.renderHeaderTrialSwitcher();
+
     if (window.lucide) window.lucide.createIcons();
     if (typeof iniciarRelojes === 'function') iniciarRelojes();
 };
