@@ -3144,8 +3144,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const safeLoc = locName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const safeVis = visName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const [imgLoc, imgVis] = await Promise.all([
-        cargarImagenCanvas(`files/images/escudos/${safeLoc}.webp?v=20261105_v12`),
-        cargarImagenCanvas(`files/images/escudos/${safeVis}.webp?v=20261105_v12`)
+        cargarImagenCanvas(`files/images/escudos/${safeLoc}.webp?v=20261108_v3`),
+        cargarImagenCanvas(`files/images/escudos/${safeVis}.webp?v=20261108_v3`)
     ]);
 
     const nowMs = Date.now();

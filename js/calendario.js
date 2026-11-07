@@ -263,8 +263,8 @@ function renderMatchCardHtml(eq) {
 
     let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261105_v12" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261105_v12" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-    let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261105_v12" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261105_v12" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+    let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261108_v3" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261108_v3" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+    let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261108_v3" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261108_v3" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     
     let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; font-size:0.75rem; color:var(--text-muted); word-break:break-word;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> <span>${eq.pabellon}</span></div>` : '';
 
@@ -362,8 +362,8 @@ function renderMatchResultCardHtml(eq) {
 
     let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261105_v12" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261105_v12" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-    let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261105_v12" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261105_v12" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+    let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261108_v3" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261108_v3" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+    let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261108_v3" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261108_v3" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     
     let infoPabellon = eq.pabellon ? `<div style="margin-top:2px; font-size:0.75rem; color:var(--text-muted); word-break:break-word;"><i data-lucide="map-pin" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px; flex-shrink:0;"></i> <span>${eq.pabellon}</span></div>` : '';
 
@@ -487,8 +487,8 @@ function renderMatchResultCardHtml(eq) {
             let difLabel = diffOficial === 0 ? 'Empate' : `+${diffOficial}${ganadorPuntosAbrev ? ' ' + ganadorPuntosAbrev : ''}`;
             
             totalBadgeHtml = `
-            <span title="Puntos totales oficiales del partido" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.35); font-size:0.75rem; font-weight:800; color:var(--text-main); margin-left:4px;">
-                <span style="color:var(--vcv-dorado); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px;">Total:</span>
+            <span title="Puntos totales oficiales del partido" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.35); font-size:0.75rem; font-weight:800; color:var(--text-main); ">
+                <span style="color:var(--vcv-dorado); font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px;">Total Puntos:</span>
                 <span style="${totalPtsL > totalPtsV ? 'color:var(--vcv-dorado); font-weight:900;' : 'color:var(--text-muted);'}">${totalPtsL}</span>
                 <span style="color:var(--text-muted); opacity:0.6; font-size:0.65rem;">-</span>
                 <span style="${totalPtsV > totalPtsL ? 'color:var(--vcv-dorado); font-weight:900;' : 'color:var(--text-muted);'}">${totalPtsV}</span>
@@ -497,10 +497,12 @@ function renderMatchResultCardHtml(eq) {
         }
 
         parcialesHtml = `
-        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px; text-align:center;">
-            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-right:2px;">Parciales:</span>
-            ${chipsHtml}
-            ${totalBadgeHtml}
+        <div style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;">
+            <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px;">
+                <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-right:2px;">Parciales:</span>
+                ${chipsHtml}
+            </div>
+            ${totalBadgeHtml ? `<div>${totalBadgeHtml}</div>` : ''}
         </div>`;
     }
 
