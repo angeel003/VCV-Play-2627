@@ -367,59 +367,81 @@ window.renderCarteleraHTML = function(data) {
                             <span style="font-size: 0.75rem; color: var(--text-muted);">Pásate por la pestaña <b>¡Únete!</b> para solicitar tu cuenta gratuita.</span>
                         </div>`;
                     } else {
-                        inputsControlHtml = `
-                        <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
-                            <div id="summary-text-${eq.id_partido}">
-                            ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
-                            </div>
-                        </div>
+                        // Comprobar estrictamente si el plazo ya ha vencido antes de pintar ningún botón
+                        let isPlazoFinalizado = Boolean((eq.timestamp && eq.timestamp > 0 && nowMs >= eq.timestamp) || eq.estado === 'CERRADO' || eq.estado === 'FINALIZADO');
 
-                        <!-- HIDDEN INPUTS -->
-                        <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
-                        <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
-                        <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
-
-                        <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
-                            <div class="sets-grid-label-v2">
-                              <span>Resultado</span>
+                        if (isPlazoFinalizado) {
+                            if (isPredicted) {
+                                inputsControlHtml = `
+                                <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="display:block; margin-bottom: 8px;">
+                                    <div id="summary-text-${eq.id_partido}">
+                                        <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Registrada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>
+                                    </div>
+                                </div>
+                                <div style="text-align:center; padding: 7px 10px; background: rgba(231,76,60,0.08); border-radius: 8px; border: 1px dashed rgba(231,76,60,0.3); font-size: 0.75rem; font-weight: 800; color: var(--danger); margin-top: 4px;">
+                                    🔒 Plazo de modificación cerrado
+                                </div>`;
+                            } else {
+                                inputsControlHtml = `
+                                <div style="text-align:center; margin-top:10px; padding:12px; background:var(--bg-input); border-radius:12px; border:1px dashed var(--border-color);">
+                                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight:bold;">🔒 El plazo para predecir este partido está cerrado.</span>
+                                </div>`;
+                            }
+                        } else {
+                            inputsControlHtml = `
+                            <div class="summary-v2" id="summary-v2-${eq.id_partido}" style="${isPredicted ? 'display:block;' : 'display:none;'} margin-bottom: 12px;">
+                                <div id="summary-text-${eq.id_partido}">
+                                ${isPredicted ? `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${savedLocalName} ${formattedSets} ${savedVisitName} ${formStr}</strong></span></div>` : ``}
+                                </div>
                             </div>
-                            <div class="sets-selector-grid-v2">
-                                <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
-                                <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
-                                <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
-                                <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
-                                <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
-                                <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
-                            </div>
 
-                            <div class="points-diff-container-v2">
-                              <div class="points-header-v2">
-                                <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
-                              </div>
-                              <div class="points-controls-row-v2">
-                                <div class="stepper-container-v2">
-                                  <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
-                                  <div class="stepper-value-v2">
-                                    <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
-                                    <small>PTS</small>
+                            <!-- HIDDEN INPUTS -->
+                            <input type="hidden" id="e${eq.id_partido}_sets" value="${pSets}">
+                            <input type="hidden" id="e${eq.id_partido}_puntos" value="${pPts || '14'}">
+                            <input type="hidden" id="e${eq.id_partido}_signo" value="${pSig}">
+
+                            <div class="inputs-eq" id="inputs_eq_${eq.id_partido}" style="${isPredicted ? 'display:none;' : 'display:block;'}">
+                                <div class="sets-grid-label-v2">
+                                  <span>Resultado</span>
+                                </div>
+                                <div class="sets-selector-grid-v2">
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-0' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-0', '${eq.id_partido}')">3-0</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-1' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-1', '${eq.id_partido}')">3-1</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '3-2' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '3-2', '${eq.id_partido}')">3-2</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '2-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '2-3', '${eq.id_partido}')">2-3</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '1-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '1-3', '${eq.id_partido}')">1-3</button>
+                                    <button type="button" class="set-option-btn-v2 ${pSets === '0-3' ? 'selected' : ''}" onclick="seleccionarSetV2(this, '0-3', '${eq.id_partido}')">0-3</button>
+                                </div>
+
+                                <div class="points-diff-container-v2">
+                                  <div class="points-header-v2">
+                                    <span style="font-size: 0.75rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display:flex; align-items:center; justify-content:center; gap:5px; letter-spacing:0.5px;">DIFERENCIA DE PUNTOS <i data-lucide="help-circle" style="width:14px; height:14px; cursor:pointer; color:var(--primary-color);" onclick="document.getElementById(\'guiaModal\').style.display=\'flex\'"></i></span>
                                   </div>
-                                  <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
+                                  <div class="points-controls-row-v2">
+                                    <div class="stepper-container-v2">
+                                      <button type="button" class="btn-step-v2" id="btn-step-minus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', -1)">-</button>
+                                      <div class="stepper-value-v2">
+                                        <input type="number" id="val-v2-${eq.id_partido}" value="${pPts || '14'}" oninput="sincronizarPuntosV2(\'${eq.id_partido}\')" style="background:transparent; border:none; text-align:center; font-size:1.3rem; font-weight:900; color:var(--secondary-color); width:46px; max-width:46px; outline:none; -moz-appearance:textfield; padding:0; margin:0; height:30px;">
+                                        <small>PTS</small>
+                                      </div>
+                                      <button type="button" class="btn-step-v2" id="btn-step-plus-${eq.id_partido}" onclick="cambiarPuntosV2('${eq.id_partido}', 1)">+</button>
+                                    </div>
+                                    <div class="sign-selector-v2">
+                                      <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
+                                        <span style="font-size:0.7rem;">${localTeamName}</span>
+                                      </button>
+                                      <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
+                                        <span style="font-size:0.7rem;">${visitTeamName}</span>
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div class="sign-selector-v2">
-                                  <button type="button" class="sign-btn-v2 sign-plus-v2 ${pSig === 'A favor' ? 'selected' : ''}" id="signo-plus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, true)">
-                                    <span style="font-size:0.7rem;">${localTeamName}</span>
-                                  </button>
-                                  <button type="button" class="sign-btn-v2 sign-minus-v2 ${pSig === 'En contra' ? 'selected' : ''}" id="signo-minus-v2-${eq.id_partido}" onclick="cambiarSignoV2('${eq.id_partido}', this, false)">
-                                    <span style="font-size:0.7rem;">${visitTeamName}</span>
-                                  </button>
-                                </div>
-                              </div>
                             </div>
-                        </div>
-                        
-                        <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
-                            ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
-                        </button>`;
+                            
+                            <button type="button" id="btn-save-${eq.id_partido}" onclick="handleSaveOrModifyV2('${eq.id_partido}')" style="width:100%; margin-top:10px; padding:12px; border-radius:10px; ${isPredicted ? "background:transparent; color:var(--text-muted); font-weight:800; border:1px solid var(--border-color);" : "background:var(--secondary-color); color:#000; font-weight:800; border:none;"} cursor:pointer; transition: all 0.2s;">
+                                ${isPredicted ? "Modificar Predicción" : "Guardar Predicción"}
+                            </button>`;
+                        }
                     }
 
                     htmlPartidos += `
@@ -612,7 +634,7 @@ window.renderCarteleraHTML = function(data) {
 
 function iniciarRelojes() {
     if(intervalCountdown) clearInterval(intervalCountdown);
-    intervalCountdown = setInterval(() => {
+    const actualizarTodosLosRelojes = () => {
         const now = new Date().getTime();
 
         // Actualizar cuentas atrás de publicación del MVP VALCYL
@@ -730,7 +752,9 @@ function iniciarRelojes() {
                 }
             }
         });
-    }, 1000);
+    };
+    actualizarTodosLosRelojes(); // Ejecución síncrona inmediata (frame 0) para evitar parpadeos
+    intervalCountdown = setInterval(actualizarTodosLosRelojes, 1000);
 }
 
 function iniciarRelojTotales() {

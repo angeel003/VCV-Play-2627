@@ -214,6 +214,16 @@
     });
 
     function handleSaveOrModifyV2(idPart) {
+        // Bloqueo preventivo de seguridad: comprobar si el plazo está vencido
+        const matchObj = (window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos.find(m => m.id_partido === idPart) : null;
+        if (matchObj) {
+            const nowTs = Date.now();
+            const vencido = Boolean((matchObj.timestamp && matchObj.timestamp > 0 && nowTs >= matchObj.timestamp) || matchObj.estado === 'CERRADO' || matchObj.estado === 'FINALIZADO');
+            if (vencido) {
+                alert("🔒 El plazo para realizar o modificar predicciones de este partido ya ha finalizado.");
+                return;
+            }
+        }
         const card = document.getElementById('card-v2-' + idPart);
         const btn = document.getElementById('btn-save-' + idPart);
         const summary = document.getElementById('summary-v2-' + idPart);
