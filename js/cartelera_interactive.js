@@ -2500,6 +2500,16 @@ window.abrirModalCompartirPartido = function(idPart) {
     window.dibujarTarjetaCompartir();
 };
 
+window.abrirModalCompartirCalendario = function(idPart) {
+    window.currentShareMode = 'calendar';
+    window.currentShareMatchId = idPart;
+    const ligaSelector = document.getElementById('shareLigaSelectorContainer');
+    if (ligaSelector) ligaSelector.style.display = 'none';
+    const modal = document.getElementById('shareCardModal');
+    if (modal) modal.style.display = 'flex';
+    window.dibujarTarjetaCompartir();
+};
+
 window.abrirModalCompartirMVP = function(idPart) {
     window.currentShareMode = 'mvp';
     window.currentShareMatchId = idPart;
@@ -2648,6 +2658,8 @@ window.dibujarTarjetaCompartir = async function() {
         await dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data);
     } else if (window.currentShareMode === 'mvp') {
         await dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data);
+    } else if (window.currentShareMode === 'calendar') {
+        await dibujarTarjetaCalendarioCanvas(ctx, W, H, data);
     } else {
         await dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data);
     }
@@ -3133,6 +3145,17 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     let match = null;
     if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
     if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    // Si no se encuentra en cartelera/calendario o se abrió desde Historial, buscar en globalHistorialData
+    let histMatch = null;
+    if (typeof globalHistorialData !== 'undefined' && Array.isArray(globalHistorialData)) {
+        for (const r of globalHistorialData) {
+            if (Array.isArray(r.partidos)) {
+                const found = r.partidos.find(p => p.id_partido === idPart);
+                if (found) { histMatch = found; break; }
+            }
+        }
+    }
+    if (!match && histMatch) match = histMatch;
     if (!match) return;
 
     const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
@@ -3153,7 +3176,15 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const yaJugado = Boolean(hasOficialSets || match.estado === 'FINALIZADO' || (match.estado === 'CERRADO' && hasOficialSets));
     const isPastDeadline = Boolean(match.timestamp && (nowMs >= match.timestamp));
     const isCerrado = Boolean(yaJugado || match.estado === 'CERRADO' || match.estado === 'BLOQUEADO' || isPastDeadline);
-    const pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : ((data.mis_predicciones && data.mis_predicciones[idPart]) ? data.mis_predicciones[idPart] : null);
+    let pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) ? data.predicciones_usuario[idPart] : ((data.mis_predicciones && data.mis_predicciones[idPart]) ? data.mis_predicciones[idPart] : null);
+    if (!pUser && histMatch && histMatch.sets) {
+        pUser = {
+            sets: histMatch.sets,
+            puntos: histMatch.puntos,
+            signo: histMatch.signo,
+            puntos_partido: histMatch.puntos_partido
+        };
+    }
 
     // --- BARRA SUPERIOR DE METADATOS (Pills redondeadas en una fila equilibrada) ---
     // Badge 1: Categoría
@@ -3520,6 +3551,359 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     }
 }
 
+
+async function dibujarTarjetaCalendarioCanvas(ctx, W, H, data) {
+    const idPart = window.currentShareMatchId;
+    let match = null;
+    if (data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    if (!match && data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+    if (!match && typeof globalHistorialData !== 'undefined' && Array.isArray(globalHistorialData)) {
+        for (const r of globalHistorialData) {
+            if (Array.isArray(r.partidos)) {
+                const found = r.partidos.find(p => p.id_partido === idPart);
+                if (found) { match = found; break; }
+            }
+        }
+    }
+    if (!match) return;
+
+    const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
+    const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
+    const catShort = window.getShortCategory ? window.getShortCategory(match.categoria) : (match.categoria || 'VOLEIBOL').toUpperCase();
+    const jNum = match.jornada_eq || match.ronda_global || '-';
+
+    const safeLoc = locName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const safeVis = visName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+
+    const [imgLoc, imgVis] = await Promise.all([
+        cargarImagenCanvas(`files/images/escudos/${safeLoc}.webp?v=20261108_v3`),
+        cargarImagenCanvas(`files/images/escudos/${safeVis}.webp?v=20261108_v3`)
+    ]);
+
+    const hasOficialSets = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+    const yaJugado = Boolean(hasOficialSets || match.estado === 'FINALIZADO');
+
+    let setsL = 0;
+    let setsV = 0;
+    if (hasOficialSets && String(match.oficial_sets).includes('-')) {
+        const parts = String(match.oficial_sets).split('-');
+        setsL = parseInt(parts[0]) || 0;
+        setsV = parseInt(parts[1]) || 0;
+    }
+    const localGana = setsL > setsV;
+    const visitGana = setsV > setsL;
+
+    const misEquipos = (data.mis_equipos_siguiendo && Array.isArray(data.mis_equipos_siguiendo) && data.mis_equipos_siguiendo.length > 0)
+        ? data.mis_equipos_siguiendo
+        : ['Universidad de Valladolid VCV', 'VALCYL VCV', 'Valladolid CV Vacceas', 'VCV Maria Molina', 'VCV Meseta'];
+    const isDerby = Boolean(match.es_derby || (misEquipos.includes(match.equipo_local) && misEquipos.includes(match.rival)));
+    const isVcvLocal = (match.ubicacion === 'LOCAL');
+    const isVcvWin = (isVcvLocal && localGana) || (!isVcvLocal && visitGana);
+
+    const hasMvp = Boolean(match.mvp_oficial && String(match.mvp_oficial).trim() !== '');
+
+    // Dimensiones y marco de la tarjeta
+    const posterX = 70;
+    const posterW = W - 140; // 940px
+    const posterY = hasMvp ? 195 : 225;
+    const posterH = hasMvp ? 775 : 680;
+
+    // Fondo Glassmorphism
+    const cardGrad = ctx.createLinearGradient(0, posterY, 0, posterY + posterH);
+    cardGrad.addColorStop(0, 'rgba(39, 19, 48, 0.90)');
+    cardGrad.addColorStop(1, 'rgba(18, 8, 24, 0.98)');
+    ctx.fillStyle = cardGrad;
+    ctx.strokeStyle = isDerby ? 'rgba(212, 175, 55, 0.7)' : (isVcvWin ? 'rgba(46, 204, 113, 0.6)' : 'rgba(212, 175, 55, 0.4)');
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.roundRect(posterX, posterY, posterW, posterH, 26);
+    ctx.fill(); ctx.stroke();
+
+    // 1. MICRO-FILA 1 (Categoría a la izquierda, Fecha a la derecha)
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.roundRect(posterX + 25, posterY + 22, 230, 42, 10);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#d4af37';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, catShort, posterX + 140, posterY + 50, 210, 19, '900 "Space Grotesk", sans-serif', 13);
+
+    const fechaStr = window.formatMatchDate ? window.formatMatchDate(match.timestamp) : '';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'right';
+    ctx.font = '700 22px sans-serif';
+    ctx.fillText('📅 ' + fechaStr, posterX + posterW - 25, posterY + 50);
+
+    // 2. MICRO-FILA 2 (Badge resultado/derby a la izquierda, Pabellón a la derecha)
+    const micro2Y = posterY + 84;
+    let outcomeText = '';
+    let outcomeBg = '';
+    let outcomeBorder = '';
+    let outcomeColor = '';
+
+    if (yaJugado) {
+        if (isDerby) {
+            let winAbrev = localGana ? (match.abrev_local || locName.substring(0,3)).toUpperCase() : (visitGana ? (match.abrev_rival || visName.substring(0,3)).toUpperCase() : '');
+            outcomeText = winAbrev ? `🏆 GANA ${winAbrev}` : '⚡ DERBY';
+            outcomeBg = 'rgba(212, 175, 55, 0.18)';
+            outcomeBorder = '#d4af37';
+            outcomeColor = '#f3ce5e';
+        } else if (isVcvWin) {
+            outcomeText = '✓ VICTORIA';
+            outcomeBg = 'rgba(46, 204, 113, 0.18)';
+            outcomeBorder = '#2ecc71';
+            outcomeColor = '#2ecc71';
+        } else {
+            outcomeText = 'DERROTA';
+            outcomeBg = 'rgba(231, 76, 60, 0.18)';
+            outcomeBorder = '#e74c3c';
+            outcomeColor = '#e74c3c';
+        }
+    } else if (isDerby) {
+        outcomeText = '⚡ DERBY';
+        outcomeBg = 'rgba(212, 175, 55, 0.18)';
+        outcomeBorder = '#d4af37';
+        outcomeColor = '#f3ce5e';
+    }
+
+    if (outcomeText) {
+        ctx.fillStyle = outcomeBg;
+        ctx.strokeStyle = outcomeBorder;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(posterX + 25, micro2Y, 150, 34, 8);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = outcomeColor;
+        ctx.textAlign = 'center';
+        ctx.font = '900 16px sans-serif';
+        ctx.fillText(outcomeText, posterX + 100, micro2Y + 23);
+    }
+
+    const cleanPab = window.cleanPabellon ? window.cleanPabellon(match.pabellon) : (match.pabellon || '');
+    if (cleanPab) {
+        ctx.fillStyle = '#b7a4be';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, '📍 ' + cleanPab, posterX + posterW - 25, micro2Y + 23, 550, 19, '700 sans-serif', 13);
+    }
+
+    // Línea separadora sutil
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(posterX + 25, posterY + 132);
+    ctx.lineTo(posterX + posterW - 25, posterY + 132);
+    ctx.stroke();
+
+    // 3. SECCIÓN DE EQUIPOS Y MARCADOR (Sin botón de streaming ni etiqueta FINAL)
+    const teamsAreaY = posterY + 155;
+    const locCenter = posterX + 200;
+    const visCenter = posterX + posterW - 200;
+    const midX = W / 2;
+
+    // Escudo y Nombre Local
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.beginPath(); ctx.arc(locCenter, teamsAreaY + 80, 85, 0, Math.PI * 2); ctx.fill();
+    if (imgLoc) {
+        drawImageContain(ctx, imgLoc, locCenter - 75, teamsAreaY + 5, 150, 150);
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, locName, locCenter, teamsAreaY + 195, 300, 26, localGana ? '900 sans-serif' : '700 sans-serif', 16);
+
+    ctx.fillStyle = 'rgba(46, 204, 113, 0.15)';
+    ctx.strokeStyle = '#2ecc71';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(locCenter - 55, teamsAreaY + 215, 110, 30, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2ecc71';
+    ctx.font = '900 15px sans-serif';
+    ctx.fillText('LOCAL', locCenter, teamsAreaY + 235);
+
+    // Escudo y Nombre Visitante
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.beginPath(); ctx.arc(visCenter, teamsAreaY + 80, 85, 0, Math.PI * 2); ctx.fill();
+    if (imgVis) {
+        drawImageContain(ctx, imgVis, visCenter - 75, teamsAreaY + 5, 150, 150);
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, visName, visCenter, teamsAreaY + 195, 300, 26, visitGana ? '900 sans-serif' : '700 sans-serif', 16);
+
+    ctx.fillStyle = 'rgba(183, 164, 190, 0.15)';
+    ctx.strokeStyle = '#b7a4be';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(visCenter - 65, teamsAreaY + 215, 130, 30, 8);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#b7a4be';
+    ctx.font = '900 15px sans-serif';
+    ctx.fillText('VISITANTE', visCenter, teamsAreaY + 235);
+
+    // Centro (Jornada y Marcador / VS)
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '800 20px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('JORNADA ' + jNum, midX, teamsAreaY + 35);
+
+    if (yaJugado) {
+        // Marcador oficial limpio (sin "FINAL")
+        ctx.font = '900 88px "Space Grotesk", sans-serif';
+        ctx.fillStyle = localGana ? '#ffd700' : '#b7a4be';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(setsL), midX - 25, teamsAreaY + 130);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.textAlign = 'center';
+        ctx.font = '800 50px sans-serif';
+        ctx.fillText('-', midX, teamsAreaY + 120);
+
+        ctx.fillStyle = visitGana ? '#ffd700' : '#b7a4be';
+        ctx.textAlign = 'left';
+        ctx.fillText(String(setsV), midX + 25, teamsAreaY + 130);
+    } else {
+        ctx.fillStyle = '#d4af37';
+        ctx.font = '900 72px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VS', midX, teamsAreaY + 125);
+    }
+
+    // 4. PARCIALES Y TOTAL DE PUNTOS
+    let nextBlockY = teamsAreaY + 265;
+    if (yaJugado && match.oficial_parciales) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(posterX + 50, nextBlockY);
+        ctx.lineTo(posterX + posterW - 50, nextBlockY);
+        ctx.stroke();
+
+        const chipsRaw = String(match.oficial_parciales).split(/\s*,\s*|\s*;\s*/);
+        let totL = 0, totV = 0;
+        const validSets = [];
+        chipsRaw.forEach(cp => {
+            const p = cp.trim().split('-');
+            if (p.length === 2) {
+                const pL = parseInt(p[0]) || 0;
+                const pV = parseInt(p[1]) || 0;
+                totL += pL; totV += pV;
+                validSets.push({ l: pL, v: pV, text: `${pL}-${pV}` });
+            }
+        });
+
+        if (validSets.length > 0) {
+            const chipW = 90;
+            const chipH = 34;
+            const chipGap = 12;
+            const totalChipsW = validSets.length * chipW + (validSets.length - 1) * chipGap;
+            let startChipX = midX - (totalChipsW / 2);
+
+            validSets.forEach(setObj => {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.roundRect(startChipX, nextBlockY + 15, chipW, chipH, 8);
+                ctx.fill(); ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.font = '800 16px sans-serif';
+                ctx.fillStyle = setObj.l > setObj.v ? '#ffd700' : '#ffffff';
+                ctx.fillText(setObj.text, startChipX + (chipW / 2), nextBlockY + 38);
+
+                startChipX += chipW + chipGap;
+            });
+
+            // Badge Total Puntos
+            const diffOficial = Math.abs(totL - totV);
+            let ganadorAbrev = totL > totV ? (match.abrev_local || locName.substring(0,3)).toUpperCase() : (totV > totL ? (match.abrev_rival || visName.substring(0,3)).toUpperCase() : '');
+            let difLabel = diffOficial === 0 ? 'Empate' : `+${diffOficial}${ganadorAbrev ? ' ' + ganadorAbrev : ''}`;
+
+            const badgeTotalTxt = `TOTAL PUNTOS:  ${totL} - ${totV}  (${difLabel})`;
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+            ctx.lineWidth = 1.5;
+            const badgeW = 430;
+            const badgeH = 36;
+            ctx.beginPath();
+            ctx.roundRect(midX - (badgeW / 2), nextBlockY + 62, badgeW, badgeH, 10);
+            ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#f3ce5e';
+            ctx.textAlign = 'center';
+            ctx.font = '900 16px "Space Grotesk", sans-serif';
+            ctx.fillText(badgeTotalTxt, midX, nextBlockY + 86);
+
+            nextBlockY += 115;
+        }
+    }
+
+    // 5. BLOQUE MVP VALCYL
+    if (hasMvp) {
+        const oInfo = window.parseCandInfo ? window.parseCandInfo(match.mvp_oficial) : { apodo: match.mvp_oficial };
+        const mvpBoxW = posterW - 80;
+        const mvpBoxH = 100;
+        const mvpBoxX = midX - (mvpBoxW / 2);
+        const mvpBoxY = nextBlockY + 10;
+
+        const gradMvp = ctx.createLinearGradient(mvpBoxX, mvpBoxY, mvpBoxX + mvpBoxW, mvpBoxY + mvpBoxH);
+        gradMvp.addColorStop(0, 'rgba(212, 175, 55, 0.18)');
+        gradMvp.addColorStop(1, 'rgba(106, 44, 112, 0.3)');
+        ctx.fillStyle = gradMvp;
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(mvpBoxX, mvpBoxY, mvpBoxW, mvpBoxH, 16);
+        ctx.fill(); ctx.stroke();
+
+        const photoSize = 76;
+        const photoX = mvpBoxX + 16;
+        const photoY = mvpBoxY + 12;
+        let mvpImg = null;
+        if (oInfo.photoSrc) {
+            mvpImg = await cargarImagenCanvas(oInfo.photoSrc);
+            if (!mvpImg && oInfo.dorsal) {
+                mvpImg = await cargarImagenCanvas(`files/images/jugadores/dorsal_${oInfo.dorsal}.jpeg`);
+            }
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(photoX, photoY, photoSize, photoSize, 12);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.2)';
+        ctx.fill();
+        if (mvpImg) {
+            drawImageContain(ctx, mvpImg, photoX, photoY, photoSize, photoSize);
+        } else {
+            ctx.fillStyle = '#ffd700';
+            ctx.font = '900 32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(oInfo.initials || '⭐', photoX + (photoSize / 2), photoY + 52);
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(photoX, photoY, photoSize, photoSize, 12);
+        ctx.stroke();
+
+        const textX = photoX + photoSize + 20;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#ffd700';
+        ctx.font = '900 18px "Space Grotesk", sans-serif';
+        let mvpTitle = '👑 MVP VALCYL' + (oInfo.posicion ? ` · ${oInfo.posicion}` : '');
+        ctx.fillText(mvpTitle, textX, mvpBoxY + 38);
+
+        ctx.fillStyle = '#ffffff';
+        let fullMvpName = (oInfo.dorsal ? `#${oInfo.dorsal} ` : '') + (oInfo.nombre || oInfo.apodo || match.mvp_oficial);
+        drawTextFitted(ctx, fullMvpName, textX, mvpBoxY + 74, mvpBoxW - photoSize - 50, 26, '900 sans-serif', 18);
+    }
+}
+
 async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     const liga = window.currentShareLiga || (data.ligas ? data.ligas[0] : '');
     const ranking = (data.clasificaciones && data.clasificaciones[liga]) ? data.clasificaciones[liga] : [];
@@ -3772,6 +4156,27 @@ window.ejecutarCompartirTarjeta = async function() {
             shareTitle = `${locName} vs ${visName} | VCV Play`;
         } else {
             shareText = `🏐 ¡Echa un vistazo a mi pronóstico en VCV Play! Únete a la liga y compite con nosotros:`;
+        }
+    } else if (window.currentShareMode === 'calendar') {
+        const idPart = window.currentShareMatchId;
+        let match = null;
+        if (data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+        if (!match && data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+        if (match) {
+            const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
+            const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
+            const hasOficialSets = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+            if (hasOficialSets) {
+                shareText = `🏐 Resultado oficial: ${locName} ${match.oficial_sets} ${visName}. ¡Sigue todo el voleibol de VCV en VCV Play!`;
+                shareTitle = `Resultado: ${locName} vs ${visName} | VCV Play`;
+            } else {
+                let fechaStr = window.formatMatchDate ? window.formatMatchDate(match.timestamp) : '';
+                shareText = `🏐 Próximo partido: ${locName} vs ${visName} (${fechaStr}). ¡Sigue al club en VCV Play!`;
+                shareTitle = `${locName} vs ${visName} | VCV Play`;
+            }
+        } else {
+            shareText = `🏐 ¡Sigue los partidos de Valladolid Club Voleibol en VCV Play!`;
+            shareTitle = `VCV Play`;
         }
     } else if (window.currentShareMode === 'mvp') {
         const idPart = window.currentShareMatchId;
