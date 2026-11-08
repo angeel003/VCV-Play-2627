@@ -688,21 +688,13 @@ function renderizarHistorial() {
             let cleanPab = window.cleanPabellon ? window.cleanPabellon(p.pabellon) : (p.pabellon || "");
             let infoPabellon = cleanPab ? `<div style="font-size:0.85rem; color:#777; margin-top:2px;">📍 ${cleanPab}</div>` : "";
             
-            // INSIGNIA DE CATEGORÍA Y BOTÓN COMPARTIR PARA EL HISTORIAL
+            // INSIGNIA DE CATEGORÍA PARA EL HISTORIAL
             let categoryHtml = getCategoryHTML(p.categoria);
-            let btnShareHist = `
-                <button type="button" onclick="window.abrirModalCompartirPartido('${p.id_partido}')" title="Compartir mi predicción" style="background:rgba(212,175,55,0.14); border:1px solid rgba(212,175,55,0.4); color:var(--secondary-color); border-radius:8px; padding:3px 8px; font-size:0.72rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:all 0.2s ease;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                    Compartir
-                </button>`;
 
             blockHtml += `
             <div class="card-match" style="margin-bottom:20px; font-size:0.95rem; border-bottom:1px dashed #ccc; padding-bottom:15px; padding-top: 10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <div>${categoryHtml}</div>
-                    ${btnShareHist}
-                </div>
-                <div style="font-weight:bold; color:#444; margin-bottom:6px; padding-right: 10px;">
+                ${categoryHtml}
+                <div style="font-weight:bold; color:#444; margin-bottom:6px; padding-right: 90px;">
                     🏐 ${eqName} vs ${rivalName}${infoJornadaEq}${infoLocFecha}
                     ${infoPabellon}
                 </div>
