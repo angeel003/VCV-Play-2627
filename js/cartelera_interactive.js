@@ -3357,16 +3357,11 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     // 5. SECCIÓN INFERIOR: PRONÓSTICO DEL JUGADOR
     const userBlockY = sepY + 25;
 
-    // Header del pronóstico: Icono + Título + Usuario
+    // Header del pronóstico: Icono + Título (el usuario se muestra exclusivamente arriba a la derecha)
     ctx.fillStyle = '#d4af37';
     ctx.font = '900 24px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('🎯 PRONÓSTICO REGISTRADO', 120, userBlockY + 20);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'right';
-    let matchUserHeader = '@' + uName + (nReal && nReal !== uName ? ' (' + nReal + ')' : '');
-    drawTextFitted(ctx, matchUserHeader, W - 120, userBlockY + 20, 380, 24, '800 sans-serif', 16);
+    ctx.textAlign = 'center';
+    ctx.fillText('🎯 PRONÓSTICO REGISTRADO', midX, userBlockY + 20);
 
     if (pUser && pUser.sets) {
         // Caja de Sets Pronosticados (Diseño tipo display)
