@@ -2616,9 +2616,255 @@ function pintarFondoEstadioCanvas(ctx, W, H) {
     ctx.restore();
 }
 
+
+// ==================================================================
+// RENDERIZADO DE ALTA CALIDAD MEDIANTE HTML2CANVAS (DOM REAL)
+// ==================================================================
+async function renderShareCardWithHtml2Canvas(mode, idPart) {
+    const canvas = document.getElementById('shareCardCanvas');
+    if (!canvas || typeof html2canvas !== 'function') return false;
+
+    const data = window.appData || {};
+    let match = null;
+    if (data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    if (!match && data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+    if (!match && typeof globalHistorialData !== 'undefined' && Array.isArray(globalHistorialData)) {
+        for (const r of globalHistorialData) {
+            if (Array.isArray(r.partidos)) {
+                const found = r.partidos.find(p => p.id_partido === idPart);
+                if (found) { match = found; break; }
+            }
+        }
+    }
+    if (!match) return false;
+
+    const hasOficialSets = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+    const yaJugado = Boolean(hasOficialSets || match.estado === 'FINALIZADO');
+
+    let cardHtml = '';
+    if (yaJugado) {
+        if (typeof window.renderMatchResultCardHtml === 'function') cardHtml = window.renderMatchResultCardHtml(match);
+        else if (typeof renderMatchResultCardHtml === 'function') cardHtml = renderMatchResultCardHtml(match);
+    } else {
+        if (typeof window.renderMatchCardHtml === 'function') cardHtml = window.renderMatchCardHtml(match);
+        else if (typeof renderMatchCardHtml === 'function') cardHtml = renderMatchCardHtml(match);
+    }
+    if (!cardHtml) return false;
+
+    const temp = document.createElement('div');
+    temp.innerHTML = cardHtml;
+    const cardEl = temp.firstElementChild;
+    if (!cardEl) return false;
+
+    cardEl.style.width = '440px';
+    cardEl.style.margin = '0';
+    cardEl.style.boxSizing = 'border-box';
+    cardEl.style.boxShadow = 'none';
+
+    // Eliminar botones no deseados en la imagen para compartir
+    cardEl.querySelectorAll('.btn-streaming-v2, button[onclick*="Compartir"], .porra-actions-v2, .reloj-partido').forEach(el => el.remove());
+    // Eliminar la píldora FINAL que pidió quitar el usuario
+    cardEl.querySelectorAll('span').forEach(sp => {
+        if (sp.textContent.trim() === 'FINAL') sp.remove();
+    });
+
+    // Si es modo predicción (match), añadir la cajita de pronóstico del usuario
+    if (mode === 'match') {
+        let pUser = (data.predicciones_usuario && data.predicciones_usuario[idPart]) 
+            ? data.predicciones_usuario[idPart] 
+            : ((data.mis_predicciones && data.mis_predicciones[idPart]) ? data.mis_predicciones[idPart] : null);
+
+        if (!pUser && typeof globalHistorialData !== 'undefined' && Array.isArray(globalHistorialData)) {
+            for (const r of globalHistorialData) {
+                if (Array.isArray(r.partidos)) {
+                    const found = r.partidos.find(p => p.id_partido === idPart);
+                    if (found && found.sets) {
+                        pUser = {
+                            sets: found.sets,
+                            puntos: found.puntos,
+                            signo: found.signo,
+                            puntos_partido: found.puntos_partido
+                        };
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (pUser && pUser.sets) {
+            const uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (data.usuario || 'Jugador');
+            let ptsConseguidos = null;
+            if (yaJugado) {
+                if (pUser.puntos_partido !== undefined && pUser.puntos_partido !== null) {
+                    ptsConseguidos = pUser.puntos_partido;
+                } else {
+                    let ptsGanador = (data.reglas && data.reglas.ganador) || 3;
+                    let ptsSets = (data.reglas && data.reglas.sets) || 5;
+                    let ptsDiffExacta = (data.reglas && data.reglas.diff_exacta) || 2;
+                    let maxDistancia = (data.reglas && data.reglas.max_dist) || 10;
+
+                    ptsConseguidos = 0;
+                    const oSets = (match.oficial_sets || '').split('-');
+                    const uSets = (pUser.sets || '').split('-');
+                    if (oSets.length === 2 && uSets.length === 2) {
+                        const oLocalWin = parseInt(oSets[0]) > parseInt(oSets[1]);
+                        const uLocalWin = parseInt(uSets[0]) > parseInt(uSets[1]);
+                        if (oLocalWin === uLocalWin) ptsConseguidos += ptsGanador;
+                        if (pUser.sets === match.oficial_sets) ptsConseguidos += ptsSets;
+                    }
+
+                    if (match.oficial_parciales) {
+                        let oDiff = 0;
+                        const setsP = match.oficial_parciales.split(',');
+                        for (const sp of setsP) {
+                            const nums = sp.split('-');
+                            if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+                        }
+                        let uDiff = parseInt(pUser.puntos) || 0;
+                        if (pUser.signo && pUser.signo.toLowerCase().includes('en contra')) uDiff = -uDiff;
+                        const dist = Math.abs(oDiff - uDiff);
+                        if (dist === 0) ptsConseguidos += ptsDiffExacta;
+                        else if (maxDistancia > 0 && dist < maxDistancia) {
+                            ptsConseguidos += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+                        }
+                    }
+                }
+            }
+
+            const predDiv = document.createElement('div');
+            predDiv.style.marginTop = '12px';
+            predDiv.style.padding = '10px 14px';
+            predDiv.style.borderRadius = '12px';
+            predDiv.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(106, 44, 112, 0.18))';
+            predDiv.style.border = '1px solid rgba(212, 175, 55, 0.35)';
+            predDiv.style.display = 'flex';
+            predDiv.style.justifyContent = 'space-between';
+            predDiv.style.alignItems = 'center';
+            predDiv.style.boxSizing = 'border-box';
+
+            let signoTxt = pUser.signo ? ` (${pUser.signo})` : '';
+            let diffTxt = pUser.puntos !== undefined ? ` • Dif. Sets: ${pUser.puntos} pts${signoTxt}` : '';
+
+            let badgeHtml = '';
+            if (yaJugado && ptsConseguidos !== null) {
+                badgeHtml = `<div style="background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 0.85rem; white-space: nowrap;">+${ptsConseguidos} PTS</div>`;
+            } else {
+                badgeHtml = `<div style="background: rgba(212, 175, 55, 0.2); border: 1px solid #d4af37; color: #ffd700; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; white-space: nowrap;">REGISTRADO</div>`;
+            }
+
+            predDiv.innerHTML = `
+                <div>
+                    <div style="font-size: 0.7rem; font-weight: 800; color: #d4af37; text-transform: uppercase; letter-spacing: 0.5px;">
+                        🎯 PRONÓSTICO DE @${uName}
+                    </div>
+                    <div style="font-size: 1.05rem; font-weight: 900; color: #ffffff; margin-top: 2px;">
+                        Sets: <span style="color: #ffd700;">${pUser.sets}</span> <span style="font-size: 0.72rem; font-weight: 700; color: #b7a4be;">${diffTxt}</span>
+                    </div>
+                </div>
+                ${badgeHtml}
+            `;
+            cardEl.appendChild(predDiv);
+        }
+    }
+
+    // Marco exterior VCV PLAY con proporción estética idéntica al diseño de la app
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '-9999px';
+    wrapper.style.top = '-9999px';
+    wrapper.style.width = '476px';
+    wrapper.style.padding = '18px';
+    wrapper.style.borderRadius = '22px';
+    wrapper.style.background = 'linear-gradient(135deg, #1e0728 0%, #0c0211 100%)';
+    wrapper.style.border = '2px solid rgba(212, 175, 55, 0.4)';
+    wrapper.style.boxShadow = '0 12px 40px rgba(0,0,0,0.8)';
+    wrapper.style.fontFamily = "'Space Grotesk', system-ui, -apple-system, sans-serif";
+
+    let badgeTitle = (mode === 'match') 
+        ? (yaJugado ? 'MI PRONÓSTICO • FINAL' : 'MI PRONÓSTICO') 
+        : (yaJugado ? 'RESULTADO OFICIAL' : 'PRÓXIMO PARTIDO');
+
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '12px';
+    header.style.paddingBottom = '10px';
+    header.style.borderBottom = '1px solid rgba(212, 175, 55, 0.3)';
+    header.innerHTML = `
+        <div>
+            <div style="font-size: 1.15rem; font-weight: 900; color: #d4af37; letter-spacing: 1px;">VCV PLAY</div>
+            <div style="font-size: 0.68rem; font-weight: 700; color: #b7a4be; letter-spacing: 0.5px;">VALLADOLID CLUB VOLEIBOL</div>
+        </div>
+        <div style="font-size: 0.72rem; font-weight: 800; color: #f3ce5e; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3); padding: 3px 8px; border-radius: 6px;">
+            ${badgeTitle}
+        </div>
+    `;
+    wrapper.appendChild(header);
+    wrapper.appendChild(cardEl);
+
+    const footer = document.createElement('div');
+    footer.style.textAlign = 'center';
+    footer.style.marginTop = '12px';
+    footer.style.fontSize = '0.75rem';
+    footer.style.fontWeight = '700';
+    footer.style.color = 'rgba(255,255,255,0.5)';
+    footer.innerHTML = (mode === 'match')
+        ? '🏐 Pronostica gratis y compite en el ranking en <b>vcvplay.com</b>'
+        : '🏐 Consulta todos los partidos y clasificaciones en <b>vcvplay.com</b>';
+    wrapper.appendChild(footer);
+
+    document.body.appendChild(wrapper);
+
+    // Asegurar carga de imágenes si hubiere alguna pendiente
+    const imgs = Array.from(wrapper.querySelectorAll('img'));
+    await Promise.all(imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(res => { img.onload = res; img.onerror = res; setTimeout(res, 300); });
+    }));
+
+    try {
+        const renderedCanvas = await html2canvas(wrapper, {
+            scale: 2,
+            backgroundColor: '#0c0211',
+            useCORS: true,
+            logging: false
+        });
+        document.body.removeChild(wrapper);
+
+        canvas.width = renderedCanvas.width;
+        canvas.height = renderedCanvas.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(renderedCanvas, 0, 0);
+        return true;
+    } catch (err) {
+        console.error('Error generating card share with html2canvas:', err);
+        if (wrapper.parentNode) document.body.removeChild(wrapper);
+        return false;
+    }
+}
+
 window.dibujarTarjetaCompartir = async function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
+    const shareBtn = document.getElementById('btnShareNative');
+    if (shareBtn) {
+        shareBtn.disabled = true;
+        shareBtn.style.opacity = '0.6';
+    }
+    try {
+        if (window.currentShareMode === 'calendar' || window.currentShareMode === 'match') {
+            if (typeof html2canvas === 'function') {
+                const ok = await renderShareCardWithHtml2Canvas(window.currentShareMode, window.currentShareMatchId);
+                if (ok) return;
+            }
+        }
+    } finally {
+        if (shareBtn) {
+            shareBtn.disabled = false;
+            shareBtn.style.opacity = '1';
+        }
+    }
     const ctx = canvas.getContext('2d');
 
     const W = 1080;

@@ -843,3 +843,6 @@ if (document.readyState === 'loading') {
 } else {
     setupCalendarListeners();
 }
+
+window.renderMatchCardHtml = renderMatchCardHtml;
+window.renderMatchResultCardHtml = renderMatchResultCardHtml;
