@@ -313,11 +313,6 @@ function renderMatchCardHtml(eq) {
     let localRoleHtml = `<span class="team-role-v2" style="color: var(--success); font-weight:800; display:flex; align-items:center; gap:4px;">🏠 LOCAL</span>`;
     let visitRoleHtml = `<span class="team-role-v2" style="color: var(--text-muted); font-weight:800; display:flex; align-items:center; gap:4px;">✈️ VISITANTE</span>`;
 
-    let btnShareHtml = `
-    <button type="button" onclick="window.abrirModalCompartirCalendario('${eq.id_partido}')" title="Compartir este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-    </button>`;
-
     let headerStripHtml = `
     <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
@@ -325,7 +320,6 @@ function renderMatchCardHtml(eq) {
                 ${catLogoHtml}
             </div>
             <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; margin-left:auto; flex-shrink:0;">
-                ${btnShareHtml}
                 <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap;">
                     <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
                 </div>
