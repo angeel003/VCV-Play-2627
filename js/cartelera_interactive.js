@@ -2628,6 +2628,29 @@ window.dibujarTarjetaCompartir = async function() {
     ctx.font = '700 22px sans-serif';
     ctx.fillText('VALLADOLID CLUB VOLEIBOL • 2026/2027', 70, 130);
 
+    const data = window.appData || {};
+    let uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || (data.usuario || ''));
+    if (!uName || uName === 'Invitado') {
+        try {
+            const ses = JSON.parse(localStorage.getItem('vcv_saved_session') || '{}');
+            if (ses.usuario) uName = ses.usuario;
+        } catch(e) {}
+    }
+    if (!uName) uName = 'Jugador';
+    const nReal = data.nombre_real || (uName !== 'Jugador' && uName !== 'Invitado' ? uName : '');
+
+    // Usuario visible en la cabecera superior derecha
+    if (uName && uName !== 'Invitado' && uName !== 'Jugador') {
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, '@' + uName, W - 70, 95, 380, 28, '800 "Space Grotesk", sans-serif', 18);
+        if (nReal && nReal !== uName) {
+            ctx.fillStyle = '#b7a4be';
+            ctx.textAlign = 'right';
+            drawTextFitted(ctx, nReal, W - 70, 126, 380, 20, '700 sans-serif', 15);
+        }
+    }
+
     // Línea separadora
     const lineGrad = ctx.createLinearGradient(70, 0, W - 70, 0);
     lineGrad.addColorStop(0, 'rgba(212, 175, 55, 0.8)');
@@ -2639,10 +2662,6 @@ window.dibujarTarjetaCompartir = async function() {
     ctx.moveTo(70, 155);
     ctx.lineTo(W - 70, 155);
     ctx.stroke();
-
-    const data = window.appData || {};
-    const uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (data.usuario || 'Jugador');
-    const nReal = data.nombre_real || uName;
 
     if (window.currentShareMode === 'match') {
         await dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data);
