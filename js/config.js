@@ -498,19 +498,51 @@ window.getShortCategory = function(cat) {
 window.cleanPabellon = function(pab) {
     if (!pab) return "";
     let s = String(pab).trim();
-    if (s.toLowerCase() === 'por definir' || s.toLowerCase() === 'pendiente') return "";
+    if (!s || s.toLowerCase() === 'por definir' || s.toLowerCase() === 'pendiente') return "";
     s = s.replace(/\s*\([^)]*(?:c\/|calle|avda|avenida|carretera|s\/n|\d{5})[^)]*\)/gi, '');
     s = s.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
-    if (s.length > 25 && s === s.toUpperCase()) {
-        s = s.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
-        s = s.replace(/\bUbu\b/g, 'UBU').replace(/\bVcv\b/g, 'VCV').replace(/\bCdm\b/g, 'CDM').replace(/\bCeip\b/g, 'CEIP');
+    
+    if (s === s.toUpperCase() && s.length > 2) {
+        const words = s.split(' ');
+        s = words.map((w, idx) => {
+            const wLow = w.toLowerCase();
+            if (idx > 0 && ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'en'].includes(wLow)) {
+                return wLow;
+            }
+            return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        }).join(' ');
     }
-    if (s.length > 26) {
+    
+    s = s.replace(/C\.?D\.?M\.?/gi, 'CDM')
+         .replace(/\bUbu\b/gi, 'UBU')
+         .replace(/\bVcv\b/gi, 'VCV')
+         .replace(/\bCeip\b/gi, 'CEIP')
+         .replace(/\bFcafd\b/gi, 'FCAFD')
+         .replace(/\bChv\d*\b/gi, 'CHV1995')
+         .replace(/\bSiglo Xxi\b/gi, 'Siglo XXI')
+         .replace(/\bFdez\b/gi, 'Fdez.')
+         .replace(/\bFdez\.\.?\b/g, 'Fdez.')
+         .replace(/\bMun\.\.?\b/g, 'Mun.')
+         .replace(/\bPol\.\.?\b/g, 'Pol.')
+         .replace(/\bPab\.\.?\b/g, 'Pab.');
+
+    if (s.length > 18) {
         s = s.replace(/Polideportivo Municipal/gi, 'Pol. Mun.')
              .replace(/Polideportivo/gi, 'Pol.')
              .replace(/Pabell[oó]n Municipal/gi, 'Pab. Mun.')
-             .replace(/Pabell[oó]n/gi, 'Pab.');
+             .replace(/Pabell[oó]n/gi, 'Pab.')
+             .replace(/Campus Deportivo/gi, 'Campus Dep.');
     }
     return s.trim();
+};
+
+window.formatMatchDate = function(ts) {
+    if (!ts || isNaN(Number(ts)) || Number(ts) <= 0) return "Fecha por confirmar";
+    const dt = new Date(Number(ts));
+    if (isNaN(dt.getTime())) return "Fecha por confirmar";
+    const diaRaw = dt.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    const hora = dt.getHours().toString().padStart(2, '0') + ':' + dt.getMinutes().toString().padStart(2, '0');
+    const dia = diaRaw.charAt(0).toUpperCase() + diaRaw.slice(1).replace('.', '');
+    return `${dia} · ${hora}`;
 };
 

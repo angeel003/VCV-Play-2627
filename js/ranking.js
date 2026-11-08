@@ -685,7 +685,8 @@ function renderizarHistorial() {
             let txtPorraSets = p.sets ? p.sets : `<i style="color:#999;">Sin predicción</i>`;
             let txtPorraPtos = p.sets ? `<span style="font-size:0.9rem; color:#555;">| ${p.puntos} pts (${p.signo})</span>` : "";
             
-            let infoPabellon = p.pabellon ? `<div style="font-size:0.85rem; color:#777; margin-top:2px;">📍 ${p.pabellon}</div>` : "";
+            let cleanPab = window.cleanPabellon ? window.cleanPabellon(p.pabellon) : (p.pabellon || "");
+            let infoPabellon = cleanPab ? `<div style="font-size:0.85rem; color:#777; margin-top:2px;">📍 ${cleanPab}</div>` : "";
             
             // INSIGNIA DE CATEGORÍA PARA EL HISTORIAL
             let categoryHtml = getCategoryHTML(p.categoria);

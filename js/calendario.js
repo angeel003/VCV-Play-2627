@@ -249,8 +249,7 @@ window.initCalendar = function() {
 // RENDERIZADO DE PARTIDO FUTURO (TARJETA)
 // ---------------------------------------------------
 function renderMatchCardHtml(eq) {
-    let dt = new Date(eq.timestamp);
-    let fechaFormateada = isNaN(dt) ? "Por confirmar" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+    let fechaFormateada = window.formatMatchDate ? window.formatMatchDate(eq.timestamp) : (eq.timestamp ? new Date(eq.timestamp).toLocaleString() : "Por confirmar");
     
     let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
     let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
@@ -364,9 +363,7 @@ function renderMatchCardHtml(eq) {
 // RENDERIZADO DE PARTIDO JUGADO (MARCADOR Y RESULTADO)
 // ---------------------------------------------------
 function renderMatchResultCardHtml(eq) {
-    let dt = new Date(eq.timestamp);
-    let fechaFormateada = isNaN(dt) ? "Fecha por confirmar" : `${dt.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
-    fechaFormateada = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    let fechaFormateada = window.formatMatchDate ? window.formatMatchDate(eq.timestamp) : (eq.timestamp ? new Date(eq.timestamp).toLocaleString() : "Fecha por confirmar");
 
     let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
     let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
@@ -671,8 +668,8 @@ window.renderResultados = function() {
 
     filtered.forEach(eq => {
         let dateLabel = "Fecha por confirmar";
-        if (eq.timestamp) {
-            let d = new Date(eq.timestamp);
+        if (eq.timestamp && Number(eq.timestamp) > 0) {
+            let d = new Date(Number(eq.timestamp));
             dateLabel = d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             dateLabel = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
         }
@@ -764,11 +761,11 @@ window.renderCalendar = function() {
             if (ids24h.has(eq.id_partido)) return;
             
             let dateLabel = "Fecha por confirmar";
-            if (eq.timestamp) {
-                let d = new Date(eq.timestamp);
-                dateLabel = d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                dateLabel = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
-            }
+        if (eq.timestamp && Number(eq.timestamp) > 0) {
+            let d = new Date(Number(eq.timestamp));
+            dateLabel = d.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            dateLabel = dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1);
+        }
             
             if (dateLabel !== lastDateLabel) {
                 html_res += `

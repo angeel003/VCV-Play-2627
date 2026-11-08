@@ -77,8 +77,7 @@ window.renderCarteleraHTML = function(data) {
             let destacadoHtml = "";
 
             if (eq.estado === "ABIERTO" || eq.estado === "CERRADO" || eq.estado === "FINALIZADO") {
-                let dt = new Date(eq.timestamp);
-                let fechaFormateada = isNaN(dt) ? "" : `${dt.toLocaleDateString()} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+                let fechaFormateada = window.formatMatchDate ? window.formatMatchDate(eq.timestamp) : (eq.timestamp ? new Date(eq.timestamp).toLocaleString() : "Por confirmar");
 
                 let localTeamName = (eq.ubicacion === 'LOCAL') ? eq.equipo_local : eq.rival;
                 let visitTeamName = (eq.ubicacion === 'LOCAL') ? eq.rival : eq.equipo_local;
