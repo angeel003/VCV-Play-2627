@@ -121,7 +121,7 @@ function formatMvpCandidate(candStr) {
         nombre: nombre,
         apodo: apodo || nombre,
         posicion: posicion,
-        photoSrc: dorsal ? 'files/images/jugadores/dorsal_' + dorsal + '.png' : '',
+        photoSrc: dorsal ? ((typeof window.getJugadorPhotoUrl === 'function') ? window.getJugadorPhotoUrl(dorsal) : 'files/images/jugadores/dorsal_' + dorsal + '.png') : '',
         initials: (apodo || nombre || 'VC').substring(0, 2).toUpperCase()
     };
 }
