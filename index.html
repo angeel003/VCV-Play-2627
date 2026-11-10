@@ -3997,14 +3997,14 @@
             </select>
         </div>
 
-        <!-- Selector de Formato 1080x1080 / 1080x1920 (solo visible al previsualizar tarjeta MVP del club desde Admin) -->
+        <!-- Selector de Formato 1080x1080 / 1080x1920 para cualquier tarjeta compartible -->
         <div id="shareMvpFormatSelectorContainer" style="display:none; margin-bottom:12px; text-align:left;">
             <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:5px;">📐 Tamaño / Formato:</label>
             <div style="display:flex; gap:8px;">
-                <button type="button" id="btnShareFmtSquare" onclick="window.cambiarFormatoMvpTarjeta('square')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1.5px solid var(--secondary-color); background:rgba(212,175,55,0.2); color:#ffd700; transition:all 0.2s;">
+                <button type="button" id="btnShareFmtSquare" onclick="window.cambiarFormatoTarjeta('square')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1.5px solid var(--secondary-color); background:rgba(212,175,55,0.2); color:#ffd700; transition:all 0.2s;">
                     🖼️ Post (1080×1080)
                 </button>
-                <button type="button" id="btnShareFmtStory" onclick="window.cambiarFormatoMvpTarjeta('story')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-muted); transition:all 0.2s;">
+                <button type="button" id="btnShareFmtStory" onclick="window.cambiarFormatoTarjeta('story')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-muted); transition:all 0.2s;">
                     📱 Stories (1080×1920)
                 </button>
             </div>
@@ -4012,7 +4012,7 @@
 
         <!-- Contenedor del Canvas de Previsualización -->
         <div style="background:#0e0612; border-radius:14px; padding:10px; border:1px solid var(--border-color); margin-bottom:16px; display:flex; justify-content:center; align-items:center; min-height:240px;">
-            <canvas id="shareCardCanvas" style="width:auto; height:auto; max-width:100%; max-height:50vh; object-fit:contain; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
+            <canvas id="shareCardCanvas" style="width:auto; height:auto; max-width:100%; max-height:52vh; object-fit:contain; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
         </div>
 
         <!-- Botones de Acción Principal -->
@@ -4029,12 +4029,12 @@
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261110_mvp5"></script>
-<script src="js/admin.js?v=20261110_mvp5"></script>
-<script src="js/cartelera.js?v=20261110_mvp5"></script>
-<script src="js/ranking.js?v=20261110_mvp5"></script>
-<script src="js/calendario.js?v=20261110_mvp5"></script>
-<script src="js/cartelera_interactive.js?v=20261110_mvp5"></script>
+<script src="js/config.js?v=20261110_v6"></script>
+<script src="js/admin.js?v=20261110_v6"></script>
+<script src="js/cartelera.js?v=20261110_v6"></script>
+<script src="js/ranking.js?v=20261110_v6"></script>
+<script src="js/calendario.js?v=20261110_v6"></script>
+<script src="js/cartelera_interactive.js?v=20261110_v7"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
 <script src="js/auth.js?v=20261107_v28"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>

@@ -2843,16 +2843,18 @@ window.eliminarUsuarioMonitor = function(user) {
 // ==================================================================
 // HERRAMIENTA CM / REDES: TARJETA GANADOR MVP (1080x1080 / 1080x1920)
 // ==================================================================
-window.syncMvpFormatUi = function(fmt) {
+window.syncMvpFormatUi = function(fmt, fromAdminSelect = false) {
     const safeFmt = (fmt === 'story') ? 'story' : 'square';
-    const selAdminFmt = document.getElementById('adminMvpCardFormatSelect');
-    if (selAdminFmt && selAdminFmt.value !== safeFmt) selAdminFmt.value = safeFmt;
+    if (window.isMvpAdminClubCard || fromAdminSelect) {
+        const selAdminFmt = document.getElementById('adminMvpCardFormatSelect');
+        if (selAdminFmt && selAdminFmt.value !== safeFmt) selAdminFmt.value = safeFmt;
 
-    const dlLabel = document.getElementById('btnAdminMvpDownloadPngLabel');
-    if (dlLabel) {
-        dlLabel.innerText = (safeFmt === 'story')
-            ? '⬇️ Descargar Tarjeta (PNG 1080×1920)'
-            : '⬇️ Descargar Tarjeta (PNG 1080×1080)';
+        const dlLabel = document.getElementById('btnAdminMvpDownloadPngLabel');
+        if (dlLabel) {
+            dlLabel.innerText = (safeFmt === 'story')
+                ? '⬇️ Descargar Tarjeta (PNG 1080×1920)'
+                : '⬇️ Descargar Tarjeta (PNG 1080×1080)';
+        }
     }
 
     const dlModalBtn = document.getElementById('btnAdminShareDownloadPng');
@@ -2886,17 +2888,18 @@ window.syncMvpFormatUi = function(fmt) {
 window.onMvpCardFormatSelectChange = function(fmt) {
     const safeFmt = (fmt === 'story') ? 'story' : 'square';
     window.currentShareFormat = safeFmt;
-    window.syncMvpFormatUi(safeFmt);
+    window.syncMvpFormatUi(safeFmt, true);
 };
 
 window.cambiarFormatoMvpTarjeta = async function(fmt) {
     const safeFmt = (fmt === 'story') ? 'story' : 'square';
     window.currentShareFormat = safeFmt;
-    window.syncMvpFormatUi(safeFmt);
+    window.syncMvpFormatUi(safeFmt, Boolean(window.isMvpAdminClubCard));
     if (typeof window.dibujarTarjetaCompartir === 'function') {
         await window.dibujarTarjetaCompartir();
     }
 };
+window.cambiarFormatoTarjeta = window.cambiarFormatoMvpTarjeta;
 
 window.abrirTarjetaMvpClub = async function(directDownload = false) {
     const pSelect = document.getElementById('directMvpPartidoSelect');
