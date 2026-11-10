@@ -2921,6 +2921,44 @@ function drawImageContainBottom(ctx, img, x, y, maxW, maxH) {
     ctx.drawImage(img, nx, ny, nw, nh);
 }
 
+// Helper para dibujar recortes de jugadores disolviendo suavemente solo su borde inferior (sin rectángulos oscuros sobre el fondo)
+function drawImageContainBottomFaded(ctx, img, x, y, maxW, maxH, fadeStartRatio = 0.70, fadeEndRatio = 0.97) {
+    if (!img) return;
+    const iw = img.naturalWidth || img.width || 0;
+    const ih = img.naturalHeight || img.height || 0;
+    if (!iw || !ih) return;
+    const ratio = Math.min(maxW / iw, maxH / ih);
+    const nw = Math.round(iw * ratio);
+    const nh = Math.round(ih * ratio);
+    const nx = Math.round(x + (maxW - nw) / 2);
+    const ny = Math.round(y + (maxH - nh));
+
+    try {
+        const off = document.createElement('canvas');
+        off.width = Math.max(1, nw);
+        off.height = Math.max(1, nh);
+        const octx = off.getContext('2d');
+        octx.clearRect(0, 0, off.width, off.height);
+        octx.drawImage(img, 0, 0, off.width, off.height);
+
+        octx.globalCompositeOperation = 'destination-out';
+        const fadeY1 = Math.floor(off.height * fadeStartRatio);
+        const fadeY2 = Math.max(fadeY1 + 2, Math.ceil(off.height * fadeEndRatio));
+        const maskGrad = octx.createLinearGradient(0, fadeY1, 0, fadeY2);
+        maskGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        maskGrad.addColorStop(0.35, 'rgba(0, 0, 0, 0.22)');
+        maskGrad.addColorStop(0.70, 'rgba(0, 0, 0, 0.68)');
+        maskGrad.addColorStop(1, 'rgba(0, 0, 0, 1)');
+        octx.fillStyle = maskGrad;
+        octx.fillRect(0, fadeY1, off.width, off.height - fadeY1);
+        octx.globalCompositeOperation = 'source-over';
+
+        ctx.drawImage(off, nx, ny, nw, nh);
+    } catch (e) {
+        ctx.drawImage(img, nx, ny, nw, nh);
+    }
+}
+
 // Helper para auto-ajustar tamaño de fuente y que nunca se desborde del ancho máximo permitido
 function drawTextFitted(ctx, text, x, y, maxW, baseFontSize, fontSpec = 'sans-serif', minFontSize = 14) {
     if (!text) return;
@@ -3413,7 +3451,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
         ctx.shadowBlur = 26;
         ctx.shadowOffsetY = 6;
-        drawImageContainBottom(ctx, mainImg, 18, heroZoneTop + 8, 502, heroBoxH - 8);
+        drawImageContainBottomFaded(ctx, mainImg, 18, heroZoneTop + 8, 502, heroBoxH - 8, 0.72, 0.99);
         ctx.restore();
     } else if (primaryInfo) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
@@ -3421,15 +3459,6 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.textAlign = 'center';
         ctx.fillText(primaryInfo.initials, leftCenterX, heroZoneTop + 340);
     }
-
-    // Niebla degradada inferior (fundido orgánico sin cortar bruscamente)
-    const mistStart = heroFadeBottom - 155;
-    const mistGrad = ctx.createLinearGradient(0, mistStart, 0, heroFadeBottom + 12);
-    mistGrad.addColorStop(0, 'rgba(10, 3, 15, 0)');
-    mistGrad.addColorStop(0.55, 'rgba(10, 3, 15, 0.65)');
-    mistGrad.addColorStop(1, '#09020e');
-    ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, mistStart, W, 168);
 
     // Sello inclinado MVP VALCYL sobre el borde del jugador
     drawValcylMvpStamp(ctx, 424, 666, 80, -13, valcylStampLogo, cat);
@@ -3925,7 +3954,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
         ctx.shadowBlur = 28;
         ctx.shadowOffsetY = 8;
-        drawImageContainBottom(ctx, mainImg, midX - 420, heroBoxTop, 840, heroBoxH);
+        drawImageContainBottomFaded(ctx, mainImg, midX - 420, heroBoxTop, 840, heroBoxH, 0.68, 0.96);
         ctx.restore();
     } else if (primaryInfo) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
@@ -3933,16 +3962,6 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         ctx.textAlign = 'center';
         ctx.fillText(primaryInfo.initials, midX, heroBoxTop + 490);
     }
-
-    // Niebla degradada inferior
-    const mistStart = heroFadeBottom - 275;
-    const mistGrad = ctx.createLinearGradient(0, mistStart, 0, heroFadeBottom + 45);
-    mistGrad.addColorStop(0, 'rgba(10, 3, 15, 0)');
-    mistGrad.addColorStop(0.38, 'rgba(10, 3, 15, 0.56)');
-    mistGrad.addColorStop(0.70, 'rgba(9, 2, 14, 0.94)');
-    mistGrad.addColorStop(1, '#09020e');
-    ctx.fillStyle = mistGrad;
-    ctx.fillRect(0, mistStart, W, 320);
 
     // Sello inclinado MVP VALCYL sobre el jugador
     drawValcylMvpStamp(ctx, 796, isClubCard ? 934 : 906, 96, -13, valcylStampLogo, cat);
