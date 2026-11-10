@@ -3206,21 +3206,16 @@
                   </div>
                 </div>
 
-                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN Y AJUSTAR RESULTADOS FINALES -->
+                <!-- VER RECUENTO DE VOTOS REALES DE LA AFICIÓN -->
                 <div style="margin-top: 10px; padding: 10px; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición y porcentajes finales:</span>
-                    <div style="display:flex; gap:6px;">
-                      <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
-                        🔄 Consultar Votos
-                      </button>
-                      <button type="button" id="btnAutoAjustarVotosMvp" onclick="window.autoAjustarVotosGanadorMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:800; background:rgba(46,204,113,0.18); border:1px solid #2ecc71; color:#2ecc71; border-radius:6px; cursor:pointer;" title="Ajusta automáticamente los votos para que el jugador elegido en el desplegable quede en primer lugar con mayoría clara">
-                        ⚡ Dar Mayoría al Ganador
-                      </button>
-                    </div>
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos reales de la afición y porcentajes:</span>
+                    <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
+                      🔄 Consultar Votos
+                    </button>
                   </div>
                   <div id="adminRecuentoVotosMvp" style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">
-                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido o editarlos antes de guardar.
+                    Pulsa 'Consultar Votos' para ver cuántos votos reales y qué porcentaje ha recibido cada nominado en este partido.
                   </div>
                 </div>
               </div>
@@ -4008,12 +4003,12 @@
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261110_mvp3"></script>
-<script src="js/admin.js?v=20261110_mvp3"></script>
-<script src="js/cartelera.js?v=20261110_mvp3"></script>
-<script src="js/ranking.js?v=20261110_mvp3"></script>
-<script src="js/calendario.js?v=20261110_mvp3"></script>
-<script src="js/cartelera_interactive.js?v=20261110_mvp3"></script>
+<script src="js/config.js?v=20261110_mvp4"></script>
+<script src="js/admin.js?v=20261110_mvp4"></script>
+<script src="js/cartelera.js?v=20261110_mvp4"></script>
+<script src="js/ranking.js?v=20261110_mvp4"></script>
+<script src="js/calendario.js?v=20261110_mvp4"></script>
+<script src="js/cartelera_interactive.js?v=20261110_mvp4"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
 <script src="js/auth.js?v=20261107_v28"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>

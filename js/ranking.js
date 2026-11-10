@@ -228,14 +228,16 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         let mvpBonusPts = 0;
         let acertoMvp = false;
         if (match.mvp_oficial && matchPts > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
-            let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
-            let mOficial = String(match.mvp_oficial).trim().toLowerCase();
-            let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-            let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
-            if (dorOf && dorVo && dorOf === dorVo) {
-                acertoMvp = true;
-            } else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) {
-                acertoMvp = true;
+            const rawVote = data.mvp_votos[match.id_partido];
+            if (typeof window.isSameMvpPlayer === 'function') {
+                acertoMvp = window.isSameMvpPlayer(match.mvp_oficial, rawVote);
+            } else {
+                let uMvpVote = String(rawVote).trim().toLowerCase();
+                let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+                let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                if (dorOf && dorVo) acertoMvp = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                else acertoMvp = (mOficial === uMvpVote);
             }
             if (acertoMvp) {
                 mvpBonusPts = Math.ceil(matchPts * (pctMvp / 100));

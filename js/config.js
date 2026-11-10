@@ -546,3 +546,109 @@ window.formatMatchDate = function(ts) {
     return `${dia} · ${hora}`;
 };
 
+// --- UTILIDADES CANÓNICAS DE EMPAREJAMIENTO Y PORCENTAJES MVP VALCYL ---
+window.normalizeMvpStr = function(str) {
+    if (!str) return '';
+    return String(str)
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, ' ');
+};
+
+window.extractMvpDorsal = function(str) {
+    if (!str) return null;
+    const m = String(str).match(/#(\d+)/);
+    if (!m) return null;
+    const num = parseInt(m[1], 10);
+    return isNaN(num) ? null : num;
+};
+
+window.isSameMvpPlayer = function(a, b) {
+    if (!a || !b) return false;
+    const nA = window.normalizeMvpStr(a);
+    const nB = window.normalizeMvpStr(b);
+    if (!nA || !nB) return false;
+    if (nA === nB) return true;
+
+    const dA = window.extractMvpDorsal(a);
+    const dB = window.extractMvpDorsal(b);
+    if (dA !== null && dB !== null) {
+        return dA === dB;
+    }
+
+    const extractParts = (raw) => {
+        const s = String(raw || '');
+        const apMatch = s.match(/\(([^)]+)\)/);
+        const apodo = apMatch ? window.normalizeMvpStr(apMatch[1]) : '';
+        const cleaned = window.normalizeMvpStr(
+            s.replace(/#\d+\s*/g, '').replace(/\s*\[[^\]]+\]/g, '').replace(/\s*\([^)]+\)/g, '')
+        );
+        return { apodo, cleaned };
+    };
+    const pA = extractParts(a);
+    const pB = extractParts(b);
+
+    if (pA.cleaned && pB.cleaned && pA.cleaned === pB.cleaned) return true;
+    if (pA.apodo && pB.apodo && pA.apodo === pB.apodo) return true;
+    if (pA.apodo && pB.cleaned && pA.apodo === pB.cleaned) return true;
+    if (pB.apodo && pA.cleaned && pB.apodo === pA.cleaned) return true;
+    return false;
+};
+
+window.calcularPorcentajesExactos = function(counts) {
+    if (!Array.isArray(counts) || counts.length === 0) return [];
+    const cleanCounts = counts.map(c => Math.max(0, parseInt(c, 10) || 0));
+    const total = cleanCounts.reduce((acc, n) => acc + n, 0);
+    if (total <= 0) return cleanCounts.map(() => 0);
+
+    const exact = cleanCounts.map((c, idx) => {
+        const raw = (c / total) * 100;
+        const floored = Math.floor(raw);
+        return { idx, count: c, floored, remainder: raw - floored };
+    });
+    let remainderSum = 100 - exact.reduce((acc, x) => acc + x.floored, 0);
+    const ranked = [...exact].sort((a, b) =>
+        (b.remainder - a.remainder) || (b.count - a.count) || (a.idx - b.idx)
+    );
+    const result = exact.map(x => x.floored);
+    for (let i = 0; i < remainderSum && i < ranked.length; i++) {
+        result[ranked[i].idx] += 1;
+    }
+    return result;
+};
+
+window.mergeMvpRecuentoWithCandidates = function(recuentoList, candsList) {
+    const buckets = [];
+    const rawRec = Array.isArray(recuentoList) ? recuentoList.filter(v => v && v.jugador) : [];
+    const cands = Array.isArray(candsList) ? candsList.filter(c => c && String(c).trim() !== '') : [];
+
+    if (cands.length > 0) {
+        cands.forEach(cand => {
+            const existing = buckets.find(b => window.isSameMvpPlayer(b.jugador, cand));
+            if (!existing) {
+                buckets.push({ jugador: cand, total: 0 });
+            }
+        });
+        rawRec.forEach(item => {
+            const count = Math.max(0, parseInt(item.total, 10) || 0);
+            const target = buckets.find(b => window.isSameMvpPlayer(b.jugador, item.jugador));
+            if (target) {
+                target.total += count;
+            }
+        });
+    } else {
+        rawRec.forEach(item => {
+            const count = Math.max(0, parseInt(item.total, 10) || 0);
+            const target = buckets.find(b => window.isSameMvpPlayer(b.jugador, item.jugador));
+            if (target) {
+                target.total += count;
+            } else {
+                buckets.push({ jugador: item.jugador, total: count });
+            }
+        });
+    }
+    return buckets;
+};
+

@@ -450,23 +450,23 @@ window.setSelectValueSafely = function(selectEl, rawVal) {
             return;
         }
     }
-    // 2. Coincidencia por dorsal (#X)
-    let m = String(rawVal).match(/^#(\d+)\b/);
-    if (m) {
-        let dor = m[1];
+    // 2. Coincidencia canónica (dorsal numérico / apodo / nombre normalizado)
+    if (typeof window.isSameMvpPlayer === 'function') {
         for (let i = 0; i < selectEl.options.length; i++) {
-            if (selectEl.options[i].value.startsWith(`#${dor} `)) {
+            let optVal = selectEl.options[i].value;
+            if (optVal && window.isSameMvpPlayer(optVal, rawVal)) {
                 selectEl.selectedIndex = i;
                 return;
             }
         }
     }
-    // 3. Coincidencia por texto o nombre contenido
-    let rawClean = String(rawVal).toLowerCase().replace(/[^a-záéíóúüñ]/g, ' ').trim();
-    if (rawClean) {
+    // 3. Fallback por dorsal numérico exacto (#X)
+    let m = String(rawVal).match(/#(\d+)\b/);
+    if (m) {
+        let dor = parseInt(m[1], 10);
         for (let i = 0; i < selectEl.options.length; i++) {
-            let optClean = selectEl.options[i].value.toLowerCase().replace(/[^a-záéíóúüñ]/g, ' ').trim();
-            if (optClean && (optClean.includes(rawClean) || rawClean.includes(optClean))) {
+            let om = String(selectEl.options[i].value).match(/#(\d+)\b/);
+            if (om && parseInt(om[1], 10) === dor) {
                 selectEl.selectedIndex = i;
                 return;
             }
@@ -831,7 +831,7 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
     }
     sOficial.innerHTML = h;
 
-    if (selActual && candidatosActivos.some(c => c === selActual || (window.parseCandInfo && window.parseCandInfo(c).dorsal === window.parseCandInfo(selActual).dorsal))) {
+    if (selActual && candidatosActivos.some(c => (typeof window.isSameMvpPlayer === 'function') ? window.isSameMvpPlayer(c, selActual) : c === selActual)) {
         window.setSelectValueSafely(sOficial, selActual);
     } else {
         sOficial.selectedIndex = 0;
@@ -856,10 +856,10 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
             // Añadir el resto de jugadores de la plantilla para que siempre se pueda elegir cualquiera
             let restPlantilla = plantilla.filter(pj => {
                 let dor = pj.dorsal;
-                return !candidatosActivos.some(c => {
-                    let cInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(c) : {};
-                    return cInf.dorsal === dor;
-                });
+                let candFallback = `#${dor} ${pj.nombre || ''}`;
+                return !candidatosActivos.some(c => (typeof window.isSameMvpPlayer === 'function')
+                    ? window.isSameMvpPlayer(c, candFallback)
+                    : (window.parseCandInfo && window.parseCandInfo(c).dorsal === dor));
             });
 
             if (restPlantilla.length > 0) {
@@ -891,6 +891,10 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
         } else if (sCardWinner.options.length > 0) {
             sCardWinner.selectedIndex = 0;
         }
+    }
+
+    if (typeof window.renderRecuentoVotosMvpFromCache === 'function' && window._adminMvpRawVotesCache && idPart && window._adminMvpRawVotesCache[idPart] !== undefined) {
+        window.renderRecuentoVotosMvpFromCache();
     }
 };
 
@@ -1143,22 +1147,6 @@ window.guardarMvpOficial = function(e) {
 
     const chkMostrarPct = document.getElementById('adminMvpMostrarPorcentajes');
     const targetMostrarPct = chkMostrarPct ? chkMostrarPct.checked : true;
-
-    // Recoger votos personalizados o editados si existen inputs en el recuento
-    let customVotosRecuento = [];
-    const voteInputs = document.querySelectorAll('.admin-mvp-vote-input');
-    if (voteInputs && voteInputs.length > 0) {
-        voteInputs.forEach(inp => {
-            let cand = inp.getAttribute('data-cand');
-            let val = parseInt(inp.value);
-            if (cand) {
-                customVotosRecuento.push({
-                    jugador: cand,
-                    total: isNaN(val) ? 0 : Math.max(0, val)
-                });
-            }
-        });
-    }
     
     if (!window.appData) window.appData = {};
     if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];
@@ -1172,7 +1160,6 @@ window.guardarMvpOficial = function(e) {
         pObj.mvp_oficial = valOficial;
         pObj.mvp_stats = collectedStats;
         pObj.mvp_mostrar_porcentajes = targetMostrarPct;
-        if (customVotosRecuento.length > 0) pObj.mvp_votos_recuento = customVotosRecuento;
         pObj.visibilidad = "MOSTRAR";
         pObj.permitido = true;
     }
@@ -1208,7 +1195,6 @@ window.guardarMvpOficial = function(e) {
                     p.mvp_proclamado_ts = proclamadoNow;
                     p.mvp_publicacion_ts = targetPubTs;
                     p.mvp_mostrar_porcentajes = targetMostrarPct;
-                    if (customVotosRecuento.length > 0) p.mvp_votos_recuento = customVotosRecuento;
                     p.visibilidad = "MOSTRAR";
                 }
             });
@@ -1227,14 +1213,29 @@ window.guardarMvpOficial = function(e) {
             mvp_oficial: valOficial,
             mvp_stats: collectedStats,
             mvp_publicacion_ts: targetPubTs,
-            mvp_mostrar_porcentajes: targetMostrarPct,
-            mvp_votos_recuento: customVotosRecuento
+            mvp_mostrar_porcentajes: targetMostrarPct
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
     .then(r => r.json())
     .then(d => {
         if (btn) { btn.disabled = false; btn.innerText = "👑 Guardar Ganador MVP en BD"; }
+        if (d && Array.isArray(d.recuento)) {
+            [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
+                if (Array.isArray(arr)) {
+                    arr.forEach(p => {
+                        if (p.id_partido === idPart) p.mvp_votos_recuento = d.recuento;
+                    });
+                }
+            });
+            window._adminMvpRawVotesCache = window._adminMvpRawVotesCache || {};
+            window._adminMvpRawVotesCache[idPart] = d.recuento;
+            if (typeof window.renderRecuentoVotosMvpFromCache === 'function') {
+                window.renderRecuentoVotosMvpFromCache();
+            }
+        } else if (typeof window.cargarRecuentoVotosMvp === 'function') {
+            window.cargarRecuentoVotosMvp();
+        }
         if (targetPubTs <= Date.now()) {
             mostrarToast("¡Ganador MVP publicado de inmediato en Cartelera!");
         } else {
@@ -1274,14 +1275,18 @@ window.quitarMvpOficial = function(e) {
     if (!idPart) return;
     
     let pObj = null;
-    if (window.appData && Array.isArray(window.appData.equipos)) {
-        pObj = window.appData.equipos.find(p => p.id_partido === idPart);
-        window.appData.equipos.forEach(p => {
-            let cat = (p.categoria || '').toLowerCase();
-            if (cat.includes('sm2') || cat.includes('superliga')) {
-                p.mvp_oficial = '';
-                p.mvp_stats = [];
-                p.mvp_publicacion_ts = 0;
+    if (window.appData) {
+        [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
+            if (Array.isArray(arr)) {
+                arr.forEach(p => {
+                    if (p.id_partido === idPart) {
+                        if (!pObj) pObj = p;
+                        p.mvp_oficial = '';
+                        p.mvp_stats = [];
+                        p.mvp_proclamado_ts = 0;
+                        p.mvp_publicacion_ts = 0;
+                    }
+                });
             }
         });
     }
@@ -1307,6 +1312,9 @@ window.quitarMvpOficial = function(e) {
     }).catch(e => {});
     
     mostrarToast("Ganador MVP retirado. ¡Vuelve a mostrarse la votación!");
+    if (typeof window.recalcularPorcentajesMvpAdmin === 'function') {
+        window.recalcularPorcentajesMvpAdmin();
+    }
     if (typeof window.recalcularInsigniasMvpLocal === 'function') {
         window.recalcularInsigniasMvpLocal();
     }
@@ -1316,6 +1324,98 @@ window.quitarMvpOficial = function(e) {
     if (typeof window.renderCarteleraHTML === 'function') {
         window.renderCarteleraHTML(window.appData);
     }
+};
+
+window._adminMvpRawVotesCache = window._adminMvpRawVotesCache || {};
+
+window.renderRecuentoVotosMvpFromCache = function() {
+    const selPart = document.getElementById('directMvpPartidoSelect');
+    const idPart = selPart ? selPart.value : '';
+    const cont = document.getElementById('adminRecuentoVotosMvp');
+    if (!idPart || !cont) return;
+
+    let matchObj = null;
+    if (window.appData && Array.isArray(window.appData.equipos)) matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
+    if (!matchObj && window.appData && Array.isArray(window.appData.todos_partidos)) matchObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
+
+    let s1 = document.getElementById('directMvp1')?.value;
+    let s2 = document.getElementById('directMvp2')?.value;
+    let s3 = document.getElementById('directMvp3')?.value;
+    let activeCands = [s1, s2, s3].filter(c => c && c.trim() !== '');
+    if (activeCands.length === 0 && matchObj && Array.isArray(matchObj.mvp_candidatos)) {
+        activeCands = matchObj.mvp_candidatos.filter(Boolean);
+    }
+
+    if (activeCands.length === 0) {
+        cont.innerHTML = '<span style="color:var(--text-muted);">Selecciona los nominados a MVP arriba para ver los votos reales recibidos.</span>';
+        return;
+    }
+
+    const rawVotes = (window._adminMvpRawVotesCache && Array.isArray(window._adminMvpRawVotesCache[idPart]))
+        ? window._adminMvpRawVotesCache[idPart]
+        : (matchObj && Array.isArray(matchObj.mvp_votos_recuento) ? matchObj.mvp_votos_recuento : []);
+
+    const merged = (typeof window.mergeMvpRecuentoWithCandidates === 'function')
+        ? window.mergeMvpRecuentoWithCandidates(rawVotes, activeCands)
+        : activeCands.map(c => ({ jugador: c, total: 0 }));
+
+    const exactPcts = (typeof window.calcularPorcentajesExactos === 'function')
+        ? window.calcularPorcentajesExactos(merged.map(m => m.total))
+        : merged.map(() => 0);
+
+    const totalNominados = merged.reduce((acc, m) => acc + (parseInt(m.total, 10) || 0), 0);
+    const unmatchedVotes = rawVotes.filter(v =>
+        v && v.jugador && !merged.some(m => (typeof window.isSameMvpPlayer === 'function')
+            ? window.isSameMvpPlayer(m.jugador, v.jugador)
+            : m.jugador === v.jugador)
+    );
+    const totalUnmatched = unmatchedVotes.reduce((acc, v) => acc + (parseInt(v.total, 10) || 0), 0);
+
+    const selOficial = document.getElementById('directMvpOficialSelect');
+    const winnerVal = selOficial ? selOficial.value : (matchObj ? matchObj.mvp_oficial : '');
+
+    let rowsHtml = merged.map((item, idx) => {
+        let candStr = item.jugador;
+        let pInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(candStr) : { apodo: candStr, dorsal: '' };
+        let count = parseInt(item.total, 10) || 0;
+        let pct = exactPcts[idx] || 0;
+        let isWinner = Boolean(winnerVal && ((typeof window.isSameMvpPlayer === 'function')
+            ? window.isSameMvpPlayer(candStr, winnerVal)
+            : candStr === winnerVal));
+        let barWidth = pct > 0 ? Math.max(pct, 2) : 0;
+        let barBg = isWinner
+            ? 'linear-gradient(90deg, #d4af37, #f1c40f)'
+            : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
+
+        return `
+        <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <span style="font-weight: 800; color: ${isWinner ? '#ffd700' : '#fff'}; font-size: 0.76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;">
+                    ${isWinner ? '👑 ' : ''}${pInfo.dorsal ? '#' + pInfo.dorsal + ' ' : ''}${pInfo.apodo}
+                </span>
+                <span style="font-weight: 800; font-size: 0.74rem; color: ${isWinner ? '#ffd700' : 'var(--secondary-color)'}; flex-shrink: 0;">
+                    ${count} ${count === 1 ? 'voto' : 'votos'} · ${pct}%
+                </span>
+            </div>
+            <div style="width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; margin-top: 4px;">
+                <div style="width: ${barWidth}%; height: 100%; background: ${barBg}; border-radius: 999px; transition: width 0.3s ease;"></div>
+            </div>
+        </div>`;
+    }).join('');
+
+    let extraNote = totalUnmatched > 0
+        ? `<div style="margin-top: 4px; font-size: 0.66rem; color: #f39c12;">⚠️ Hay ${totalUnmatched} ${totalUnmatched === 1 ? 'voto adicional' : 'votos adicionales'} en BD para jugadores distintos a los nominados actuales.</div>`
+        : '';
+
+    cont.innerHTML = `
+    <div style="margin-top: 4px;">
+        ${rowsHtml}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.68rem; color: var(--text-muted);">
+            <span>Recuento real registrado en base de datos</span>
+            <span id="adminMvpTotalVotesRecuento" style="font-weight: 800; color: #fff;">Total: ${totalNominados} votos</span>
+        </div>
+        ${extraNote}
+    </div>`;
 };
 
 window.cargarRecuentoVotosMvp = function() {
@@ -1328,7 +1428,6 @@ window.cargarRecuentoVotosMvp = function() {
     if (window.appData && Array.isArray(window.appData.equipos)) matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
     if (!matchObj && window.appData && Array.isArray(window.appData.todos_partidos)) matchObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
 
-    // Candidatos activos desde desplegables o matchObj
     let s1 = document.getElementById('directMvp1')?.value;
     let s2 = document.getElementById('directMvp2')?.value;
     let s3 = document.getElementById('directMvp3')?.value;
@@ -1338,11 +1437,11 @@ window.cargarRecuentoVotosMvp = function() {
     }
 
     if (activeCands.length === 0) {
-        cont.innerHTML = '<span style="color:var(--text-muted);">Selecciona los nominados a MVP arriba para ver y configurar los votos.</span>';
+        cont.innerHTML = '<span style="color:var(--text-muted);">Selecciona los nominados a MVP arriba para ver los votos reales recibidos.</span>';
         return;
     }
 
-    cont.innerHTML = '<span style="color:var(--text-muted);">Consultando votos en la base de datos...</span>';
+    cont.innerHTML = '<span style="color:var(--text-muted);">Consultando votos reales en la base de datos...</span>';
 
     fetchSeguro(scriptURL, {
         method: 'POST',
@@ -1356,62 +1455,25 @@ window.cargarRecuentoVotosMvp = function() {
     })
     .then(r => r.json())
     .then(d => {
-        let dbVotesMap = {};
-        if (d && d.status === 'success' && Array.isArray(d.votos)) {
-            d.votos.forEach(v => {
-                if (v && v.jugador) dbVotesMap[v.jugador] = parseInt(v.total) || 0;
+        const dbVotes = (d && d.status === 'success' && Array.isArray(d.votos)) ? d.votos : [];
+        window._adminMvpRawVotesCache = window._adminMvpRawVotesCache || {};
+        window._adminMvpRawVotesCache[idPart] = dbVotes;
+
+        const mergedReal = (typeof window.mergeMvpRecuentoWithCandidates === 'function')
+            ? window.mergeMvpRecuentoWithCandidates(dbVotes, activeCands)
+            : dbVotes;
+
+        if (window.appData) {
+            [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
+                if (Array.isArray(arr)) {
+                    arr.forEach(p => {
+                        if (p.id_partido === idPart) p.mvp_votos_recuento = mergedReal;
+                    });
+                }
             });
         }
 
-        // Votos guardados previamente en matchObj si existen
-        let savedVotesMap = {};
-        if (matchObj && Array.isArray(matchObj.mvp_votos_recuento) && matchObj.mvp_votos_recuento.length > 0) {
-            matchObj.mvp_votos_recuento.forEach(v => {
-                if (v && v.jugador) savedVotesMap[v.jugador] = parseInt(v.total) || 0;
-            });
-        }
-
-        const selOficial = document.getElementById('directMvpOficialSelect');
-        const winnerVal = selOficial ? selOficial.value : (matchObj ? matchObj.mvp_oficial : '');
-
-        let rowsHtml = activeCands.map((candStr, idx) => {
-            let pInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(candStr) : { apodo: candStr, dorsal: '' };
-            let realVotes = dbVotesMap[candStr] !== undefined ? dbVotesMap[candStr] : 0;
-            let initVal = savedVotesMap[candStr] !== undefined ? savedVotesMap[candStr] : realVotes;
-            let isWinner = (winnerVal && (candStr === winnerVal || candStr.includes(winnerVal)));
-
-            return `
-            <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
-                        <span style="font-weight: 800; color: #fff; font-size: 0.76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${isWinner ? '👑 ' : ''}${pInfo.dorsal ? '#' + pInfo.dorsal + ' ' : ''}${pInfo.apodo}
-                        </span>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); flex-shrink: 0;" title="Votos reales registrados por usuarios en BD">
-                            (Real: ${realVotes})
-                        </span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                        <input type="number" min="0" step="1" class="admin-mvp-vote-input" id="adminMvpVote_${idx}" data-cand="${candStr}" value="${initVal}" oninput="window.recalcularPorcentajesMvpAdmin()" style="width: 58px; padding: 4px 6px; font-size: 0.78rem; font-weight: 800; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.4); border-radius: 4px; color: #fff; text-align: right;">
-                        <span id="adminMvpPctBadge_${idx}" style="font-weight: 800; font-size: 0.75rem; min-width: 44px; text-align: right; color: var(--secondary-color);">0%</span>
-                    </div>
-                </div>
-                <div style="width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; margin-top: 4px;">
-                    <div id="adminMvpBar_${idx}" style="width: 0%; height: 100%; background: linear-gradient(90deg, #d4af37, #f1c40f); border-radius: 999px; transition: width 0.3s ease;"></div>
-                </div>
-            </div>`;
-        }).join('');
-
-        cont.innerHTML = `
-        <div style="margin-top: 4px;">
-            ${rowsHtml}
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.68rem; color: var(--text-muted);">
-                <span>ℹ️ Modifica los números si necesitas cuadrar el MVP deseado.</span>
-                <span id="adminMvpTotalVotesRecuento" style="font-weight: 800; color: #fff;">Total: 0 votos</span>
-            </div>
-        </div>`;
-
-        window.recalcularPorcentajesMvpAdmin();
+        window.renderRecuentoVotosMvpFromCache();
     })
     .catch(() => {
         cont.innerHTML = '<span style="color:#e74c3c;">No se pudo conectar para obtener los votos.</span>';
@@ -1419,87 +1481,8 @@ window.cargarRecuentoVotosMvp = function() {
 };
 
 window.recalcularPorcentajesMvpAdmin = function() {
-    const inputs = document.querySelectorAll('.admin-mvp-vote-input');
-    if (!inputs || inputs.length === 0) return;
-
-    let vals = [];
-    let total = 0;
-    inputs.forEach(inp => {
-        let v = parseInt(inp.value) || 0;
-        if (v < 0) v = 0;
-        vals.push(v);
-        total += v;
-    });
-
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    const winnerVal = selOficial ? selOficial.value : '';
-
-    inputs.forEach((inp, idx) => {
-        let v = vals[idx];
-        let pct = total > 0 ? Math.round((v / total) * 100) : 0;
-        let cand = inp.getAttribute('data-cand') || '';
-        let isWinner = (winnerVal && (winnerVal === cand || cand.includes(winnerVal)));
-
-        const badge = document.getElementById(`adminMvpPctBadge_${idx}`);
-        if (badge) {
-            badge.innerText = `${pct}%`;
-            badge.style.color = isWinner ? '#ffd700' : 'var(--text-muted)';
-        }
-
-        const bar = document.getElementById(`adminMvpBar_${idx}`);
-        if (bar) {
-            bar.style.width = `${Math.max(pct, 2)}%`;
-            bar.style.background = isWinner 
-                ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
-                : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
-        }
-    });
-
-    const totalEl = document.getElementById('adminMvpTotalVotesRecuento');
-    if (totalEl) totalEl.innerText = `Total: ${total} votos`;
-};
-
-window.autoAjustarVotosGanadorMvp = function() {
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    const winnerVal = selOficial ? selOficial.value : '';
-    if (!winnerVal) {
-        alert("Por favor selecciona primero qué jugador es el Ganador MVP en el desplegable superior.");
-        return;
-    }
-
-    const inputs = document.querySelectorAll('.admin-mvp-vote-input');
-    if (!inputs || inputs.length < 2) {
-        alert("Debes tener al menos 2 candidatos nominados para ajustar los porcentajes.");
-        return;
-    }
-
-    let candElements = Array.from(inputs).map(inp => ({
-        input: inp,
-        cand: inp.getAttribute('data-cand') || '',
-        isWinner: false
-    }));
-
-    let winIdx = candElements.findIndex(c => (c.cand === winnerVal || c.cand.includes(winnerVal)));
-    if (winIdx < 0) winIdx = 0;
-
-    if (candElements.length === 2) {
-        candElements[winIdx].input.value = 28; // 56%
-        let otherIdx = winIdx === 0 ? 1 : 0;
-        candElements[otherIdx].input.value = 22; // 44%
-    } else {
-        candElements[winIdx].input.value = 27; // 54%
-        let others = candElements.filter((_, idx) => idx !== winIdx);
-        if (others.length >= 2) {
-            others[0].input.value = 14; // 28%
-            others[1].input.value = 9;  // 18%
-        } else if (others.length === 1) {
-            others[0].input.value = 23;
-        }
-    }
-
-    window.recalcularPorcentajesMvpAdmin();
-    if (typeof mostrarToast === 'function') {
-        mostrarToast("⚡ Votos ajustados: Mayoría asignada al Ganador MVP");
+    if (typeof window.renderRecuentoVotosMvpFromCache === 'function') {
+        window.renderRecuentoVotosMvpFromCache();
     }
 };
 

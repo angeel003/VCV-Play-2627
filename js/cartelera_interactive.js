@@ -399,15 +399,9 @@
         
         let votedIdx = -1;
         if (myVote) {
-            let voteInfo = window.parseCandInfo(myVote);
-            votedIdx = cands.findIndex((c, i) => {
-                let cInfo = window.parseCandInfo(c);
-                if (c === myVote) return true;
-                if (voteInfo.dorsal && cInfo.dorsal && voteInfo.dorsal === cInfo.dorsal) return true;
-                if (voteInfo.apodo && cInfo.apodo && voteInfo.apodo.toLowerCase() === cInfo.apodo.toLowerCase()) return true;
-                return false;
-            });
-            if (votedIdx < 0 && cands.length > 0) votedIdx = 0;
+            votedIdx = cands.findIndex(c => (typeof window.isSameMvpPlayer === 'function')
+                ? window.isSameMvpPlayer(c, myVote)
+                : c === myVote);
         }
 
         let isVoted = (votedIdx >= 0);
@@ -834,13 +828,18 @@
                 // Bonificación MVP (+pctMvp% redondeado hacia arriba si acertó el MVP oficial)
                 let mvpBonusPts = 0;
                 if (p.mvp_oficial && mPts > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[p.id_partido]) {
-                    let uMvpVote = String(data.mvp_votos[p.id_partido]).trim().toLowerCase();
-                    let mOficial = String(p.mvp_oficial).trim().toLowerCase();
-                    let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-                    let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                    const rawVote = data.mvp_votos[p.id_partido];
                     let isMvpHit = false;
-                    if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
-                    else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
+                    if (typeof window.isSameMvpPlayer === 'function') {
+                        isMvpHit = window.isSameMvpPlayer(p.mvp_oficial, rawVote);
+                    } else {
+                        let uMvpVote = String(rawVote).trim().toLowerCase();
+                        let mOficial = String(p.mvp_oficial).trim().toLowerCase();
+                        let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                        let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                        if (dorOf && dorVo) isMvpHit = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                        else isMvpHit = (mOficial === uMvpVote);
+                    }
                     if (isMvpHit) {
                         mvpBonusPts = Math.ceil(mPts * (pctMvp / 100));
                         mPts += mvpBonusPts;
@@ -2761,12 +2760,17 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     if (isProclaimed) {
         primaryInfo = window.parseCandInfo(winnerOficial || match.mvp_oficial || (cands.length > 0 ? cands[0] : ''));
         if (myVote && !isClubCard) {
-            let uMvpVote = String(myVote).trim().toLowerCase();
-            let mOficial = String(winnerOficial || match.mvp_oficial).trim().toLowerCase();
-            let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-            let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
-            if (dorOf && dorVo && dorOf === dorVo) isHit = true;
-            else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isHit = true;
+            const targetWinner = winnerOficial || match.mvp_oficial;
+            if (typeof window.isSameMvpPlayer === 'function') {
+                isHit = window.isSameMvpPlayer(targetWinner, myVote);
+            } else {
+                let uMvpVote = String(myVote).trim().toLowerCase();
+                let mOficial = String(targetWinner).trim().toLowerCase();
+                let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                if (dorOf && dorVo) isHit = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                else isHit = (mOficial === uMvpVote);
+            }
         }
     } else if (myVote) {
         primaryInfo = window.parseCandInfo(myVote);
@@ -3069,10 +3073,16 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         const cInf = window.parseCandInfo(cStr);
         const mx = 110 + i * (miniW + 20);
 
-        const isUserVoteThis = (!window.isMvpAdminClubCard && myVote && (myVote === cStr || (cInf.dorsal && window.parseCandInfo(myVote).dorsal === cInf.dorsal)));
-        const isOfficialThis = (isProclaimed && (winnerOficial || match.mvp_oficial) && (
-            (winnerOficial && (winnerOficial === cStr || (cInf.dorsal && window.parseCandInfo(winnerOficial).dorsal === cInf.dorsal))) ||
-            (match.mvp_oficial && (match.mvp_oficial === cStr || (cInf.dorsal && window.parseCandInfo(match.mvp_oficial).dorsal === cInf.dorsal)))
+        const isUserVoteThis = Boolean(!window.isMvpAdminClubCard && myVote && (
+            (typeof window.isSameMvpPlayer === 'function')
+                ? window.isSameMvpPlayer(cStr, myVote)
+                : (myVote === cStr || (cInf.dorsal && window.parseCandInfo(myVote).dorsal === cInf.dorsal))
+        ));
+        const targetOfficialStr = (isClubCard && winnerOficial) ? winnerOficial : (winnerOficial || match.mvp_oficial);
+        const isOfficialThis = Boolean(isProclaimed && targetOfficialStr && (
+            (typeof window.isSameMvpPlayer === 'function')
+                ? window.isSameMvpPlayer(cStr, targetOfficialStr)
+                : (targetOfficialStr === cStr || (cInf.dorsal && window.parseCandInfo(targetOfficialStr).dorsal === cInf.dorsal))
         ));
 
         // Fondo mini card
@@ -3435,12 +3445,17 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             let isMvpHit = false;
             let bonusMvpVal = 0;
             if (match.mvp_oficial && ptsConseguidos > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[match.id_partido]) {
-                let uMvpVote = String(data.mvp_votos[match.id_partido]).trim().toLowerCase();
-                let mOficial = String(match.mvp_oficial).trim().toLowerCase();
-                let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-                let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
-                if (dorOf && dorVo && dorOf === dorVo) isMvpHit = true;
-                else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isMvpHit = true;
+                const rawVote = data.mvp_votos[match.id_partido];
+                if (typeof window.isSameMvpPlayer === 'function') {
+                    isMvpHit = window.isSameMvpPlayer(match.mvp_oficial, rawVote);
+                } else {
+                    let uMvpVote = String(rawVote).trim().toLowerCase();
+                    let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+                    let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                    let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                    if (dorOf && dorVo) isMvpHit = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                    else isMvpHit = (mOficial === uMvpVote);
+                }
                 if (isMvpHit) {
                     bonusMvpVal = Math.ceil(ptsConseguidos * (pctMvp / 100));
                     ptsConseguidos += bonusMvpVal;
@@ -3724,13 +3739,18 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     let mvpHitsInLiga = 0;
     matchesToCheck.forEach(m => {
         if (m.mvp_oficial && data.mvp_votos && data.mvp_votos[m.id_partido]) {
-            let uMvpVote = String(data.mvp_votos[m.id_partido]).trim().toLowerCase();
-            let mOficial = String(m.mvp_oficial).trim().toLowerCase();
-            let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-            let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+            const rawVote = data.mvp_votos[m.id_partido];
             let isHit = false;
-            if (dorOf && dorVo && dorOf === dorVo) isHit = true;
-            else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isHit = true;
+            if (typeof window.isSameMvpPlayer === 'function') {
+                isHit = window.isSameMvpPlayer(m.mvp_oficial, rawVote);
+            } else {
+                let uMvpVote = String(rawVote).trim().toLowerCase();
+                let mOficial = String(m.mvp_oficial).trim().toLowerCase();
+                let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                if (dorOf && dorVo) isHit = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                else isHit = (mOficial === uMvpVote);
+            }
             if (isHit) {
                 mvpHitsInLiga++;
             }
@@ -3812,13 +3832,19 @@ window.ejecutarCompartirTarjeta = async function() {
             shareTitle = `👑 MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
         } else if (match && match.mvp_oficial) {
             let oInf = window.parseCandInfo(match.mvp_oficial);
-            let uMvpVote = String(uVote || '').trim().toLowerCase();
-            let mOficial = String(match.mvp_oficial).trim().toLowerCase();
-            let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
-            let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
             let isHit = false;
-            if (dorOf && dorVo && dorOf === dorVo) isHit = true;
-            else if (mOficial === uMvpVote || mOficial.includes(uMvpVote) || uMvpVote.includes(mOficial)) isHit = true;
+            if (uVote) {
+                if (typeof window.isSameMvpPlayer === 'function') {
+                    isHit = window.isSameMvpPlayer(match.mvp_oficial, uVote);
+                } else {
+                    let uMvpVote = String(uVote).trim().toLowerCase();
+                    let mOficial = String(match.mvp_oficial).trim().toLowerCase();
+                    let dorOf = (mOficial.match(/#(\d+)/) || [])[1];
+                    let dorVo = (uMvpVote.match(/#(\d+)/) || [])[1];
+                    if (dorOf && dorVo) isHit = (parseInt(dorOf, 10) === parseInt(dorVo, 10));
+                    else isHit = (mOficial === uMvpVote);
+                }
+            }
 
             if (isHit) {
                 shareText = `👑 ¡Acerté el MVP VALCYL del partido ${locName} vs ${visName}! El ganador ha sido ${oInf.apodo} (+${pctMvpVal}% bonus ganado). ¡Juega tú también en VCV Play!`;

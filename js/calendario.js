@@ -540,17 +540,27 @@ function renderMatchResultCardHtml(eq) {
 
         let calVotingBarsHtml = '';
         let mostrarPct = (eq.mvp_mostrar_porcentajes !== false && eq.mvp_mostrar_porcentajes !== 0 && eq.mvp_mostrar_porcentajes !== '0');
-        let recuentoList = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
-        if (mostrarPct && recuentoList.length >= 2) {
-            let totalGeneral = recuentoList.reduce((acc, cur) => acc + (parseInt(cur.total) || 0), 0);
+        let mvpCandsCal = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
+        let recuentoRawCal = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
+        let recuentoList = (typeof window.mergeMvpRecuentoWithCandidates === 'function')
+            ? window.mergeMvpRecuentoWithCandidates(recuentoRawCal, mvpCandsCal)
+            : recuentoRawCal;
+        let totalGeneral = recuentoList.reduce((acc, cur) => acc + (parseInt(cur.total, 10) || 0), 0);
+
+        if (mostrarPct && recuentoList.length >= 2 && totalGeneral > 0) {
             let sortedList = [...recuentoList].map(item => {
                 let pInf = formatMvpCandidate(item.jugador);
-                let count = parseInt(item.total) || 0;
-                let pct = totalGeneral > 0 ? Math.round((count / totalGeneral) * 100) : 0;
-                let isWinner = (eq.mvp_oficial && (item.jugador === eq.mvp_oficial || (pInf.dorsal && oInfo.dorsal && pInf.dorsal === oInfo.dorsal) || (pInf.apodo && oInfo.apodo && pInf.apodo.toLowerCase() === oInfo.apodo.toLowerCase())));
-                return { ...item, pInf, count, pct, isWinner };
+                let count = parseInt(item.total, 10) || 0;
+                let isWinner = (typeof window.isSameMvpPlayer === 'function')
+                    ? window.isSameMvpPlayer(item.jugador, eq.mvp_oficial)
+                    : Boolean(eq.mvp_oficial && (item.jugador === eq.mvp_oficial || (pInf.dorsal && oInfo.dorsal && parseInt(pInf.dorsal, 10) === parseInt(oInfo.dorsal, 10))));
+                return { ...item, pInf, count, pct: 0, isWinner };
             });
             sortedList.sort((a, b) => (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0) || (b.count - a.count));
+            let exactPcts = (typeof window.calcularPorcentajesExactos === 'function')
+                ? window.calcularPorcentajesExactos(sortedList.map(x => x.count))
+                : sortedList.map(x => totalGeneral > 0 ? Math.round((x.count / totalGeneral) * 100) : 0);
+            sortedList.forEach((cand, idx) => { cand.pct = exactPcts[idx] || 0; });
 
             let barsRows = sortedList.map(cand => {
                 let nameLabel = `${cand.isWinner ? '👑 ' : ''}${cand.pInf.dorsal ? '#' + cand.pInf.dorsal + ' ' : ''}${cand.pInf.apodo || cand.jugador}`;
@@ -561,6 +571,7 @@ function renderMatchResultCardHtml(eq) {
                     : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
                 let barGlow = cand.isWinner ? 'box-shadow: 0 0 6px rgba(241, 196, 15, 0.4);' : '';
                 let fontWeight = cand.isWinner ? '800' : '600';
+                let barWidth = cand.pct > 0 ? Math.max(cand.pct, 2) : 0;
 
                 return `
                 <div style="margin-bottom: 4px;">
@@ -573,7 +584,7 @@ function renderMatchResultCardHtml(eq) {
                         </span>
                     </div>
                     <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
-                        <div style="width: ${Math.max(cand.pct, 2)}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
+                        <div style="width: ${barWidth}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
                     </div>
                 </div>`;
             }).join('');
