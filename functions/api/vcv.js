@@ -1593,6 +1593,26 @@ export async function onRequestPost(context) {
         };
     }
 
+    function parseReglasPuntuacion(regRows) {
+        let ptsSets = 5, ptsGanador = 3, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
+        let hasMvpRuleInDb = false;
+        for (const r of regRows || []) {
+            const reg = (r.Regla || "").toLowerCase();
+            const rawNum = parseFloat(String(r.Puntos !== undefined && r.Puntos !== null ? r.Puntos : "").replace(',', '.'));
+            if (!Number.isFinite(rawNum)) continue;
+            if (reg.includes("sets")) ptsSets = Math.round(rawNum);
+            else if (reg.includes("ganador")) ptsGanador = Math.round(rawNum);
+            else if (reg.includes("exacta")) ptsDiffExacta = Math.round(rawNum);
+            else if (reg.includes("distancia") || reg.includes("max")) maxDistancia = Math.round(rawNum);
+            else if (reg.includes("mvp")) {
+                pctMvp = rawNum;
+                hasMvpRuleInDb = true;
+            }
+        }
+        const rulesCacheSig = `${ptsSets}|${ptsGanador}|${ptsDiffExacta}|${maxDistancia}|${pctMvp}`;
+        return { ptsSets, ptsGanador, ptsDiffExacta, maxDistancia, pctMvp, hasMvpRuleInDb, rulesCacheSig };
+    }
+
     // 2. LOGIN INVITADO
     if (action === "login_guest") {
         const autoKeyGuest = 'AUTO_UNFREEZE_' + getLunesSemanaClave(new Date());
@@ -1602,7 +1622,8 @@ export async function onRequestPost(context) {
             mvpVotesMap,
             rowPerm,
             notifRes,
-            cacheGuestRes
+            cacheGuestRes,
+            regGuestRes
         ] = await Promise.all([
             db.prepare('SELECT * FROM "Ajustes" WHERE "Visibilidad" != \'OCULTAR\' ORDER BY "timestamp" ASC').all(),
             db.prepare('SELECT * FROM "Resultados_Oficiales"').all(),
@@ -1613,7 +1634,8 @@ export async function onRequestPost(context) {
                 WHERE "Visibilidad" IS NULL OR ("Visibilidad" != 'OCULTAR' AND "Visibilidad" != 'BORRADA' AND "Visibilidad" != 'ELIMINADA') 
                 ORDER BY "timestamp" DESC, "ID" DESC
             `).all().catch(() => null),
-            db.prepare("SELECT clave, valor FROM Cache_App WHERE clave IN ('FREEZE_OVERRIDE', ?)").bind(autoKeyGuest).all().catch(() => null)
+            db.prepare("SELECT clave, valor FROM Cache_App WHERE clave IN ('FREEZE_OVERRIDE', ?)").bind(autoKeyGuest).all().catch(() => null),
+            db.prepare('SELECT "Regla", "Puntos" FROM "Reglas_Puntuacion"').all().catch(() => null)
         ]);
 
         const rawPartidos = (rawPartidosRes && rawPartidosRes.results) || [];
@@ -1713,6 +1735,8 @@ export async function onRequestPost(context) {
             autoRow: guestCacheMap[autoKeyGuest] !== undefined ? { valor: guestCacheMap[autoKeyGuest] } : null
         });
 
+        const guestReglas = parseReglasPuntuacion((regGuestRes && regGuestRes.results) || []);
+
         return jsonResponse({
             status: "success",
             usuario: "Invitado",
@@ -1720,7 +1744,14 @@ export async function onRequestPost(context) {
             equipos: cartelera,
             todos_partidos: todosPartidos,
             mis_equipos_siguiendo: Object.keys(misPermisos),
-            notificaciones: notificaciones
+            notificaciones: notificaciones,
+            reglas: {
+                sets: guestReglas.ptsSets,
+                ganador: guestReglas.ptsGanador,
+                diff_exacta: guestReglas.ptsDiffExacta,
+                max_dist: guestReglas.maxDistancia,
+                pct_mvp: guestReglas.pctMvp
+            }
         });
     }
 
@@ -2368,20 +2399,15 @@ export async function onRequestPost(context) {
 
         // Reglas de puntuación (prefetched)
         const regRows = (regRowsRes && regRowsRes.results) || [];
-        let ptsSets = 5, ptsGanador = 3, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
-        let hasMvpRuleInDb = false;
-        for (const r of regRows) {
-            const reg = (r.Regla || "").toLowerCase();
-            const val = parseFloat(r.Puntos) || 0;
-            if (reg.includes("sets")) ptsSets = Math.round(val);
-            else if (reg.includes("ganador")) ptsGanador = Math.round(val);
-            else if (reg.includes("exacta")) ptsDiffExacta = Math.round(val);
-            else if (reg.includes("distancia") || reg.includes("max")) maxDistancia = Math.round(val);
-            else if (reg.includes("mvp")) {
-                pctMvp = val;
-                hasMvpRuleInDb = true;
-            }
-        }
+        const {
+            ptsSets,
+            ptsGanador,
+            ptsDiffExacta,
+            maxDistancia,
+            pctMvp,
+            hasMvpRuleInDb,
+            rulesCacheSig
+        } = parseReglasPuntuacion(regRows);
         // Si no existía la regla de MVP en Reglas_Puntuacion, insertarla en segundo plano para permitir editarla
         if (!hasMvpRuleInDb) {
             runInBg(context, db.prepare('INSERT OR IGNORE INTO "Reglas_Puntuacion" ("Regla", "Puntos") VALUES (\'Porcentaje Extra MVP\', 10)').run());
@@ -2461,9 +2487,14 @@ export async function onRequestPost(context) {
             rawStatsStr = statsCacheRow && statsCacheRow.valor;
         }
         if (rawPointsStr) {
-            try { userPointsInLiga = JSON.parse(rawPointsStr); } catch(e) {}
+            try {
+                const parsedPts = JSON.parse(rawPointsStr);
+                if (parsedPts && parsedPts.__reglas_sig === rulesCacheSig && parsedPts.data) {
+                    userPointsInLiga = parsedPts.data;
+                }
+            } catch(e) {}
         }
-        if (rawStatsStr) {
+        if (Object.keys(userPointsInLiga).length > 0 && rawStatsStr) {
             try { statsLigas = JSON.parse(rawStatsStr); } catch(e) {}
         }
 
@@ -2558,7 +2589,7 @@ export async function onRequestPost(context) {
             }
             const writeTs = Date.now();
             runInBg(context, Promise.all([
-                db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(cacheKey, JSON.stringify(userPointsInLiga), writeTs).run(),
+                db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(cacheKey, JSON.stringify({ __reglas_sig: rulesCacheSig, data: userPointsInLiga }), writeTs).run(),
                 db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES (?, ?, ?)").bind(statsCacheKey, JSON.stringify(statsLigas), writeTs).run()
             ]));
         }

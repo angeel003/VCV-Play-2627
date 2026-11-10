@@ -37,6 +37,60 @@ window.ocultarOverlayAutoLogin = function(immediate = false) {
     }
 };
 
+window.applyReglasUI = function(reglas) {
+    if (!reglas) return;
+    const numR = (v, fb) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v))) ? Number(v) : fb;
+    const ptsSets = numR(reglas.sets, 5);
+    const ptsGanador = numR(reglas.ganador, 3);
+    const pDE = numR(reglas.diff_exacta, 2);
+    const mD = numR(reglas.max_dist, 10);
+    const pctMvpVal = numR(reglas.pct_mvp, 10);
+
+    const listaReglas = document.getElementById('listaReglasPuntuacion');
+    if (listaReglas) {
+        listaReglas.innerHTML = `
+            <li>Acertar el <b>Resultado Exacto (Sets)</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${ptsSets} pts</span></li>
+            <li>Acertar el <b>Ganador del partido</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${ptsGanador} pts</span></li>
+            <li>Acertar la <b>Diferencia de puntos exacta</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${pDE} pts</span> extra</li>
+            <li>Aproximarse a la diferencia (margen de ${mD} pts): <span style="color:var(--vcv-rojo); font-weight:bold;">${mD > 1 && pDE > 0 ? 'Bonus proporcional' : 'Solo diferencia exacta'}</span></li>
+            <li>Acertar el <b>MVP</b>: <span style="color:var(--secondary-color); font-weight:bold;">+${pctMvpVal}% bonus extra</span> sobre los puntos del partido</li>
+        `;
+    }
+    const pExact = document.getElementById('puntosExactosModal');
+    const pMargen = document.getElementById('puntosMargenModal');
+    if (pExact) pExact.innerText = pDE;
+    if (pMargen) pMargen.innerText = mD;
+
+    const elMvpPctModal = document.getElementById('infoMvpBonusPct');
+    if (elMvpPctModal) elMvpPctModal.innerText = `+${pctMvpVal}%`;
+    const elMvpEjemploModal = document.getElementById('infoMvpBonusEjemplo');
+    if (elMvpEjemploModal) {
+        const bonusEj = Math.ceil(12 * (pctMvpVal / 100));
+        elMvpEjemploModal.innerText = `El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas +${bonusEj} pts extra (total ${12 + bonusEj} pts).`;
+    }
+
+    const ejCont = document.getElementById('ejemploProporcionalModal');
+    if (ejCont) {
+        const calcP = (d) => {
+            if (d >= mD || mD <= 0 || pDE <= 0) return 0;
+            return Math.round(pDE * ((mD - d) / mD));
+        };
+        let htmlEjemplo = `<b>Reparto actual de puntos:</b><br>`;
+        if (pDE <= 0 || mD <= 0) {
+            htmlEjemplo += `• Sin bonus por aproximación con las reglas actuales.`;
+        } else if (mD === 1) {
+            htmlEjemplo += `• Alejarte 1 o más puntos: 0 pts`;
+        } else {
+            htmlEjemplo += `• Alejarte 1 punto exacto: +${calcP(1)} pts<br>`;
+            if (mD > 2) htmlEjemplo += `• Alejarte 2 puntos exactos: +${calcP(2)} pts<br>`;
+            if (mD > 3) htmlEjemplo += `• Alejarte 3 puntos exactos: +${calcP(3)} pts<br>`;
+            if (mD > 4) htmlEjemplo += `• ...<br>`;
+            htmlEjemplo += `• Alejarte ${mD} o más puntos: 0 pts`;
+        }
+        ejCont.innerHTML = htmlEjemplo;
+    }
+};
+
 
 // --- DETECCIÓN PRECISA DE DISPOSITIVO Y MODELO PARA EL MONITOR SILENCIOSO ---
 function detectarModeloDispositivo() {
@@ -557,6 +611,9 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             window.appData = data;
             window.appData.usuario = "Invitado";
             window.currentUser = "Invitado";
+            if (data.reglas && typeof window.applyReglasUI === 'function') {
+                window.applyReglasUI(data.reglas);
+            }
             window.renderCarteleraHTML(data);
 
             window.appNotificaciones = data.notificaciones || [];
@@ -742,53 +799,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             let promoDiv2 = document.getElementById('guestPromoBanner');
             if (promoDiv2) promoDiv2.style.display = "none";
 
-            if(data.reglas) {
-                let pctMvpVal = (data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
-                let listaReglas = document.getElementById('listaReglasPuntuacion');
-                if(listaReglas) {
-                    listaReglas.innerHTML = `
-                        <li>Acertar el <b>Resultado Exacto (Sets)</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${data.reglas.sets} pts</span></li>
-                        <li>Acertar el <b>Ganador del partido</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${data.reglas.ganador} pts</span></li>
-                        <li>Acertar la <b>Diferencia de puntos exacta</b>: <span style="color:var(--vcv-rojo); font-weight:bold;">+${data.reglas.diff_exacta} pts</span> extra</li>
-                        <li>Aproximarse a la diferencia (margen de ${data.reglas.max_dist} pts): <span style="color:var(--vcv-rojo); font-weight:bold;">Bonus proporcional</span></li>
-                        <li>Acertar el <b>MVP</b>: <span style="color:var(--secondary-color); font-weight:bold;">+${pctMvpVal}% bonus extra</span> sobre los puntos del partido</li>
-                    `;
-                }
-                const pExact = document.getElementById('puntosExactosModal');
-                const pMargen = document.getElementById('puntosMargenModal');
-                if (pExact) pExact.innerText = data.reglas.diff_exacta;
-                if (pMargen) pMargen.innerText = data.reglas.max_dist;
-
-                // Actualizar textos dinámicos del modal de información de MVP
-                const elMvpPctModal = document.getElementById('infoMvpBonusPct');
-                if (elMvpPctModal) elMvpPctModal.innerText = `+${pctMvpVal}%`;
-                const elMvpEjemploModal = document.getElementById('infoMvpBonusEjemplo');
-                if (elMvpEjemploModal) {
-                    let bonusEj = Math.ceil(12 * (pctMvpVal / 100));
-                    elMvpEjemploModal.innerText = `El cálculo se redondea siempre hacia arriba. Por ejemplo, si logras 12 puntos y aciertas el MVP, ganas +${bonusEj} pts extra (total ${12 + bonusEj} pts).`;
-                }
-
-                const ejCont = document.getElementById('ejemploProporcionalModal');
-                if(ejCont && data.reglas.diff_exacta && data.reglas.max_dist) {
-                    let pDE = parseInt(data.reglas.diff_exacta);
-                    let mD = parseInt(data.reglas.max_dist);
-                    let calcP = (d) => {
-                        if(d >= mD) return 0;
-                        return Math.round(pDE * ((mD - d) / mD));
-                    };
-                    
-                    let htmlEjemplo = `<b>Reparto actual de puntos:</b><br>`;
-                    htmlEjemplo += `• Alejarte 1 punto exacto: +${calcP(1)} pts<br>`;
-                    if (mD > 2) htmlEjemplo += `• Alejarte 2 puntos exactos: +${calcP(2)} pts<br>`;
-                    if (mD > 3) htmlEjemplo += `• Alejarte 3 puntos exactos: +${calcP(3)} pts<br>`;
-                    
-                    if (mD > 4) {
-                       htmlEjemplo += `• ...<br>`;
-                    }
-                    htmlEjemplo += `• Alejarte ${mD} o más puntos: 0 pts`;
-                    
-                    ejCont.innerHTML = htmlEjemplo;
-                }
+            if (data.reglas && typeof window.applyReglasUI === 'function') {
+                window.applyReglasUI(data.reglas);
             }
 
             // Cabecera y metadatos visibles

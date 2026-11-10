@@ -763,13 +763,14 @@
 
         // 1. Si es el propio usuario logueado y se permite ver partidos: desglose completo por jornada y partido
         if (!isViewingOther && targetUser === loggedUser && data.predicciones_usuario && (data.todos_partidos || data.equipos)) {
+            const numRule = (v, fb) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v))) ? Number(v) : fb;
             let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
             if (data.reglas) {
-                ptsGanador = data.reglas.ganador || ptsGanador;
-                ptsSets = data.reglas.sets || ptsSets;
-                ptsDiffExacta = data.reglas.diff_exacta || ptsDiffExacta;
-                maxDistancia = data.reglas.max_dist || maxDistancia;
-                if (data.reglas.pct_mvp !== undefined) pctMvp = data.reglas.pct_mvp;
+                ptsGanador = numRule(data.reglas.ganador, ptsGanador);
+                ptsSets = numRule(data.reglas.sets, ptsSets);
+                ptsDiffExacta = numRule(data.reglas.diff_exacta, ptsDiffExacta);
+                maxDistancia = numRule(data.reglas.max_dist, maxDistancia);
+                pctMvp = numRule(data.reglas.pct_mvp, pctMvp);
             }
 
             let pMap = {};
@@ -2980,6 +2981,22 @@ function drawVectorFlame(ctx, cx, cy, size, color) {
     ctx.restore();
 }
 
+function drawVectorPin(ctx, cx, cy, size, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    const r = size * 0.36;
+    const topCy = cy - size * 0.14;
+    const tipY = cy + size * 0.52;
+    ctx.beginPath();
+    ctx.arc(cx, topCy, r, Math.PI * 0.85, Math.PI * 0.15, false);
+    ctx.lineTo(cx, tipY);
+    ctx.closePath();
+    ctx.moveTo(cx + r * 0.40, topCy);
+    ctx.arc(cx, topCy, r * 0.40, 0, Math.PI * 2, true);
+    ctx.fill('evenodd');
+    ctx.restore();
+}
+
 function drawEditorialHeaderCanvas(ctx, W, H, vcvCrest, rightPrimary, rightSecondary, rightColor = '#f3ce5e') {
     const isStory = H > W;
     const marginX = isStory ? 68 : 56;
@@ -3328,6 +3345,225 @@ async function loadUserAvatarEntry(data, targetUser) {
         return { img, emoji: null, initials };
     }
     return { img: null, emoji: raw, initials };
+}
+
+function drawShareUserMedallion(ctx, cx, cy, r, avEntry, ringColor = '#d4af37', lineWidth = 3, isLeader = false) {
+    ctx.save();
+    const bgGrad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+    bgGrad.addColorStop(0, '#6a2c70');
+    bgGrad.addColorStop(1, '#2d103d');
+    ctx.fillStyle = bgGrad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+    if (avEntry && avEntry.img) {
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, r - 2, 0, Math.PI * 2); ctx.clip();
+        const iw = avEntry.img.naturalWidth || avEntry.img.width || 1;
+        const ih = avEntry.img.naturalHeight || avEntry.img.height || 1;
+        const ratio = Math.max((r * 2) / iw, (r * 2) / ih);
+        const nw = iw * ratio;
+        const nh = ih * ratio;
+        drawImageStepped(ctx, avEntry.img, cx - nw / 2, cy - nh / 2, nw, nh);
+        ctx.restore();
+    } else if (avEntry && avEntry.emoji) {
+        ctx.font = `${Math.round(r * 1.05)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(avEntry.emoji, cx, cy + 2);
+        ctx.textBaseline = 'alphabetic';
+    } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `900 ${Math.round(r * 0.78)}px "Space Grotesk", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText((avEntry && avEntry.initials) || 'VC', cx, cy + Math.round(r * 0.27));
+    }
+
+    ctx.strokeStyle = ringColor;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+
+    if (isLeader) {
+        const bx = cx + r * 0.72;
+        const by = cy - r * 0.72;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath(); ctx.arc(bx, by, Math.max(12, Math.round(r * 0.28)), 0, Math.PI * 2); ctx.fill();
+        drawVectorCrown(ctx, bx, by + 1, Math.max(12, Math.round(r * 0.28)), Math.max(8, Math.round(r * 0.19)), '#16071f');
+    }
+    ctx.restore();
+}
+
+function resolveMatchLeagueContext(data, match, uName) {
+    if (!data || !data.clasificaciones || !uName) return null;
+    const clasifKeys = Object.keys(data.clasificaciones);
+    if (clasifKeys.length === 0) return null;
+    const userLeagues = (Array.isArray(data.ligas) && data.ligas.length > 0) ? data.ligas : clasifKeys;
+    const eqLocalL = String((match && match.equipo_local) || '').trim().toLowerCase();
+    const eqRivalL = String((match && match.rival) || '').trim().toLowerCase();
+
+    const matchesLeagueTeams = (ligaName) => {
+        if (!ligaName || !Array.isArray(data.ligas_equipos) || data.ligas_equipos.length === 0) return false;
+        const ligaLow = ligaName.trim().toLowerCase();
+        for (const row of data.ligas_equipos) {
+            if (row.Liga && row.Liga.trim().toLowerCase() === ligaLow) {
+                for (const col in row) {
+                    if (col !== 'Liga' && row[col] && (row[col].toString().toUpperCase() === 'X' || row[col] === true || row[col] === 1)) {
+                        const cL = col.trim().toLowerCase();
+                        if ((eqLocalL && cL === eqLocalL) || (eqRivalL && cL === eqRivalL)) return true;
+                    }
+                }
+            }
+            const eqName = String(row.Equipo || row.equipo || '').trim().toLowerCase();
+            const val = row[ligaName];
+            if (eqName && val && (val.toString().toUpperCase() === 'X' || val === true || val === 1)) {
+                if ((eqLocalL && eqName === eqLocalL) || (eqRivalL && eqName === eqRivalL)) return true;
+            }
+        }
+        return false;
+    };
+
+    const specificCandidates = userLeagues.filter(l => l && l.trim().toLowerCase() !== 'general' && Array.isArray(data.clasificaciones[l]) && matchesLeagueTeams(l));
+    const ordered = [
+        ...specificCandidates,
+        ...userLeagues.filter(l => l && l.trim().toLowerCase() === 'general' && Array.isArray(data.clasificaciones[l])),
+        ...userLeagues.filter(l => l && Array.isArray(data.clasificaciones[l]) && !specificCandidates.includes(l) && l.trim().toLowerCase() !== 'general')
+    ];
+
+    for (const liga of ordered) {
+        const ranking = data.clasificaciones[liga] || [];
+        if (ranking.length === 0) continue;
+        const idx = ranking.findIndex(r => r && r.jugador === uName);
+        if (idx !== -1) {
+            const entry = ranking[idx];
+            const realRank = ranking.findIndex(x => x && x.puntos === entry.puntos) + 1;
+            return { liga, rank: realRank, pts: entry.puntos || 0, total: ranking.length };
+        }
+    }
+    return null;
+}
+
+function formatMatchShortTeamName(name) {
+    let s = String(name || '').trim();
+    if (!s) return 'VCV';
+    s = s.replace(/^Universidad de Valladolid\s+VCV$/i, 'Univ. Valladolid VCV');
+    s = s.replace(/^Valladolid CV\s+/i, 'CV ');
+    return s;
+}
+
+function getUserTeamPerformanceStats(data, match, uName) {
+    if (!data || !match || !uName || uName === 'Invitado' || uName === 'Jugador') return null;
+    const loggedUser = String(data.usuario || '').trim();
+    if (loggedUser && uName !== loggedUser) return null;
+    const predsMap = data.predicciones_usuario || data.mis_predicciones;
+    if (!predsMap) return null;
+
+    const locRaw = String(match.equipo_local || '').trim();
+    const rivRaw = String(match.rival || '').trim();
+    const followed = Array.isArray(data.mis_equipos_siguiendo) ? data.mis_equipos_siguiendo.filter(Boolean) : [];
+    let targetTeam = locRaw;
+    if (followed.length > 0 && rivRaw && !followed.includes(locRaw) && followed.includes(rivRaw)) {
+        targetTeam = rivRaw;
+    }
+    const targetL = targetTeam.trim().toLowerCase();
+    if (!targetL) return null;
+
+    const rules = data.reglas || {};
+    const numOr = (v, fb) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v))) ? Number(v) : fb;
+    const ptsGanador = numOr(rules.ganador, 3);
+    const ptsSets = numOr(rules.sets, 5);
+    const ptsDiffExacta = numOr(rules.diff_exacta, 2);
+    const maxDistancia = numOr(rules.max_dist, 10);
+    const pctMvp = numOr(rules.pct_mvp, 10);
+
+    const pMap = {};
+    (data.todos_partidos || []).forEach(p => { if (p && p.id_partido) pMap[p.id_partido] = p; });
+    (data.equipos || []).forEach(p => { if (p && p.id_partido && !pMap[p.id_partido]) pMap[p.id_partido] = p; });
+
+    let matchesPlayed = 0;
+    let totalBasePts = 0;
+    let recordPts = 0;
+    let winnerHits = 0;
+    let exactSetsHits = 0;
+
+    for (const p of Object.values(pMap)) {
+        const pLocL = String(p.equipo_local || '').trim().toLowerCase();
+        const pRivL = String(p.rival || '').trim().toLowerCase();
+        if (pLocL !== targetL && pRivL !== targetL) continue;
+        if (!p.oficial_sets || !String(p.oficial_sets).includes('-')) continue;
+
+        const pred = predsMap[p.id_partido];
+        if (!pred || !pred.sets || !String(pred.sets).includes('-')) continue;
+
+        const oSets = String(p.oficial_sets).split('-');
+        const uSets = String(pred.sets).split('-');
+        if (oSets.length !== 2 || uSets.length !== 2) continue;
+
+        const oLocalWin = parseInt(oSets[0], 10) > parseInt(oSets[1], 10);
+        const uLocalWin = parseInt(uSets[0], 10) > parseInt(uSets[1], 10);
+        const ofNorm = String(p.oficial_sets).replace(/\s+/g, '');
+        const uNorm = String(pred.sets).replace(/\s+/g, '');
+
+        let mPts = 0;
+        if (uLocalWin === oLocalWin) {
+            mPts += ptsGanador;
+            winnerHits++;
+        }
+        if (uNorm === ofNorm) {
+            mPts += ptsSets;
+            exactSetsHits++;
+        }
+
+        if (p.oficial_parciales && String(p.oficial_parciales).trim() !== '') {
+            let oDiff = 0;
+            const setsP = String(p.oficial_parciales).split(',');
+            for (const sp of setsP) {
+                const nums = sp.split('-');
+                if (nums.length === 2) oDiff += (parseInt(nums[0], 10) - parseInt(nums[1], 10));
+            }
+            let uDiff = parseInt(pred.puntos, 10) || 0;
+            if (pred.signo && String(pred.signo).toLowerCase().includes('en contra')) uDiff = -uDiff;
+            const dist = Math.abs(oDiff - uDiff);
+            if (dist === 0) mPts += ptsDiffExacta;
+            else if (maxDistancia > 0 && dist < maxDistancia) {
+                mPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+            }
+        }
+
+        if (p.mvp_oficial && mPts > 0 && pctMvp > 0 && data.mvp_votos && data.mvp_votos[p.id_partido]) {
+            const rawVote = data.mvp_votos[p.id_partido];
+            let isMvpHit = false;
+            if (typeof window.isSameMvpPlayer === 'function') {
+                isMvpHit = window.isSameMvpPlayer(p.mvp_oficial, rawVote);
+            } else {
+                const dorOf = (String(p.mvp_oficial).match(/#(\d+)/) || [])[1];
+                const dorVo = (String(rawVote).match(/#(\d+)/) || [])[1];
+                isMvpHit = (dorOf && dorVo)
+                    ? (parseInt(dorOf, 10) === parseInt(dorVo, 10))
+                    : (String(p.mvp_oficial).trim().toLowerCase() === String(rawVote).trim().toLowerCase());
+            }
+            if (isMvpHit) {
+                mPts += Math.ceil(mPts * (pctMvp / 100));
+            }
+        }
+
+        matchesPlayed++;
+        totalBasePts += mPts;
+        if (mPts > recordPts) recordPts = mPts;
+    }
+
+    if (matchesPlayed === 0) return null;
+    const rawAvg = totalBasePts / matchesPlayed;
+    const avgPts = Number.isInteger(rawAvg) ? String(rawAvg) : rawAvg.toFixed(1).replace(/\.0$/, '');
+
+    return {
+        team: targetTeam,
+        shortTeam: formatMatchShortTeamName(targetTeam),
+        matchesPlayed,
+        totalPts: totalBasePts,
+        avgPts,
+        recordPts,
+        winnerHits,
+        exactSetsHits
+    };
 }
 
 function createTintedLogoCanvas(img, color) {
@@ -3690,9 +3926,10 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     // COLUMNA EDITORIAL DERECHA (X = 540..1024)
     const colX = 540;
     const colW = W - 56 - colX; // 484px
+    const noStatsCompact = (statsCount === 0);
 
-    // Eyebrow vectorial + título
-    const eyebrowY = 282;
+    // Eyebrow vectorial + título (cuando no hay estadísticas, bajamos el bloque a una altura media equilibrada)
+    const eyebrowY = noStatsCompact ? (isClubCard ? 398 : 374) : 282;
     const eyebrowText = focusVoteMode
         ? 'MI VOTO MVP VALCYL'
         : (isProclaimed
@@ -3709,13 +3946,14 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     // Nombre hero gigante (APODO)
     const displayApodo = String(primaryInfo ? primaryInfo.apodo : 'JUGADOR').toUpperCase();
-    const apodoY = 368;
+    const apodoY = noStatsCompact ? (isClubCard ? 488 : 462) : 368;
+    const apodoMaxSize = noStatsCompact ? (isClubCard ? 86 : 84) : 76;
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
     ctx.shadowBlur = 18;
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
-    drawTextFitted(ctx, displayApodo, colX, apodoY, colW, 76, '900 "Space Grotesk", sans-serif', 36);
+    drawTextFitted(ctx, displayApodo, colX, apodoY, colW, apodoMaxSize, '900 "Space Grotesk", sans-serif', 36);
     ctx.restore();
 
     // Sublínea #DORSAL · NOMBRE · POSICIÓN
@@ -3726,22 +3964,24 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     }
     if (primaryInfo && primaryInfo.posicion) subParts.push(String(primaryInfo.posicion).toUpperCase());
     const subLine = subParts.join('  ·  ');
+    const subY = apodoY + (noStatsCompact ? 40 : 38);
     if (subLine) {
         ctx.fillStyle = 'rgba(229, 214, 240, 0.85)';
         ctx.textAlign = 'left';
-        drawTextFitted(ctx, subLine, colX, apodoY + 38, colW, 18, '700 "Space Grotesk", sans-serif', 12);
+        drawTextFitted(ctx, subLine, colX, subY, colW, 18, '700 "Space Grotesk", sans-serif', 12);
     }
 
     // Separador fino en columna derecha
+    const ruleY = noStatsCompact ? (subY + 28) : 434;
     const rRuleGrad = ctx.createLinearGradient(colX, 0, W - 56, 0);
     rRuleGrad.addColorStop(0, 'rgba(212, 175, 55, 0.55)');
     rRuleGrad.addColorStop(1, 'rgba(212, 175, 55, 0.08)');
     ctx.strokeStyle = rRuleGrad;
     ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(colX, 434); ctx.lineTo(W - 56, 434); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(colX, ruleY); ctx.lineTo(W - 56, ruleY); ctx.stroke();
 
-    // Bloque abierto de estadísticas y/o estado de votación en columna derecha (Y = 446..726)
-    let kpiTop = 446;
+    // Bloque abierto de estadísticas y/o estado de votación en columna derecha
+    let kpiTop = ruleY + 12;
     const kpiBottom = 736;
     const pctMvpVal = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
 
@@ -3784,21 +4024,46 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             }
         }
 
-        const stStripY = kpiTop + 6;
-        ctx.fillStyle = fanAccent;
-        ctx.fillRect(colX, stStripY + 4, 3.5, 34);
-        if (fanIcon === 'check') drawVectorCheck(ctx, colX + 24, stStripY + 21, 9, fanAccent);
-        else if (fanIcon === 'crown') drawVectorCrown(ctx, colX + 24, stStripY + 21, 16, 11, fanAccent);
-        else drawVectorStar(ctx, colX + 24, stStripY + 21, 8, fanAccent);
+        const stStripY = kpiTop + 4;
+        if (noStatsCompact) {
+            const fanSub = focusVoteMode
+                ? 'VOTADO POR TI EN ESTA JORNADA  ·  VCVPLAY.COM'
+                : (isProclaimed
+                    ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN'
+                    : (myVote
+                        ? 'TU ELECCIÓN PARA EL PREMIO MVP VALCYL'
+                        : (isVotingClosed
+                            ? 'PENDIENTE DE PROCLAMACIÓN OFICIAL'
+                            : 'ENTRA EN VCV PLAY Y VOTA POR TU FAVORITO')));
+            ctx.fillStyle = fanAccent;
+            ctx.fillRect(colX, stStripY + 4, 3.5, 50);
+            if (fanIcon === 'check') drawVectorCheck(ctx, colX + 24, stStripY + 19, 9, fanAccent);
+            else if (fanIcon === 'crown') drawVectorCrown(ctx, colX + 24, stStripY + 19, 16, 11, fanAccent);
+            else drawVectorStar(ctx, colX + 24, stStripY + 19, 8, fanAccent);
 
-        ctx.fillStyle = fanAccent;
-        ctx.textAlign = 'left';
-        drawTextFitted(ctx, fanMain, colX + 42, stStripY + 27, colW - 44, 17, '900 "Space Grotesk", sans-serif', 12);
+            ctx.fillStyle = fanAccent;
+            ctx.textAlign = 'left';
+            drawTextFitted(ctx, fanMain, colX + 42, stStripY + 25, colW - 44, 17, '900 "Space Grotesk", sans-serif', 12);
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath(); ctx.moveTo(colX, stStripY + 52); ctx.lineTo(W - 56, stStripY + 52); ctx.stroke();
-        kpiTop = stStripY + 62;
+            ctx.fillStyle = 'rgba(229, 214, 240, 0.78)';
+            drawTextFitted(ctx, fanSub, colX + 42, stStripY + 50, colW - 44, 14, '700 "Space Grotesk", sans-serif', 11);
+            kpiTop = stStripY + 66;
+        } else {
+            ctx.fillStyle = fanAccent;
+            ctx.fillRect(colX, stStripY + 4, 3.5, 34);
+            if (fanIcon === 'check') drawVectorCheck(ctx, colX + 24, stStripY + 21, 9, fanAccent);
+            else if (fanIcon === 'crown') drawVectorCrown(ctx, colX + 24, stStripY + 21, 16, 11, fanAccent);
+            else drawVectorStar(ctx, colX + 24, stStripY + 21, 8, fanAccent);
+
+            ctx.fillStyle = fanAccent;
+            ctx.textAlign = 'left';
+            drawTextFitted(ctx, fanMain, colX + 42, stStripY + 27, colW - 44, 17, '900 "Space Grotesk", sans-serif', 12);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.moveTo(colX, stStripY + 52); ctx.lineTo(W - 56, stStripY + 52); ctx.stroke();
+            kpiTop = stStripY + 62;
+        }
     }
 
     const drawSplitKpiCell = (st, cx, cyCenter, cellW, compact) => {
@@ -3822,19 +4087,19 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     const kpiH = kpiBottom - kpiTop;
     if (statsCount === 0) {
-        const cyMid = kpiTop + Math.round(kpiH / 2);
-        drawVectorStar(ctx, colX + colW / 2, cyMid - 38, 12, '#ffd700');
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        const emptyTitle = focusVoteMode
-            ? 'TU ELECCIÓN EN LA JORNADA'
-            : (isProclaimed ? 'JUGADOR MÁS VALORADO' : 'ELIGE AL MVP DEL PARTIDO');
-        const emptySub = focusVoteMode
-            ? 'VOTADO POR TI EN ESTA JORNADA  ·  VCVPLAY.COM'
-            : (isProclaimed ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN' : `ACIERTO = +${pctMvpVal}% DE BONUS EN TUS PUNTOS`);
-        drawTextFitted(ctx, emptyTitle, colX + colW / 2, cyMid + 4, colW - 20, 23, '900 "Space Grotesk", sans-serif', 15);
-        ctx.fillStyle = '#d4af37';
-        drawTextFitted(ctx, emptySub, colX + colW / 2, cyMid + 34, colW - 20, 14, '800 "Space Grotesk", sans-serif', 11);
+        if (isClubCard) {
+            const stStripY = ruleY + 18;
+            ctx.fillStyle = '#d4af37';
+            ctx.fillRect(colX, stStripY + 4, 3.5, 50);
+            drawVectorStar(ctx, colX + 24, stStripY + 19, 8.5, '#ffd700');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'left';
+            drawTextFitted(ctx, 'JUGADOR MÁS VALORADO', colX + 42, stStripY + 25, colW - 44, 19, '900 "Space Grotesk", sans-serif', 13);
+
+            ctx.fillStyle = '#d4af37';
+            drawTextFitted(ctx, 'ELEGIDO POR EL CLUB Y LA AFICIÓN', colX + 42, stStripY + 50, colW - 44, 14, '800 "Space Grotesk", sans-serif', 11);
+        }
     } else if (statsCount === 1) {
         drawSplitKpiCell(statsToShow[0], colX + colW / 2, kpiTop + Math.round(kpiH / 2) - 8, colW, false);
     } else if (statsCount === 2) {
@@ -4546,13 +4811,23 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const mvpFocusInfo = mvpFocusStr ? window.parseCandInfo(mvpFocusStr) : null;
     const candListInfo = (!mvpFocusStr && mvpCands.length > 0) ? mvpCands.slice(0, 3).map(c => ({ raw: c, info: window.parseCandInfo(c) })) : [];
 
-    const [valcylLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mvpFocusImg, ...candImgs] = await Promise.all([
+    const catL = (match.categoria || '').toLowerCase();
+    const isSuperligaMatch = catL.includes('sm2') || catL.includes('superliga');
+    const canHaveMvp = Boolean(isSuperligaMatch && match.mvp_visible !== false && match.mvp_visible !== 'OCULTAR');
+    const hasValidUser = Boolean(uName && uName !== 'Invitado' && uName !== 'Jugador');
+    const cleanPab = (typeof window.cleanPabellon === 'function')
+        ? window.cleanPabellon(match.pabellon)
+        : String(match.pabellon || '').trim();
+    const venueLabel = cleanPab ? cleanPab.toUpperCase() : `JORNADA ${jNum} · ${cat}`;
+
+    const [valcylLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mvpFocusImg, myAvatar, ...candImgs] = await Promise.all([
         cargarImagenCanvas(`files/images/valcyl_logo.png?v=${SHARE_ASSET_VER}`),
         cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
         cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         cargarEscudoCanvas(locName),
         cargarEscudoCanvas(visName),
         cargarFotoJugadorCanvas(mvpFocusInfo),
+        hasValidUser ? loadUserAvatarEntry(data, uName) : Promise.resolve(null),
         ...candListInfo.map((ci) => cargarFotoJugadorCanvas(ci.info))
     ]);
     const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
@@ -4561,7 +4836,6 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const hasPred = Boolean(pUser && pUser.sets);
     pintarAtmosferaEditorialCanvas(ctx, W, H, { secondaryAccentRgb: (yaJugado && hasPred) ? '46, 204, 113' : null });
 
-    const hasValidUser = Boolean(uName && uName !== 'Invitado' && uName !== 'Jugador');
     const hdrRight1 = hasValidUser ? '@' + uName : `${cat}  ·  JORNADA ${jNum}`;
     const hdrRight2 = hasValidUser ? `${cat}  ·  JORNADA ${jNum}` : '';
     drawEditorialHeaderCanvas(ctx, W, H, vcvCrest, hdrRight1, hdrRight2);
@@ -4581,9 +4855,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     let matchDateStr = 'HORARIO POR CONFIRMAR';
     if (match.timestamp) {
         try {
-            matchDateStr = new Date(match.timestamp).toLocaleDateString('es-ES', {
-                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-            }).replace(',', ' ·').toUpperCase();
+            const rawDt = new Date(match.timestamp).toLocaleDateString('es-ES', {
+                weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+            });
+            matchDateStr = rawDt.replace(/\./g, '').replace(/,\s*(?=\d{2}:)/, ' · ').replace(/,/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
         } catch(e) {
             matchDateStr = new Date(match.timestamp).toLocaleDateString().toUpperCase();
         }
@@ -4683,6 +4958,32 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     ctx.save();
     ctx.shadowColor = 'rgba(9, 2, 14, 0.96)';
     ctx.shadowBlur = 24;
+    const drawPinVenueCentered = (pinY) => {
+        const pinSize = isStory ? 16 : 14;
+        const pinGap = 8;
+        const venueMaxW = isStory ? 350 : 292;
+        let vFontPx = isStory ? 16 : 13.5;
+        ctx.font = `800 ${vFontPx}px "Space Grotesk", sans-serif`;
+        while (ctx.measureText(venueLabel).width > (venueMaxW - pinSize - pinGap) && vFontPx > 10.5) {
+            vFontPx -= 0.5;
+            ctx.font = `800 ${vFontPx}px "Space Grotesk", sans-serif`;
+        }
+        let finalVenueTxt = venueLabel;
+        if (ctx.measureText(finalVenueTxt).width > (venueMaxW - pinSize - pinGap)) {
+            while (finalVenueTxt.length > 3 && ctx.measureText(finalVenueTxt + '…').width > (venueMaxW - pinSize - pinGap)) {
+                finalVenueTxt = finalVenueTxt.slice(0, -1);
+            }
+            finalVenueTxt += '…';
+        }
+        const vTxtW = ctx.measureText(finalVenueTxt).width;
+        const vTotW = pinSize + pinGap + vTxtW;
+        const vStart = midX - vTotW / 2;
+        drawVectorPin(ctx, vStart + pinSize / 2, pinY - Math.round(vFontPx * 0.34), pinSize, '#f3ce5e');
+        ctx.fillStyle = 'rgba(229, 214, 240, 0.88)';
+        ctx.textAlign = 'left';
+        ctx.fillText(finalVenueTxt, vStart + pinSize + pinGap, pinY);
+    };
+
     if (yaJugado && hasOficialSets) {
         ctx.fillStyle = 'rgba(243, 206, 94, 0.78)';
         ctx.font = `900 ${isStory ? 15 : 13}px "Space Grotesk", sans-serif`;
@@ -4697,19 +4998,20 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             ctx.fillStyle = '#f3ce5e';
             const cleanParcs = String(match.oficial_parciales).split(/\s*,\s*/).join('   ·   ');
             drawTextFitted(ctx, cleanParcs, midX, crestCenterY + (isStory ? 78 : 58), isStory ? 430 : 390, isStory ? 18 : 15, '700 "Space Grotesk", sans-serif', 11);
+        } else if (cleanPab) {
+            drawPinVenueCentered(crestCenterY + (isStory ? 76 : 56));
         }
     } else {
         ctx.fillStyle = 'rgba(243, 206, 94, 0.72)';
         ctx.font = `900 ${isStory ? 16 : 13}px "Space Grotesk", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(isCerrado ? 'EN CUESTIÓN DE SETS' : 'ENFRENTAMIENTO', midX, crestCenterY - (isStory ? 46 : 38));
+        ctx.fillText(isCerrado ? 'EN JUEGO / CERRADO' : 'ENFRENTAMIENTO', midX, crestCenterY - (isStory ? 46 : 38));
 
         ctx.fillStyle = '#d4af37';
         ctx.font = `900 ${isStory ? 104 : 78}px "Space Grotesk", sans-serif`;
         ctx.fillText('VS', midX, crestCenterY + (isStory ? 32 : 24));
 
-        ctx.fillStyle = 'rgba(229, 214, 240, 0.80)';
-        drawTextFitted(ctx, matchDateStr, midX, crestCenterY + (isStory ? 70 : 54), isStory ? 360 : 300, isStory ? 17 : 14, '700 "Space Grotesk", sans-serif', 11);
+        drawPinVenueCentered(crestCenterY + (isStory ? 72 : 55));
     }
     ctx.restore();
 
@@ -4733,7 +5035,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
 
     // 4. SECCIÓN DE PRONÓSTICO DEL USUARIO (Split Swiss o Display Abierto)
     const predHeaderY = isStory ? 776 : 478;
-    const predHeaderTxt = 'MI PRONÓSTICO EN VCV PLAY';
+    const predHeaderTxt = (hasPred || yaJugado || isCerrado) ? 'MI PRONÓSTICO EN VCV PLAY' : 'PRONÓSTICO ABIERTO EN VCV PLAY';
     ctx.font = `900 ${isStory ? 19 : 16}px "Space Grotesk", sans-serif`;
     const phW = ctx.measureText(predHeaderTxt).width;
     const targetR = isStory ? 9 : 8;
@@ -4756,11 +5058,12 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     }
 
     // Cálculo completo de puntuación si ya se ha jugado y hay pronóstico
-    let ptsGanador = (data.reglas && data.reglas.ganador) || 3;
-    let ptsSets = (data.reglas && data.reglas.sets) || 5;
-    let ptsDiffExacta = (data.reglas && data.reglas.diff_exacta) || 2;
-    let maxDistancia = (data.reglas && data.reglas.max_dist) || 10;
-    let pctMvp = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
+    const numRule = (raw, fb) => (raw !== undefined && raw !== null && raw !== '' && Number.isFinite(Number(raw))) ? Number(raw) : fb;
+    let ptsGanador = numRule(data.reglas && data.reglas.ganador, 3);
+    let ptsSets = numRule(data.reglas && data.reglas.sets, 5);
+    let ptsDiffExacta = numRule(data.reglas && data.reglas.diff_exacta, 2);
+    let maxDistancia = numRule(data.reglas && data.reglas.max_dist, 10);
+    let pctMvp = numRule(data.reglas && data.reglas.pct_mvp, 10);
 
     let ptsConseguidos = 0;
     let earnedGanador = 0;
@@ -4829,6 +5132,12 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const hasDerbyBonus = Boolean(isDerbyMatch && ptsConseguidos > 0);
     const predEndSepY = isStory ? 1316 : 746;
 
+    const maxPtsInPlay = (ptsGanador + ptsSets + ptsDiffExacta) * (isDerbyMatch ? 2 : 1);
+    const rawStepDiff = maxDistancia > 0 ? (ptsDiffExacta / maxDistancia) : 0;
+    const stepDiffStr = Number.isInteger(rawStepDiff)
+        ? String(rawStepDiff)
+        : (rawStepDiff >= 1 ? rawStepDiff.toFixed(1).replace(/\.0$/, '') : rawStepDiff.toFixed(2).replace(/\.?0+$/, ''));
+
     if (hasPred) {
         const cleanPredSets = String(pUser.sets).replace(/\s*-\s*/, ' – ');
         const signoTxt = pUser.signo || '';
@@ -4888,7 +5197,10 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.fillStyle = '#2ecc71';
                 drawTextFitted(ctx, 'PRONÓSTICO REGISTRADO', rightMid, 634, 420, 28, '900 "Space Grotesk", sans-serif', 18);
                 ctx.fillStyle = 'rgba(229, 214, 240, 0.78)';
-                drawTextFitted(ctx, isCerrado ? '¡Suerte en el partido! Puntos al finalizar' : '¡Listo para sumar puntos en esta jornada!', rightMid, 672, 420, 16, '600 "Plus Jakarta Sans", sans-serif', 12);
+                const regSqSub = isCerrado
+                    ? '¡Suerte en el partido! Puntos al finalizar'
+                    : (isDerbyMatch ? `¡Derby ×2! Hasta +${maxPtsInPlay} pts en juego` : `¡Listo para sumar hasta +${maxPtsInPlay} pts!`);
+                drawTextFitted(ctx, regSqSub, rightMid, 672, 420, 16, '600 "Plus Jakarta Sans", sans-serif', 12);
             }
         } else {
             // STORY (1080x1920): Display vertical monumental + Veredicto Swiss 3/4-col
@@ -4957,43 +5269,84 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.textAlign = 'center';
                 drawTextFitted(ctx, 'PRONÓSTICO REGISTRADO', midX, 1202, W - 160, 30, '900 "Space Grotesk", sans-serif', 18);
                 ctx.fillStyle = 'rgba(229, 214, 240, 0.80)';
-                drawTextFitted(ctx, 'Acumularás tus puntos automáticamente al terminar el partido', midX, 1246, W - 160, 19, '600 "Plus Jakarta Sans", sans-serif', 13);
+                const regStSub = isCerrado
+                    ? 'Acumularás tus puntos automáticamente al terminar el partido'
+                    : (isDerbyMatch ? `Derby ×2 · Hasta +${maxPtsInPlay} pts en juego al terminar el partido` : `Acumularás tus puntos automáticamente al terminar (hasta +${maxPtsInPlay} pts)`);
+                drawTextFitted(ctx, regStSub, midX, 1246, W - 160, 19, '600 "Plus Jakarta Sans", sans-serif', 13);
             }
         }
     } else {
-        // Sin predicción registrada
-        const emptyCy = isStory ? 1020 : 608;
+        // Sin predicción registrada: Invitación Matchday (si está abierto) o estado cerrado/disputado
+        const isOpenForPreds = !yaJugado && !isCerrado;
+        const emptyCy = isStory ? 1032 : 608;
         ctx.save();
-        ctx.font = `900 ${isStory ? 200 : 140}px "Space Grotesk", sans-serif`;
+        ctx.font = `900 ${isStory ? 186 : 128}px "Space Grotesk", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.028)';
-        ctx.fillText('?', midX, emptyCy + (isStory ? 60 : 40));
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.032)';
+        const wmTxt = isOpenForPreds ? `J.${jNum}` : (yaJugado ? 'FIN' : 'OFF');
+        ctx.fillText(wmTxt, midX, emptyCy + (isStory ? 58 : 42));
         ctx.restore();
 
         const msgTitle = yaJugado
-            ? 'SIN PRONÓSTICO REGISTRADO EN ESTE PARTIDO'
-            : (isCerrado ? 'PLAZO DE PRONÓSTICOS CERRADO' : 'SIN PRONÓSTICO REGISTRADO AÚN');
+            ? 'PARTIDO DISPUTADO SIN PRONÓSTICO'
+            : (isCerrado ? 'PLAZO DE PRONÓSTICOS CERRADO' : (isDerbyMatch ? '¡DERBY ×2! ¿QUIÉN CREES QUE GANARÁ?' : '¿CUÁL ES TU PRONÓSTICO PARA EL PARTIDO?'));
         const msgSub = yaJugado
             ? '¡Entra en VCV Play y consulta las clasificaciones actualizadas!'
-            : (isCerrado ? '¡Sigue el encuentro en directo en VCV Play!' : '¡Entra en VCV Play y haz tu pronóstico antes del inicio!');
+            : (isCerrado
+                ? '¡Sigue el encuentro en directo y consulta el desenlace en VCV Play!'
+                : (cleanPab ? `Juega gratis en VCV Play antes del inicio en ${cleanPab}` : '¡Entra en VCV Play y haz tu pronóstico antes del inicio!'));
 
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
-        drawTextFitted(ctx, msgTitle, midX, emptyCy - 14, W - marginX * 2 - 40, isStory ? 30 : 25, '900 "Space Grotesk", sans-serif', 16);
+        drawTextFitted(ctx, msgTitle, midX, emptyCy - (isStory ? 38 : 22), W - marginX * 2 - 40, isStory ? 31 : 25, '900 "Space Grotesk", sans-serif', 16);
 
         ctx.fillStyle = '#f3ce5e';
-        drawTextFitted(ctx, msgSub, midX, emptyCy + (isStory ? 34 : 26), W - marginX * 2 - 40, isStory ? 21 : 18, '700 "Plus Jakarta Sans", sans-serif', 13);
+        drawTextFitted(ctx, msgSub, midX, emptyCy + (isStory ? 12 : 18), W - marginX * 2 - 40, isStory ? 21 : 18, '700 "Plus Jakarta Sans", sans-serif', 13);
 
-        ctx.fillStyle = 'rgba(205, 190, 216, 0.68)';
-        const rulesHint = `GANADOR +${ptsGanador} PTS   ·   SETS EXACTOS +${ptsSets} PTS   ·   DIF. EXACTA +${ptsDiffExacta} PTS`;
-        drawTextFitted(ctx, rulesHint, midX, emptyCy + (isStory ? 84 : 68), W - marginX * 2 - 40, isStory ? 16 : 14, '800 "Space Grotesk", sans-serif', 11);
+        if (isOpenForPreds) {
+            ctx.fillStyle = '#2ecc71';
+            const inPlayTxt = isDerbyMatch ? `HASTA +${maxPtsInPlay} PTS EN JUEGO  (DERBY ×2)` : `HASTA +${maxPtsInPlay} PTS EN JUEGO`;
+            drawTextFitted(ctx, inPlayTxt, midX, emptyCy + (isStory ? 68 : 58), W - marginX * 2 - 40, isStory ? 21 : 17, '900 "Space Grotesk", sans-serif', 13);
+
+            ctx.fillStyle = 'rgba(205, 190, 216, 0.72)';
+            const rulesHint = canHaveMvp
+                ? 'Acierta ganador, resultado en sets, diferencia y vota al MVP VALCYL'
+                : 'Acierta ganador, resultado en sets y diferencia de puntos en la cartelera';
+            drawTextFitted(ctx, rulesHint, midX, emptyCy + (isStory ? 108 : 90), W - marginX * 2 - 40, isStory ? 16 : 14, '700 "Plus Jakarta Sans", sans-serif', 11);
+        } else {
+            ctx.fillStyle = 'rgba(205, 190, 216, 0.68)';
+            const rulesHint = `GANADOR +${ptsGanador} PTS   ·   SETS EXACTOS +${ptsSets} PTS   ·   DIF. EXACTA +${ptsDiffExacta} PTS`;
+            drawTextFitted(ctx, rulesHint, midX, emptyCy + (isStory ? 76 : 64), W - marginX * 2 - 40, isStory ? 16 : 14, '800 "Space Grotesk", sans-serif', 11);
+        }
     }
 
     drawEditorialRule(ctx, marginX, W - marginX, predEndSepY, 0.44, 1.5, 0);
 
-    // 5. SECCIÓN INFERIOR: SPOTLIGHT MVP VALCYL Ó REGLAS DE PUNTUACIÓN (Si la liga no tiene MVP)
-    const botEyeY = isStory ? 1368 : 782;
-    const botLabel = hasMvpFeature ? 'SEGUIMIENTO MVP VALCYL' : 'SISTEMA DE PUNTUACIÓN VCV PLAY';
+    // 5. SECCIÓN INFERIOR: SPOTLIGHT MVP VALCYL Ó LIGA + RENDIMIENTO CON ESE EQUIPO + REGLAS DE PUNTUACIÓN
+    const showDynamicContext = (!mvpFocusInfo && candListInfo.length === 0);
+    const showRulesStrip = (showDynamicContext && !yaJugado);
+    const leagueCtx = (showDynamicContext && hasValidUser) ? resolveMatchLeagueContext(data, match, uName) : null;
+    const teamPerf = showDynamicContext ? getUserTeamPerformanceStats(data, match, uName) : null;
+    const hasTeamPerf = Boolean(teamPerf && teamPerf.matchesPlayed > 0);
+    const leagueStats = (showDynamicContext && !hasTeamPerf && leagueCtx && typeof window.calculateUserStatsHelper === 'function')
+        ? window.calculateUserStatsHelper(uName, leagueCtx.liga)
+        : null;
+    const hasLeagueMedia = Boolean(leagueStats && parseFloat(leagueStats.mediaPuntos) > 0);
+
+    let botLabel = 'CLAVES DEL PARTIDO';
+    if (hasMvpFeature) {
+        botLabel = 'SEGUIMIENTO MVP VALCYL';
+    } else if (!yaJugado && canHaveMvp) {
+        botLabel = leagueCtx ? 'TU LIGA, MVP Y PUNTUACIÓN' : 'MVP Y SISTEMA DE PUNTUACIÓN';
+    } else if (!yaJugado) {
+        botLabel = leagueCtx
+            ? (hasTeamPerf ? 'TU LIGA, EQUIPO Y PUNTUACIÓN' : 'TU LIGA Y PUNTUACIÓN')
+            : 'EQUIPO Y SISTEMA DE PUNTUACIÓN';
+    } else if (yaJugado) {
+        botLabel = leagueCtx ? 'TU LIGA Y DETALLES DEL PARTIDO' : 'DETALLES DEL PARTIDO';
+    }
+
+    const botEyeY = showRulesStrip ? (isStory ? 1358 : 776) : (isStory ? 1368 : 782);
     ctx.fillStyle = '#d4af37';
     ctx.font = `900 ${isStory ? 16 : 15}px "Space Grotesk", sans-serif`;
     ctx.textAlign = 'left';
@@ -5137,28 +5490,215 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             }
         }
     } else {
-        // Liga sin MVP VALCYL: 3 columnas abiertas Swiss de puntuación
-        const kpis = [
-            { val: `+${ptsGanador}`, lbl: 'ACIERTO GANADOR', col: '#ffffff' },
-            { val: `+${ptsSets}`, lbl: 'MARCADOR EXACTO', col: '#f3ce5e' },
-            { val: `+${ptsDiffExacta}`, lbl: 'DIF. PUNTOS EXACTA', col: '#2ecc71' }
-        ];
-        const colW = (W - marginX * 2) / 3;
-        const rowCy = isStory ? 1512 : 886;
-        kpis.forEach((kp, idx) => {
-            const cx = marginX + colW * idx + colW / 2;
-            ctx.fillStyle = kp.col;
-            ctx.textAlign = 'center';
-            drawTextFitted(ctx, kp.val, cx, rowCy + 2, colW - 24, isStory ? 54 : 44, '900 "Space Grotesk", sans-serif', 24);
+        // Sin MVP proclamado ni candidatos todavía: Split Swiss 2 columnas (Tu Liga | Equipo / MVP) + tira inferior de reglas en próximos partidos
+        const rowCy = showRulesStrip ? (isStory ? 1460 : 852) : (isStory ? 1524 : 896);
+        const divY1 = showRulesStrip ? (isStory ? 1392 : 798) : (isStory ? 1442 : 828);
+        const divY2 = showRulesStrip ? (isStory ? 1528 : 906) : (isStory ? 1608 : 962);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(midX, divY1); ctx.lineTo(midX, divY2); ctx.stroke();
+
+        // COLUMNA IZQUIERDA: Posición del usuario en la liga de este partido (o máximo en juego / reparto si invitado)
+        const leftMaxX = midX - 24;
+        if (leagueCtx) {
+            const avR = showRulesStrip ? (isStory ? 42 : 34) : (isStory ? 44 : 36);
+            const avCx = marginX + avR + 4;
+            const avCy = rowCy;
+            const isLdr = leagueCtx.rank === 1;
+            drawShareUserMedallion(ctx, avCx, avCy, avR, myAvatar, isLdr ? '#ffd700' : '#d4af37', 3, isLdr);
+
+            const lx = avCx + avR + (isStory ? 22 : 18);
+            const lw = leftMaxX - lx;
+            ctx.textAlign = 'left';
             ctx.fillStyle = '#d4af37';
-            drawTextFitted(ctx, kp.lbl, cx, rowCy + (isStory ? 38 : 32), colW - 24, isStory ? 15 : 13, '800 "Space Grotesk", sans-serif', 10);
-            if (idx < 2) {
-                const dx = marginX + colW * (idx + 1);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.13)';
-                ctx.lineWidth = 1.4;
-                ctx.beginPath(); ctx.moveTo(dx, rowCy - 38); ctx.lineTo(dx, rowCy + 42); ctx.stroke();
+            drawTextFitted(ctx, `LIGA ${leagueCtx.liga.toUpperCase()}`, lx, avCy - (showRulesStrip ? (isStory ? 31 : 25) : (isStory ? 34 : 26)), lw, isStory ? 14.5 : 13, '900 "Space Grotesk", sans-serif', 10.5);
+
+            const rankStr = `#${leagueCtx.rank}`;
+            const ptsStr = `  ·  ${leagueCtx.pts} PTS`;
+            let hFont = isStory ? 34 : 29;
+            ctx.font = `900 ${hFont}px "Space Grotesk", sans-serif`;
+            while (ctx.measureText(rankStr + ptsStr).width > lw && hFont > 17) {
+                hFont -= 1;
+                ctx.font = `900 ${hFont}px "Space Grotesk", sans-serif`;
             }
-        });
+            const rwUsed = ctx.measureText(rankStr).width;
+            ctx.fillStyle = '#f3ce5e';
+            ctx.fillText(rankStr, lx, avCy + (isStory ? 11 : 10));
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(ptsStr, lx + rwUsed, avCy + (isStory ? 11 : 10));
+
+            ctx.fillStyle = 'rgba(229, 214, 240, 0.78)';
+            const subLigaTxt = `@${uName}  ·  DE ${leagueCtx.total} JUGADORES`;
+            drawTextFitted(ctx, subLigaTxt, lx, avCy + (showRulesStrip ? (isStory ? 40 : 35) : (isStory ? 42 : 36)), lw, isStory ? 15.5 : 13.5, '700 "Plus Jakarta Sans", sans-serif', 10.5);
+        } else {
+            const leftMid = Math.round((marginX + leftMaxX) / 2);
+            const lColW = (leftMaxX - marginX) - 10;
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#d4af37';
+            drawTextFitted(ctx, yaJugado ? 'REPARTO DE PUNTOS' : 'PUNTOS MÁXIMOS', leftMid, rowCy - (showRulesStrip ? (isStory ? 31 : 25) : (isStory ? 34 : 26)), lColW, isStory ? 14.5 : 13, '900 "Space Grotesk", sans-serif', 10.5);
+
+            ctx.fillStyle = '#2ecc71';
+            const heroLeftTxt = yaJugado ? `+${ptsGanador} / +${ptsSets} / +${ptsDiffExacta}` : `HASTA +${maxPtsInPlay} PTS`;
+            drawTextFitted(ctx, heroLeftTxt, leftMid, rowCy + (isStory ? 12 : 10), lColW, isStory ? 38 : 32, '900 "Space Grotesk", sans-serif', 18);
+
+            ctx.fillStyle = 'rgba(229, 214, 240, 0.78)';
+            const subLeftTxt = yaJugado
+                ? `Ganador +${ptsGanador} · Sets +${ptsSets} · Dif. +${ptsDiffExacta}`
+                : (isDerbyMatch ? 'Partido Derby ×2 en VCV Play' : 'Juega gratis en VCV Play');
+            drawTextFitted(ctx, subLeftTxt, leftMid, rowCy + (showRulesStrip ? (isStory ? 40 : 35) : (isStory ? 44 : 36)), lColW, isStory ? 15.5 : 13.5, '700 "Plus Jakarta Sans", sans-serif', 10.5);
+        }
+
+        // COLUMNA DERECHA: Seguimiento MVP post-partido ó rendimiento específico con este equipo en concreto
+        const rx = midX + 26;
+        const rw = (W - marginX) - rx;
+        const eyeRightY = rowCy - (showRulesStrip ? (isStory ? 31 : 25) : (isStory ? 34 : 26));
+        const heroRightY = rowCy + (isStory ? 11 : 10);
+        const subRightY = rowCy + (showRulesStrip ? (isStory ? 40 : 35) : (isStory ? 42 : 36));
+
+        let rightEyeTxt = 'DETALLES DEL ENCUENTRO';
+        let rightIcon = null;
+        let rightHeroTxt = `${cat}  ·  JORNADA ${jNum}`;
+        let rightHeroCol = '#ffffff';
+        let rightHeroMaxPx = isStory ? 30 : 25;
+        let rightSubTxt = cleanPab ? `Sede: ${cleanPab}` : 'Competición oficial en VCV Play';
+
+        if (!yaJugado && canHaveMvp) {
+            rightEyeTxt = 'MVP VALCYL';
+            rightIcon = 'star';
+            rightHeroTxt = 'VOTACIÓN AL FINALIZAR';
+            rightHeroCol = '#f3ce5e';
+            rightHeroMaxPx = isStory ? 27 : 23;
+            rightSubTxt = hasTeamPerf
+                ? `Con ${teamPerf.shortTeam}: ${teamPerf.avgPts} pts/p  ·  +${pctMvp}% extra MVP`
+                : `Vota al terminar y suma un +${pctMvp}% extra`;
+        } else if (yaJugado) {
+            if (cleanPab) {
+                rightEyeTxt = 'SEDE Y JORNADA';
+                rightIcon = 'pin';
+                rightHeroTxt = cleanPab.toUpperCase();
+                rightHeroCol = '#ffffff';
+                rightHeroMaxPx = isStory ? 28 : 24;
+                rightSubTxt = hasTeamPerf
+                    ? `Con ${teamPerf.shortTeam}: ${teamPerf.avgPts} pts/p  ·  Récord: ${teamPerf.recordPts} pts`
+                    : (hasLeagueMedia
+                        ? `Media en liga: ${leagueStats.mediaPuntos} pts/j  ·  Récord: ${leagueStats.recordJornada} pts`
+                        : `${cat}  ·  Jornada ${jNum} disputada`);
+            } else if (hasTeamPerf) {
+                rightEyeTxt = `CON ${teamPerf.team.toUpperCase()}`;
+                rightHeroTxt = `${teamPerf.avgPts} PTS / PARTIDO`;
+                rightHeroCol = '#f3ce5e';
+                rightHeroMaxPx = isStory ? 29 : 24;
+                rightSubTxt = `Récord: ${teamPerf.recordPts} pts  ·  ${teamPerf.winnerHits}/${teamPerf.matchesPlayed} gan.  ·  ${teamPerf.exactSetsHits} sets ex.`;
+            } else if (hasLeagueMedia) {
+                rightEyeTxt = 'TU MEDIA EN ESTA LIGA';
+                rightHeroTxt = `${leagueStats.mediaPuntos} PTS / JORNADA`;
+                rightHeroCol = '#f3ce5e';
+                rightHeroMaxPx = isStory ? 30 : 25;
+                rightSubTxt = `Récord: ${leagueStats.recordJornada} pts  ·  Pos. media: ${leagueStats.mediaPos}`;
+            } else {
+                rightEyeTxt = 'DETALLES DEL PARTIDO';
+                rightHeroTxt = `${cat}  ·  JORNADA ${jNum}`;
+                rightHeroCol = '#ffffff';
+                rightSubTxt = `Ganador +${ptsGanador}  ·  Sets +${ptsSets}  ·  Dif. exacta +${ptsDiffExacta}`;
+            }
+        } else if (hasTeamPerf) {
+            rightEyeTxt = `CON ${teamPerf.team.toUpperCase()}`;
+            rightHeroTxt = `${teamPerf.avgPts} PTS / PARTIDO`;
+            rightHeroCol = '#f3ce5e';
+            rightHeroMaxPx = isStory ? 29 : 24;
+            rightSubTxt = `Récord: ${teamPerf.recordPts} pts  ·  ${teamPerf.winnerHits}/${teamPerf.matchesPlayed} gan.  ·  ${teamPerf.exactSetsHits} sets ex.`;
+        } else if (hasLeagueMedia) {
+            rightEyeTxt = 'TU RENDIMIENTO EN LIGA';
+            rightHeroTxt = `${leagueStats.mediaPuntos} PTS / JORNADA`;
+            rightHeroCol = '#f3ce5e';
+            rightHeroMaxPx = isStory ? 29 : 24;
+            rightSubTxt = `Récord personal: ${leagueStats.recordJornada} pts  ·  Pos. media: ${leagueStats.mediaPos}`;
+        } else if (cleanPab) {
+            rightEyeTxt = 'SEDE DEL ENCUENTRO';
+            rightIcon = 'pin';
+            rightHeroTxt = cleanPab.toUpperCase();
+            rightHeroCol = '#ffffff';
+            rightHeroMaxPx = isStory ? 27 : 23;
+            rightSubTxt = `${cat}  ·  Jornada ${jNum}`;
+        }
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#d4af37';
+        drawTextFitted(ctx, rightEyeTxt, rx, eyeRightY, rw, isStory ? 14.5 : 13, '900 "Space Grotesk", sans-serif', 10.5);
+
+        if (rightIcon) {
+            const icSz = isStory ? 21 : 18;
+            const icGap = 10;
+            if (rightIcon === 'star') {
+                drawVectorStar(ctx, rx + icSz / 2, heroRightY - Math.round(rightHeroMaxPx * 0.36), Math.round(icSz * 0.62), rightHeroCol);
+            } else if (rightIcon === 'pin') {
+                drawVectorPin(ctx, rx + icSz / 2, heroRightY - Math.round(rightHeroMaxPx * 0.35), icSz, '#f3ce5e');
+            }
+            ctx.fillStyle = rightHeroCol;
+            drawTextFitted(ctx, rightHeroTxt, rx + icSz + icGap, heroRightY, rw - (icSz + icGap), rightHeroMaxPx, '900 "Space Grotesk", sans-serif', 15);
+        } else {
+            ctx.fillStyle = rightHeroCol;
+            drawTextFitted(ctx, rightHeroTxt, rx, heroRightY, rw, rightHeroMaxPx, '900 "Space Grotesk", sans-serif', 15);
+        }
+
+        ctx.fillStyle = 'rgba(229, 214, 240, 0.80)';
+        drawTextFitted(ctx, rightSubTxt, rx, subRightY, rw, isStory ? 15 : 13, '700 "Plus Jakarta Sans", sans-serif', 10);
+
+        // TIRA INFERIOR EN PRÓXIMOS PARTIDOS: Desglose de puntos (Ganador, Sets exactos, Dif. exacta y Penalización por alejarse)
+        if (showRulesStrip) {
+            const ruleSplitY = isStory ? 1554 : 916;
+            drawEditorialRule(ctx, marginX, W - marginX, ruleSplitY, 0.22, 1.1, 0);
+
+            const ruleLblY = isStory ? 1598 : 944;
+            const ruleValY = isStory ? 1642 : 978;
+            const col4ValY = isStory ? 1628 : 969;
+            const col4SubY = isStory ? 1658 : 993;
+
+            const totalStripW = W - marginX * 2;
+            const colFracs = [0.185, 0.215, 0.215, 0.385];
+            const penHeroTxt = maxDistancia > 1 ? `-${stepDiffStr} PTS / POSICIÓN` : 'SOLO EXACTA';
+            const maxMarginPts = Math.max(0, maxDistancia - 1);
+            const penSubTxt = maxDistancia > 1
+                ? `Hasta ±${maxMarginPts} ${maxMarginPts === 1 ? 'pto' : 'pts'} (a ±${maxDistancia}: 0 pts)`
+                : (maxDistancia === 1 ? 'A ±1 o más: 0 pts' : 'Sin margen por aproximación');
+
+            const stripCols = [
+                { lbl: 'GANADOR', val: `+${ptsGanador} PTS`, col: '#2ecc71', sub: null },
+                { lbl: 'SETS EXACTOS', val: `+${ptsSets} PTS`, col: '#2ecc71', sub: null },
+                { lbl: 'DIF. EXACTA', val: `+${ptsDiffExacta} PTS`, col: '#f3ce5e', sub: null },
+                { lbl: 'SI TE ALEJAS EN DIF.', val: penHeroTxt, col: '#e5d6f0', sub: penSubTxt }
+            ];
+
+            let curX = marginX;
+            stripCols.forEach((sc, idx) => {
+                const colW = totalStripW * colFracs[idx];
+                const colCx = curX + colW / 2;
+                ctx.textAlign = 'center';
+
+                ctx.fillStyle = 'rgba(205, 190, 216, 0.74)';
+                drawTextFitted(ctx, sc.lbl, colCx, ruleLblY, colW - 18, isStory ? 13 : 11.5, '800 "Space Grotesk", sans-serif', 9.5);
+
+                if (sc.sub) {
+                    ctx.fillStyle = sc.col;
+                    drawTextFitted(ctx, sc.val, colCx, col4ValY, colW - 18, isStory ? 23 : 20, '900 "Space Grotesk", sans-serif', 13);
+                    ctx.fillStyle = 'rgba(229, 214, 240, 0.72)';
+                    drawTextFitted(ctx, sc.sub, colCx, col4SubY, colW - 16, isStory ? 14.5 : 12.5, '700 "Plus Jakarta Sans", sans-serif', 10);
+                } else {
+                    ctx.fillStyle = sc.col;
+                    drawTextFitted(ctx, sc.val, colCx, ruleValY, colW - 18, isStory ? 28 : 24, '900 "Space Grotesk", sans-serif', 15);
+                }
+
+                curX += colW;
+                if (idx < stripCols.length - 1) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(curX, ruleLblY - (isStory ? 14 : 12));
+                    ctx.lineTo(curX, isStory ? 1666 : 998);
+                    ctx.stroke();
+                }
+            });
+        }
     }
 
     drawEditorialFooterCanvas(ctx, W, H, vcvCrest);
@@ -5203,51 +5743,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         t.avatar = (t.jugador === uName) ? myAvatar : (topAvatars[idx] || { img: null, emoji: null, initials: String(t.jugador || 'VC').substring(0, 2).toUpperCase() });
     });
 
-    // Helper para pintar medallón de usuario (foto real / emoji / monograma VCV)
-    const drawUserMedallion = (cx, cy, r, avEntry, ringColor = '#d4af37', lineWidth = 3, isLeader = false) => {
-        ctx.save();
-        const bgGrad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
-        bgGrad.addColorStop(0, '#6a2c70');
-        bgGrad.addColorStop(1, '#2d103d');
-        ctx.fillStyle = bgGrad;
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-
-        if (avEntry && avEntry.img) {
-            ctx.save();
-            ctx.beginPath(); ctx.arc(cx, cy, r - 2, 0, Math.PI * 2); ctx.clip();
-            const iw = avEntry.img.naturalWidth || avEntry.img.width || 1;
-            const ih = avEntry.img.naturalHeight || avEntry.img.height || 1;
-            const ratio = Math.max((r * 2) / iw, (r * 2) / ih);
-            const nw = iw * ratio;
-            const nh = ih * ratio;
-            drawImageStepped(ctx, avEntry.img, cx - nw / 2, cy - nh / 2, nw, nh);
-            ctx.restore();
-        } else if (avEntry && avEntry.emoji) {
-            ctx.font = `${Math.round(r * 1.05)}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(avEntry.emoji, cx, cy + 2);
-            ctx.textBaseline = 'alphabetic';
-        } else {
-            ctx.fillStyle = '#ffffff';
-            ctx.font = `900 ${Math.round(r * 0.78)}px "Space Grotesk", sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText((avEntry && avEntry.initials) || 'VC', cx, cy + Math.round(r * 0.27));
-        }
-
-        ctx.strokeStyle = ringColor;
-        ctx.lineWidth = lineWidth;
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-
-        if (isLeader) {
-            const bx = cx + r * 0.72;
-            const by = cy - r * 0.72;
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath(); ctx.arc(bx, by, Math.max(12, Math.round(r * 0.28)), 0, Math.PI * 2); ctx.fill();
-            drawVectorCrown(ctx, bx, by + 1, Math.max(12, Math.round(r * 0.28)), Math.max(8, Math.round(r * 0.19)), '#16071f');
-        }
-        ctx.restore();
-    };
+    const drawUserMedallion = (cx, cy, r, avEntry, ringColor = '#d4af37', lineWidth = 3, isLeader = false) =>
+        drawShareUserMedallion(ctx, cx, cy, r, avEntry, ringColor, lineWidth, isLeader);
 
     // 1. ATMÓSFERA FULL-BLEED + CABECERA
     pintarAtmosferaEditorialCanvas(ctx, W, H, { secondaryAccentRgb: '212, 175, 55' });

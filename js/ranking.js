@@ -12,13 +12,14 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     const container = document.getElementById('historialContentV2');
     if (!container || !data) return;
 
+    const numRule = (v, fb) => (v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v))) ? Number(v) : fb;
     let ptsGanador = 3, ptsSets = 5, ptsDiffExacta = 2, maxDistancia = 10, pctMvp = 10;
     if (data.reglas) {
-        ptsGanador = data.reglas.ganador || ptsGanador;
-        ptsSets = data.reglas.sets || ptsSets;
-        ptsDiffExacta = data.reglas.diff_exacta || ptsDiffExacta;
-        maxDistancia = data.reglas.max_dist || maxDistancia;
-        if (data.reglas.pct_mvp !== undefined) pctMvp = data.reglas.pct_mvp;
+        ptsGanador = numRule(data.reglas.ganador, ptsGanador);
+        ptsSets = numRule(data.reglas.sets, ptsSets);
+        ptsDiffExacta = numRule(data.reglas.diff_exacta, ptsDiffExacta);
+        maxDistancia = numRule(data.reglas.max_dist, maxDistancia);
+        pctMvp = numRule(data.reglas.pct_mvp, pctMvp);
     }
 
     const todosPartidosMap = {};
