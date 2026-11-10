@@ -807,6 +807,18 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
 
     let candidatosActivos = [m1, m2, m3].filter(c => c && c.trim() !== '');
 
+    // Fallback: Si s1, s2, s3 aún no tienen valor, buscar en matchObj.mvp_candidatos
+    const selPart = document.getElementById('directMvpPartidoSelect');
+    const idPart = selPart ? selPart.value : '';
+    let matchObj = null;
+    if (idPart && window.appData) {
+        if (Array.isArray(window.appData.equipos)) matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
+        if (!matchObj && Array.isArray(window.appData.todos_partidos)) matchObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
+    }
+    if (candidatosActivos.length === 0 && matchObj && Array.isArray(matchObj.mvp_candidatos)) {
+        candidatosActivos = matchObj.mvp_candidatos.filter(Boolean);
+    }
+
     let h = '<option value="">-- Sin MVP asignado --</option>';
     if (candidatosActivos.length === 0) {
         h = '<option value="">-- Primero selecciona los nominados arriba --</option>';
@@ -819,7 +831,7 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
     }
     sOficial.innerHTML = h;
 
-    if (selActual && candidatosActivos.includes(selActual)) {
+    if (selActual && candidatosActivos.some(c => c === selActual || (window.parseCandInfo && window.parseCandInfo(c).dorsal === window.parseCandInfo(selActual).dorsal))) {
         window.setSelectValueSafely(sOficial, selActual);
     } else {
         sOficial.selectedIndex = 0;
@@ -828,23 +840,55 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
     // Actualizar también el selector de ganador para la tarjeta oficial (redes/Instagram)
     const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
     if (sCardWinner) {
+        const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
         let prevCardVal = sCardWinner.value;
         let hCard = '';
-        if (candidatosActivos.length === 0) {
-            hCard = '<option value="">-- Primero selecciona los nominados arriba --</option>';
-        } else {
+
+        if (candidatosActivos.length > 0) {
+            hCard += '<optgroup label="⭐ Nominados del Partido">';
             candidatosActivos.forEach(cand => {
                 let info = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand, posicion: '' };
                 let etiqueta = (info.dorsal ? '#' + info.dorsal + ' ' : '') + info.apodo;
-                hCard += `<option value="${cand}">${etiqueta}</option>`;
+                hCard += `<option value="${cand}">👑 ${etiqueta} (Nominado)</option>`;
             });
+            hCard += '</optgroup>';
+
+            // Añadir el resto de jugadores de la plantilla para que siempre se pueda elegir cualquiera
+            let restPlantilla = plantilla.filter(pj => {
+                let dor = pj.dorsal;
+                return !candidatosActivos.some(c => {
+                    let cInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(c) : {};
+                    return cInf.dorsal === dor;
+                });
+            });
+
+            if (restPlantilla.length > 0) {
+                hCard += '<optgroup label="🏐 Resto de la Plantilla">';
+                restPlantilla.forEach(pj => {
+                    let valStr = `#${pj.dorsal} ${pj.nombre}${pj.apodo ? ' (' + pj.apodo + ')' : ''}${pj.posicion ? ' [' + pj.posicion + ']' : ''}`;
+                    hCard += `<option value="${valStr}">#${pj.dorsal} ${pj.apodo || pj.nombre}</option>`;
+                });
+                hCard += '</optgroup>';
+            }
+        } else {
+            // No hay nominados activos aún: mostrar toda la plantilla directamente para que nunca esté vacío
+            hCard += '<optgroup label="🏐 Jugadores Plantilla Superliga 2">';
+            plantilla.forEach(pj => {
+                let valStr = `#${pj.dorsal} ${pj.nombre}${pj.apodo ? ' (' + pj.apodo + ')' : ''}${pj.posicion ? ' [' + pj.posicion + ']' : ''}`;
+                hCard += `<option value="${valStr}">👑 #${pj.dorsal} ${pj.apodo || pj.nombre}</option>`;
+            });
+            hCard += '</optgroup>';
         }
+
         sCardWinner.innerHTML = hCard;
-        if (prevCardVal && candidatosActivos.includes(prevCardVal)) {
+
+        if (prevCardVal) {
             window.setSelectValueSafely(sCardWinner, prevCardVal);
-        } else if (selActual && candidatosActivos.includes(selActual)) {
+        } else if (selActual) {
             window.setSelectValueSafely(sCardWinner, selActual);
         } else if (candidatosActivos.length > 0) {
+            window.setSelectValueSafely(sCardWinner, candidatosActivos[0]);
+        } else if (sCardWinner.options.length > 0) {
             sCardWinner.selectedIndex = 0;
         }
     }
@@ -2839,8 +2883,13 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
     }
 
     if (cands.length < 2) {
-        alert('Para generar la tarjeta del MVP debes tener al menos 2 candidatos nominados.');
-        return;
+        const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : [];
+        if (plantilla.length >= 2) {
+            cands = plantilla.slice(0, 3).map(pj => `#${pj.dorsal} ${pj.apodo || pj.nombre}`);
+        } else {
+            alert('Por favor selecciona primero los jugadores nominados en la sección superior.');
+            return;
+        }
     }
 
     // Ganador seleccionado en el desplegable de tarjeta, ganador oficial o el primero de los candidatos
@@ -2883,10 +2932,15 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         const winnerSelect = document.getElementById('shareMvpWinnerSelect');
         if (winnerSelectorContainer && winnerSelect) {
             winnerSelectorContainer.style.display = 'block';
-            winnerSelect.innerHTML = cands.map(cand => {
-                let pInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand };
-                return `<option value="${cand}" ${cand === winner ? 'selected' : ''}>👑 ${pInf.dorsal ? '#' + pInf.dorsal + ' ' : ''}${pInf.apodo}</option>`;
-            }).join('');
+            let cardOptions = (sCardWinner && sCardWinner.options && sCardWinner.options.length > 0)
+                ? Array.from(sCardWinner.options).map(opt => ({ val: opt.value, text: opt.text }))
+                : cands.map(cand => {
+                    let pInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand };
+                    return { val: cand, text: `👑 ${pInf.dorsal ? '#' + pInf.dorsal + ' ' : ''}${pInf.apodo}` };
+                });
+
+            winnerSelect.innerHTML = cardOptions.map(opt => `<option value="${opt.val}" ${opt.val === winner ? 'selected' : ''}>${opt.text}</option>`).join('');
+            if (winner) window.setSelectValueSafely(winnerSelect, winner);
         }
 
         const modal = document.getElementById('shareCardModal');
