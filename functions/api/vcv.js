@@ -2870,7 +2870,7 @@ export async function onRequestPost(context) {
 
         const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         const hasMvpPerm = adminCheck && (adminCheck["Admin Web"] === "X" || adminCheck["Permiso_MVP"] === "X");
-        if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para proclamar el MVP oficial.' }, 403);
+        if (!hasMvpPerm) return jsonResponse({ status: 'error', message: 'No tienes permisos para proclamar el MVP.' }, 403);
 
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
         const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
@@ -2913,7 +2913,7 @@ export async function onRequestPost(context) {
             } catch(e) {}
         }
 
-        return jsonResponse({ status: 'success', message: 'MVP Oficial, estadísticas y recuento de votos reales guardados con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs, mvp_publicacion_ts: publicacionTs, recuento: recuentoList });
+        return jsonResponse({ status: 'success', message: 'Ganador MVP, estadísticas y recuento de votos reales guardados con éxito en la base de datos', mvp_proclamado_ts: proclamadoTs, mvp_publicacion_ts: publicacionTs, recuento: recuentoList });
     }
 
     // VOTAR MVP DE PARTIDO

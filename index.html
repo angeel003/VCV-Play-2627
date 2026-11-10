@@ -3091,16 +3091,16 @@
                   </button>
                 </div>
 
-                <!-- TARJETA OFICIAL GANADOR MVP (1080x1080) -->
+                <!-- TARJETA GANADOR MVP (1080x1080 y 1080x1920) -->
                 <div style="margin: 14px 0; padding: 12px; background: linear-gradient(135deg, rgba(142, 68, 173, 0.22) 0%, rgba(212, 175, 55, 0.15) 100%); border: 1.5px solid var(--secondary-color); border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 6px;">
                     <div style="font-weight: 900; font-size: 0.86rem; color: var(--secondary-color); display: flex; align-items: center; gap: 6px;">
-                      <span>📸 Tarjeta Oficial MVP (1080×1080 • Redes / Instagram)</span>
+                      <span>📸 Tarjeta Ganador MVP (Instagram / Redes)</span>
                     </div>
                     <span style="font-size: 0.65rem; background: rgba(212, 175, 55, 0.2); color: var(--secondary-color); border: 1px solid var(--secondary-color); padding: 2px 6px; border-radius: 4px; font-weight: 800;">COMUNICACIÓN / CM</span>
                   </div>
                   <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.35;">
-                    Descarga exactamente la misma tarjeta oficial de MVP de la app (formato 1080×1080) como si el ganador ya estuviese proclamado, con el diseño del club y sin datos de usuario, lista para publicar en historias o posts de redes aunque aún no se haya publicado en la app.
+                    Descarga la tarjeta MVP del club en formato <b>Post (1080×1080)</b> o <b>Stories (1080×1920)</b> como si el ganador ya estuviese proclamado, con el diseño del club y sin datos de usuario, lista para publicar en redes aunque aún no se haya publicado en la app.
                   </p>
                   <!-- SELECTOR DE GANADOR PARA LA TARJETA -->
                   <div style="margin-bottom: 10px;">
@@ -3110,17 +3110,27 @@
                     <select id="adminMvpCardWinnerSelect" onchange="window.onMvpCardWinnerSelectChange(this.value)" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.45); color: #fff; font-weight: 700;">
                     </select>
                   </div>
+                  <!-- SELECTOR DE TAMAÑO / FORMATO DE LA TARJETA -->
+                  <div style="margin-bottom: 10px;">
+                    <label style="font-size: 0.72rem; color: #ffd700; font-weight: 800; display: block; margin-bottom: 4px;">
+                      📐 Formato / Tamaño de la tarjeta (PNG):
+                    </label>
+                    <select id="adminMvpCardFormatSelect" onchange="window.onMvpCardFormatSelectChange(this.value)" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.45); color: #fff; font-weight: 700;">
+                      <option value="square">🖼️ Post Cuadrado • Instagram / Redes (1080×1080)</option>
+                      <option value="story">📱 Vertical Stories • Instagram (1080×1920)</option>
+                    </select>
+                  </div>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="window.abrirTarjetaMvpOficialClub(false)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, #8e44ad, #3498db); color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
+                    <button type="button" onclick="window.abrirTarjetaMvpClub(false)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, #8e44ad, #3498db); color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
                       <span>👁️ Previsualizar Tarjeta</span>
                     </button>
-                    <button type="button" onclick="window.abrirTarjetaMvpOficialClub(true)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, var(--secondary-color), #f39c12); color: #000; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(212,175,55,0.3);">
-                      <span>⬇️ Descargar Tarjeta (PNG 1080x1080)</span>
+                    <button type="button" onclick="window.abrirTarjetaMvpClub(true)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, var(--secondary-color), #f39c12); color: #000; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(212,175,55,0.3);">
+                      <span id="btnAdminMvpDownloadPngLabel">⬇️ Descargar Tarjeta (PNG 1080×1080)</span>
                     </button>
                   </div>
                 </div>
 
-                <!-- PROCLAMAR MVP OFICIAL DEFINITIVO -->
+                <!-- PROCLAMAR GANADOR MVP DEFINITIVO -->
                 <div style="padding: 12px; background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.35); border-radius: 10px;">
                   <div style="font-weight: 800; font-size: 0.85rem; color: #2ecc71; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     👑 Elegir Ganador MVP del Partido / Jornada
@@ -3980,35 +3990,51 @@
             </select>
         </div>
 
-        <!-- Selector de Ganador MVP (solo visible al previsualizar o compartir tarjeta oficial MVP) -->
-        <div id="shareMvpWinnerSelectorContainer" style="display:none; margin-bottom:12px; text-align:left;">
+        <!-- Selector de Ganador MVP (solo visible al previsualizar tarjeta MVP del club) -->
+        <div id="shareMvpWinnerSelectorContainer" style="display:none; margin-bottom:10px; text-align:left;">
             <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:4px;">👑 Ganador a mostrar en la tarjeta:</label>
             <select id="shareMvpWinnerSelect" onchange="window.cambiarGanadorMvpTarjeta(this.value)" style="background:var(--bg-input); color:var(--text-main); border:1.5px solid var(--secondary-color); padding:8px 12px; border-radius:8px; font-size:0.85rem; font-weight:800; width:100%; outline:none; cursor:pointer;">
             </select>
         </div>
 
-        <!-- Contenedor del Canvas de Previsualización -->
-        <div style="background:#0e0612; border-radius:14px; padding:10px; border:1px solid var(--border-color); margin-bottom:16px; display:flex; justify-content:center; align-items:center; min-height:260px;">
-            <canvas id="shareCardCanvas" style="max-width:100%; max-height:52vh; object-fit:contain; height:auto; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
+        <!-- Selector de Formato 1080x1080 / 1080x1920 (solo visible al previsualizar tarjeta MVP del club desde Admin) -->
+        <div id="shareMvpFormatSelectorContainer" style="display:none; margin-bottom:12px; text-align:left;">
+            <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:5px;">📐 Tamaño / Formato:</label>
+            <div style="display:flex; gap:8px;">
+                <button type="button" id="btnShareFmtSquare" onclick="window.cambiarFormatoMvpTarjeta('square')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1.5px solid var(--secondary-color); background:rgba(212,175,55,0.2); color:#ffd700; transition:all 0.2s;">
+                    🖼️ Post (1080×1080)
+                </button>
+                <button type="button" id="btnShareFmtStory" onclick="window.cambiarFormatoMvpTarjeta('story')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-muted); transition:all 0.2s;">
+                    📱 Stories (1080×1920)
+                </button>
+            </div>
         </div>
 
-        <!-- Botón de Acción Principal -->
-        <div>
-            <button id="btnShareNative" onclick="window.ejecutarCompartirTarjeta()" class="btn btn-primary" style="width:100%; background:linear-gradient(135deg, var(--primary-color), #8e3c96); border:none; font-weight:800; border-radius:12px; padding:12px 16px; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(123,51,130,0.4);">
+        <!-- Contenedor del Canvas de Previsualización -->
+        <div style="background:#0e0612; border-radius:14px; padding:10px; border:1px solid var(--border-color); margin-bottom:16px; display:flex; justify-content:center; align-items:center; min-height:240px;">
+            <canvas id="shareCardCanvas" style="width:auto; height:auto; max-width:100%; max-height:50vh; object-fit:contain; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.5); display:block;"></canvas>
+        </div>
+
+        <!-- Botones de Acción Principal -->
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="btnShareNative" onclick="window.ejecutarCompartirTarjeta()" class="btn btn-primary" style="flex:1 1 150px; background:linear-gradient(135deg, var(--primary-color), #8e3c96); border:none; font-weight:800; border-radius:12px; padding:12px 14px; font-size:0.95rem; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 16px rgba(123,51,130,0.4);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                 Compartir Imagen
+            </button>
+            <button id="btnAdminShareDownloadPng" onclick="window.descargarTarjetaCanvas()" class="btn" style="display:none; flex:1 1 140px; background:linear-gradient(135deg, var(--secondary-color), #f39c12); color:#000; border:none; font-weight:900; border-radius:12px; padding:12px 14px; font-size:0.9rem; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 14px rgba(212,175,55,0.35); cursor:pointer;">
+                ⬇️ Descargar PNG
             </button>
         </div>
     </div>
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261110_mvp4"></script>
-<script src="js/admin.js?v=20261110_mvp4"></script>
-<script src="js/cartelera.js?v=20261110_mvp4"></script>
-<script src="js/ranking.js?v=20261110_mvp4"></script>
-<script src="js/calendario.js?v=20261110_mvp4"></script>
-<script src="js/cartelera_interactive.js?v=20261110_mvp4"></script>
+<script src="js/config.js?v=20261110_mvp5"></script>
+<script src="js/admin.js?v=20261110_mvp5"></script>
+<script src="js/cartelera.js?v=20261110_mvp5"></script>
+<script src="js/ranking.js?v=20261110_mvp5"></script>
+<script src="js/calendario.js?v=20261110_mvp5"></script>
+<script src="js/cartelera_interactive.js?v=20261110_mvp5"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
 <script src="js/auth.js?v=20261107_v28"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>

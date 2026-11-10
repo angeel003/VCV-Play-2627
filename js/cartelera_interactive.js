@@ -2476,56 +2476,59 @@ if (btnRequestInsigniasEl) btnRequestInsigniasEl.addEventListener('click', funct
 // ==========================================
 // LOGICA DE COMPARTIR TARJETA CANVAS
 // ==========================================
-window.currentShareMode = null; // 'match' o 'jornada'
+window.currentShareMode = null; // 'match', 'jornada' o 'mvp'
+window.currentShareFormat = 'square'; // 'square' (1080x1080) o 'story' (1080x1920, solo Admin MVP)
 window.currentShareMatchId = null;
 window.currentShareLiga = null;
+
+function ocultarControlesAdminModalTarjeta() {
+    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
+    const formatSelectorContainer = document.getElementById('shareMvpFormatSelectorContainer');
+    if (formatSelectorContainer) formatSelectorContainer.style.display = 'none';
+    const btnAdminDl = document.getElementById('btnAdminShareDownloadPng');
+    if (btnAdminDl) btnAdminDl.style.display = 'none';
+    window.isMvpAdminClubCard = false;
+    window.currentShareFormat = 'square';
+    window.currentShareWinnerOverride = null;
+    window.currentShareStatsOverride = null;
+    window.currentShareCandidatesOverride = null;
+}
 
 window.closeShareCardModal = function() {
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'none';
-    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
-    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
-    window.isMvpAdminClubCard = false;
-    window.currentShareWinnerOverride = null;
-    window.currentShareStatsOverride = null;
-    window.currentShareCandidatesOverride = null;
+    ocultarControlesAdminModalTarjeta();
 };
 
 window.abrirModalCompartirPartido = function(idPart) {
+    ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'match';
     window.currentShareMatchId = idPart;
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
-    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
-    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'flex';
     window.dibujarTarjetaCompartir();
 };
 
 window.abrirModalCompartirMVP = function(idPart) {
+    ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'mvp';
     window.currentShareMatchId = idPart;
-    window.isMvpAdminClubCard = false;
-    window.currentShareWinnerOverride = null;
-    window.currentShareStatsOverride = null;
-    window.currentShareCandidatesOverride = null;
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
-    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
-    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'flex';
     window.dibujarTarjetaCompartir();
 };
 
 window.abrirModalCompartirJornada = function(ligaDefault) {
+    ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'jornada';
     window.currentShareLiga = ligaDefault || (window.currentLiga || (window.appData && window.appData.ligas ? window.appData.ligas[0] : ''));
     
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
-    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
-    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const select = document.getElementById('shareLigaSelect');
     if (select && window.appData && window.appData.ligas) {
         select.innerHTML = window.appData.ligas.map(l => `<option value="${l}" ${l === window.currentShareLiga ? 'selected' : ''}>Liga ${l}</option>`).join('');
@@ -2557,7 +2560,7 @@ function cargarImagenCanvas(src) {
 // Helper: Pintar fondo con malla y resplandores dorados/morados
 function pintarFondoEstadioCanvas(ctx, W, H) {
     // Fondo base degradado profundo
-    const bgGrad = ctx.createRadialGradient(W / 2, H / 3, 50, W / 2, H / 2, Math.max(W, H) * 0.8);
+    const bgGrad = ctx.createRadialGradient(W / 2, H / 3, 50, W / 2, H / 2, Math.max(W, H) * 0.85);
     bgGrad.addColorStop(0, '#2d1437');
     bgGrad.addColorStop(0.5, '#190a1e');
     bgGrad.addColorStop(1, '#0b040e');
@@ -2565,24 +2568,24 @@ function pintarFondoEstadioCanvas(ctx, W, H) {
     ctx.fillRect(0, 0, W, H);
 
     // Resplandor superior dorado
-    const glowGold = ctx.createRadialGradient(W / 2, 0, 10, W / 2, 0, 500);
-    glowGold.addColorStop(0, 'rgba(212, 175, 55, 0.22)');
+    const glowGold = ctx.createRadialGradient(W / 2, 0, 10, W / 2, 0, Math.round(H * 0.46));
+    glowGold.addColorStop(0, 'rgba(212, 175, 55, 0.24)');
     glowGold.addColorStop(1, 'rgba(212, 175, 55, 0)');
     ctx.fillStyle = glowGold;
     ctx.fillRect(0, 0, W, H);
 
     // Resplandor inferior morado intenso
-    const glowMorado = ctx.createRadialGradient(W / 2, H, 10, W / 2, H, 600);
-    glowMorado.addColorStop(0, 'rgba(123, 51, 130, 0.28)');
+    const glowMorado = ctx.createRadialGradient(W / 2, H, 10, W / 2, H, Math.round(H * 0.55));
+    glowMorado.addColorStop(0, 'rgba(123, 51, 130, 0.30)');
     glowMorado.addColorStop(1, 'rgba(123, 51, 130, 0)');
     ctx.fillStyle = glowMorado;
     ctx.fillRect(0, 0, W, H);
 
     // Líneas diagonales de estilo deportivo (sutil marca de agua)
     ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.022)';
     ctx.lineWidth = 1.5;
-    for (let x = -H; x < W + H; x += 60) {
+    for (let x = -H; x < W + H; x += 64) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x + H, H);
@@ -2601,7 +2604,7 @@ function pintarFondoEstadioCanvas(ctx, W, H) {
     // Acentos dorados en las 4 esquinas
     ctx.strokeStyle = '#d4af37';
     ctx.lineWidth = 5;
-    const cornerSize = 40;
+    const cornerSize = (H > W) ? 48 : 40;
     // Top-left
     ctx.beginPath(); ctx.moveTo(24, 24 + cornerSize); ctx.lineTo(24, 24); ctx.lineTo(24 + cornerSize, 24); ctx.stroke();
     // Top-right
@@ -2618,14 +2621,27 @@ window.dibujarTarjetaCompartir = async function() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    const isStoryClubMvp = Boolean(
+        window.currentShareMode === 'mvp' &&
+        window.isMvpAdminClubCard &&
+        window.currentShareFormat === 'story'
+    );
+
     const W = 1080;
-    const H = 1080;
+    const H = isStoryClubMvp ? 1920 : 1080;
     canvas.width = W;
     canvas.height = H;
 
     pintarFondoEstadioCanvas(ctx, W, H);
 
-    // Cabecera Oficial VCV PLAY
+    const data = window.appData || {};
+
+    if (isStoryClubMvp) {
+        await dibujarTarjetaMvpStoryCanvas(ctx, W, H, data);
+        return;
+    }
+
+    // Cabecera VCV PLAY
     ctx.fillStyle = '#d4af37';
     ctx.font = '900 46px "Space Grotesk", sans-serif, system-ui';
     ctx.textAlign = 'left';
@@ -2635,7 +2651,6 @@ window.dibujarTarjetaCompartir = async function() {
     ctx.font = '700 22px sans-serif';
     ctx.fillText('VALLADOLID CLUB VOLEIBOL • 2026/2027', 70, 130);
 
-    const data = window.appData || {};
     let uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || (data.usuario || ''));
     if (!uName || uName === 'Invitado') {
         try {
@@ -2646,8 +2661,15 @@ window.dibujarTarjetaCompartir = async function() {
     if (!uName) uName = 'Jugador';
     const nReal = data.nombre_real || (uName !== 'Jugador' && uName !== 'Invitado' ? uName : '');
 
-    // Usuario visible en la cabecera superior derecha
-    if (uName && uName !== 'Invitado' && uName !== 'Jugador') {
+    // En tarjetas de usuario: mostrar @usuario. En tarjetas del club (admin): mostrar sello de competición sin datos personales
+    if (window.currentShareMode === 'mvp' && window.isMvpAdminClubCard) {
+        ctx.fillStyle = '#f3ce5e';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, 'PREMIO MVP VALCYL', W - 70, 95, 380, 26, '900 "Space Grotesk", sans-serif', 18);
+        ctx.fillStyle = '#b7a4be';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, 'SUPERLIGA 2 • vcvplay.com', W - 70, 126, 380, 19, '700 sans-serif', 14);
+    } else if (uName && uName !== 'Invitado' && uName !== 'Jugador') {
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'right';
         drawTextFitted(ctx, '@' + uName, W - 70, 95, 380, 28, '800 "Space Grotesk", sans-serif', 18);
@@ -2693,6 +2715,17 @@ function drawImageContain(ctx, img, x, y, maxW, maxH) {
     const nh = img.height * ratio;
     const nx = x + (maxW - nw) / 2;
     const ny = y + (maxH - nh) / 2;
+    ctx.drawImage(img, nx, ny, nw, nh);
+}
+
+// Helper para dibujar recortes de jugadores alineados abajo (object-position: bottom center)
+function drawImageContainBottom(ctx, img, x, y, maxW, maxH) {
+    if (!img) return;
+    const ratio = Math.min(maxW / img.width, maxH / img.height);
+    const nw = img.width * ratio;
+    const nh = img.height * ratio;
+    const nx = x + (maxW - nw) / 2;
+    const ny = y + (maxH - nh);
     ctx.drawImage(img, nx, ny, nw, nh);
 }
 
@@ -2778,7 +2811,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         primaryInfo = window.parseCandInfo(cands[0]);
     }
 
-    // Cargar marca de agua oficial VALCYL e imagen del jugador principal
+    // Cargar marca de agua VALCYL e imagen del jugador principal
     let valcylLogoImg = await cargarImagenCanvas('files/images/valcyl_logo.png');
     let mainImg = null;
     if (primaryInfo) {
@@ -2901,7 +2934,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     // 2. Foto del jugador o iniciales por delante de la marca de agua
     if (mainImg) {
-        drawImageContain(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
+        drawImageContainBottom(ctx, mainImg, photoX + 4, photoY + 4, photoBoxW - 8, photoBoxH - 8);
     } else if (primaryInfo) {
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 80px "Space Grotesk", sans-serif';
@@ -2960,26 +2993,28 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         drawTextFitted(ctx, primaryInfo.posicion, infoX + 90, heroY + 169, 160, 18, '800 sans-serif', 13);
     }
 
-    // Estadísticas destacadas de MVP (si el partido ya terminó o por override)
+    // Estadísticas destacadas de MVP (si el partido ya terminó o por override, hasta 4)
     let statsToShow = (window.isMvpAdminClubCard && Array.isArray(window.currentShareStatsOverride) && window.currentShareStatsOverride.length > 0)
         ? window.currentShareStatsOverride
         : (Array.isArray(match.mvp_stats) ? match.mvp_stats : []);
     if (isProclaimed && Array.isArray(statsToShow) && statsToShow.length > 0) {
         let stY = heroY + 198;
-        let validStats = statsToShow.filter(Boolean);
-        validStats.slice(0, 3).forEach((st, i) => {
-            let badgeX = infoX + (i * 155);
-            if (badgeX + 145 <= W - 110) {
+        let validStats = statsToShow.filter(Boolean).slice(0, 4);
+        let badgeW = validStats.length <= 3 ? 145 : 132;
+        let badgeGap = validStats.length <= 3 ? 10 : 8;
+        validStats.forEach((st, i) => {
+            let badgeX = infoX + (i * (badgeW + badgeGap));
+            if (badgeX + badgeW <= W - 105) {
                 ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
                 ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.roundRect(badgeX, stY, 145, 42, 10);
+                ctx.roundRect(badgeX, stY, badgeW, 42, 10);
                 ctx.fill(); ctx.stroke();
 
                 ctx.fillStyle = '#ffffff';
                 ctx.textAlign = 'center';
-                drawTextFitted(ctx, '⚡ ' + st, badgeX + 72, stY + 27, 130, 17, '800 sans-serif', 12);
+                drawTextFitted(ctx, '⚡ ' + st, badgeX + (badgeW / 2), stY + 27, badgeW - 14, validStats.length <= 3 ? 17 : 15, '800 sans-serif', 11);
             }
         });
     }
@@ -2990,7 +3025,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const bannerMaxW = W - 260; // margen dentro del recuadro
     if (isProclaimed) {
         if (isClubCard) {
-            // Banner genérico oficial del club (sin datos ni votos de usuario)
+            // Banner genérico del club (sin datos ni votos de usuario)
             ctx.fillStyle = 'rgba(212, 175, 55, 0.18)';
             ctx.strokeStyle = '#d4af37';
             ctx.lineWidth = 2.5;
@@ -3128,7 +3163,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         }
 
         if (miniImg) {
-            drawImageContain(ctx, miniImg, mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4);
+            drawImageContainBottom(ctx, miniImg, mPhotoX + 2, mPhotoY + 2, mPhotoSize - 4, mPhotoSize - 4);
         } else {
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 32px "Space Grotesk", sans-serif';
@@ -3143,7 +3178,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         const mMaxW = (mx + miniW - 14) - mInfoX;
         ctx.textAlign = 'left';
 
-        // Badge indicador (OFICIAL / TU VOTO / NOMINADO)
+        // Badge indicador (GANADOR MVP / TU VOTO / NOMINADO)
         if (isOfficialThis) {
             ctx.fillStyle = '#ffd700';
             drawTextFitted(ctx, '👑 MVP VALCYL', mInfoX, miniY + 40, mMaxW, 16, '900 sans-serif', 12);
@@ -3163,6 +3198,645 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = '#b7a4be';
         drawTextFitted(ctx, cInf.posicion || cInf.nombre || '', mInfoX, miniY + 105, mMaxW, 17, '600 sans-serif', 12);
     }
+}
+
+// =========================================================================
+// DISEÑO VERTICAL INSTAGRAM STORIES (1080 x 1920) EXCLUSIVO ADMIN / CLUB
+// =========================================================================
+async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data) {
+    const idPart = window.currentShareMatchId;
+    let match = null;
+    if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
+    if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    if (!match) return;
+
+    const midX = W / 2;
+    const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
+    const visName = (match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local;
+    const cat = (match.categoria || 'SUPERLIGA 2').toUpperCase();
+    const jNum = match.jornada_eq || match.ronda_global || '-';
+
+    const cands = (Array.isArray(window.currentShareCandidatesOverride) && window.currentShareCandidatesOverride.length > 0)
+        ? window.currentShareCandidatesOverride
+        : (Array.isArray(match.mvp_candidatos) ? match.mvp_candidatos.filter(Boolean) : []);
+    const winnerStr = window.currentShareWinnerOverride || match.mvp_oficial || (cands.length > 0 ? cands[0] : '');
+    const primaryInfo = winnerStr ? window.parseCandInfo(winnerStr) : null;
+
+    const rawStats = (Array.isArray(window.currentShareStatsOverride) && window.currentShareStatsOverride.length > 0)
+        ? window.currentShareStatsOverride
+        : (Array.isArray(match.mvp_stats) ? match.mvp_stats : []);
+    const statsToShow = rawStats.filter(s => s && String(s).trim() !== '').slice(0, 4);
+
+    // Normalizar nombres de escudos (idéntico a tarjetas de partido)
+    const slugifyCrest = (str) => String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const safeLoc = slugifyCrest(locName);
+    const safeVis = slugifyCrest(visName);
+
+    // Cargar en paralelo todas las imágenes necesarias
+    const candInfos = cands.slice(0, 3).map(c => ({ raw: c, info: window.parseCandInfo(c) }));
+    const [valcylLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mainImgRaw, mainImgFallback, ...candImgs] = await Promise.all([
+        cargarImagenCanvas('files/images/valcyl_logo.png'),
+        cargarImagenCanvas('files/images/escudos/valcyl_vcv.webp'),
+        cargarImagenCanvas('files/images/logo_vcv_circle.png'),
+        cargarImagenCanvas(`files/images/escudos/${safeLoc}.webp?v=20261108_v3`),
+        cargarImagenCanvas(`files/images/escudos/${safeVis}.webp?v=20261108_v3`),
+        primaryInfo ? cargarImagenCanvas(primaryInfo.photoSrc) : Promise.resolve(null),
+        (primaryInfo && primaryInfo.dorsal) ? cargarImagenCanvas(`files/images/jugadores/dorsal_${primaryInfo.dorsal}.jpeg`) : Promise.resolve(null),
+        ...candInfos.map(async (ci) => {
+            let im = await cargarImagenCanvas(ci.info.photoSrc);
+            if (!im && ci.info.dorsal) {
+                im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${ci.info.dorsal}.jpeg`);
+            }
+            return im;
+        })
+    ]);
+    const mainImg = mainImgRaw || mainImgFallback;
+    const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
+
+    // Resplandor ambiental central para equilibrar la composición vertical
+    const storySpot = ctx.createRadialGradient(midX, 690, 40, midX, 690, 520);
+    storySpot.addColorStop(0, 'rgba(212, 175, 55, 0.16)');
+    storySpot.addColorStop(0.55, 'rgba(123, 51, 130, 0.18)');
+    storySpot.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = storySpot;
+    ctx.fillRect(0, 260, W, 920);
+
+    // ========================================================
+    // 1. CABECERA SUPERIOR SAFE-ZONE IG STORIES (Y = 122..212)
+    // ========================================================
+    let brandTextX = 72;
+    if (vcvCrest) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.beginPath();
+        ctx.arc(106, 158, 36, 0, Math.PI * 2);
+        ctx.fill();
+        drawImageContain(ctx, vcvCrest, 76, 128, 60, 60);
+        ctx.restore();
+        brandTextX = 156;
+    }
+
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '900 42px "Space Grotesk", sans-serif, system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText('VCV PLAY', brandTextX, 154);
+
+    ctx.fillStyle = '#b7a4be';
+    ctx.font = '700 18px sans-serif';
+    ctx.fillText('VALLADOLID CLUB VOLEIBOL • 2026/2027', brandTextX, 184);
+
+    // Pill de competición en esquina superior derecha
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(W - 72 - 220, 132, 220, 48, 14);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, cat, W - 72 - 110, 163, 194, 21, '900 "Space Grotesk", sans-serif', 14);
+
+    // Línea divisoria superior
+    const lineGrad = ctx.createLinearGradient(72, 0, W - 72, 0);
+    lineGrad.addColorStop(0, 'rgba(212, 175, 55, 0.85)');
+    lineGrad.addColorStop(0.5, 'rgba(123, 51, 130, 0.7)');
+    lineGrad.addColorStop(1, 'rgba(212, 175, 55, 0.15)');
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(72, 210);
+    ctx.lineTo(W - 72, 210);
+    ctx.stroke();
+
+    // ========================================================
+    // 2. BANDA DE PARTIDO Y JORNADA (Y = 230..324)
+    // ========================================================
+    const barY = 230;
+    const barH = 92;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.045)';
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.32)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(72, barY, W - 144, barH, 20);
+    ctx.fill(); ctx.stroke();
+
+    const hasScore = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+    const centerMatchX = 432;
+    const locCrestX = 96;
+    const visCrestX = 712;
+
+    if (imgLoc) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(locCrestX + 26, barY + 46, 31, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        drawImageContain(ctx, imgLoc, locCrestX, barY + 20, 52, 52);
+    }
+    if (imgVis) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.arc(visCrestX + 26, barY + 46, 31, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        drawImageContain(ctx, imgVis, visCrestX, barY + 20, 52, 52);
+    }
+
+    const locShort = String(locName || 'VCV').trim();
+    const visShort = String(visName || 'Rival').trim();
+
+    if (hasScore) {
+        // Marcador oficial entre ambos equipos
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.2)';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.roundRect(centerMatchX - 44, barY + 25, 88, 42, 12);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#ffd700';
+        ctx.textAlign = 'center';
+        drawTextFitted(ctx, String(match.oficial_sets).replace('-', ' - '), centerMatchX, barY + 54, 76, 22, '900 "Space Grotesk", sans-serif', 14);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, locShort, centerMatchX - 58, barY + 53, 206, 21, '800 sans-serif', 13);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        drawTextFitted(ctx, visShort, centerMatchX + 58, barY + 53, 206, 21, '800 sans-serif', 13);
+    } else {
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(centerMatchX - 28, barY + 27, 56, 38, 11);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#ffd700';
+        ctx.textAlign = 'center';
+        ctx.font = '900 18px "Space Grotesk", sans-serif';
+        ctx.fillText('VS', centerMatchX, barY + 52);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'right';
+        drawTextFitted(ctx, locShort, centerMatchX - 42, barY + 53, 218, 22, '800 sans-serif', 13);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        drawTextFitted(ctx, visShort, centerMatchX + 42, barY + 53, 218, 22, '800 sans-serif', 13);
+    }
+
+    // Separador vertical y chip Jornada
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(784, barY + 18);
+    ctx.lineTo(784, barY + barH - 18);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.16)';
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(800, barY + 18, 190, 56, 14);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, 'JORNADA ' + jNum, 895, barY + 54, 170, 23, '900 "Space Grotesk", sans-serif', 15);
+
+    // ========================================================
+    // 3. POSTER HERO PRINCIPAL DEL MVP (Y = 344..1262, H = 918)
+    // ========================================================
+    const posterX = 68;
+    const posterY = 344;
+    const posterW = W - 136;
+    const posterH = 918;
+
+    const cardGrad = ctx.createLinearGradient(0, posterY, 0, posterY + posterH);
+    cardGrad.addColorStop(0, 'rgba(42, 19, 53, 0.92)');
+    cardGrad.addColorStop(1, 'rgba(16, 7, 22, 0.98)');
+    ctx.fillStyle = cardGrad;
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.78)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(posterX, posterY, posterW, posterH, 30);
+    ctx.fill(); ctx.stroke();
+
+    // Ribbon superior MVP VALCYL
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.18)';
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(midX - 250, posterY + 26, 500, 50, 25);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, '👑 MVP VALCYL DE LA JORNADA', midX, posterY + 59, 460, 23, '900 "Space Grotesk", sans-serif', 16);
+
+    // Dimensionado adaptativo dentro del poster según cuántas estadísticas haya (0 / 1-2 / 3-4)
+    const statsCount = statsToShow.length;
+    const hasFullName = Boolean(
+        primaryInfo &&
+        primaryInfo.nombre &&
+        primaryInfo.nombre.toLowerCase() !== String(primaryInfo.apodo || '').toLowerCase()
+    );
+
+    let photoSize = 460;
+    let photoY = posterY + 94;
+    if (statsCount === 0) {
+        photoSize = 510;
+        photoY = posterY + 96;
+    } else if (statsCount >= 3) {
+        photoSize = 420;
+        photoY = posterY + 92;
+    }
+
+    const photoX = midX - (photoSize / 2);
+
+    // Marco / Escenario del jugador con resplandor dorado + marca de agua VALCYL
+    ctx.save();
+    const bgRad = ctx.createRadialGradient(
+        midX, photoY + photoSize * 0.62, 24,
+        midX, photoY + photoSize * 0.52, photoSize * 0.62
+    );
+    bgRad.addColorStop(0, 'rgba(212, 175, 55, 0.30)');
+    bgRad.addColorStop(0.58, 'rgba(93, 23, 137, 0.42)');
+    bgRad.addColorStop(1, 'rgba(15, 5, 22, 0.96)');
+    ctx.fillStyle = bgRad;
+    ctx.beginPath();
+    ctx.roundRect(photoX, photoY, photoSize, photoSize, 28);
+    ctx.fill();
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+
+    // Clip interior de foto + marca de agua
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(photoX + 4, photoY + 4, photoSize - 8, photoSize - 8, 24);
+    ctx.clip();
+
+    if (valcylLogoImg) {
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        const wmSize = (photoSize - 8) * 0.90;
+        const wmX = photoX + 4 + ((photoSize - 8) - wmSize) / 2;
+        const wmY = photoY + 4 + ((photoSize - 8) - wmSize) / 2;
+        drawImageContain(ctx, valcylLogoImg, wmX, wmY, wmSize, wmSize);
+        ctx.restore();
+    }
+
+    if (mainImg) {
+        drawImageContainBottom(ctx, mainImg, photoX + 4, photoY + 10, photoSize - 8, photoSize - 14);
+    } else if (primaryInfo) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `900 ${Math.round(photoSize * 0.28)}px "Space Grotesk", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(primaryInfo.initials, midX, photoY + (photoSize / 2) + Math.round(photoSize * 0.1));
+    }
+
+    // Degradado sutil en el borde inferior del retrato para transición limpia
+    const bottomFade = ctx.createLinearGradient(0, photoY + photoSize - 46, 0, photoY + photoSize);
+    bottomFade.addColorStop(0, 'rgba(16, 7, 22, 0)');
+    bottomFade.addColorStop(1, 'rgba(16, 7, 22, 0.72)');
+    ctx.fillStyle = bottomFade;
+    ctx.fillRect(photoX, photoY + photoSize - 46, photoSize, 46);
+    ctx.restore();
+    ctx.restore();
+
+    // Badge Dorsal flotante sobre el retrato
+    if (primaryInfo && primaryInfo.dorsal) {
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.roundRect(photoX + 18, photoY + 18, 94, 54, 14);
+        ctx.fill();
+        ctx.fillStyle = '#170624';
+        ctx.font = '900 32px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('#' + primaryInfo.dorsal, photoX + 65, photoY + 56);
+    }
+
+    // Tipografía del jugador bajo la foto
+    let curY = photoY + photoSize + 36;
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '800 19px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+        statsCount === 0 ? '⭐ ELEGIDO POR EL CLUB Y LA AFICIÓN' : '👑 JUGADOR MÁS VALIOSO DEL PARTIDO',
+        midX,
+        curY
+    );
+
+    const displayApodo = primaryInfo ? primaryInfo.apodo : 'Jugador';
+    curY += (statsCount === 0 ? 74 : (statsCount >= 3 ? 62 : 66));
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    drawTextFitted(
+        ctx,
+        displayApodo,
+        midX,
+        curY,
+        posterW - 80,
+        statsCount === 0 ? 74 : (statsCount >= 3 ? 62 : 68),
+        '900 "Space Grotesk", sans-serif',
+        32
+    );
+
+    if (hasFullName) {
+        curY += (statsCount === 0 ? 40 : 34);
+        ctx.fillStyle = '#b7a4be';
+        ctx.textAlign = 'center';
+        drawTextFitted(ctx, primaryInfo.nombre, midX, curY, posterW - 100, statsCount === 0 ? 25 : 23, '700 sans-serif', 15);
+    }
+
+    // Posición y sello / bloque de estadísticas
+    const drawPositionChip = (cx, cy, wChip = 240, hChip = 38) => {
+        if (!primaryInfo || !primaryInfo.posicion) return false;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.26)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(cx - (wChip / 2), cy, wChip, hChip, 19);
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        drawTextFitted(ctx, String(primaryInfo.posicion).toUpperCase(), cx, cy + Math.round(hChip * 0.68), wChip - 24, 18, '800 sans-serif', 12);
+        return true;
+    };
+
+    const drawStatBox = (st, sx, sy, sw, sh, isCompact) => {
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(sx, sy, sw, sh, 16);
+        ctx.fill(); ctx.stroke();
+
+        // Acento dorado vertical a la izquierda
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.roundRect(sx + 2, sy + 12, 6, sh - 24, 3);
+        ctx.fill();
+
+        const raw = String(st).trim();
+        const colonIdx = raw.indexOf(':');
+        if (colonIdx > 0 && colonIdx < raw.length - 1) {
+            const labelPart = raw.slice(0, colonIdx).trim().toUpperCase();
+            const valPart = raw.slice(colonIdx + 1).trim();
+            const labelY = sy + Math.round(sh / 2) - (isCompact ? 9 : 11);
+            const valY = sy + Math.round(sh / 2) + (isCompact ? 22 : 28);
+
+            ctx.fillStyle = '#f3ce5e';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, labelPart, sx + (sw / 2) + 2, labelY, sw - 34, isCompact ? 16 : 19, '800 sans-serif', 12);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, valPart, sx + (sw / 2) + 2, valY, sw - 34, isCompact ? 28 : 34, '900 "Space Grotesk", sans-serif', 16);
+        } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '⚡ ' + raw, sx + (sw / 2) + 2, sy + Math.round(sh / 2) + 9, sw - 34, isCompact ? 22 : 26, '800 sans-serif', 14);
+        }
+    };
+
+    if (statsCount === 0) {
+        // Centrar chip de posición + sello decorativo del club para no dejar hueco vacío
+        const chipRowY = curY + 28;
+        const posDrawn = primaryInfo && primaryInfo.posicion;
+        const sealTxt = (match.oficial_parciales && String(match.oficial_parciales).trim() !== '')
+            ? `PARCIALES: ${match.oficial_parciales}`
+            : 'VALCYL • TEMPORADA 2026/2027';
+
+        if (posDrawn) {
+            drawPositionChip(midX, chipRowY, 260, 42);
+            const sealY = chipRowY + 60;
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(midX - 310, sealY, 620, 48, 14);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#f3ce5e';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '🏆 ' + sealTxt, midX, sealY + 31, 580, 19, '800 "Space Grotesk", sans-serif', 13);
+        } else {
+            ctx.fillStyle = 'rgba(212, 175, 55, 0.14)';
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.roundRect(midX - 310, chipRowY + 12, 620, 56, 16);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#f3ce5e';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '🏆 ' + sealTxt, midX, chipRowY + 47, 580, 21, '800 "Space Grotesk", sans-serif', 14);
+        }
+    } else if (statsCount <= 2) {
+        if (primaryInfo && primaryInfo.posicion) {
+            curY += 16;
+            drawPositionChip(midX, curY, 240, 38);
+            curY += 58;
+        } else {
+            curY += 32;
+        }
+        const availH = (posterY + posterH - 22) - curY;
+        const boxH = Math.min(112, Math.max(88, availH));
+        const boxW = statsCount === 1 ? 540 : 418;
+        const gap = 24;
+        const totalW = statsCount * boxW + (statsCount - 1) * gap;
+        const startX = midX - (totalW / 2);
+        statsToShow.forEach((st, idx) => {
+            drawStatBox(st, startX + idx * (boxW + gap), curY, boxW, boxH, false);
+        });
+    } else {
+        if (primaryInfo && primaryInfo.posicion) {
+            curY += 12;
+            drawPositionChip(midX, curY, 224, 34);
+            curY += 48;
+        } else {
+            curY += 22;
+        }
+        const gridTop = curY;
+        const gridBottom = posterY + posterH - 20;
+        const availH = gridBottom - gridTop;
+
+        if (statsCount === 3) {
+            const boxH = Math.min(138, Math.max(108, availH - 8));
+            const boxW = 278;
+            const gap = 18;
+            const startX = midX - ((3 * boxW + 2 * gap) / 2);
+            const boxY = gridTop + Math.max(0, Math.round((availH - boxH) / 2));
+            statsToShow.forEach((st, idx) => {
+                drawStatBox(st, startX + idx * (boxW + gap), boxY, boxW, boxH, false);
+            });
+        } else {
+            // Grid 2x2 para 4 estadísticas
+            const gapX = 20;
+            const gapY = 14;
+            const boxW = 426;
+            const boxH = Math.min(82, Math.floor((availH - gapY) / 2));
+            const startX = midX - ((2 * boxW + gapX) / 2);
+            const startY = gridTop + Math.max(0, Math.round((availH - (2 * boxH + gapY)) / 2));
+            statsToShow.forEach((st, idx) => {
+                const col = idx % 2;
+                const row = Math.floor(idx / 2);
+                drawStatBox(st, startX + col * (boxW + gapX), startY + row * (boxH + gapY), boxW, boxH, true);
+            });
+        }
+    }
+
+    // ========================================================
+    // 4. SECCIÓN NOMINADOS EN ESTE PARTIDO (Y = 1284..1672)
+    // ========================================================
+    const nomHeaderY = 1312;
+    ctx.fillStyle = '#d4af37';
+    ctx.font = '900 22px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('👥 NOMINADOS EN ESTE PARTIDO', 72, nomHeaderY);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.font = '800 18px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('VOTACIÓN VALCYL', W - 72, nomHeaderY);
+
+    const listCands = candInfos;
+    const nCands = listCands.length || 1;
+    const rowX = 68;
+    const rowW = W - 136;
+    const rowH = nCands >= 3 ? 102 : (nCands === 2 ? 136 : 150);
+    const rowGap = nCands >= 3 ? 14 : 22;
+    const listAreaTop = 1334;
+    const listTotalH = nCands * rowH + (nCands - 1) * rowGap;
+    const listStartY = listAreaTop + Math.max(0, Math.round((336 - listTotalH) / 2));
+
+    for (let i = 0; i < listCands.length; i++) {
+        const cItem = listCands[i];
+        const cInf = cItem.info;
+        const cImg = candImgs[i];
+        const ry = listStartY + i * (rowH + rowGap);
+
+        const isWinnerRow = Boolean(winnerStr && (
+            (typeof window.isSameMvpPlayer === 'function')
+                ? window.isSameMvpPlayer(cItem.raw, winnerStr)
+                : (cItem.raw === winnerStr || (cInf.dorsal && primaryInfo && cInf.dorsal === primaryInfo.dorsal))
+        ));
+
+        ctx.fillStyle = isWinnerRow ? 'rgba(212, 175, 55, 0.20)' : 'rgba(255, 255, 255, 0.045)';
+        ctx.strokeStyle = isWinnerRow ? '#d4af37' : 'rgba(255, 255, 255, 0.14)';
+        ctx.lineWidth = isWinnerRow ? 2.5 : 1.5;
+        ctx.beginPath();
+        ctx.roundRect(rowX, ry, rowW, rowH, 20);
+        ctx.fill(); ctx.stroke();
+
+        // Avatar con marca de agua VALCYL
+        const avSize = rowH - 22;
+        const avX = rowX + 14;
+        const avY = ry + 11;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+        ctx.beginPath();
+        ctx.roundRect(avX, avY, avSize, avSize, 14);
+        ctx.fill();
+        ctx.strokeStyle = isWinnerRow ? '#d4af37' : 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(avX + 2, avY + 2, avSize - 4, avSize - 4, 12);
+        ctx.clip();
+
+        if (valcylLogoImg) {
+            ctx.save();
+            ctx.globalAlpha = 0.24;
+            const mWmSize = (avSize - 4) * 0.88;
+            const mWmX = avX + 2 + ((avSize - 4) - mWmSize) / 2;
+            const mWmY = avY + 2 + ((avSize - 4) - mWmSize) / 2;
+            drawImageContain(ctx, valcylLogoImg, mWmX, mWmY, mWmSize, mWmSize);
+            ctx.restore();
+        }
+
+        if (cImg) {
+            drawImageContainBottom(ctx, cImg, avX + 2, avY + 2, avSize - 4, avSize - 4);
+        } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `900 ${Math.round(avSize * 0.36)}px "Space Grotesk", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(cInf.initials, avX + (avSize / 2), avY + (avSize / 2) + Math.round(avSize * 0.12));
+        }
+        ctx.restore();
+        ctx.restore();
+
+        // Badge derecho (👑 MVP VALCYL o ⭐ NOMINADO)
+        const pillW = 204;
+        const pillH = 44;
+        const pillX = rowX + rowW - 18 - pillW;
+        const pillY = ry + Math.round((rowH - pillH) / 2);
+
+        if (isWinnerRow) {
+            ctx.fillStyle = '#d4af37';
+            ctx.beginPath();
+            ctx.roundRect(pillX, pillY, pillW, pillH, 22);
+            ctx.fill();
+            ctx.fillStyle = '#170624';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '👑 MVP VALCYL', pillX + (pillW / 2), pillY + 29, pillW - 22, 18, '900 "Space Grotesk", sans-serif', 12);
+        } else {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.20)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.roundRect(pillX, pillY, pillW, pillH, 22);
+            ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#b7a4be';
+            ctx.textAlign = 'center';
+            drawTextFitted(ctx, '⭐ NOMINADO', pillX + (pillW / 2), pillY + 29, pillW - 22, 17, '800 sans-serif', 12);
+        }
+
+        // Nombre + Posición en centro-izquierda
+        const txtX = avX + avSize + 20;
+        const txtMaxW = pillX - 18 - txtX;
+        const centerY = ry + Math.round(rowH / 2);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        const rowTitle = (cInf.dorsal ? '#' + cInf.dorsal + ' ' : '') + cInf.apodo;
+        drawTextFitted(ctx, rowTitle, txtX, centerY - 4, txtMaxW, nCands >= 3 ? 28 : 32, '900 "Space Grotesk", sans-serif', 16);
+
+        const subParts = [];
+        if (cInf.nombre && cInf.nombre.toLowerCase() !== String(cInf.apodo || '').toLowerCase()) {
+            subParts.push(cInf.nombre);
+        }
+        if (cInf.posicion) subParts.push(cInf.posicion);
+        const subText = subParts.join(' • ');
+        if (subText) {
+            ctx.fillStyle = '#b7a4be';
+            ctx.textAlign = 'left';
+            drawTextFitted(ctx, subText, txtX, centerY + 26, txtMaxW, nCands >= 3 ? 19 : 21, '600 sans-serif', 13);
+        }
+    }
+
+    // ========================================================
+    // 5. CTA FOOTER DENTRO DE ZONA SEGURA IG STORIES (Y = 1694..1754)
+    // ========================================================
+    const ctaW = 680;
+    const ctaH = 58;
+    const ctaX = midX - (ctaW / 2);
+    const ctaY = 1694;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.045)';
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(ctaX, ctaY, ctaW, ctaH, 29);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.textAlign = 'center';
+    drawTextFitted(ctx, '🏐 Juega gratis y vota en vcvplay.com', midX, ctaY + 37, ctaW - 44, 22, '800 sans-serif', 14);
 }
 
 async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
@@ -3880,7 +4554,10 @@ window.ejecutarCompartirTarjeta = async function() {
             alert('No se pudo generar la imagen.');
             return;
         }
-        const file = new File([blob], 'vcv_play_tarjeta.png', { type: 'image/png' });
+        const dlFilename = (window.currentShareMode === 'mvp' && window.isMvpAdminClubCard)
+            ? (window.currentShareFormat === 'story' ? 'mvp_valcyl_ganador_story_1080x1920.png' : 'mvp_valcyl_ganador_1080x1080.png')
+            : 'vcv_play_tarjeta.png';
+        const file = new File([blob], dlFilename, { type: 'image/png' });
 
         // Comprobar si el navegador soporta compartir archivos
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -3915,7 +4592,7 @@ window.descargarTarjetaCanvas = function() {
     if (!canvas) return;
     const link = document.createElement('a');
     let filename = (window.currentShareMode === 'mvp' && window.isMvpAdminClubCard) 
-        ? 'mvp_valcyl_ganador_oficial.png' 
+        ? (window.currentShareFormat === 'story' ? 'mvp_valcyl_ganador_story_1080x1920.png' : 'mvp_valcyl_ganador_1080x1080.png')
         : 'vcv_play_tarjeta.png';
     link.download = filename;
     link.href = canvas.toDataURL('image/png');

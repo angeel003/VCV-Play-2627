@@ -734,7 +734,7 @@ window.onDirectMvpPartidoChange = function(idPart) {
     s2.innerHTML = optsHtml;
     s3.innerHTML = optsHtml;
 
-    // Buscar si el partido ya tiene candidatos u oficial
+    // Buscar si el partido ya tiene candidatos o ganador MVP
     let matchObj = null;
     if (window.appData && Array.isArray(window.appData.equipos)) {
         matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
@@ -748,7 +748,7 @@ window.onDirectMvpPartidoChange = function(idPart) {
     window.setSelectValueSafely(s2, cands[1] || '');
     window.setSelectValueSafely(s3, cands[2] || '');
 
-    // Actualizar opciones del MVP Oficial para que SOLO salgan los candidatos seleccionados
+    // Actualizar opciones del ganador MVP para que SOLO salgan los candidatos seleccionados
     window.actualizarOpcionesMvpOficial(matchObj ? matchObj.mvp_oficial : '');
 
     // Cargar horarios programados: Cierre de votación (12:00) y Publicación (15:00)
@@ -837,7 +837,7 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
         sOficial.selectedIndex = 0;
     }
 
-    // Actualizar también el selector de ganador para la tarjeta oficial (redes/Instagram)
+    // Actualizar también el selector de ganador para la tarjeta del club (redes/Instagram)
     const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
     if (sCardWinner) {
         const plantilla = (typeof window.getPlantillaSuperligaActual === 'function') ? window.getPlantillaSuperligaActual() : ((window.appData && window.appData.plantilla_superliga) || []);
@@ -2119,7 +2119,7 @@ window.cargarListaPermisosUsuarios = function() {
                 <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                     <label style="display:flex; align-items:center; gap:6px; font-size:0.75rem; cursor:pointer; margin:0; background:rgba(230,126,34,0.1); border:1px solid rgba(230,126,34,0.3); padding:4px 8px; border-radius:6px;">
                         <input type="checkbox" id="perm_mvp_${idx}" ${isMvp ? 'checked' : ''} style="cursor:pointer;">
-                        <span>⭐ <b>Gestor MVP Superliga</b> (candidatos y oficial)</span>
+                        <span>⭐ <b>Gestor MVP Superliga</b> (candidatos y ganador)</span>
                     </label>
                 </div>
 
@@ -2841,9 +2841,64 @@ window.eliminarUsuarioMonitor = function(user) {
 // ==================================================================
 
 // ==================================================================
-// HERRAMIENTA CM / REDES: TARJETA OFICIAL GANADOR MVP (1080x1080)
+// HERRAMIENTA CM / REDES: TARJETA GANADOR MVP (1080x1080 / 1080x1920)
 // ==================================================================
-window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
+window.syncMvpFormatUi = function(fmt) {
+    const safeFmt = (fmt === 'story') ? 'story' : 'square';
+    const selAdminFmt = document.getElementById('adminMvpCardFormatSelect');
+    if (selAdminFmt && selAdminFmt.value !== safeFmt) selAdminFmt.value = safeFmt;
+
+    const dlLabel = document.getElementById('btnAdminMvpDownloadPngLabel');
+    if (dlLabel) {
+        dlLabel.innerText = (safeFmt === 'story')
+            ? '⬇️ Descargar Tarjeta (PNG 1080×1920)'
+            : '⬇️ Descargar Tarjeta (PNG 1080×1080)';
+    }
+
+    const dlModalBtn = document.getElementById('btnAdminShareDownloadPng');
+    if (dlModalBtn) {
+        dlModalBtn.innerText = (safeFmt === 'story')
+            ? '⬇️ PNG Stories (1080×1920)'
+            : '⬇️ PNG Post (1080×1080)';
+    }
+
+    const btnSq = document.getElementById('btnShareFmtSquare');
+    const btnSt = document.getElementById('btnShareFmtStory');
+    if (btnSq && btnSt) {
+        if (safeFmt === 'story') {
+            btnSq.style.border = '1px solid var(--border-color)';
+            btnSq.style.background = 'var(--bg-input)';
+            btnSq.style.color = 'var(--text-muted)';
+            btnSt.style.border = '1.5px solid var(--secondary-color)';
+            btnSt.style.background = 'rgba(212,175,55,0.2)';
+            btnSt.style.color = '#ffd700';
+        } else {
+            btnSq.style.border = '1.5px solid var(--secondary-color)';
+            btnSq.style.background = 'rgba(212,175,55,0.2)';
+            btnSq.style.color = '#ffd700';
+            btnSt.style.border = '1px solid var(--border-color)';
+            btnSt.style.background = 'var(--bg-input)';
+            btnSt.style.color = 'var(--text-muted)';
+        }
+    }
+};
+
+window.onMvpCardFormatSelectChange = function(fmt) {
+    const safeFmt = (fmt === 'story') ? 'story' : 'square';
+    window.currentShareFormat = safeFmt;
+    window.syncMvpFormatUi(safeFmt);
+};
+
+window.cambiarFormatoMvpTarjeta = async function(fmt) {
+    const safeFmt = (fmt === 'story') ? 'story' : 'square';
+    window.currentShareFormat = safeFmt;
+    window.syncMvpFormatUi(safeFmt);
+    if (typeof window.dibujarTarjetaCompartir === 'function') {
+        await window.dibujarTarjetaCompartir();
+    }
+};
+
+window.abrirTarjetaMvpClub = async function(directDownload = false) {
     const pSelect = document.getElementById('directMvpPartidoSelect');
     const idPart = pSelect ? pSelect.value : null;
     if (!idPart) {
@@ -2875,7 +2930,7 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         }
     }
 
-    // Ganador seleccionado en el desplegable de tarjeta, ganador oficial o el primero de los candidatos
+    // Ganador seleccionado en el desplegable de tarjeta, ganador guardado o el primero de los candidatos
     const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
     const sOficial = document.getElementById('directMvpOficialSelect');
     let winner = (sCardWinner && sCardWinner.value) 
@@ -2895,13 +2950,20 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         stats = match.mvp_stats.filter(Boolean);
     }
 
-    // Parámetros para el canvas de la tarjeta oficial (1080x1080)
+    // Formato seleccionado (1080x1080 o 1080x1920)
+    const sFmt = document.getElementById('adminMvpCardFormatSelect');
+    const fmt = (sFmt && sFmt.value === 'story') ? 'story' : 'square';
+
+    // Parámetros para el canvas de la tarjeta MVP del club
     window.currentShareMode = 'mvp';
+    window.currentShareFormat = fmt;
     window.currentShareMatchId = idPart;
     window.isMvpAdminClubCard = true;
     window.currentShareWinnerOverride = winner;
     window.currentShareStatsOverride = stats;
     window.currentShareCandidatesOverride = cands;
+
+    window.syncMvpFormatUi(fmt);
 
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
@@ -2926,11 +2988,18 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
             if (winner) window.setSelectValueSafely(winnerSelect, winner);
         }
 
+        const formatSelectorContainer = document.getElementById('shareMvpFormatSelectorContainer');
+        if (formatSelectorContainer) formatSelectorContainer.style.display = 'block';
+
+        const btnAdminDl = document.getElementById('btnAdminShareDownloadPng');
+        if (btnAdminDl) btnAdminDl.style.display = 'flex';
+
         const modal = document.getElementById('shareCardModal');
         if (modal) modal.style.display = 'flex';
         await window.dibujarTarjetaCompartir();
     }
 };
+window.abrirTarjetaMvpOficialClub = window.abrirTarjetaMvpClub;
 
 window.cambiarGanadorMvpTarjeta = async function(cand) {
     if (!cand) return;
