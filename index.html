@@ -3102,6 +3102,14 @@
                   <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.35;">
                     Descarga exactamente la misma tarjeta oficial de MVP de la app (formato 1080×1080) como si el ganador ya estuviese proclamado, con el diseño del club y sin datos de usuario, lista para publicar en historias o posts de redes aunque aún no se haya publicado en la app.
                   </p>
+                  <!-- SELECTOR DE GANADOR PARA LA TARJETA -->
+                  <div style="margin-bottom: 10px;">
+                    <label style="font-size: 0.72rem; color: #ffd700; font-weight: 800; display: block; margin-bottom: 4px;">
+                      👑 Elegir nominado a destacar como ganador en la tarjeta:
+                    </label>
+                    <select id="adminMvpCardWinnerSelect" onchange="window.onMvpCardWinnerSelectChange(this.value)" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; border-radius: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.45); color: #fff; font-weight: 700;">
+                    </select>
+                  </div>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" onclick="window.abrirTarjetaMvpOficialClub(false)" style="flex: 1 1 140px; padding: 10px; background: linear-gradient(135deg, #8e44ad, #3498db); color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.78rem; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
                       <span>👁️ Previsualizar Tarjeta</span>
@@ -3974,6 +3982,13 @@
         <div id="shareLigaSelectorContainer" style="display:none; margin-bottom:12px;">
             <label style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; display:block; margin-bottom:4px;">Liga a mostrar:</label>
             <select id="shareLigaSelect" onchange="window.cambiarLigaCompartir(this.value)" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:6px 12px; border-radius:8px; font-size:0.85rem; font-weight:700; width:100%; outline:none;">
+            </select>
+        </div>
+
+        <!-- Selector de Ganador MVP (solo visible al previsualizar o compartir tarjeta oficial MVP) -->
+        <div id="shareMvpWinnerSelectorContainer" style="display:none; margin-bottom:12px; text-align:left;">
+            <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:4px;">👑 Ganador a mostrar en la tarjeta:</label>
+            <select id="shareMvpWinnerSelect" onchange="window.cambiarGanadorMvpTarjeta(this.value)" style="background:var(--bg-input); color:var(--text-main); border:1.5px solid var(--secondary-color); padding:8px 12px; border-radius:8px; font-size:0.85rem; font-weight:800; width:100%; outline:none; cursor:pointer;">
             </select>
         </div>
 

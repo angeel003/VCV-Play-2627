@@ -2484,6 +2484,8 @@ window.currentShareLiga = null;
 window.closeShareCardModal = function() {
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'none';
+    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     window.isMvpAdminClubCard = false;
     window.currentShareWinnerOverride = null;
     window.currentShareStatsOverride = null;
@@ -2495,6 +2497,8 @@ window.abrirModalCompartirPartido = function(idPart) {
     window.currentShareMatchId = idPart;
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
+    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'flex';
     window.dibujarTarjetaCompartir();
@@ -2509,6 +2513,8 @@ window.abrirModalCompartirMVP = function(idPart) {
     window.currentShareCandidatesOverride = null;
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
+    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'flex';
     window.dibujarTarjetaCompartir();
@@ -2519,6 +2525,8 @@ window.abrirModalCompartirJornada = function(ligaDefault) {
     window.currentShareLiga = ligaDefault || (window.currentLiga || (window.appData && window.appData.ligas ? window.appData.ligas[0] : ''));
     
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
+    const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+    if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
     const select = document.getElementById('shareLigaSelect');
     if (select && window.appData && window.appData.ligas) {
         select.innerHTML = window.appData.ligas.map(l => `<option value="${l}" ${l === window.currentShareLiga ? 'selected' : ''}>Liga ${l}</option>`).join('');

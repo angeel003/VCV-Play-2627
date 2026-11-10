@@ -824,6 +824,34 @@ window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
     } else {
         sOficial.selectedIndex = 0;
     }
+
+    // Actualizar también el selector de ganador para la tarjeta oficial (redes/Instagram)
+    const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
+    if (sCardWinner) {
+        let prevCardVal = sCardWinner.value;
+        let hCard = '';
+        if (candidatosActivos.length === 0) {
+            hCard = '<option value="">-- Primero selecciona los nominados arriba --</option>';
+        } else {
+            candidatosActivos.forEach(cand => {
+                let info = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand, posicion: '' };
+                let etiqueta = (info.dorsal ? '#' + info.dorsal + ' ' : '') + info.apodo;
+                hCard += `<option value="${cand}">${etiqueta}</option>`;
+            });
+        }
+        sCardWinner.innerHTML = hCard;
+        if (prevCardVal && candidatosActivos.includes(prevCardVal)) {
+            window.setSelectValueSafely(sCardWinner, prevCardVal);
+        } else if (selActual && candidatosActivos.includes(selActual)) {
+            window.setSelectValueSafely(sCardWinner, selActual);
+        } else if (candidatosActivos.length > 0) {
+            sCardWinner.selectedIndex = 0;
+        }
+    }
+};
+
+window.onMvpCardWinnerSelectChange = function(val) {
+    window.currentShareWinnerOverride = val;
 };
 
 window.actualizarBannerEstadoMvp = function(matchObj) {
@@ -2815,9 +2843,12 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         return;
     }
 
-    // Ganador seleccionado en el desplegable de ganador oficial o el primero de los candidatos
+    // Ganador seleccionado en el desplegable de tarjeta, ganador oficial o el primero de los candidatos
+    const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
     const sOficial = document.getElementById('directMvpOficialSelect');
-    let winner = (sOficial && sOficial.value) ? sOficial.value : (match && match.mvp_oficial ? match.mvp_oficial : '');
+    let winner = (sCardWinner && sCardWinner.value) 
+        ? sCardWinner.value 
+        : ((sOficial && sOficial.value) ? sOficial.value : (match && match.mvp_oficial ? match.mvp_oficial : ''));
     if (!winner && cands.length > 0) {
         winner = cands[0];
     }
@@ -2847,8 +2878,31 @@ window.abrirTarjetaMvpOficialClub = async function(directDownload = false) {
         await window.dibujarTarjetaCompartir();
         window.descargarTarjetaCanvas();
     } else {
+        // Configurar selector de ganador dentro del propio modal
+        const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
+        const winnerSelect = document.getElementById('shareMvpWinnerSelect');
+        if (winnerSelectorContainer && winnerSelect) {
+            winnerSelectorContainer.style.display = 'block';
+            winnerSelect.innerHTML = cands.map(cand => {
+                let pInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(cand) : { dorsal: '', apodo: cand };
+                return `<option value="${cand}" ${cand === winner ? 'selected' : ''}>👑 ${pInf.dorsal ? '#' + pInf.dorsal + ' ' : ''}${pInf.apodo}</option>`;
+            }).join('');
+        }
+
         const modal = document.getElementById('shareCardModal');
         if (modal) modal.style.display = 'flex';
+        await window.dibujarTarjetaCompartir();
+    }
+};
+
+window.cambiarGanadorMvpTarjeta = async function(cand) {
+    if (!cand) return;
+    window.currentShareWinnerOverride = cand;
+    const sCardWinner = document.getElementById('adminMvpCardWinnerSelect');
+    if (sCardWinner && typeof window.setSelectValueSafely === 'function') {
+        window.setSelectValueSafely(sCardWinner, cand);
+    }
+    if (typeof window.dibujarTarjetaCompartir === 'function') {
         await window.dibujarTarjetaCompartir();
     }
 };
