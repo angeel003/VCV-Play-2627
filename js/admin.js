@@ -220,9 +220,6 @@ ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); 
     if (typeof window.populateDirectMvpBoxes === 'function') {
         window.populateDirectMvpBoxes();
     }
-    if (typeof window.initAdminPushPanel === 'function') {
-        window.initAdminPushPanel();
-    }
 }
 
 window.getJugadorPhotoUrl = function(dorsal) {
@@ -281,20 +278,6 @@ window.renderAdminPlantillaMvp = function() {
         </div>`;
     });
     cont.innerHTML = h;
-};
-
-window.actualizarCampoJugador = function(idx, field, val) {
-    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
-    if (window.appData.plantilla_superliga[idx]) {
-        if (field === 'dorsal') {
-            window.appData.plantilla_superliga[idx][field] = parseInt(val) || 0;
-        } else {
-            window.appData.plantilla_superliga[idx][field] = val.trim();
-        }
-        try {
-            localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-        } catch(e) {}
-    }
 };
 
 window.agregarJugadorPlantilla = function() {
@@ -375,65 +358,6 @@ window.agregarJugadorPlantilla = function() {
     });
 };
 
-window.eliminarJugadorPlantilla = function(idx) {
-    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
-    let pj = window.appData.plantilla_superliga[idx];
-    if (!confirm(`¿Eliminar a #${pj.dorsal} ${pj.nombre} de la plantilla?`)) return;
-    window.appData.plantilla_superliga.splice(idx, 1);
-    try {
-        localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-    } catch(e) {}
-    renderAdminPlantillaMvp();
-    if (window.appData.equipos) renderAdminPanel(window.appData.equipos);
-};
-
-window.guardarPlantillaSuperligaEnBD = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const btn = document.getElementById('btnGuardarPlantillaMvp');
-    if (!window.appData || !Array.isArray(window.appData.plantilla_superliga)) return;
-    if (btn) { btn.disabled = true; btn.innerText = "⏳ Guardando en base de datos..."; }
-    
-    // Guardar siempre una copia local de respaldo inmediato
-    try {
-        localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(window.appData.plantilla_superliga));
-    } catch(err) {}
-
-    let onDone = function() {
-        if (btn) { btn.disabled = false; btn.innerText = "💾 Guardar Cambios en Plantilla"; }
-        window._imgCacheBust = Date.now();
-        if (typeof window.renderAdminPlantillaMvp === 'function') window.renderAdminPlantillaMvp();
-        if (typeof window.renderCarteleraHTML === 'function' && window.appData) window.renderCarteleraHTML(window.appData);
-    };
-
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'save_plantilla_superliga',
-            usuario: currentUser,
-            password: currentPassword,
-            jugadores: window.appData.plantilla_superliga
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    })
-    .then(r => r.json())
-    .then(d => {
-        onDone();
-        if (d.status === 'success') {
-            mostrarToast("Plantilla y fotos actualizadas en base de datos con éxito");
-        } else {
-            // Si el backend remoto aún no tiene la acción activa, guardado local para pruebas
-            mostrarToast("Plantilla y fotos actualizadas (modo pruebas)");
-        }
-    })
-    .catch(err => {
-        onDone();
-        mostrarToast("Plantilla y fotos actualizadas localmente (modo pruebas)");
-    });
-};
-
-
-
-// ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // GESTOR DIRECTO DE NOMINADOS MVP EN SECCIÓN 6.B
 // ------------------------------------------------------------------
@@ -1268,64 +1192,6 @@ window.guardarMvpOficial = function(e) {
     });
 };
 
-window.quitarMvpOficial = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const selPart = document.getElementById('directMvpPartidoSelect');
-    const idPart = selPart ? selPart.value : '';
-    if (!idPart) return;
-    
-    let pObj = null;
-    if (window.appData) {
-        [window.appData.equipos, window.appData.todos_partidos].forEach(arr => {
-            if (Array.isArray(arr)) {
-                arr.forEach(p => {
-                    if (p.id_partido === idPart) {
-                        if (!pObj) pObj = p;
-                        p.mvp_oficial = '';
-                        p.mvp_stats = [];
-                        p.mvp_proclamado_ts = 0;
-                        p.mvp_publicacion_ts = 0;
-                    }
-                });
-            }
-        });
-    }
-    
-    const selOficial = document.getElementById('directMvpOficialSelect');
-    if (selOficial) selOficial.selectedIndex = 0;
-    for (let k = 1; k <= 4; k++) {
-        let el = document.getElementById(`mvpStat${k}`);
-        if (el) el.value = '';
-    }
-    
-    fetchSeguro(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify({
-            action: 'set_mvp_oficial',
-            usuario: currentUser,
-            password: currentPassword,
-            id_partido: idPart,
-            mvp_oficial: '',
-            mvp_stats: []
-        }),
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-    }).catch(e => {});
-    
-    mostrarToast("Ganador MVP retirado. ¡Vuelve a mostrarse la votación!");
-    if (typeof window.recalcularPorcentajesMvpAdmin === 'function') {
-        window.recalcularPorcentajesMvpAdmin();
-    }
-    if (typeof window.recalcularInsigniasMvpLocal === 'function') {
-        window.recalcularInsigniasMvpLocal();
-    }
-    if (typeof window.actualizarBannerEstadoMvp === 'function') {
-        window.actualizarBannerEstadoMvp(pObj);
-    }
-    if (typeof window.renderCarteleraHTML === 'function') {
-        window.renderCarteleraHTML(window.appData);
-    }
-};
-
 window._adminMvpRawVotesCache = window._adminMvpRawVotesCache || {};
 
 window.renderRecuentoVotosMvpFromCache = function() {
@@ -1543,7 +1409,8 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             }
             btnLoadNameRequests.disabled = false;
             btnLoadNameRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes`;
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (window.renderLucideIcons) window.renderLucideIcons('adminPanelWrapper');
+            else if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     }
 
@@ -1659,7 +1526,8 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
 
             btnLoadBadgeRequests.disabled = false;
             btnLoadBadgeRequests.innerHTML = `<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias`;
-            if(window.lucide) window.lucide.createIcons();
+            if(window.renderLucideIcons) window.renderLucideIcons('adminPanelWrapper');
+            else if(window.lucide) window.lucide.createIcons();
         });
     }
 
@@ -2082,9 +1950,6 @@ window.cargarListaPermisosUsuarios = function() {
         let availableTeams = (Array.isArray(d.equipos_disponibles) && d.equipos_disponibles.length > 0)
             ? d.equipos_disponibles
             : ((window.appData && Array.isArray(window.appData.equipos_totales_publicos)) ? window.appData.equipos_totales_publicos : ['VCV', 'CyL Palencia 2028']);
-
-        // Guardar referencia en memoria para el buscador o selección
-        window._adminEquiposDisponibles = availableTeams;
 
         d.usuarios.forEach((u, idx) => {
             let isMvp = (u.permiso_mvp === 'X');
@@ -2598,7 +2463,8 @@ window.cargarSugerenciasAdmin = async function() {
         box.innerHTML = `<div style="color:#e74c3c; padding:8px;">Error: ${err.message}</div>`;
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios'; }
-        if (typeof lucide !== 'undefined') lucide.createIcons();
+        if (window.renderLucideIcons) window.renderLucideIcons('adminPanelWrapper');
+        else if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 };
 
@@ -2970,6 +2836,9 @@ window.abrirTarjetaMvpClub = async function(directDownload = false) {
 
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
+    const focusSelector = document.getElementById('shareMvpFocusSelectorContainer');
+    if (focusSelector) focusSelector.style.display = 'none';
+    window.currentShareMvpFocus = 'winner';
 
     if (directDownload) {
         await window.dibujarTarjetaCompartir();
@@ -3002,7 +2871,6 @@ window.abrirTarjetaMvpClub = async function(directDownload = false) {
         await window.dibujarTarjetaCompartir();
     }
 };
-window.abrirTarjetaMvpOficialClub = window.abrirTarjetaMvpClub;
 
 window.cambiarGanadorMvpTarjeta = async function(cand) {
     if (!cand) return;

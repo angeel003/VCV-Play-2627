@@ -1,24 +1,40 @@
-window.ocultarOverlayAutoLogin = function() {
+window.ocultarOverlayAutoLogin = function(immediate = false) {
     try {
-        const elapsed = Date.now() - (window._autoLoginStartTs || 0);
-        // Garantizar al menos 1.2s en auto-login para que el aficionado aprecie la pantalla de carga y el patrocinador
-        const minTime = window._autoLoginStartTs ? 1200 : 0;
+        window._autoLoginPending = false;
+        const o = document.getElementById('vcvAutoLoginOverlay');
+        if (immediate) {
+            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (o) {
+                o.style.transition = 'none';
+                o.style.setProperty('display', 'none', 'important');
+                o.style.opacity = '1';
+                o.style.pointerEvents = '';
+            }
+            return;
+        }
+        const startTs = window._vcvHeadStartTs || window._autoLoginStartTs || 0;
+        const elapsed = startTs ? (Date.now() - startTs) : 0;
+        // Transición mínima breve desde el inicio sin frenar el acceso real
+        const minTime = startTs ? 250 : 0;
         const remaining = Math.max(0, minTime - elapsed);
         setTimeout(() => {
-            const o = document.getElementById('vcvAutoLoginOverlay');
             if (o) {
-                o.style.transition = 'opacity 0.3s ease';
+                o.style.pointerEvents = 'none';
+                o.style.transition = 'opacity 0.18s ease';
                 o.style.opacity = '0';
                 setTimeout(() => {
                     document.documentElement.classList.remove('vcv-auto-logging-in');
                     o.style.setProperty('display', 'none', 'important');
                     o.style.opacity = '1';
-                }, 300);
+                    o.style.pointerEvents = '';
+                }, 180);
             } else {
                 document.documentElement.classList.remove('vcv-auto-logging-in');
             }
         }, remaining);
-    } catch(e) {}
+    } catch(e) {
+        try { document.documentElement.classList.remove('vcv-auto-logging-in'); } catch(e2) {}
+    }
 };
 
 
@@ -338,7 +354,8 @@ window.renderNotificaciones = function(notifList) {
     }
 
     notifContainer.innerHTML = html;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof window.renderLucideIcons === 'function') window.renderLucideIcons(notifContainer);
+    else if (typeof lucide !== 'undefined') lucide.createIcons();
 };
 
 window.abrirModalNotificaciones = function() {
@@ -347,6 +364,9 @@ window.abrirModalNotificaciones = function() {
     const list = window.appNotificaciones || (window.appData && window.appData.notificaciones) || [];
     if (typeof window.renderNotificaciones === 'function') {
         window.renderNotificaciones(list);
+    }
+    if (typeof window.renderLucideIcons === 'function') {
+        window.renderLucideIcons(modal);
     }
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -533,34 +553,49 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
             const titSec = document.getElementById('tituloPrincipalSeccion');
             if (titSec) titSec.style.display = 'block';
 
-            // Render modern match cards
+            // Render modern match cards (pestaña inicial visible)
             window.appData = data;
             window.appData.usuario = "Invitado";
             window.currentUser = "Invitado";
             window.renderCarteleraHTML(data);
 
-            // Notifications
             window.appNotificaciones = data.notificaciones || [];
-            if (typeof window.renderNotificaciones === 'function') {
-                window.renderNotificaciones(window.appNotificaciones);
-            }
-            if (typeof window.initCalendar === 'function') {
-                window.initCalendar();
+            if (typeof window.renderLucideIcons === 'function') {
+                window.renderLucideIcons('tituloPrincipalSeccion');
+                window.renderLucideIcons('bottomNavWrapperV2');
             }
 
-            // Activate cartelera tab
-            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
+            // Activate cartelera tab immediately
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
             const firstNavBtn = navItems[0] || null;
             switchTabV2('carteleraSection', firstNavBtn);
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
+
+            // Diferir notificaciones y calendario al siguiente frame tras pintar Partidos
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (typeof window.renderNotificaciones === 'function') {
+                        window.renderNotificaciones(window.appNotificaciones);
+                    }
+                    if (typeof window.initCalendar === 'function') {
+                        window.initCalendar();
+                    }
+                    if (typeof window.renderLucideIcons === 'function') {
+                        window.renderLucideIcons('guestInfoSection');
+                    }
+                }, 0);
+            });
         } else {
-            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+            else document.documentElement.classList.remove('vcv-auto-logging-in');
             msgBox.className = "alert-box alert-danger"; msgBox.innerText = data.message || "Error cargando modo invitado."; msgBox.style.display = "block";
             if (typeof updateProgressBar === 'function') updateProgressBar();
         }
     })
     .catch(err => { 
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+        else document.documentElement.classList.remove('vcv-auto-logging-in');
         msgBox.className = "alert-box alert-danger"; msgBox.innerText = "Error: " + err.message; msgBox.style.display = "block";
         if (typeof updateProgressBar === 'function') updateProgressBar();
     })
@@ -597,11 +632,14 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            
             currentUser = usr; currentPassword = pwd;
+            currentJornadaGlobal = data.jornada;
+            window.appData = data;
+            window.appData.usuario = usr;
+            window.currentUser = usr;
+            if (typeof window.aplicarHorasMvpLocales === 'function') window.aplicarHorasMvpLocales(data);
+
             if (data.modo_mantenimiento !== undefined) {
-                window.appData = window.appData || {};
-                window.appData.modo_mantenimiento = data.modo_mantenimiento;
                 if (typeof window.adminActualizarUiMantenimiento === 'function') {
                     window.adminActualizarUiMantenimiento(data.modo_mantenimiento);
                 }
@@ -620,13 +658,11 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             } else {
                 localStorage.removeItem('vcv_saved_session');
             }
-            // --- NOTIFICACIONES ---
             window.appNotificaciones = data.notificaciones || [];
-            if (typeof window.renderNotificaciones === 'function') {
-                window.renderNotificaciones(window.appNotificaciones);
+            if (data.ligas && data.ligas.length > 0) {
+                window.currentLiga = data.ligas[0];
             }
-            
-            
+
             let totalOpen = 0;
             let predictedOpen = 0;
             if (data.equipos && data.equipos.length > 0) {
@@ -638,11 +674,6 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 });
             }
             let porcentaje = totalOpen > 0 ? Math.round((predictedOpen / totalOpen) * 100) : 100;
-            
-            // Asegurar que appData y currentUser estén disponibles antes de calcular podioBadges
-            window.appData = data;
-            window.appData.usuario = usr;
-            window.currentUser = usr;
 
             let myBadges = data.insignias ? (data.insignias[currentUser] || []) : [];
             let podioBadges = (typeof window.getPodioBadgesForUser === 'function')
@@ -665,7 +696,6 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 insigniasHTML += `</div></div>`;
             }
 
-            
             let highestJornada = data.jornada || "Activa";
             if (data.equipos && data.equipos.length > 0) {
                 let max = -1;
@@ -679,7 +709,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     highestJornada = max;
                 }
             }
-            
+
             let htmlPerfil = `
     
             <div style="padding: 14px; border-radius: 16px; background: linear-gradient(to right, rgba(93, 23, 137, 0.4), var(--bg-card), var(--bg-card)); border: 1px solid var(--border-color); position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); margin-bottom: 10px;">
@@ -709,24 +739,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
               </div>
             </div>`;
             document.getElementById('perfilUsuarioTop').innerHTML = htmlPerfil;
-            if (typeof window.renderPushPromoBannerPartidos === 'function') window.renderPushPromoBannerPartidos();
-            if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 20);
-            if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 20);
-            
             let promoDiv2 = document.getElementById('guestPromoBanner');
             if (promoDiv2) promoDiv2.style.display = "none";
-            currentJornadaGlobal = data.jornada;
-            if (typeof window.aplicarHorasMvpLocales === 'function') window.aplicarHorasMvpLocales(data);
-            window.appData = data;
-            if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
-                try { localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga)); } catch(e) {}
-            }
-            if(window.initCalendar) window.initCalendar();
-            if(window.renderHistorialV2) window.renderHistorialV2(data);
-            if(window.loadInsigniasUI) window.loadInsigniasUI();
-            if(window.renderMyProfileCard) window.renderMyProfileCard();
-            
-            
 
             if(data.reglas) {
                 let pctMvpVal = (data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
@@ -775,30 +789,21 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     
                     ejCont.innerHTML = htmlEjemplo;
                 }
+            }
 
-
-                
-                // Update match cards dynamically
-                                            }
-
-            let displayNom = data.nombre_real && data.nombre_real !== usr ? `${data.nombre_real} <span style="font-size:0.85rem; color:#666; font-weight:normal; font-family:sans-serif;">(@${usr})</span>` : usr;
-            
-            
-            // Populating new Header V2
+            // Cabecera y metadatos visibles
             let nameEl = document.getElementById('h2-user-name'); if(nameEl) nameEl.innerText = data.nombre_real || usr;
             if (data.correo) { let emlDisp = document.getElementById('currentEmailDisplay'); let emlTxt = document.getElementById('currentEmailText'); if(emlDisp && emlTxt) { emlDisp.style.display = 'block'; emlTxt.innerText = data.correo; } }
             let handleEl = document.getElementById('h2-user-handle'); if(handleEl) handleEl.innerText = "@" + usr;
-            
+
             let misInsignias = data.insignias[usr] || [];
-            let insigniasHeaderHtml = "";
             let insigniasH2Html = "";
             let isAdmin = false;
             let hasPermisoMvp = false;
             let hasPermisoResultados = false;
             let permisoResultadosVal = "";
 
-            // Calculate Rank from Global Leaderboard
-            if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); } else { setTimeout(() => { if(typeof window.updateHeaderStats === "function") window.updateHeaderStats(); }, 500); }
+            if(typeof window.updateHeaderStats === "function") { window.updateHeaderStats(); }
             let displayMisInsignias = misInsignias.filter(b => b.type !== 'avatar');
             displayMisInsignias.forEach(b => {
                 if (b.type === 'admin') isAdmin = true;
@@ -807,31 +812,20 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     hasPermisoResultados = true;
                     permisoResultadosVal = b.text || "";
                 }
-                let cssColorClass = getBadgeCSS(b.type);
-                let badgeIconHeader = renderBadgeIcon(b, "badge-header", "width:18px; height:18px; cursor:pointer;");
-                if (badgeIconHeader) {
-                    insigniasHeaderHtml += badgeIconHeader.replace(">", ` title="${b.text}" onclick="showMobileTooltip(event, \'${b.text}\')">`);
-                }
-                
-                // NO tooltips, NO onclick for the top header badges! Just visual.
                 let badgeIconH2 = renderBadgeIcon(b, "", "width:14px; height:14px;");
                 if (badgeIconH2) {
                     insigniasH2Html += badgeIconH2;
                 }
             });
-            
+
             let badgesEl = document.getElementById('h2-user-badges'); if(badgesEl) badgesEl.innerHTML = insigniasH2Html;
-            
-            // Render lucide icons in the newly injected HTML
-            lucide.createIcons();
-            
+
             let canAccessIntranet = isAdmin || hasPermisoMvp || hasPermisoResultados;
             window._userPermisoResultados = isAdmin ? 'TODOS' : (hasPermisoResultados ? permisoResultadosVal : '');
 
+            const admWrap = document.getElementById('adminPanelWrapper');
             if (canAccessIntranet) {
-                document.getElementById('adminPanelWrapper').style.display = "block";
-
-                // Personalizar encabezado según rol
+                if (admWrap) admWrap.style.display = "block";
                 const titleEl = document.getElementById('adminMainTitle');
                 const badgeEl = document.getElementById('adminRootBadge');
                 if (isAdmin) {
@@ -848,13 +842,11 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     if (badgeEl) { badgeEl.innerText = "RESULTADOS"; badgeEl.style.background = "#3498db"; }
                 }
 
-                // Mostrar/Ocultar secciones según permisos
                 const allCollapsibles = document.querySelectorAll('#adminMainDetails details.admin-collapsible');
                 allCollapsibles.forEach(sec => {
                     if (isAdmin) {
                         sec.style.display = "block";
                     } else {
-                        // Para usuarios no-admin, ocultar todo excepto sus secciones autorizadas
                         if (sec.id === 'secAdminMvp' && hasPermisoMvp) {
                             sec.style.display = "block";
                         } else if (sec.id === 'secAdminResultados' && hasPermisoResultados) {
@@ -864,26 +856,139 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         }
                     }
                 });
+            } else {
+                if (admWrap) admWrap.style.display = "none";
+            }
 
-                // Si tiene acceso a resultados, renderizar la lista de partidos
-                if (isAdmin || hasPermisoResultados) {
-                    renderAdminPanel(data.equipos);
+            document.getElementById('tituloPrincipalSeccion').style.display = 'block';
+
+            // Renderizar ÚNICAMENTE la pestaña activa inicial (Partidos / Cartelera) antes de mostrar #appSection
+            window.renderCarteleraHTML(data);
+
+            if (typeof window.renderLucideIcons === 'function') {
+                window.renderLucideIcons('tituloPrincipalSeccion');
+                window.renderLucideIcons('bottomNavWrapperV2');
+                window.renderLucideIcons('perfilUsuarioTop');
+            } else if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            document.getElementById('loginSection').style.display = "none";
+            document.getElementById('appSection').style.display = "block";
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
+
+            const renderPrediccionesTotalesLazy = () => {
+                if(!data.equipos_totales || data.equipos_totales.length === 0) {
+                    let tsSec = document.getElementById('prediccionesTotalesSection');
+                    if(tsSec) tsSec.remove();
+                    return;
+                }
+                let tsSec = document.getElementById('prediccionesTotalesSection');
+                if(tsSec) tsSec.style.display = '';
+
+                let isClosed = new Date().getTime() >= new Date("2026-10-10T12:00:00").getTime();
+                let htmlTot = ``;
+
+                data.equipos_totales.forEach(eq => {
+                    let ptsActuales = data.puntos_reales[eq] || 0;
+                    let misPts = "";
+                    let categoriaEq = "";
+                    let matchEncontrado = data.equipos.find(m => m.equipo_local === eq || m.rival === eq);
+                    if (matchEncontrado && matchEncontrado.categoria) {
+                        categoriaEq = matchEncontrado.categoria;
+                    }
+                    let porrasEq = data.predicciones_totales[eq] || [];
+                    porrasEq.forEach(porra => {
+                        if (porra.usuario === usr) misPts = porra.puntos;
+                    });
+
+                    let miCajonHTML = "";
+                    if (isClosed) {
+                        let txtPts = misPts !== "" ? `${misPts} pts` : "Sin predicción";
+                        miCajonHTML = `
+                        <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase;">Tu predicción final:</label>
+                            <div style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); display:flex; align-items:center; gap:6px;">
+                                <i data-lucide="lock" style="width:14px; height:14px;"></i>
+                                ${txtPts}
+                            </div>
+                        </div>`;
+                    } else {
+                        miCajonHTML = `
+                        <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase;">Tu predicción:</label>
+                            <div class="stepper-container-v2" style="width: 140px; background:var(--bg-input);">
+                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px;" onclick="document.getElementById('pt_${eq}').stepDown()">-</button>
+                                <div class="stepper-value-v2" style="flex:1; min-width:auto;">
+                                    <input type="number" id="pt_${eq}" placeholder="0" value="${misPts}" style="background:transparent; border:none; text-align:center; font-size:1.1rem; font-weight:900; color:var(--secondary-color); width:100%; outline:none; -moz-appearance:textfield; margin:0; padding:0; height:30px;">
+                                </div>
+                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px;" onclick="document.getElementById('pt_${eq}').stepUp()">+</button>
+                            </div>
+                        </div>`;
+                    }
+
+                    if (!categoriaEq && data.todos_partidos) {
+                        let matchTodo = data.todos_partidos.find(m => m.equipo_local === eq || m.rival === eq);
+                        if (matchTodo && matchTodo.categoria) categoriaEq = matchTodo.categoria;
+                    }
+
+                    htmlTot += `
+                    <div class="vcv-card-v2" style="margin-bottom:10px; padding: 14px 16px; border-left:4px solid var(--vcv-dorado); text-align: left;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+                            <div style="display:flex; flex-direction:column; min-width:0; flex:1; text-align:left;">
+                                <h4 style="color:var(--text-main); margin:0; font-weight:800; font-size:1.02rem; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left;" title="${eq}">${eq}</h4>
+                                ${categoriaEq ? `<span style="color:var(--text-muted); font-size:0.7rem; font-weight:700; margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; text-align:left; display:block;">${categoriaEq}</span>` : ''}
+                            </div>
+                            <span style="background:rgba(16, 185, 129, 0.15); color:#10b981; padding:4px 10px; border-radius:6px; border:1px solid rgba(16, 185, 129, 0.3); font-weight:bold; font-size:0.75rem; white-space:nowrap; flex-shrink:0;">Llevan: ${ptsActuales} pts</span>
+                        </div>
+                        ${miCajonHTML}
+                    </div>`;
+                });
+
+                htmlTot += `<div id="msgPrediccionesTotales" class="alert-box mt-3" style="padding:10px;"></div>`;
+                if (!isClosed) {
+                    htmlTot += `<button type="button" id="btnSaveTotales" style="width:100%; padding: 14px; border-radius: 12px; font-weight: 900; border: none; background: var(--secondary-color); color: #000; cursor:pointer; font-size:1.1rem; transition: all 0.2s; margin-top:10px; margin-bottom:10px; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);">💾 Guardar Predicciones</button>`;
                 }
 
-                // Renderizar plantilla MVP si tiene acceso a MVP
-                if (isAdmin || hasPermisoMvp) {
-                    if (typeof window.renderAdminPlantillaMvp === 'function') window.renderAdminPlantillaMvp();
-                    if (typeof window.populateDirectMvpBoxes === 'function') window.populateDirectMvpBoxes();
+                const contTot = document.getElementById('contenedorPrediccionesTotales');
+                if (contTot) {
+                    contTot.innerHTML = htmlTot;
+                    if (typeof window.renderLucideIcons === 'function') window.renderLucideIcons(contTot);
                 }
-                
-                // Elementos exclusivos de administrador completo
+
+                if (!isClosed) {
+                    const btnSaveTot = document.getElementById('btnSaveTotales');
+                    if (btnSaveTot) btnSaveTot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        let prediccionesTot = {};
+                        data.equipos_totales.forEach(eq => {
+                            let val = document.getElementById(`pt_${eq}`).value.trim();
+                            if(val !== "") prediccionesTot[eq] = val;
+                        });
+                        const btnT = this;
+                        const msgT = document.getElementById('msgPrediccionesTotales');
+                        btnT.disabled = true;
+                        btnT.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+                        msgT.style.display = "none";
+
+                        fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'save_totales', usuario: currentUser, password: currentPassword, predicciones_totales: prediccionesTot }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
+                        .then(res => res.json())
+                        .then(d => {
+                            msgT.style.display = "block";
+                            if(d.status === "success") { msgT.className = "alert-box alert-success"; msgT.innerText = d.message; }
+                            else { msgT.className = "alert-box alert-danger"; msgT.innerText = d.message; }
+                        }).catch(() => { msgT.className = "alert-box alert-danger"; msgT.innerText = "Error de conexión."; msgT.style.display = "block"; })
+                        .finally(() => { btnT.disabled = false; btnT.innerText = "💾 Guardar Predicciones"; });
+                    });
+                }
+            };
+
+            const renderAdminLigasAndFreezeLazy = () => {
                 if (isAdmin) {
-                    // POPULATE LIGAS
                     var ligasContainer = document.getElementById('adminLigasCheckboxes');
                     if (ligasContainer && data.todas_las_ligas) {
                         ligasContainer.innerHTML = '';
-                        var allLigas = data.todas_las_ligas;
-                        allLigas.forEach(function(liga) {
+                        data.todas_las_ligas.forEach(function(liga) {
                             if (!liga) return;
                             var div = document.createElement('div');
                             div.innerHTML = '<label style="margin:0; cursor:pointer;"><input type="checkbox" value="' + liga + '" style="margin-right:5px;"> ' + liga + '</label>';
@@ -891,7 +996,6 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         });
                     }
 
-                    // POPULATE LIGAS CONGELAR (FINDE)
                     var ligasFreezeContainer = document.getElementById('adminLigasCongelarCheckboxes');
                     if (ligasFreezeContainer && data.todas_las_ligas) {
                         ligasFreezeContainer.innerHTML = '';
@@ -905,7 +1009,6 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         });
                     }
 
-                    // ACTUALIZAR ESTADO VISUAL DE CONGELACIÓN (ADMIN)
                     var freezeBadge = document.getElementById('adminFreezeStatusBadge');
                     var freezeDesc = document.getElementById('adminFreezeStatusDesc');
                     if (freezeBadge && freezeDesc) {
@@ -938,138 +1041,98 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         }
                     }
                 }
-            } else {
-                document.getElementById('adminPanelWrapper').style.display = "none";
-            }
+            };
 
-             document.getElementById('tituloPrincipalSeccion').style.display = 'block';
-
-            // Render match cards with unified function
-            window.renderCarteleraHTML(data);
-
-            
-            if(data.ligas && data.ligas.length > 0) {
-                window.currentLiga = data.ligas[0];
-            }
-            if(typeof window.renderRankingV2 === "function") { window.renderRankingV2(); } else { setTimeout(() => { if(typeof window.renderRankingV2 === "function") window.renderRankingV2(); }, 500); }
-            if(!data.equipos_totales || data.equipos_totales.length === 0) {
-                let tsSec = document.getElementById('prediccionesTotalesSection');
-                if(tsSec) tsSec.remove();
-            }
-            if(data.equipos_totales && data.equipos_totales.length > 0) {
-                let tsSec = document.getElementById('prediccionesTotalesSection');
-                if(tsSec) tsSec.style.display = '';
-                
-                
-                let isClosed = new Date().getTime() >= new Date("2026-10-10T12:00:00").getTime();
-                
-                let htmlTot = ``;
-                
-                data.equipos_totales.forEach(eq => {
-                    let ptsActuales = data.puntos_reales[eq] || 0;
-                    let misPts = "";
-                    let listaOtros = "";
-                    let categoriaEq = "";
-                    let matchEncontrado = data.equipos.find(m => m.equipo_local === eq || m.rival === eq);
-                    if (matchEncontrado && matchEncontrado.categoria) {
-                        categoriaEq = matchEncontrado.categoria;
+            const deferredTasks = {
+                clasificacionesSection: () => {
+                    if (typeof window.renderRankingV2 === "function") window.renderRankingV2();
+                },
+                historialSection: () => {
+                    if (typeof window.renderHistorialV2 === "function") window.renderHistorialV2(data);
+                    renderPrediccionesTotalesLazy();
+                    if (typeof iniciarRelojTotales === "function") iniciarRelojTotales();
+                },
+                calendarioSection: () => {
+                    if (typeof window.initCalendar === "function") window.initCalendar();
+                },
+                enlacesRfevbSection: () => {
+                    if (typeof window.loadInsigniasUI === "function") window.loadInsigniasUI();
+                    if (typeof window.renderMyProfileCard === "function") window.renderMyProfileCard();
+                    if (canAccessIntranet) {
+                        if ((isAdmin || hasPermisoResultados) && typeof renderAdminPanel === "function") {
+                            renderAdminPanel(data.equipos);
+                        }
+                        if (isAdmin || hasPermisoMvp) {
+                            if (typeof window.renderAdminPlantillaMvp === 'function') window.renderAdminPlantillaMvp();
+                            if (typeof window.populateDirectMvpBoxes === 'function') window.populateDirectMvpBoxes();
+                        }
+                        renderAdminLigasAndFreezeLazy();
                     }
-                    let porrasEq = data.predicciones_totales[eq] || [];
-                    
-                    // Nadie podrá ver la puntuación del resto nunca
-                    misPts = "";
-                    porrasEq.forEach(porra => {
-                        if (porra.usuario === usr) misPts = porra.puntos;
+                    if (typeof window.renderLucideIcons === 'function') {
+                        window.renderLucideIcons('enlacesRfevbSection');
+                    }
+                }
+            };
+            window._pendingDeferredTabs = deferredTasks;
+            window.runDeferredTabRender = function(targetId) {
+                const pending = window._pendingDeferredTabs;
+                if (!pending) return;
+                if (targetId === 'all') {
+                    ['clasificacionesSection', 'historialSection', 'calendarioSection', 'enlacesRfevbSection'].forEach(k => {
+                        if (typeof pending[k] === 'function') {
+                            const fn = pending[k];
+                            delete pending[k];
+                            try { fn(); } catch(e) { console.error('Error en carga diferida (' + k + '):', e); }
+                        }
                     });
-                    
-                    let miCajonHTML = "";
-                    if (isClosed) {
-                        let txtPts = misPts !== "" ? `${misPts} pts` : "Sin predicción";
-                        miCajonHTML = `
-                        <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
-                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase;">Tu predicción final:</label>
-                            <div style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); display:flex; align-items:center; gap:6px;">
-                                <i data-lucide="lock" style="width:14px; height:14px;"></i>
-                                ${txtPts}
-                            </div>
-                        </div>`;
-                    } else {
-                        miCajonHTML = `
-                        <div style="background:var(--bg-card-alt); padding:10px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
-                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase;">Tu predicción:</label>
-                            <div class="stepper-container-v2" style="width: 140px; background:var(--bg-input);">
-                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px;" onclick="document.getElementById('pt_${eq}').stepDown()">-</button>
-                                <div class="stepper-value-v2" style="flex:1; min-width:auto;">
-                                    <input type="number" id="pt_${eq}" placeholder="0" value="${misPts}" style="background:transparent; border:none; text-align:center; font-size:1.1rem; font-weight:900; color:var(--secondary-color); width:100%; outline:none; -moz-appearance:textfield; margin:0; padding:0; height:30px;">
-                                </div>
-                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px;" onclick="document.getElementById('pt_${eq}').stepUp()">+</button>
-                            </div>
-                        </div>`;
-                    }
-                    
-                    if (!categoriaEq && data.todos_partidos) {
-                        let matchTodo = data.todos_partidos.find(m => m.equipo_local === eq || m.rival === eq);
-                        if (matchTodo && matchTodo.categoria) categoriaEq = matchTodo.categoria;
-                    }
-                    
-                    htmlTot += `
-                    <div class="vcv-card-v2" style="margin-bottom:10px; padding: 14px 16px; border-left:4px solid var(--vcv-dorado); text-align: left;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
-                            <div style="display:flex; flex-direction:column; min-width:0; flex:1; text-align:left;">
-                                <h4 style="color:var(--text-main); margin:0; font-weight:800; font-size:1.02rem; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left;" title="${eq}">${eq}</h4>
-                                ${categoriaEq ? `<span style="color:var(--text-muted); font-size:0.7rem; font-weight:700; margin-top:2px; text-transform:uppercase; letter-spacing:0.5px; text-align:left; display:block;">${categoriaEq}</span>` : ''}
-                            </div>
-                            <span style="background:rgba(16, 185, 129, 0.15); color:#10b981; padding:4px 10px; border-radius:6px; border:1px solid rgba(16, 185, 129, 0.3); font-weight:bold; font-size:0.75rem; white-space:nowrap; flex-shrink:0;">Llevan: ${ptsActuales} pts</span>
-                        </div>
-                        
-                        ${miCajonHTML}
+                    return;
+                }
+                if (targetId && typeof pending[targetId] === 'function') {
+                    const fn = pending[targetId];
+                    delete pending[targetId];
+                    try { fn(); } catch(e) { console.error('Error en carga diferida (' + targetId + '):', e); }
+                }
+            };
 
-                    </div>`;
+            const adminDet = document.getElementById('adminMainDetails');
+            if (adminDet && !adminDet._vcvDeferredBound) {
+                adminDet._vcvDeferredBound = true;
+                adminDet.addEventListener('toggle', () => {
+                    if (adminDet.open && typeof window.runDeferredTabRender === 'function') {
+                        window.runDeferredTabRender('enlacesRfevbSection');
+                    }
                 });
-                
-                htmlTot += `<div id="msgPrediccionesTotales" class="alert-box mt-3" style="padding:10px;"></div>`;
-                
-                if (!isClosed) {
-                    htmlTot += `<button type="button" id="btnSaveTotales" style="width:100%; padding: 14px; border-radius: 12px; font-weight: 900; border: none; background: var(--secondary-color); color: #000; cursor:pointer; font-size:1.1rem; transition: all 0.2s; margin-top:10px; margin-bottom:10px; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);">💾 Guardar Predicciones</button>`;
-                }
-
-                document.getElementById('contenedorPrediccionesTotales').innerHTML = htmlTot;
-
-                if (!isClosed) {
-                    document.getElementById('btnSaveTotales').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        let prediccionesTot = {};
-                        data.equipos_totales.forEach(eq => {
-                            let val = document.getElementById(`pt_${eq}`).value.trim();
-                            if(val !== "") prediccionesTot[eq] = val;
-                        });
-                        
-                        const btnT = this;
-                        const msgT = document.getElementById('msgPrediccionesTotales');
-                        
-                        btnT.disabled = true; 
-                        btnT.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...'; 
-                        msgT.style.display = "none";
-
-                        fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'save_totales', usuario: currentUser, password: currentPassword, predicciones_totales: prediccionesTot }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-                        .then(res => res.json())
-                        .then(d => {
-                            msgT.style.display = "block";
-                            if(d.status === "success") { msgT.className = "alert-box alert-success"; msgT.innerText = d.message; }
-                            else { msgT.className = "alert-box alert-danger"; msgT.innerText = d.message; }
-                        }).catch(() => { msgT.className = "alert-box alert-danger"; msgT.innerText = "Error de conexión."; msgT.style.display = "block"; })
-                        .finally(() => { btnT.disabled = false; btnT.innerText = "💾 Guardar Predicciones"; });
-                    });
-                }
             }
 
-            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
-            document.getElementById('loginSection').style.display = "none";
-            document.getElementById('appSection').style.display = "block";
-            
-            iniciarRelojTotales();
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    try {
+                        if (Array.isArray(data.plantilla_superliga) && data.plantilla_superliga.length > 0) {
+                            localStorage.setItem('vcv_plantilla_superliga_cache', JSON.stringify(data.plantilla_superliga));
+                        }
+                    } catch(e) {}
+                    if (typeof window.runDeferredTabRender === 'function') {
+                        window.runDeferredTabRender('all');
+                    }
+                    if (typeof window.renderPushPromoBannerPartidos === 'function') {
+                        window.renderPushPromoBannerPartidos();
+                    }
+                    if (typeof window.renderNotificaciones === 'function') {
+                        window.renderNotificaciones(window.appNotificaciones);
+                    }
+                    if (typeof window.updateAllBadgeScrollFades === 'function') window.updateAllBadgeScrollFades();
+                    if (typeof window.observeBadgeScrollContainers === 'function') window.observeBadgeScrollContainers();
+                    if (typeof window.cargarEstadoPush === 'function') {
+                        window.cargarEstadoPush().then(() => {
+                            if (typeof window.renderPushPromoBannerPartidos === 'function') window.renderPushPromoBannerPartidos();
+                            if (typeof window.renderNotificaciones === 'function' && window.appNotificaciones) {
+                                window.renderNotificaciones(window.appNotificaciones);
+                            }
+                        }).catch(() => {});
+                    }
+                }, 0);
+            });
         } else if (data.status === "ok") {
-            console.log("Servidor despertado con éxito (Cold Start). Reintentando login automáticamente...");
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Conectando...';
             setTimeout(() => {
                 btn.disabled = false;
@@ -1079,7 +1142,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
         } else {
             // Si el servidor rechaza por Modo Mantenimiento
             if (data.code === 'MODO_MANTENIMIENTO') {
-                document.documentElement.classList.remove('vcv-auto-logging-in');
+                if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+                else document.documentElement.classList.remove('vcv-auto-logging-in');
                 const mb = document.getElementById('mantenimientoBannerLogin');
                 if (mb) mb.style.display = 'block';
                 msgBox.className = "alert-box alert-danger";
@@ -1095,7 +1159,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             if (isCredsError) {
                 localStorage.removeItem('vcv_saved_session');
             }
-            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+            else document.documentElement.classList.remove('vcv-auto-logging-in');
             msgBox.className = "alert-box alert-danger"; 
             msgBox.innerText = (data.message && data.message.includes('incorrect')) 
                 ? "Tu sesión guardada ya no es válida o las credenciales cambiaron. Inicia sesión de nuevo." 
@@ -1105,7 +1170,8 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
         }
     })
     .catch(err => { 
-        document.documentElement.classList.remove('vcv-auto-logging-in');
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+        else document.documentElement.classList.remove('vcv-auto-logging-in');
         msgBox.className = "alert-box alert-danger"; 
         msgBox.innerHTML = `<div style="margin-bottom:6px;">⚠️ Error de conexión: ${err.message || 'Sin conexión'}</div>
         <button type="button" onclick="document.getElementById('btnLogin').click()" style="background:#fff; color:#e74c3c; border:none; padding:4px 10px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.75rem;">🔄 Reintentar</button>`; 
@@ -1125,29 +1191,33 @@ window.verificarAutoLogin = function() {
     window._autoLoginStartTs = Date.now();
     // Situación 1: Si el usuario acaba de pulsar 'Cerrar sesión / Volver', no auto-iniciar
     if (sessionStorage.getItem('vcv_just_logged_out')) {
-        document.documentElement.classList.remove('vcv-auto-logging-in');
         sessionStorage.removeItem('vcv_just_logged_out');
         localStorage.removeItem('vcv_saved_session');
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+        else document.documentElement.classList.remove('vcv-auto-logging-in');
         return;
     }
 
     // Situación 2: Parámetro en la URL para forzar salida (?logout=1)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('logout')) {
-        document.documentElement.classList.remove('vcv-auto-logging-in');
         localStorage.removeItem('vcv_saved_session');
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+        else document.documentElement.classList.remove('vcv-auto-logging-in');
         return;
     }
 
     try {
         const raw = localStorage.getItem('vcv_saved_session');
         if (!raw) {
-            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+            else document.documentElement.classList.remove('vcv-auto-logging-in');
             return;
         }
         const ses = JSON.parse(raw);
         if (!ses || !ses.usuario || !ses.password) {
-            document.documentElement.classList.remove('vcv-auto-logging-in');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+            else document.documentElement.classList.remove('vcv-auto-logging-in');
             return;
         }
 
@@ -1155,8 +1225,9 @@ window.verificarAutoLogin = function() {
         const DIAS_LIMITE = 30;
         if (ses.ts && (Date.now() - ses.ts > DIAS_LIMITE * 24 * 60 * 60 * 1000)) {
             console.warn("Sesión caducada por superar el límite de 30 días.");
-            document.documentElement.classList.remove('vcv-auto-logging-in');
             localStorage.removeItem('vcv_saved_session');
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+            else document.documentElement.classList.remove('vcv-auto-logging-in');
             return;
         }
         // Renovar fecha de actividad para que cuente 30 días desde la última vez que abrió la app
@@ -1175,17 +1246,14 @@ window.verificarAutoLogin = function() {
             inputPwd.value = ses.password;
             if (chk) chk.checked = true;
 
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Restaurando sesión...';
-
             window._esAutoLogin = true;
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.click();
-            }, 120);
+            btn.disabled = false;
+            btn.click();
+        } else {
+            if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
         }
     } catch(e) {
-        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
+        if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
         console.error("Error al procesar auto-login:", e);
     }
 };
@@ -1202,6 +1270,12 @@ if (document.readyState === 'loading') {
 // VERIFICAR ESTADO PÚBLICO DE MODO MANTENIMIENTO
 // -------------------------------------------------------------
 window.verificarEstadoMantenimientoPublico = function() {
+    try {
+        if (localStorage.getItem('vcv_saved_session') && !sessionStorage.getItem('vcv_just_logged_out')) {
+            // El endpoint de auto-login ya comprueba y devuelve el estado de mantenimiento
+            return;
+        }
+    } catch(e) {}
     fetchSeguro(scriptURL, {
         method: 'POST',
         body: JSON.stringify({ action: 'get_mantenimiento_status' }),

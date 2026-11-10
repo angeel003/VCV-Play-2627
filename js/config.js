@@ -2,6 +2,25 @@
 // CONFIGURACIÓN GLOBAL, ESTADO Y UTILIDADES
 // ==================================================================
 
+// Helper global para renderizar iconos Lucide de forma acotada a un contenedor
+window.renderLucideIcons = function(root) {
+    try {
+        if (typeof lucide === 'undefined' || typeof lucide.createIcons !== 'function') return;
+        const pendingSelector = 'i[data-lucide], [data-lucide]:not(svg)';
+        if (root) {
+            const target = (typeof root === 'string') ? document.getElementById(root) : root;
+            if (!target) return;
+            if (target.querySelectorAll && target.querySelectorAll(pendingSelector).length === 0) return;
+            lucide.createIcons({ root: target });
+        } else {
+            if (document.querySelectorAll && document.querySelectorAll(pendingSelector).length === 0) return;
+            lucide.createIcons();
+        }
+    } catch (e) {
+        try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch (e2) {}
+    }
+};
+
 
 
 // POLYFILL PARA REINTENTOS AUTOMATICOS (Soluciona los errores 500 y timeouts del primer login)
@@ -103,16 +122,6 @@ window.aplicarHorasMvpLocales = function(data) {
     if (Array.isArray(data.todos_partidos)) data.todos_partidos.forEach(applyToMatch);
 };
 
-// Pre-calentar la API en segundo plano mientras el usuario escribe sus credenciales
-try {
-    fetch(scriptURL + (scriptURL.includes('?') ? '&' : '?') + 'ping=1', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'ping' }),
-        mode: 'no-cors'
-    }).catch(() => {});
-} catch(e) {}
-
 // --- PON AQUÍ TUS ENLACES DE GITHUB CUANDO LOS TENGAS ---
 var URL_BADGE_GENERIC = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg"; 
 // --------------------------------------------------------
@@ -120,8 +129,6 @@ var URL_BADGE_GENERIC = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twi
 var currentUser = ""; var currentPassword = ""; var equiposTotalesInfo = [];
 var intervalCountdown = null;
 var intervalTotalesCountdown = null;
-var globalHistorialData = [];
-var isSortDesc = true;
 var currentJornadaGlobal = 0;
 
 
@@ -163,9 +170,11 @@ async function directDeleteAvatar() {
             if(document.getElementById('avatarUploadStatus')) document.getElementById('avatarUploadStatus').textContent = 'Sin foto';
             if(document.getElementById('insAvatar')) {
                 document.getElementById('insAvatar').checked = false;
-                document.getElementById('insAvatarContainer').style.display = 'none';
+                if (document.getElementById('insAvatarContainer')) document.getElementById('insAvatarContainer').style.display = 'none';
             }
-            cargarDatosAntiguos();
+            if (typeof window.recargarDatosAppSilencioso === 'function') {
+                window.recargarDatosAppSilencioso(true);
+            }
         } else {
             mostrarToast("Error al borrar: " + data.message);
         }
@@ -185,12 +194,14 @@ async function directDeleteCustomBadge() {
         let data = await res.json();
         if (data.status === 'success') {
             mostrarToast("Insignia borrada.");
-            document.getElementById('insCustomEmoji').value = '';
-            document.getElementById('insCustomDesc').value = '';
-            document.getElementById('customUploadStatus').textContent = 'Sin foto';
-            document.getElementById('insCustom').checked = false;
-            document.getElementById('insCustomContainer').style.display = 'none';
-            cargarDatosAntiguos();
+            if (document.getElementById('insCustomEmoji')) document.getElementById('insCustomEmoji').value = '';
+            if (document.getElementById('insCustomDesc')) document.getElementById('insCustomDesc').value = '';
+            if (document.getElementById('customUploadStatus')) document.getElementById('customUploadStatus').textContent = 'Sin foto';
+            if (document.getElementById('insCustom')) document.getElementById('insCustom').checked = false;
+            if (document.getElementById('insCustomContainer')) document.getElementById('insCustomContainer').style.display = 'none';
+            if (typeof window.recargarDatosAppSilencioso === 'function') {
+                window.recargarDatosAppSilencioso(true);
+            }
         } else {
             mostrarToast("Error al borrar: " + data.message);
         }

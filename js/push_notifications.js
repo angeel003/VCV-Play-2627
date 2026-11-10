@@ -154,8 +154,6 @@
             let reg = await navigator.serviceWorker.getRegistration();
             if (!reg) {
                 reg = await navigator.serviceWorker.register('sw.js?v=20261031_v14');
-            } else {
-                try { await reg.update(); } catch(e){}
             }
             await navigator.serviceWorker.ready;
             return reg;
@@ -166,6 +164,9 @@
     }
 
     // Estado local en memoria
+    let pendingPushConfigPromise = null;
+    let pendingPushConfigUser = '';
+    let pushConfigSyncedUser = '';
     let currentPushConfig = {
         dispositivo_suscrito: false,
         opciones_2horas: true,
@@ -221,7 +222,7 @@
     }
 
     // --- CARGAR ESTADO Y CONFIGURACIÓN ---
-    window.cargarEstadoPush = async function() {
+    window.cargarEstadoPush = async function(opts = {}) {
         // Cargar respaldo local primero
         try {
             const rawLocal = localStorage.getItem('vcv_push_config_local');
@@ -235,43 +236,72 @@
         const { usr, pwd } = getCredentials();
         if (!usr || usr === 'lectura' || usr === 'Invitado') return currentPushConfig;
 
-        try {
-            const reg = await getServiceWorkerRegistration();
-            if (reg) {
-                const sub = await reg.pushManager.getSubscription();
-                currentPushConfig.dispositivo_suscrito = Boolean(sub);
-            }
-
-            // Consultar preferencias guardadas en D1
-            if (typeof fetchSeguro === 'function' && window.scriptURL) {
-                const res = await fetchSeguro(window.scriptURL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'obtener_config_push',
-                        usuario: usr,
-                        password: pwd
-                    })
-                });
-                const data = await res.json();
-                if (data && data.status === 'success' && data.config) {
-                    currentPushConfig.opciones_2horas = data.config.opciones_2horas !== false;
-                    currentPushConfig.opciones_solo_olvidos = Boolean(data.config.opciones_solo_olvidos);
-                    currentPushConfig.opciones_viernes = data.config.opciones_viernes !== false;
-                    currentPushConfig.opciones_descongelacion = data.config.opciones_descongelacion !== false;
-                    currentPushConfig.opciones_mvp = data.config.opciones_mvp !== false;
-                    if (data.config.equipos_config && typeof data.config.equipos_config === 'object') {
-                        currentPushConfig.equipos_config = data.config.equipos_config;
-                    }
-                    if (data.config.public_key) {
-                        currentPushConfig.public_key = data.config.public_key;
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn('[Push] Error cargando config de push:', e);
+        if (!opts.force && pushConfigSyncedUser === usr) {
+            return currentPushConfig;
         }
-        return currentPushConfig;
+        if (pendingPushConfigPromise && pendingPushConfigUser === usr && !opts.force) {
+            return pendingPushConfigPromise;
+        }
+
+        pendingPushConfigUser = usr;
+        pendingPushConfigPromise = (async () => {
+            try {
+                const swPromise = getServiceWorkerRegistration()
+                    .then(reg => reg ? reg.pushManager.getSubscription() : null)
+                    .then(sub => { currentPushConfig.dispositivo_suscrito = Boolean(sub); })
+                    .catch(() => {});
+
+                const preloadedCfg = (!opts.force && window.appData && window.appData.usuario === usr && window.appData.push_config)
+                    ? window.appData.push_config
+                    : null;
+
+                const applyServerConfig = (cfg) => {
+                    if (!cfg) return;
+                    currentPushConfig.opciones_2horas = cfg.opciones_2horas !== false;
+                    currentPushConfig.opciones_solo_olvidos = Boolean(cfg.opciones_solo_olvidos);
+                    currentPushConfig.opciones_viernes = cfg.opciones_viernes !== false;
+                    currentPushConfig.opciones_descongelacion = cfg.opciones_descongelacion !== false;
+                    currentPushConfig.opciones_mvp = cfg.opciones_mvp !== false;
+                    if (cfg.equipos_config && typeof cfg.equipos_config === 'object') {
+                        currentPushConfig.equipos_config = cfg.equipos_config;
+                    }
+                    if (cfg.public_key) {
+                        currentPushConfig.public_key = cfg.public_key;
+                    }
+                    pushConfigSyncedUser = usr;
+                };
+
+                const serverPromise = preloadedCfg
+                    ? Promise.resolve(applyServerConfig(preloadedCfg))
+                    : ((typeof fetchSeguro === 'function' && window.scriptURL)
+                        ? fetchSeguro(window.scriptURL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                action: 'obtener_config_push',
+                                usuario: usr,
+                                password: pwd
+                            })
+                        }).then(r => r.json()).then(data => {
+                            if (data && data.status === 'success' && data.config) {
+                                applyServerConfig(data.config);
+                            }
+                        }).catch(e => {
+                            console.warn('[Push] Error cargando config de push:', e);
+                        })
+                        : Promise.resolve());
+
+                await Promise.all([swPromise, serverPromise]);
+                try { localStorage.setItem('vcv_push_config_local', JSON.stringify(currentPushConfig)); } catch(e) {}
+            } catch (e) {
+                console.warn('[Push] Error cargando config de push:', e);
+            } finally {
+                pendingPushConfigPromise = null;
+            }
+            return currentPushConfig;
+        })();
+
+        return pendingPushConfigPromise;
     };
 
     // --- ACTIVAR / DESACTIVAR PUSH EN ESTE DISPOSITIVO ---
@@ -661,8 +691,18 @@
             return;
         }
 
-        // Si ya está suscrito en este dispositivo, ocultar el aviso promocional
-        if (currentPushConfig && currentPushConfig.dispositivo_suscrito) {
+        // Si ya está suscrito en este dispositivo (en memoria o caché local), ocultar el aviso promocional
+        let isSubCached = Boolean(currentPushConfig && currentPushConfig.dispositivo_suscrito);
+        if (!isSubCached) {
+            try {
+                const rawCfg = localStorage.getItem('vcv_push_config_local');
+                if (rawCfg) {
+                    const parsedCfg = JSON.parse(rawCfg);
+                    if (parsedCfg && parsedCfg.dispositivo_suscrito) isSubCached = true;
+                }
+            } catch(e) {}
+        }
+        if (isSubCached) {
             bannerContainer.innerHTML = '';
             return;
         }
@@ -1346,10 +1386,5 @@ window.adminCargarLogsNotificaciones = async function() {
     });
 
 
-    // Ejecutar render automáticamente al cargar
-    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 100);
-    setTimeout(() => { if (typeof window.renderPushPromoBannerPartidos === 'function') window.renderPushPromoBannerPartidos(); }, 150);
-    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 800);
-    setTimeout(() => { if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings(); }, 2000);
-
+    // La sincronización push se inicia en segundo plano tras entrar en la app o al abrir la pestaña Perfil
 })();

@@ -185,7 +185,6 @@ window.aplicarIndicesBD = async function(e) {
                 if (entry.target) updateBadgeScrollFade(entry.target);
             }
         });
-        window._badgeResizeObserver = resizeObserver;
     }
 
     window.observeBadgeScrollContainers = function() {

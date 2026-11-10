@@ -5,7 +5,11 @@
 
     // --- V2 INTERACTIVE LOGIC ---
     document.addEventListener("DOMContentLoaded", () => {
-        if(window.lucide) lucide.createIcons();
+        if (typeof window.renderLucideIcons === 'function') {
+            window.renderLucideIcons(['tituloPrincipalSeccion', 'bottomNavWrapperV2', 'guiaModal']);
+        } else if (window.lucide) {
+            lucide.createIcons();
+        }
     });
 
     function seleccionarSetV2(btn, val, matchId) {
@@ -166,23 +170,36 @@
         document.querySelectorAll('.nav-item-v2').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
 
+        const didRunDeferred = Boolean(window._pendingDeferredTabs && typeof window._pendingDeferredTabs[sectionId] === 'function');
+        if (typeof window.runDeferredTabRender === 'function') {
+            window.runDeferredTabRender(sectionId);
+        }
+
         if (sectionId === 'enlacesRfevbSection') {
-            if (typeof window.renderMyProfileCard === 'function') window.renderMyProfileCard();
-            if (typeof window.renderUserPushSettings === 'function') window.renderUserPushSettings();
+            if (!didRunDeferred) {
+                if (typeof window.renderMyProfileCard === 'function') {
+                    window.renderMyProfileCard();
+                } else if (typeof window.renderUserPushSettings === 'function') {
+                    window.renderUserPushSettings();
+                }
+            }
         }
         if (sectionId === 'calendarioSection' || sectionId === 'calendario') {
-            if (typeof window.initCalendar === 'function') window.initCalendar();
+            if (!didRunDeferred && typeof window.initCalendar === 'function') window.initCalendar();
         }
         
-        if (window.lucide) setTimeout(() => lucide.createIcons(), 30);
+        if (typeof window.renderLucideIcons === 'function') {
+            if (target) setTimeout(() => window.renderLucideIcons(target), 20);
+        } else if (window.lucide) {
+            setTimeout(() => lucide.createIcons(), 30);
+        }
         if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 40);
         if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 40);
         window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 10);
     }
     window.switchTabV2 = switchTabV2;
 
-    // --- PULL TO REFRESH ENGINE (DESACTIVADO) ---
-    window.recargarDatosAppSilencioso = async function() {
+    window.recargarDatosAppSilencioso = async function(silentToast = false) {
         if (!currentUser || !currentPassword) return;
         try {
             const res = await fetchSeguro(scriptURL, {
@@ -203,7 +220,7 @@
                 if (typeof window.renderRankingV2 === 'function') window.renderRankingV2();
                 if (typeof window.updateHeaderStats === 'function') window.updateHeaderStats();
                 if (typeof window.renderMyProfileCard === 'function') window.renderMyProfileCard();
-                if (typeof mostrarToast === 'function') mostrarToast('✓ Datos actualizados', 1800);
+                if (!silentToast && typeof mostrarToast === 'function') mostrarToast('✓ Datos actualizados', 1800);
             }
         } catch(e) {
             console.error("Error al recargar silenciosamente:", e);
@@ -267,7 +284,11 @@
             if(p==0) formStr = `(0 pts)`;
             let formattedS = s.replace('-', ' - ');
             document.getElementById('summary-text-' + idPart).innerHTML = `<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-main); text-align: left; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);"><i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: var(--success); flex-shrink: 0;"></i><span><strong style="color: var(--success); text-transform: uppercase; font-size: 0.75rem; display: block; margin-bottom: 2px;">Predicción Guardada</strong><strong style="color: var(--text-main); font-weight:900;">${localAb} ${formattedS} ${visitAb} ${formStr}</strong></span></div>`;
-            if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
+            if (typeof window.renderLucideIcons === 'function') {
+                setTimeout(() => window.renderLucideIcons('summary-text-' + idPart), 10);
+            } else if (window.lucide) {
+                setTimeout(() => window.lucide.createIcons(), 10);
+            }
 
             card.classList.add('collapsed');
             inputs.style.display = 'none';
@@ -333,7 +354,24 @@
             });
         }
     }
-    // Add FAQ scroll behavior directly
+
+    // Prevenir envío global de formulario (cada partido se guarda individualmente en V2)
+    const prediccionFormEl = document.getElementById('prediccionForm');
+    if (prediccionFormEl) {
+        prediccionFormEl.addEventListener('submit', function(e) {
+            e.preventDefault();
+            return false;
+        });
+    }
+
+    // Al pulsar Enter en el input de puntos de un partido, guardar solo ese partido
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target && e.target.id && e.target.id.startsWith('val-v2-')) {
+            e.preventDefault();
+            e.target.blur();
+            handleSaveOrModifyV2(e.target.id.replace('val-v2-', ''));
+        }
+    });
     
     // --- VOTACIÓN MVP SUPERLIGA CON ATENUACIÓN Y CENTRADO SUAVE ---
     window.parseCandInfo = function(candStr) {
@@ -452,12 +490,19 @@
             headerText = '✨ Tu Voto para el MVP VALCYL';
         }
 
+        const shareBtnIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`;
+        const makePanelShareBtn = (label) => `
+            <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="${label}" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 5px 9px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: all 0.2s ease;">
+                ${shareBtnIconSvg}
+                <span>${label}</span>
+            </button>`;
+
         let bottomPanelHtml = '';
         if (isClosed) {
             if (isVoted) {
                 bottomPanelHtml = `
                 <div class="mvp-bottom-confirmation-panel is-visible" id="mvp-panel-${idPart}" style="background: rgba(212, 175, 55, 0.08); border-color: rgba(212, 175, 55, 0.3);">
-                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
                         <div style="font-size: 1.3rem; flex-shrink: 0;">🔒</div>
                         <div style="min-width: 0; flex: 1;">
                             <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
@@ -468,11 +513,12 @@
                             </div>
                         </div>
                     </div>
+                    ${makePanelShareBtn('Compartir mi voto')}
                 </div>`;
             } else {
                 bottomPanelHtml = `
                 <div class="mvp-bottom-confirmation-panel is-visible" id="mvp-panel-${idPart}" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15);">
-                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
                         <div style="font-size: 1.2rem; flex-shrink: 0;">🔒</div>
                         <div style="min-width: 0; flex: 1;">
                             <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
@@ -483,12 +529,13 @@
                             </div>
                         </div>
                     </div>
+                    ${makePanelShareBtn('Compartir')}
                 </div>`;
             }
         } else {
             bottomPanelHtml = `
             <div class="mvp-bottom-confirmation-panel ${isVoted ? 'is-visible' : ''}" id="mvp-panel-${idPart}">
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
                     <div style="font-size: 1.3rem; flex-shrink: 0;">🏆</div>
                     <div style="min-width: 0; flex: 1;">
                         <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px;">
@@ -499,18 +546,20 @@
                         </div>
                     </div>
                 </div>
+                ${makePanelShareBtn('Compartir mi voto')}
             </div>`;
         }
 
         return `
         <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); position:relative;">
-            <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
                 <span id="mvp-header-${idPart}">${headerText}</span>
                 <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación de puntos por MVP y elección" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1;">
                     ?
                 </button>
-                <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; margin-left: 2px; transition: all 0.2s ease;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="Compartir MVP VALCYL" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 999px; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.66rem; font-weight: 800; cursor: pointer; margin-left: 2px; transition: all 0.2s ease; text-transform: none; letter-spacing: 0;">
+                    ${shareBtnIconSvg}
+                    <span>Compartir</span>
                 </button>
             </div>
             <div class="mvp-candidates-grid" id="mvp-grid-${idPart}" style="${cands.length === 2 ? 'justify-content: center; gap: 16px;' : ''}">
@@ -522,7 +571,7 @@
 
     window.mostrarInfoBonusMvp = function(e) {
         if (e) e.stopPropagation();
-        const data = window.appData || {};
+        const data = getShareSourceData();
         let pctMvpVal = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
         const elMvpPctModal = document.getElementById('infoMvpBonusPct');
         if (elMvpPctModal) elMvpPctModal.innerText = `+${pctMvpVal}%`;
@@ -533,32 +582,6 @@
         }
         const m = document.getElementById('infoMvpBonusModal');
         if (m) m.style.display = 'flex';
-    };
-
-    window.cambiarVotoMvp = function(idPart, candsEncoded, prevVoteEncoded) {
-        let cands = [];
-        try { cands = JSON.parse(decodeURIComponent(candsEncoded)); } catch(e) {}
-        
-        const widget = document.getElementById('mvp-widget-' + idPart);
-        if (!widget) return;
-
-        const allCards = widget.querySelectorAll('.mvp-card-btn');
-        allCards.forEach(c => {
-            c.classList.remove('is-dimmed-state');
-            c.classList.remove('is-voted-state');
-            const badge = c.querySelector('.mvp-voted-badge');
-            if (badge) badge.remove();
-        });
-
-        const panel = document.getElementById(`mvp-panel-${idPart}`);
-        if (panel) panel.classList.remove('is-visible');
-
-        const header = document.getElementById(`mvp-header-${idPart}`);
-        if (header) header.innerText = '⭐ Elige al MVP VALCYL del Partido';
-
-        if (window.appData && window.appData.mvp_votos) {
-            delete window.appData.mvp_votos[idPart];
-        }
     };
 
     window._mvpVoteCooldowns = window._mvpVoteCooldowns || {};
@@ -1234,7 +1257,10 @@
             </div>
         `;
         if (typeof window.renderUserPushSettings === 'function') {
-            window.renderUserPushSettings();
+            const perfSec = document.getElementById('enlacesRfevbSection');
+            if (perfSec && perfSec.classList.contains('active-tab')) {
+                window.renderUserPushSettings();
+            }
         }
     };
 
@@ -2177,7 +2203,11 @@ window.renderRankingV2 = function() {
         if (newSlider) {
             newSlider.scrollLeft = savedScroll;
         }
-        if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
+        if (typeof window.renderLucideIcons === 'function') {
+            setTimeout(() => window.renderLucideIcons('tablasClasificacionContainer'), 10);
+        } else if (window.lucide) {
+            setTimeout(() => window.lucide.createIcons(), 10);
+        }
         if (typeof window.updateAllBadgeScrollFades === 'function') setTimeout(window.updateAllBadgeScrollFades, 20);
         if (typeof window.observeBadgeScrollContainers === 'function') setTimeout(window.observeBadgeScrollContainers, 20);
     };
@@ -2480,20 +2510,95 @@ window.currentShareMode = null; // 'match', 'jornada' o 'mvp'
 window.currentShareFormat = 'square'; // 'square' (1080x1080) o 'story' (1080x1920)
 window.currentShareMatchId = null;
 window.currentShareLiga = null;
+window.currentShareMvpFocus = 'winner'; // 'winner' o 'vote' cuando hay ganador y voto distinto
+
+function getShareSourceData() {
+    const app = window.appData || null;
+    const hist = window.historialDataCache || null;
+    if (app && hist && app !== hist) {
+        return {
+            ...hist,
+            ...app,
+            todos_partidos: (Array.isArray(app.todos_partidos) && app.todos_partidos.length > 0) ? app.todos_partidos : hist.todos_partidos,
+            equipos: (Array.isArray(app.equipos) && app.equipos.length > 0) ? app.equipos : hist.equipos,
+            predicciones_usuario: { ...(hist.predicciones_usuario || {}), ...(app.predicciones_usuario || {}) },
+            mvp_votos: { ...(hist.mvp_votos || {}), ...(app.mvp_votos || {}) }
+        };
+    }
+    return app || hist || {};
+}
+
+function findShareMatchById(data, idPart) {
+    if (!idPart) return null;
+    const searchSources = [data, window.appData, window.historialDataCache];
+    for (const src of searchSources) {
+        if (!src || typeof src !== 'object') continue;
+        let m = null;
+        if (Array.isArray(src.equipos)) m = src.equipos.find(x => x && x.id_partido === idPart);
+        if (!m && Array.isArray(src.todos_partidos)) m = src.todos_partidos.find(x => x && x.id_partido === idPart);
+        if (!m && Array.isArray(src.partidos_jugados)) m = src.partidos_jugados.find(x => x && x.id_partido === idPart);
+        if (!m && Array.isArray(src.calendario_procesado)) m = src.calendario_procesado.find(x => x && x.id_partido === idPart);
+        if (m) return m;
+    }
+    return null;
+}
+
+function isMvpVotingClosedForMatch(match) {
+    if (!match) return false;
+    if (match.mvp_oficial) return true;
+    let cierreTs = match.mvp_cierre_votacion_ts ? parseInt(match.mvp_cierre_votacion_ts, 10) : 0;
+    const pubTs = match.mvp_publicacion_ts ? parseInt(match.mvp_publicacion_ts, 10) : 0;
+    if (!cierreTs && pubTs > 0) cierreTs = pubTs - 3 * 3600000;
+    return Boolean(cierreTs > 0 && Date.now() >= cierreTs);
+}
 
 function ocultarControlesAdminModalTarjeta() {
     const winnerSelectorContainer = document.getElementById('shareMvpWinnerSelectorContainer');
     if (winnerSelectorContainer) winnerSelectorContainer.style.display = 'none';
+    const focusSelectorContainer = document.getElementById('shareMvpFocusSelectorContainer');
+    if (focusSelectorContainer) focusSelectorContainer.style.display = 'none';
     const formatSelectorContainer = document.getElementById('shareMvpFormatSelectorContainer');
     if (formatSelectorContainer) formatSelectorContainer.style.display = 'none';
     const btnAdminDl = document.getElementById('btnAdminShareDownloadPng');
     if (btnAdminDl) btnAdminDl.style.display = 'none';
     window.isMvpAdminClubCard = false;
     window.currentShareFormat = 'square';
+    window.currentShareMvpFocus = 'winner';
     window.currentShareWinnerOverride = null;
     window.currentShareStatsOverride = null;
     window.currentShareCandidatesOverride = null;
 }
+
+window.syncMvpFocusUi = function(focus) {
+    const safeFocus = (focus === 'vote') ? 'vote' : 'winner';
+    window.currentShareMvpFocus = safeFocus;
+    const btnW = document.getElementById('btnShareMvpFocusWinner');
+    const btnV = document.getElementById('btnShareMvpFocusVote');
+    if (btnW && btnV) {
+        if (safeFocus === 'vote') {
+            btnW.style.border = '1px solid var(--border-color)';
+            btnW.style.background = 'var(--bg-input)';
+            btnW.style.color = 'var(--text-muted)';
+            btnV.style.border = '1.5px solid var(--secondary-color)';
+            btnV.style.background = 'rgba(212,175,55,0.2)';
+            btnV.style.color = '#ffd700';
+        } else {
+            btnW.style.border = '1.5px solid var(--secondary-color)';
+            btnW.style.background = 'rgba(212,175,55,0.2)';
+            btnW.style.color = '#ffd700';
+            btnV.style.border = '1px solid var(--border-color)';
+            btnV.style.background = 'var(--bg-input)';
+            btnV.style.color = 'var(--text-muted)';
+        }
+    }
+};
+
+window.cambiarEnfoqueMvpTarjeta = async function(focus) {
+    window.syncMvpFocusUi(focus);
+    if (typeof window.dibujarTarjetaCompartir === 'function') {
+        await window.dibujarTarjetaCompartir();
+    }
+};
 
 function mostrarSelectorFormatoModalTarjeta(fmtDefault = 'square') {
     const safeFmt = (fmtDefault === 'story') ? 'story' : 'square';
@@ -2566,6 +2671,30 @@ window.abrirModalCompartirMVP = function(idPart) {
     mostrarSelectorFormatoModalTarjeta('square');
     const ligaSelector = document.getElementById('shareLigaSelectorContainer');
     if (ligaSelector) ligaSelector.style.display = 'none';
+
+    const data = getShareSourceData();
+    const match = findShareMatchById(data, idPart);
+    const myVote = (data.mvp_votos && idPart) ? data.mvp_votos[idPart] : null;
+    let showFocusToggle = false;
+    if (match && match.mvp_oficial && myVote) {
+        let isHit = false;
+        if (typeof window.isSameMvpPlayer === 'function') {
+            isHit = window.isSameMvpPlayer(match.mvp_oficial, myVote);
+        } else {
+            const dorOf = (String(match.mvp_oficial).match(/#(\d+)/) || [])[1];
+            const dorVo = (String(myVote).match(/#(\d+)/) || [])[1];
+            isHit = (dorOf && dorVo) ? (parseInt(dorOf, 10) === parseInt(dorVo, 10)) : (String(match.mvp_oficial).trim().toLowerCase() === String(myVote).trim().toLowerCase());
+        }
+        showFocusToggle = !isHit;
+    }
+    const focusSelectorContainer = document.getElementById('shareMvpFocusSelectorContainer');
+    if (focusSelectorContainer) {
+        focusSelectorContainer.style.display = showFocusToggle ? 'block' : 'none';
+        if (showFocusToggle && typeof window.syncMvpFocusUi === 'function') {
+            window.syncMvpFocusUi('winner');
+        }
+    }
+
     const modal = document.getElementById('shareCardModal');
     if (modal) modal.style.display = 'flex';
     window.dibujarTarjetaCompartir();
@@ -2594,25 +2723,75 @@ window.cambiarLigaCompartir = function(nuevaLiga) {
     window.dibujarTarjetaCompartir();
 };
 
-// Helper para cargar imagen asíncrona en Canvas
-function cargarImagenCanvas(src) {
-    return new Promise((resolve) => {
-        if (!src) return resolve(null);
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = src;
-    });
+const SHARE_ASSET_VER = '20261110_v10';
+let canvasFontsReadyPromise = null;
+
+function waitForCanvasFonts() {
+    if (!document.fonts) return Promise.resolve();
+    if (!canvasFontsReadyPromise) {
+        canvasFontsReadyPromise = Promise.race([
+            Promise.all([
+                document.fonts.ready,
+                document.fonts.load('700 40px "Space Grotesk"'),
+                document.fonts.load('700 20px "Plus Jakarta Sans"'),
+                document.fonts.load('800 20px "Plus Jakarta Sans"')
+            ]).catch(() => {}),
+            new Promise(r => setTimeout(r, 1200))
+        ]);
+    }
+    return canvasFontsReadyPromise;
 }
 
-// Helper para cargar escudo de club (.webp con fallback automático a .png)
+// Helper para cargar imagen asíncrona en Canvas (con caché en memoria y decode)
+function cargarImagenCanvas(src) {
+    if (!src) return Promise.resolve(null);
+    const cache = window._vcvCanvasImgCache || (window._vcvCanvasImgCache = new Map());
+    if (cache.has(src)) return cache.get(src);
+    const p = new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = async () => {
+            try {
+                if (typeof img.decode === 'function') await img.decode();
+            } catch (e) {}
+            resolve(img);
+        };
+        img.onerror = () => {
+            cache.delete(src);
+            resolve(null);
+        };
+        img.src = src;
+    });
+    cache.set(src, p);
+    return p;
+}
+
+// Helper para cargar escudo de club (.png alta resolución primero con fallback a .webp)
 async function cargarEscudoCanvas(teamName) {
     const slug = String(teamName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     if (!slug) return null;
-    const imWebp = await cargarImagenCanvas(`files/images/escudos/${slug}.webp?v=20261110_v4`);
-    if (imWebp) return imWebp;
-    return await cargarImagenCanvas(`files/images/escudos/${slug}.png?v=20261110_v4`);
+    const imPng = await cargarImagenCanvas(`files/images/escudos/${slug}.png?v=${SHARE_ASSET_VER}`);
+    if (imPng) return imPng;
+    return await cargarImagenCanvas(`files/images/escudos/${slug}.webp?v=${SHARE_ASSET_VER}`);
+}
+
+// Helper para cargar recorte de jugador usando URL estable para aprovechar caché HTTP/memoria
+async function cargarFotoJugadorCanvas(info) {
+    if (!info) return null;
+    const ver = window._imgCacheBust ? String(window._imgCacheBust) : SHARE_ASSET_VER;
+    if (info.dorsal) {
+        let im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${info.dorsal}.png?v=${ver}`);
+        if (im) return im;
+        im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${info.dorsal}.jpeg?v=${ver}`);
+        if (im) return im;
+        im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${info.dorsal}.jpg?v=${ver}`);
+        if (im) return im;
+        return await cargarImagenCanvas(`files/images/jugadores/dorsal_${info.dorsal}.webp?v=${ver}`);
+    }
+    if (info.photoSrc) {
+        return await cargarImagenCanvas(info.photoSrc);
+    }
+    return null;
 }
 
 // Helper: Atmósfera nocturna full-bleed estilo estudio deportivo (sin cajas rígidas)
@@ -2683,10 +2862,6 @@ function pintarAtmosferaEditorialCanvas(ctx, W, H, opts = {}) {
     ctx.beginPath(); ctx.moveTo(m, H - m - tick); ctx.lineTo(m, H - m); ctx.lineTo(m + tick, H - m); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(W - m - tick, H - m); ctx.lineTo(W - m, H - m); ctx.lineTo(W - m, H - m - tick); ctx.stroke();
     ctx.restore();
-}
-
-function pintarFondoEstadioCanvas(ctx, W, H) {
-    pintarAtmosferaEditorialCanvas(ctx, W, H);
 }
 
 // Helpers vectoriales nítidos para Canvas (evita emojis borrosos del sistema)
@@ -2823,7 +2998,7 @@ function drawEditorialHeaderCanvas(ctx, W, H, vcvCrest, rightPrimary, rightSecon
     ctx.fillText('VCV PLAY', topBrandX, topY + 26);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.52)';
-    ctx.font = `700 ${isStory ? 17 : 15}px sans-serif`;
+    ctx.font = `700 ${isStory ? 17 : 15}px "Plus Jakarta Sans", sans-serif`;
     ctx.fillText('TEMPORADA 2026/2027', topBrandX, topY + (isStory ? 48 : 45));
 
     if (rightPrimary) {
@@ -2834,7 +3009,7 @@ function drawEditorialHeaderCanvas(ctx, W, H, vcvCrest, rightPrimary, rightSecon
     if (rightSecondary) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.textAlign = 'right';
-        drawTextFitted(ctx, rightSecondary, W - marginX, topY + (isStory ? 47 : 44), 390, isStory ? 16 : 15, '700 sans-serif', 12);
+        drawTextFitted(ctx, rightSecondary, W - marginX, topY + (isStory ? 47 : 44), 390, isStory ? 16 : 15, '700 "Plus Jakarta Sans", sans-serif', 12);
     }
 }
 
@@ -2863,62 +3038,137 @@ function drawEditorialFooterCanvas(ctx, W, H, vcvCrest) {
     }
 }
 
-window.dibujarTarjetaCompartir = async function() {
+window.dibujarTarjetaCompartir = function() {
     const canvas = document.getElementById('shareCardCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return Promise.resolve();
 
-    const isStory = (window.currentShareFormat === 'story');
-    const W = 1080;
-    const H = isStory ? 1920 : 1080;
-    canvas.width = W;
-    canvas.height = H;
+    const seq = (window._shareCanvasRenderSeq = (window._shareCanvasRenderSeq || 0) + 1);
+    const isStale = () => seq !== window._shareCanvasRenderSeq;
 
-    const data = window.appData || {};
+    const task = (async () => {
+        await waitForCanvasFonts();
+        if (isStale()) return;
 
-    let uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || (data.usuario || ''));
-    if (!uName || uName === 'Invitado') {
-        try {
-            const ses = JSON.parse(localStorage.getItem('vcv_saved_session') || '{}');
-            if (ses.usuario) uName = ses.usuario;
-        } catch(e) {}
-    }
-    if (!uName) uName = 'Jugador';
-    const nReal = data.nombre_real || (uName !== 'Jugador' && uName !== 'Invitado' ? uName : '');
+        const isStory = (window.currentShareFormat === 'story');
+        const W = 1080;
+        const H = isStory ? 1920 : 1080;
 
-    if (window.currentShareMode === 'match') {
-        await dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data);
-    } else if (window.currentShareMode === 'mvp') {
-        if (isStory) {
-            await dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal);
-        } else {
-            await dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data);
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = W;
+        offCanvas.height = H;
+        const octx = offCanvas.getContext('2d');
+        octx.imageSmoothingEnabled = true;
+        octx.imageSmoothingQuality = 'high';
+
+        const data = getShareSourceData();
+
+        let uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (window.currentUser || (data.usuario || ''));
+        if (!uName || uName === 'Invitado') {
+            try {
+                const ses = JSON.parse(localStorage.getItem('vcv_saved_session') || '{}');
+                if (ses.usuario) uName = ses.usuario;
+            } catch(e) {}
         }
-    } else {
-        await dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data);
-    }
+        if (!uName) uName = 'Jugador';
+        const nReal = data.nombre_real || (uName !== 'Jugador' && uName !== 'Invitado' ? uName : '');
+
+        if (window.currentShareMode === 'match') {
+            await dibujarTarjetaPartidoCanvas(octx, W, H, uName, nReal, data);
+        } else if (window.currentShareMode === 'mvp') {
+            if (isStory) {
+                await dibujarTarjetaMvpStoryCanvas(octx, W, H, data, uName, nReal);
+            } else {
+                await dibujarTarjetaMvpCanvas(octx, W, H, uName, nReal, data);
+            }
+        } else {
+            await dibujarTarjetaJornadaCanvas(octx, W, H, uName, nReal, data);
+        }
+
+        if (isStale()) return;
+
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(offCanvas, 0, 0);
+    })();
+
+    window._activeShareRenderPromise = task;
+    return task;
 };
+
+// Downsampling progresivo (mitad por paso) para preservar nitidez en logos/retratos grandes
+function drawImageStepped(ctx, img, dx, dy, dw, dh) {
+    if (!img || dw <= 0 || dh <= 0) return;
+    const sw = img.naturalWidth || img.width || 0;
+    const sh = img.naturalHeight || img.height || 0;
+    if (!sw || !sh) return;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const targetW = Math.max(1, Math.round(dw));
+    const targetH = Math.max(1, Math.round(dh));
+    if (sw <= targetW * 1.9 && sh <= targetH * 1.9) {
+        ctx.drawImage(img, dx, dy, dw, dh);
+        return;
+    }
+
+    try {
+        let curSource = img;
+        let cw = sw;
+        let ch = sh;
+        let steps = 0;
+        while ((cw * 0.5 >= targetW * 1.05 || ch * 0.5 >= targetH * 1.05) && steps < 6) {
+            const nw = Math.max(targetW, Math.round(cw * 0.5));
+            const nh = Math.max(targetH, Math.round(ch * 0.5));
+            if (nw === cw && nh === ch) break;
+            const stepCanvas = document.createElement('canvas');
+            stepCanvas.width = nw;
+            stepCanvas.height = nh;
+            const sctx = stepCanvas.getContext('2d');
+            sctx.imageSmoothingEnabled = true;
+            sctx.imageSmoothingQuality = 'high';
+            sctx.drawImage(curSource, 0, 0, nw, nh);
+            curSource = stepCanvas;
+            cw = nw;
+            ch = nh;
+            steps++;
+        }
+        ctx.drawImage(curSource, dx, dy, dw, dh);
+    } catch (e) {
+        ctx.drawImage(img, dx, dy, dw, dh);
+    }
+}
 
 // Helper para dibujar imagen preservando proporciones (object-fit: contain)
 function drawImageContain(ctx, img, x, y, maxW, maxH) {
     if (!img) return;
-    const ratio = Math.min(maxW / img.width, maxH / img.height);
-    const nw = img.width * ratio;
-    const nh = img.height * ratio;
+    const iw = img.naturalWidth || img.width || 0;
+    const ih = img.naturalHeight || img.height || 0;
+    if (!iw || !ih) return;
+    const ratio = Math.min(maxW / iw, maxH / ih);
+    const nw = iw * ratio;
+    const nh = ih * ratio;
     const nx = x + (maxW - nw) / 2;
     const ny = y + (maxH - nh) / 2;
-    ctx.drawImage(img, nx, ny, nw, nh);
+    drawImageStepped(ctx, img, nx, ny, nw, nh);
 }
 
 // Helper para dibujar recortes de jugadores alineados abajo (object-position: bottom center)
 function drawImageContainBottom(ctx, img, x, y, maxW, maxH) {
     if (!img) return;
-    const ratio = Math.min(maxW / img.width, maxH / img.height);
-    const nw = img.width * ratio;
-    const nh = img.height * ratio;
+    const iw = img.naturalWidth || img.width || 0;
+    const ih = img.naturalHeight || img.height || 0;
+    if (!iw || !ih) return;
+    const ratio = Math.min(maxW / iw, maxH / ih);
+    const nw = iw * ratio;
+    const nh = ih * ratio;
     const nx = x + (maxW - nw) / 2;
     const ny = y + (maxH - nh);
-    ctx.drawImage(img, nx, ny, nw, nh);
+    drawImageStepped(ctx, img, nx, ny, nw, nh);
 }
 
 // Helper para dibujar recortes de jugadores disolviendo suavemente solo su borde inferior (sin rectángulos oscuros sobre el fondo)
@@ -2938,8 +3188,10 @@ function drawImageContainBottomFaded(ctx, img, x, y, maxW, maxH, fadeStartRatio 
         off.width = Math.max(1, nw);
         off.height = Math.max(1, nh);
         const octx = off.getContext('2d');
+        octx.imageSmoothingEnabled = true;
+        octx.imageSmoothingQuality = 'high';
         octx.clearRect(0, 0, off.width, off.height);
-        octx.drawImage(img, 0, 0, off.width, off.height);
+        drawImageStepped(octx, img, 0, 0, off.width, off.height);
 
         octx.globalCompositeOperation = 'destination-out';
         const fadeY1 = Math.floor(off.height * fadeStartRatio);
@@ -2953,14 +3205,16 @@ function drawImageContainBottomFaded(ctx, img, x, y, maxW, maxH, fadeStartRatio 
         octx.fillRect(0, fadeY1, off.width, off.height - fadeY1);
         octx.globalCompositeOperation = 'source-over';
 
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(off, nx, ny, nw, nh);
     } catch (e) {
-        ctx.drawImage(img, nx, ny, nw, nh);
+        drawImageStepped(ctx, img, nx, ny, nw, nh);
     }
 }
 
 // Helper para auto-ajustar tamaño de fuente y que nunca se desborde del ancho máximo permitido
-function drawTextFitted(ctx, text, x, y, maxW, baseFontSize, fontSpec = 'sans-serif', minFontSize = 14) {
+function drawTextFitted(ctx, text, x, y, maxW, baseFontSize, fontSpec = '"Plus Jakarta Sans", sans-serif', minFontSize = 14) {
     if (!text) return;
     let size = baseFontSize;
     
@@ -3086,6 +3340,8 @@ function createTintedLogoCanvas(img, color) {
         off.width = w;
         off.height = h;
         const octx = off.getContext('2d');
+        octx.imageSmoothingEnabled = true;
+        octx.imageSmoothingQuality = 'high';
         octx.clearRect(0, 0, w, h);
         octx.drawImage(img, 0, 0, w, h);
         octx.globalCompositeOperation = 'source-in';
@@ -3263,9 +3519,7 @@ function drawValcylMvpStamp(ctx, cx, cy, r, angleDeg, valcylCleanImg, rawCat) {
 
 async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const idPart = window.currentShareMatchId;
-    let match = null;
-    if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
-    if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    const match = findShareMatchById(data, idPart);
     if (!match) return;
 
     const midX = W / 2;
@@ -3280,6 +3534,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         : (Array.isArray(match.mvp_candidatos) ? match.mvp_candidatos.filter(Boolean) : []);
     const myVote = isClubCard ? null : ((data.mvp_votos && data.mvp_votos[idPart]) ? data.mvp_votos[idPart] : null);
     const isProclaimed = isClubCard ? true : !!match.mvp_oficial;
+    const isVotingClosed = isMvpVotingClosedForMatch(match);
     const winnerOficial = (isClubCard && window.currentShareWinnerOverride)
         ? window.currentShareWinnerOverride
         : (match.mvp_oficial || (cands.length > 0 ? cands[0] : null));
@@ -3287,7 +3542,6 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     let primaryInfo = null;
     let isHit = false;
     if (isProclaimed) {
-        primaryInfo = window.parseCandInfo(winnerOficial || match.mvp_oficial || (cands.length > 0 ? cands[0] : ''));
         if (myVote && !isClubCard) {
             const targetWinner = winnerOficial || match.mvp_oficial;
             if (typeof window.isSameMvpPlayer === 'function') {
@@ -3298,6 +3552,12 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
                 isHit = (dorOf && dorVo) ? (parseInt(dorOf, 10) === parseInt(dorVo, 10)) : (String(targetWinner).trim().toLowerCase() === String(myVote).trim().toLowerCase());
             }
         }
+    }
+    const focusVoteMode = Boolean(!isClubCard && isProclaimed && myVote && !isHit && window.currentShareMvpFocus === 'vote');
+    if (focusVoteMode) {
+        primaryInfo = window.parseCandInfo(myVote);
+    } else if (isProclaimed) {
+        primaryInfo = window.parseCandInfo(winnerOficial || match.mvp_oficial || (cands.length > 0 ? cands[0] : ''));
     } else if (myVote) {
         primaryInfo = window.parseCandInfo(myVote);
     } else if (cands.length > 0) {
@@ -3307,27 +3567,21 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const rawStats = (isClubCard && Array.isArray(window.currentShareStatsOverride) && window.currentShareStatsOverride.length > 0)
         ? window.currentShareStatsOverride
         : (Array.isArray(match.mvp_stats) ? match.mvp_stats : []);
-    const statsToShow = isProclaimed ? rawStats.filter(s => s && String(s).trim() !== '').slice(0, 4) : [];
+    const statsToShow = (isProclaimed && !focusVoteMode) ? rawStats.filter(s => s && String(s).trim() !== '').slice(0, 4) : [];
     const statsCount = statsToShow.length;
 
     const candInfos = cands.slice(0, 3).map(c => ({ raw: c, info: window.parseCandInfo(c) }));
-    const [valcylLogoImg, valcylCleanLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mainImgRaw, mainImgFallback, ...candImgs] = await Promise.all([
-        cargarImagenCanvas('files/images/valcyl_logo.png'),
-        cargarImagenCanvas('files/images/valcyl_logo_lavender.png'),
-        cargarImagenCanvas('files/images/escudos/valcyl_vcv.webp'),
-        cargarImagenCanvas('files/images/logo_vcv_circle.png'),
+    const [valcylLogoImg, valcylCleanLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mainImg, ...candImgs] = await Promise.all([
+        cargarImagenCanvas(`files/images/valcyl_logo.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/valcyl_logo_lavender.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         cargarEscudoCanvas(locName),
         cargarEscudoCanvas(visName),
-        primaryInfo ? cargarImagenCanvas(primaryInfo.photoSrc) : Promise.resolve(null),
-        (primaryInfo && primaryInfo.dorsal) ? cargarImagenCanvas(`files/images/jugadores/dorsal_${primaryInfo.dorsal}.jpeg`) : Promise.resolve(null),
-        ...candInfos.map(async (ci) => {
-            let im = await cargarImagenCanvas(ci.info.photoSrc);
-            if (!im && ci.info.dorsal) im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${ci.info.dorsal}.jpeg`);
-            return im;
-        })
+        cargarFotoJugadorCanvas(primaryInfo),
+        ...candInfos.map((ci) => cargarFotoJugadorCanvas(ci.info))
     ]);
     const valcylStampLogo = valcylCleanLogoImg || valcylLogoImg;
-    const mainImg = mainImgRaw || mainImgFallback;
     const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
 
     // 1. ATMÓSFERA FULL-BLEED + CABECERA
@@ -3336,9 +3590,9 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     const rightHdr2 = isClubCard ? 'PREMIO MVP VALCYL' : ((uName && uName !== 'Invitado' && uName !== 'Jugador') ? `${cat}  ·  JORNADA ${jNum}` : '');
     drawEditorialHeaderCanvas(ctx, W, H, vcvCrest, rightHdr1, rightHdr2);
 
-    // 2. ESCUDOS EN EL FONDO DEL RESULTADO + MARCADOR FLOTANTE (Y = 104..234)
-    const crestSize = 148;
-    const crestY = 102;
+    // 2. ESCUDOS EN EL FONDO + EQUIPOS ENFRENTADOS SIN RESULTADO (Y = 100..228)
+    const crestSize = 144;
+    const crestY = 98;
     if (imgLoc) {
         ctx.save(); ctx.globalAlpha = 0.14;
         drawImageContain(ctx, imgLoc, 56, crestY, crestSize, crestSize);
@@ -3350,7 +3604,6 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.restore();
     }
 
-    const hasScore = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
     const scoreY = 172;
     const locShort = String(locName || 'VCV').trim().toUpperCase();
     const visShort = String(visName || 'RIVAL').trim().toUpperCase();
@@ -3358,48 +3611,19 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     ctx.save();
     ctx.shadowColor = 'rgba(9, 2, 14, 0.96)';
     ctx.shadowBlur = 22;
-    if (hasScore) {
-        const cleanScore = String(match.oficial_sets).replace(/\s*-\s*/, ' – ');
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        drawTextFitted(ctx, cleanScore, midX, scoreY + 6, 190, 56, '900 "Space Grotesk", sans-serif', 36);
-        const halfW = Math.min(95, Math.ceil(ctx.measureText(cleanScore).width / 2));
-        const off = halfW + 30;
-        const maxTW = midX - off - 58;
+    ctx.fillStyle = '#d4af37';
+    ctx.textAlign = 'center';
+    ctx.font = '900 40px "Space Grotesk", sans-serif';
+    ctx.fillText('VS', midX, scoreY + 6);
+    const halfW = Math.ceil(ctx.measureText('VS').width / 2);
+    const off = halfW + 30;
+    const maxTW = midX - off - 58;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.textAlign = 'right';
-        drawTextFitted(ctx, locShort, midX - off, scoreY - 2, maxTW, 24, '900 "Space Grotesk", sans-serif', 14);
-        ctx.textAlign = 'left';
-        drawTextFitted(ctx, visShort, midX + off, scoreY - 2, maxTW, 24, '900 "Space Grotesk", sans-serif', 14);
-
-        if (match.oficial_parciales && String(match.oficial_parciales).trim() !== '') {
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = 'rgba(243, 206, 94, 0.88)';
-            ctx.textAlign = 'center';
-            const cleanParcs = String(match.oficial_parciales).split(/\s*,\s*/).join('   ·   ');
-            drawTextFitted(ctx, cleanParcs, midX, scoreY + 34, 620, 15, '700 "Space Grotesk", sans-serif', 11);
-        }
-    } else {
-        ctx.fillStyle = '#d4af37';
-        ctx.textAlign = 'center';
-        ctx.font = '900 38px "Space Grotesk", sans-serif';
-        ctx.fillText('VS', midX, scoreY + 2);
-        const halfW = Math.ceil(ctx.measureText('VS').width / 2);
-        const off = halfW + 28;
-        const maxTW = midX - off - 58;
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.textAlign = 'right';
-        drawTextFitted(ctx, locShort, midX - off, scoreY - 2, maxTW, 24, '900 "Space Grotesk", sans-serif', 14);
-        ctx.textAlign = 'left';
-        drawTextFitted(ctx, visShort, midX + off, scoreY - 2, maxTW, 24, '900 "Space Grotesk", sans-serif', 14);
-
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = 'rgba(212, 175, 55, 0.85)';
-        ctx.textAlign = 'center';
-        drawTextFitted(ctx, isProclaimed ? 'MVP VALCYL DE LA JORNADA' : 'VOTACIÓN MVP VALCYL ABIERTA', midX, scoreY + 32, 520, 14, '700 "Space Grotesk", sans-serif', 11);
-    }
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    ctx.textAlign = 'right';
+    drawTextFitted(ctx, locShort, midX - off, scoreY + 2, maxTW, 26, '900 "Space Grotesk", sans-serif', 14);
+    ctx.textAlign = 'left';
+    drawTextFitted(ctx, visShort, midX + off, scoreY + 2, maxTW, 26, '900 "Space Grotesk", sans-serif', 14);
     ctx.restore();
 
     // Regla dorada tras marcador
@@ -3469,10 +3693,12 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 
     // Eyebrow vectorial + título
     const eyebrowY = 282;
-    const eyebrowText = isProclaimed
-        ? 'MVP VALCYL DE LA JORNADA'
-        : (myVote ? 'MI ELECCIÓN MVP VALCYL' : 'CANDIDATOS MVP VALCYL');
-    if (isProclaimed) {
+    const eyebrowText = focusVoteMode
+        ? 'MI VOTO MVP VALCYL'
+        : (isProclaimed
+            ? 'MVP VALCYL DE LA JORNADA'
+            : (myVote ? 'MI ELECCIÓN MVP VALCYL' : 'CANDIDATOS MVP VALCYL'));
+    if (isProclaimed && !focusVoteMode) {
         drawVectorCrown(ctx, colX + 11, eyebrowY - 6, 20, 13, '#d4af37');
     } else {
         drawVectorStar(ctx, colX + 9, eyebrowY - 6, 9, '#ffd700');
@@ -3522,7 +3748,12 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
     if (!isClubCard) {
         // Estado fan abierto (acento lateral vertical fino sin caja cerrada)
         let fanMain = '', fanAccent = '#f3ce5e', fanIcon = 'star';
-        if (isProclaimed) {
+        if (focusVoteMode) {
+            const wInf = window.parseCandInfo(winnerOficial || match.mvp_oficial || '');
+            fanMain = `GANADOR MVP VALCYL: ${wInf.dorsal ? '#' + wInf.dorsal + ' ' : ''}${wInf.apodo}`;
+            fanAccent = '#f3ce5e';
+            fanIcon = 'crown';
+        } else if (isProclaimed) {
             if (isHit) {
                 fanMain = `¡MVP ACERTADO!  ·  +${pctMvpVal}% BONUS EXTRA`;
                 fanAccent = '#2ecc71';
@@ -3539,9 +3770,13 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             }
         } else {
             if (myVote) {
-                fanMain = `VOTO ASEGURADO  ·  +${pctMvpVal}% BONUS SI GANA`;
+                fanMain = `VOTO REGISTRADO  ·  +${pctMvpVal}% BONUS SI GANA`;
                 fanAccent = '#2ecc71';
-                fanIcon = 'lock';
+                fanIcon = 'check';
+            } else if (isVotingClosed) {
+                fanMain = 'VOTACIÓN CERRADA  ·  GANADOR PRÓXIMAMENTE';
+                fanAccent = '#f3ce5e';
+                fanIcon = 'star';
             } else {
                 fanMain = `VOTACIÓN ABIERTA  ·  GANA UN +${pctMvpVal}% EXTRA`;
                 fanAccent = '#ffd700';
@@ -3553,7 +3788,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = fanAccent;
         ctx.fillRect(colX, stStripY + 4, 3.5, 34);
         if (fanIcon === 'check') drawVectorCheck(ctx, colX + 24, stStripY + 21, 9, fanAccent);
-        else if (fanIcon === 'lock') drawVectorLock(ctx, colX + 24, stStripY + 21, 14, fanAccent);
+        else if (fanIcon === 'crown') drawVectorCrown(ctx, colX + 24, stStripY + 21, 16, 11, fanAccent);
         else drawVectorStar(ctx, colX + 24, stStripY + 21, 8, fanAccent);
 
         ctx.fillStyle = fanAccent;
@@ -3577,7 +3812,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
             drawTextFitted(ctx, valPart, cx, cyCenter + (compact ? 2 : 5), cellW - 22, compact ? 32 : 40, '900 "Space Grotesk", sans-serif', 16);
             ctx.fillStyle = '#d4af37';
             ctx.textAlign = 'center';
-            drawTextFitted(ctx, labelPart, cx, cyCenter + (compact ? 25 : 33), cellW - 22, compact ? 13 : 15, '800 sans-serif', 10);
+            drawTextFitted(ctx, labelPart, cx, cyCenter + (compact ? 25 : 33), cellW - 22, compact ? 13 : 15, '800 "Plus Jakarta Sans", sans-serif', 10);
         } else {
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
@@ -3591,10 +3826,15 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         drawVectorStar(ctx, colX + colW / 2, cyMid - 38, 12, '#ffd700');
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
-        const emptyTitle = isProclaimed ? 'JUGADOR MÁS VALORADO' : 'ELIGE AL MVP DEL PARTIDO';
+        const emptyTitle = focusVoteMode
+            ? 'TU ELECCIÓN EN LA JORNADA'
+            : (isProclaimed ? 'JUGADOR MÁS VALORADO' : 'ELIGE AL MVP DEL PARTIDO');
+        const emptySub = focusVoteMode
+            ? 'VOTADO POR TI EN ESTA JORNADA  ·  VCVPLAY.COM'
+            : (isProclaimed ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN' : `ACIERTO = +${pctMvpVal}% DE BONUS EN TUS PUNTOS`);
         drawTextFitted(ctx, emptyTitle, colX + colW / 2, cyMid + 4, colW - 20, 23, '900 "Space Grotesk", sans-serif', 15);
         ctx.fillStyle = '#d4af37';
-        drawTextFitted(ctx, isProclaimed ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN' : `ACIERTO = +${pctMvpVal}% DE BONUS EN TUS PUNTOS`, colX + colW / 2, cyMid + 34, colW - 20, 14, '800 "Space Grotesk", sans-serif', 11);
+        drawTextFitted(ctx, emptySub, colX + colW / 2, cyMid + 34, colW - 20, 14, '800 "Space Grotesk", sans-serif', 11);
     } else if (statsCount === 1) {
         drawSplitKpiCell(statsToShow[0], colX + colW / 2, kpiTop + Math.round(kpiH / 2) - 8, colW, false);
     } else if (statsCount === 2) {
@@ -3703,7 +3943,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         const w1 = ctx.measureText(badgeTxt).width;
         ctx.font = `900 ${nCands === 3 ? 23 : 26}px "Space Grotesk", sans-serif`;
         const w2 = ctx.measureText(nameTxt).width;
-        ctx.font = '600 15px sans-serif';
+        ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
         const w3 = posTxt ? ctx.measureText(posTxt).width : 0;
         const measuredTxtW = Math.min(maxAllowedTxtW, Math.max(w1, w2, w3, 80));
         const unitTotalW = avR * 2 + 14 + measuredTxtW;
@@ -3760,7 +4000,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
         drawTextFitted(ctx, nameTxt, txtX, cy + 5, txtMaxW, nCands === 3 ? 23 : 26, '900 "Space Grotesk", sans-serif', 14);
         if (posTxt) {
             ctx.fillStyle = 'rgba(205, 190, 216, 0.74)';
-            drawTextFitted(ctx, posTxt, txtX, cy + 28, txtMaxW, 15, '600 sans-serif', 11);
+            drawTextFitted(ctx, posTxt, txtX, cy + 28, txtMaxW, 15, '600 "Plus Jakarta Sans", sans-serif', 11);
         }
     }
 
@@ -3772,9 +4012,7 @@ async function dibujarTarjetaMvpCanvas(ctx, W, H, uName, nReal, data) {
 // =========================================================================
 async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     const idPart = window.currentShareMatchId;
-    let match = null;
-    if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
-    if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    const match = findShareMatchById(data, idPart);
     if (!match) return;
 
     const midX = W / 2;
@@ -3789,6 +4027,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         : (Array.isArray(match.mvp_candidatos) ? match.mvp_candidatos.filter(Boolean) : []);
     const myVote = isClubCard ? null : ((data.mvp_votos && data.mvp_votos[idPart]) ? data.mvp_votos[idPart] : null);
     const isProclaimed = isClubCard ? true : !!match.mvp_oficial;
+    const isVotingClosed = isMvpVotingClosedForMatch(match);
     const winnerStr = (isClubCard && window.currentShareWinnerOverride)
         ? window.currentShareWinnerOverride
         : (match.mvp_oficial || (cands.length > 0 ? cands[0] : ''));
@@ -3796,7 +4035,6 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     let primaryInfo = null;
     let isHit = false;
     if (isProclaimed) {
-        primaryInfo = winnerStr ? window.parseCandInfo(winnerStr) : null;
         if (myVote && !isClubCard && winnerStr) {
             if (typeof window.isSameMvpPlayer === 'function') {
                 isHit = window.isSameMvpPlayer(winnerStr, myVote);
@@ -3806,6 +4044,12 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
                 isHit = (dorOf && dorVo) ? (parseInt(dorOf, 10) === parseInt(dorVo, 10)) : (String(winnerStr).trim().toLowerCase() === String(myVote).trim().toLowerCase());
             }
         }
+    }
+    const focusVoteMode = Boolean(!isClubCard && isProclaimed && myVote && !isHit && window.currentShareMvpFocus === 'vote');
+    if (focusVoteMode) {
+        primaryInfo = window.parseCandInfo(myVote);
+    } else if (isProclaimed) {
+        primaryInfo = winnerStr ? window.parseCandInfo(winnerStr) : null;
     } else if (myVote) {
         primaryInfo = window.parseCandInfo(myVote);
     } else if (cands.length > 0) {
@@ -3815,29 +4059,21 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     const rawStats = (isClubCard && Array.isArray(window.currentShareStatsOverride) && window.currentShareStatsOverride.length > 0)
         ? window.currentShareStatsOverride
         : (Array.isArray(match.mvp_stats) ? match.mvp_stats : []);
-    const statsToShow = isProclaimed ? rawStats.filter(s => s && String(s).trim() !== '').slice(0, 4) : [];
+    const statsToShow = (isProclaimed && !focusVoteMode) ? rawStats.filter(s => s && String(s).trim() !== '').slice(0, 4) : [];
     const statsCount = statsToShow.length;
 
     const candInfos = cands.slice(0, 3).map(c => ({ raw: c, info: window.parseCandInfo(c) }));
-    const [valcylLogoImg, valcylCleanLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mainImgRaw, mainImgFallback, ...candImgs] = await Promise.all([
-        cargarImagenCanvas('files/images/valcyl_logo.png'),
-        cargarImagenCanvas('files/images/valcyl_logo_lavender.png'),
-        cargarImagenCanvas('files/images/escudos/valcyl_vcv.webp'),
-        cargarImagenCanvas('files/images/logo_vcv_circle.png'),
+    const [valcylLogoImg, valcylCleanLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mainImg, ...candImgs] = await Promise.all([
+        cargarImagenCanvas(`files/images/valcyl_logo.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/valcyl_logo_lavender.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         cargarEscudoCanvas(locName),
         cargarEscudoCanvas(visName),
-        primaryInfo ? cargarImagenCanvas(primaryInfo.photoSrc) : Promise.resolve(null),
-        (primaryInfo && primaryInfo.dorsal) ? cargarImagenCanvas(`files/images/jugadores/dorsal_${primaryInfo.dorsal}.jpeg`) : Promise.resolve(null),
-        ...candInfos.map(async (ci) => {
-            let im = await cargarImagenCanvas(ci.info.photoSrc);
-            if (!im && ci.info.dorsal) {
-                im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${ci.info.dorsal}.jpeg`);
-            }
-            return im;
-        })
+        cargarFotoJugadorCanvas(primaryInfo),
+        ...candInfos.map((ci) => cargarFotoJugadorCanvas(ci.info))
     ]);
     const valcylStampLogo = valcylCleanLogoImg || valcylLogoImg;
-    const mainImg = mainImgRaw || mainImgFallback;
     const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
 
     // CAPA 0: ATMÓSFERA NOCTURNA FULL-BLEED + CABECERA EDITORIAL
@@ -3882,8 +4118,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     }
     ctx.restore();
 
-    // CAPA 2: MARCADOR PROTAGONISTA FLOTANTE (Sin cajas)
-    const hasScore = Boolean(match.oficial_sets && String(match.oficial_sets).trim() !== '');
+    // CAPA 2: EQUIPOS ENFRENTADOS FLOTANTES (Sin resultado ni cajas)
     const scoreY = 304;
     const locShort = String(locName || 'VCV').trim().toUpperCase();
     const visShort = String(visName || 'RIVAL').trim().toUpperCase();
@@ -3892,45 +4127,20 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     ctx.shadowColor = 'rgba(9, 2, 14, 0.96)';
     ctx.shadowBlur = 24;
 
-    if (hasScore) {
-        const cleanScore = String(match.oficial_sets).replace(/\s*-\s*/, ' – ');
-        ctx.fillStyle = '#ffffff';
-        ctx.textAlign = 'center';
-        drawTextFitted(ctx, cleanScore, midX, scoreY + 6, 210, 68, '900 "Space Grotesk", sans-serif', 44);
-        const scoreHalfW = Math.min(105, Math.ceil(ctx.measureText(cleanScore).width / 2));
-        const teamEdgeOffset = scoreHalfW + 36;
-        const maxTeamW = midX - teamEdgeOffset - 64;
+    ctx.fillStyle = '#d4af37';
+    ctx.textAlign = 'center';
+    ctx.font = '900 44px "Space Grotesk", sans-serif';
+    ctx.fillText('VS', midX, scoreY);
+    const vsHalfW = Math.ceil(ctx.measureText('VS').width / 2);
+    const teamEdgeOffset = vsHalfW + 34;
+    const maxTeamW = midX - teamEdgeOffset - 64;
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.textAlign = 'right';
-        drawTextFitted(ctx, locShort, midX - teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 16);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    ctx.textAlign = 'right';
+    drawTextFitted(ctx, locShort, midX - teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 15);
 
-        ctx.textAlign = 'left';
-        drawTextFitted(ctx, visShort, midX + teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 16);
-
-        if (match.oficial_parciales && String(match.oficial_parciales).trim() !== '') {
-            ctx.shadowBlur = 8;
-            ctx.fillStyle = 'rgba(243, 206, 94, 0.88)';
-            ctx.textAlign = 'center';
-            const cleanParcs = String(match.oficial_parciales).split(/\s*,\s*/).join('   ·   ');
-            drawTextFitted(ctx, cleanParcs, midX, scoreY + 42, 680, 17, '700 "Space Grotesk", sans-serif', 12);
-        }
-    } else {
-        ctx.fillStyle = '#d4af37';
-        ctx.textAlign = 'center';
-        ctx.font = '900 44px "Space Grotesk", sans-serif';
-        ctx.fillText('VS', midX, scoreY);
-        const vsHalfW = Math.ceil(ctx.measureText('VS').width / 2);
-        const teamEdgeOffset = vsHalfW + 34;
-        const maxTeamW = midX - teamEdgeOffset - 64;
-
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-        ctx.textAlign = 'right';
-        drawTextFitted(ctx, locShort, midX - teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 15);
-
-        ctx.textAlign = 'left';
-        drawTextFitted(ctx, visShort, midX + teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 15);
-    }
+    ctx.textAlign = 'left';
+    drawTextFitted(ctx, visShort, midX + teamEdgeOffset, scoreY - 4, maxTeamW, 28, '900 "Space Grotesk", sans-serif', 15);
     ctx.restore();
 
     drawEditorialRule(ctx, 68, W - 68, 370, 0.45, 1.5, 0);
@@ -3972,15 +4182,17 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         : (statsCount === 0 ? 1120 : 1084);
 
     ctx.font = '900 20px "Space Grotesk", sans-serif';
-    const eyebrowLabel = isProclaimed
-        ? 'MVP VALCYL DE LA JORNADA'
-        : (myVote ? 'MI ELECCIÓN MVP VALCYL' : 'CANDIDATOS MVP VALCYL');
+    const eyebrowLabel = focusVoteMode
+        ? 'MI VOTO MVP VALCYL'
+        : (isProclaimed
+            ? 'MVP VALCYL DE LA JORNADA'
+            : (myVote ? 'MI ELECCIÓN MVP VALCYL' : 'CANDIDATOS MVP VALCYL'));
     const ebLabelW = ctx.measureText(eyebrowLabel).width;
-    const iconW = isProclaimed ? 22 : 18, iconGap = 10;
+    const iconW = (isProclaimed && !focusVoteMode) ? 22 : 18, iconGap = 10;
     const ebTotalW = iconW + iconGap + ebLabelW;
     const ebLeft = midX - ebTotalW / 2;
 
-    if (isProclaimed) {
+    if (isProclaimed && !focusVoteMode) {
         drawVectorCrown(ctx, ebLeft + iconW / 2, typoStartY - 7, iconW, 15, '#d4af37');
     } else {
         drawVectorStar(ctx, ebLeft + iconW / 2, typoStartY - 7, 9, '#ffd700');
@@ -4032,7 +4244,12 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
 
     if (!isClubCard) {
         let fanMain = '', fanAccent = '#f3ce5e', fanIcon = 'star';
-        if (isProclaimed) {
+        if (focusVoteMode) {
+            const wInf = window.parseCandInfo(winnerStr || match.mvp_oficial || '');
+            fanMain = `GANADOR MVP VALCYL: ${wInf.dorsal ? '#' + wInf.dorsal + ' ' : ''}${wInf.apodo}`;
+            fanAccent = '#f3ce5e';
+            fanIcon = 'crown';
+        } else if (isProclaimed) {
             if (isHit) {
                 fanMain = `¡MVP ACERTADO!   ·   +${pctMvpVal}% BONUS EXTRA`;
                 fanAccent = '#2ecc71';
@@ -4049,9 +4266,13 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
             }
         } else {
             if (myVote) {
-                fanMain = `VOTO ASEGURADO   ·   +${pctMvpVal}% BONUS SI GANA`;
+                fanMain = `VOTO REGISTRADO   ·   +${pctMvpVal}% BONUS SI GANA`;
                 fanAccent = '#2ecc71';
-                fanIcon = 'lock';
+                fanIcon = 'check';
+            } else if (isVotingClosed) {
+                fanMain = 'VOTACIÓN CERRADA   ·   GANADOR PRÓXIMAMENTE';
+                fanAccent = '#f3ce5e';
+                fanIcon = 'star';
             } else {
                 fanMain = `VOTACIÓN ABIERTA   ·   GANA UN +${pctMvpVal}% EXTRA`;
                 fanAccent = '#ffd700';
@@ -4067,7 +4288,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         const fIconW = 22;
         const fStart = midX - (fIconW + 12 + fTxtW) / 2;
         if (fanIcon === 'check') drawVectorCheck(ctx, fStart + fIconW / 2, fanTextY - 6, 10, fanAccent);
-        else if (fanIcon === 'lock') drawVectorLock(ctx, fStart + fIconW / 2, fanTextY - 6, 16, fanAccent);
+        else if (fanIcon === 'crown') drawVectorCrown(ctx, fStart + fIconW / 2, fanTextY - 6, 18, 12, fanAccent);
         else drawVectorStar(ctx, fStart + fIconW / 2, fanTextY - 6, 9, fanAccent);
 
         ctx.fillStyle = fanAccent;
@@ -4093,7 +4314,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
 
             ctx.fillStyle = '#d4af37';
             ctx.textAlign = 'center';
-            drawTextFitted(ctx, labelPart, cx, cyCenter + (isCompact ? 29 : 38), colW - 28, isCompact ? 14 : 17, '800 sans-serif', 11);
+            drawTextFitted(ctx, labelPart, cx, cyCenter + (isCompact ? 29 : 38), colW - 28, isCompact ? 14 : 17, '800 "Plus Jakarta Sans", sans-serif', 11);
         } else {
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
@@ -4104,7 +4325,9 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
     const kpiAreaH = kpiBottomY - kpiTopY;
     if (statsCount === 0) {
         const midKpiY = kpiTopY + Math.round(kpiAreaH / 2);
-        const headlineTxt = isProclaimed ? 'JUGADOR MÁS VALORADO DEL PARTIDO' : 'ELIGE AL MVP DE ESTA JORNADA';
+        const headlineTxt = focusVoteMode
+            ? 'TU ELECCIÓN EN LA JORNADA'
+            : (isProclaimed ? 'JUGADOR MÁS VALORADO DEL PARTIDO' : 'ELIGE AL MVP DE ESTA JORNADA');
         ctx.font = '900 22px "Space Grotesk", sans-serif';
         const hw = Math.min(W - 220, ctx.measureText(headlineTxt).width);
         const starR = 10;
@@ -4118,9 +4341,11 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
 
         ctx.fillStyle = '#d4af37';
         ctx.textAlign = 'center';
-        const subEmpty = isProclaimed
-            ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN   ·   TEMPORADA 2026/2027'
-            : `ACIERTO = +${pctMvpVal}% DE BONUS EN TUS PUNTOS   ·   VCVPLAY.COM`;
+        const subEmpty = focusVoteMode
+            ? 'VOTADO POR TI EN ESTA JORNADA   ·   VCVPLAY.COM'
+            : (isProclaimed
+                ? 'ELEGIDO POR EL CLUB Y LA AFICIÓN   ·   TEMPORADA 2026/2027'
+                : `ACIERTO = +${pctMvpVal}% DE BONUS EN TUS PUNTOS   ·   VCVPLAY.COM`);
         drawTextFitted(ctx, subEmpty, midX, midKpiY + 26, W - 180, 16, '800 "Space Grotesk", sans-serif', 11);
     } else if (statsCount <= 3) {
         const colW = (W - 144) / statsCount;
@@ -4212,7 +4437,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
         const w1 = ctx.measureText(badgeTxt).width;
         ctx.font = `900 ${nCands === 3 ? 23 : 27}px "Space Grotesk", sans-serif`;
         const w2 = ctx.measureText(nameTxt).width;
-        ctx.font = '600 15px sans-serif';
+        ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
         const w3 = posTxt ? ctx.measureText(posTxt).width : 0;
         const measuredTxtW = Math.min(maxAllowedTxtW, Math.max(w1, w2, w3, 80));
         const unitTotalW = avR * 2 + 14 + measuredTxtW;
@@ -4282,7 +4507,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
 
         if (posTxt) {
             ctx.fillStyle = 'rgba(205, 190, 216, 0.74)';
-            drawTextFitted(ctx, posTxt, txtX, cy + 29, txtMaxW, 15, '600 sans-serif', 11);
+            drawTextFitted(ctx, posTxt, txtX, cy + 29, txtMaxW, 15, '600 "Plus Jakarta Sans", sans-serif', 11);
         }
     }
 
@@ -4294,9 +4519,7 @@ async function dibujarTarjetaMvpStoryCanvas(ctx, W, H, data, uName, nReal) {
 // =========================================================================
 async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const idPart = window.currentShareMatchId;
-    let match = null;
-    if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
-    if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+    const match = findShareMatchById(data, idPart);
     if (!match) return;
 
     const isStory = H > W;
@@ -4323,22 +4546,16 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     const mvpFocusInfo = mvpFocusStr ? window.parseCandInfo(mvpFocusStr) : null;
     const candListInfo = (!mvpFocusStr && mvpCands.length > 0) ? mvpCands.slice(0, 3).map(c => ({ raw: c, info: window.parseCandInfo(c) })) : [];
 
-    const [valcylLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mvpImgRaw, mvpImgFallback, ...candImgs] = await Promise.all([
-        cargarImagenCanvas('files/images/valcyl_logo.png'),
-        cargarImagenCanvas('files/images/escudos/valcyl_vcv.webp'),
-        cargarImagenCanvas('files/images/logo_vcv_circle.png'),
+    const [valcylLogoImg, vcvCrestPrimary, vcvCrestFallback, imgLoc, imgVis, mvpFocusImg, ...candImgs] = await Promise.all([
+        cargarImagenCanvas(`files/images/valcyl_logo.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         cargarEscudoCanvas(locName),
         cargarEscudoCanvas(visName),
-        mvpFocusInfo ? cargarImagenCanvas(mvpFocusInfo.photoSrc) : Promise.resolve(null),
-        (mvpFocusInfo && mvpFocusInfo.dorsal) ? cargarImagenCanvas(`files/images/jugadores/dorsal_${mvpFocusInfo.dorsal}.jpeg`) : Promise.resolve(null),
-        ...candListInfo.map(async (ci) => {
-            let im = await cargarImagenCanvas(ci.info.photoSrc);
-            if (!im && ci.info.dorsal) im = await cargarImagenCanvas(`files/images/jugadores/dorsal_${ci.info.dorsal}.jpeg`);
-            return im;
-        })
+        cargarFotoJugadorCanvas(mvpFocusInfo),
+        ...candListInfo.map((ci) => cargarFotoJugadorCanvas(ci.info))
     ]);
     const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
-    const mvpFocusImg = mvpImgRaw || mvpImgFallback;
 
     // 1. ATMÓSFERA EDITORIAL FULL-BLEED + CABECERA
     const hasPred = Boolean(pUser && pUser.sets);
@@ -4373,7 +4590,13 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
     }
 
     const metaTokens = [];
-    if (match.es_derby) metaTokens.push({ text: 'DERBY', color: '#ff6b81', icon: 'flame' });
+    let isDerbyMatch = Boolean(match.es_derby);
+    if (!isDerbyMatch && Array.isArray(data.mis_equipos_siguiendo)) {
+        const hasLoc = data.mis_equipos_siguiendo.includes(match.equipo_local);
+        const hasRiv = data.mis_equipos_siguiendo.includes(match.rival);
+        if (hasLoc && hasRiv) isDerbyMatch = true;
+    }
+    if (isDerbyMatch) metaTokens.push({ text: 'DERBY ×2', color: '#ff6b81', icon: 'flame' });
     metaTokens.push({ text: statusLabel, color: statusColor, icon: (isCerrado && !yaJugado) ? 'lock' : 'dot' });
     metaTokens.push({ text: matchDateStr, color: 'rgba(229, 214, 240, 0.78)', icon: null });
 
@@ -4464,16 +4687,16 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         ctx.fillStyle = 'rgba(243, 206, 94, 0.78)';
         ctx.font = `900 ${isStory ? 15 : 13}px "Space Grotesk", sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('MARCADOR OFICIAL', midX, crestCenterY - (isStory ? 54 : 44));
+        ctx.fillText('MARCADOR OFICIAL', midX, crestCenterY - (isStory ? 66 : 48));
 
         const cleanScore = String(match.oficial_sets).replace(/\s*-\s*/, ' – ');
         ctx.fillStyle = '#ffffff';
-        drawTextFitted(ctx, cleanScore, midX, crestCenterY + (isStory ? 34 : 26), isStory ? 340 : 280, isStory ? 124 : 92, '900 "Space Grotesk", sans-serif', 54);
+        drawTextFitted(ctx, cleanScore, midX, crestCenterY + (isStory ? 38 : 26), isStory ? 340 : 280, isStory ? 116 : 88, '900 "Space Grotesk", sans-serif', 54);
 
         if (match.oficial_parciales && String(match.oficial_parciales).trim() !== '') {
             ctx.fillStyle = '#f3ce5e';
             const cleanParcs = String(match.oficial_parciales).split(/\s*,\s*/).join('   ·   ');
-            drawTextFitted(ctx, cleanParcs, midX, crestCenterY + (isStory ? 74 : 58), isStory ? 430 : 390, isStory ? 18 : 15, '700 "Space Grotesk", sans-serif', 11);
+            drawTextFitted(ctx, cleanParcs, midX, crestCenterY + (isStory ? 78 : 58), isStory ? 430 : 390, isStory ? 18 : 15, '700 "Space Grotesk", sans-serif', 11);
         }
     } else {
         ctx.fillStyle = 'rgba(243, 206, 94, 0.72)';
@@ -4602,6 +4825,8 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         }
     }
 
+    const ptsFinal = isDerbyMatch ? (ptsConseguidos * 2) : ptsConseguidos;
+    const hasDerbyBonus = Boolean(isDerbyMatch && ptsConseguidos > 0);
     const predEndSepY = isStory ? 1316 : 746;
 
     if (hasPred) {
@@ -4640,26 +4865,33 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.font = '800 14px "Space Grotesk", sans-serif';
                 ctx.fillText('PUNTOS EN ESTE PARTIDO', rightMid, 536);
 
-                const ptsCol = ptsConseguidos > 0 ? '#2ecc71' : '#b7a4be';
+                const ptsCol = ptsFinal > 0 ? '#2ecc71' : '#b7a4be';
                 ctx.save();
-                ctx.shadowColor = ptsConseguidos > 0 ? 'rgba(46, 204, 113, 0.25)' : 'rgba(0,0,0,0.4)';
+                ctx.shadowColor = ptsFinal > 0 ? 'rgba(46, 204, 113, 0.25)' : 'rgba(0,0,0,0.4)';
                 ctx.shadowBlur = 22;
                 ctx.fillStyle = ptsCol;
-                drawTextFitted(ctx, (ptsConseguidos > 0 ? '+' : '') + ptsConseguidos + ' PTS', rightMid, 634, 420, 84, '900 "Space Grotesk", sans-serif', 44);
+                drawTextFitted(ctx, (ptsFinal > 0 ? '+' : '') + ptsFinal + ' PTS', rightMid, 634, 420, 84, '900 "Space Grotesk", sans-serif', 44);
                 ctx.restore();
 
-                const brkTxt = `Ganador ${earnedGanador > 0 ? '+' + earnedGanador : '0'}   ·   Sets ${earnedSets > 0 ? '+' + earnedSets : '0'}   ·   Dif ${earnedDiff > 0 ? '+' + earnedDiff : '0'}`;
+                const brkParts = [
+                    `Ganador ${earnedGanador > 0 ? '+' + earnedGanador : '0'}`,
+                    `Sets ${earnedSets > 0 ? '+' + earnedSets : '0'}`,
+                    `Dif ${earnedDiff > 0 ? '+' + earnedDiff : '0'}`
+                ];
+                if (bonusMvpVal > 0) brkParts.push(`MVP +${bonusMvpVal}`);
+                if (hasDerbyBonus) brkParts.push(`Derby ×2 (${ptsConseguidos}×2)`);
+                const brkTxt = brkParts.join('  ·  ');
                 ctx.fillStyle = 'rgba(229, 214, 240, 0.86)';
-                drawTextFitted(ctx, brkTxt, rightMid, 686, 440, 16, '700 "Space Grotesk", sans-serif', 11);
+                drawTextFitted(ctx, brkTxt, rightMid, 686, 444, 15, '700 "Space Grotesk", sans-serif', 10);
             } else {
-                drawVectorLock(ctx, rightMid, 578, 28, '#2ecc71');
+                drawVectorCheck(ctx, rightMid, 578, 20, '#2ecc71');
                 ctx.fillStyle = '#2ecc71';
-                drawTextFitted(ctx, 'PRONÓSTICO SELLADO', rightMid, 634, 420, 28, '900 "Space Grotesk", sans-serif', 18);
+                drawTextFitted(ctx, 'PRONÓSTICO REGISTRADO', rightMid, 634, 420, 28, '900 "Space Grotesk", sans-serif', 18);
                 ctx.fillStyle = 'rgba(229, 214, 240, 0.78)';
-                drawTextFitted(ctx, '¡Listo para sumar puntos en esta jornada!', rightMid, 672, 420, 16, '600 sans-serif', 12);
+                drawTextFitted(ctx, isCerrado ? '¡Suerte en el partido! Puntos al finalizar' : '¡Listo para sumar puntos en esta jornada!', rightMid, 672, 420, 16, '600 "Plus Jakarta Sans", sans-serif', 12);
             }
         } else {
-            // STORY (1080x1920): Display vertical monumental + Veredicto Swiss 3-col
+            // STORY (1080x1920): Display vertical monumental + Veredicto Swiss 3/4-col
             ctx.fillStyle = 'rgba(229, 214, 240, 0.72)';
             ctx.font = '800 17px "Space Grotesk", sans-serif';
             ctx.textAlign = 'center';
@@ -4684,40 +4916,48 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
                 ctx.fillText('PUNTUACIÓN CONSEGUIDA', midX, 1094);
 
                 ctx.save();
-                ctx.shadowColor = ptsConseguidos > 0 ? 'rgba(46, 204, 113, 0.28)' : 'rgba(0,0,0,0.4)';
+                ctx.shadowColor = ptsFinal > 0 ? 'rgba(46, 204, 113, 0.28)' : 'rgba(0,0,0,0.4)';
                 ctx.shadowBlur = 24;
-                ctx.fillStyle = ptsConseguidos > 0 ? '#2ecc71' : '#b7a4be';
-                drawTextFitted(ctx, (ptsConseguidos > 0 ? '+' : '') + ptsConseguidos + ' PTS', midX, 1178, 600, 88, '900 "Space Grotesk", sans-serif', 46);
+                ctx.fillStyle = ptsFinal > 0 ? '#2ecc71' : '#b7a4be';
+                drawTextFitted(ctx, (ptsFinal > 0 ? '+' : '') + ptsFinal + ' PTS', midX, hasDerbyBonus ? 1164 : 1178, 600, 84, '900 "Space Grotesk", sans-serif', 46);
                 ctx.restore();
 
-                // 3-column Swiss breakdown
+                if (hasDerbyBonus) {
+                    ctx.fillStyle = '#f3ce5e';
+                    drawTextFitted(ctx, `BASE +${ptsConseguidos} PTS  ·  BONUS DERBY ×2`, midX, 1198, W - 180, 15, '800 "Space Grotesk", sans-serif', 11);
+                }
+
+                // 3 o 4-column Swiss breakdown
                 const brkCols = [
                     { lbl: 'GANADOR', val: earnedGanador > 0 ? `+${earnedGanador} pts` : '0 pts', col: earnedGanador > 0 ? '#2ecc71' : 'rgba(255,255,255,0.42)' },
                     { lbl: 'SETS EXACTOS', val: earnedSets > 0 ? `+${earnedSets} pts` : '0 pts', col: earnedSets > 0 ? '#2ecc71' : 'rgba(255,255,255,0.42)' },
                     { lbl: 'DIF. PUNTOS', val: earnedDiff > 0 ? `+${earnedDiff} pts` : '0 pts', col: earnedDiff > 0 ? '#2ecc71' : 'rgba(255,255,255,0.42)' }
                 ];
-                const slotW = (W - marginX * 2) / 3;
+                if (bonusMvpVal > 0) {
+                    brkCols.push({ lbl: 'BONUS MVP', val: `+${bonusMvpVal} pts`, col: '#f3ce5e' });
+                }
+                const slotW = (W - marginX * 2) / brkCols.length;
                 brkCols.forEach((bc, idx) => {
                     const bx = marginX + slotW * idx + slotW / 2;
                     ctx.fillStyle = 'rgba(205, 190, 216, 0.72)';
                     ctx.textAlign = 'center';
-                    drawTextFitted(ctx, bc.lbl, bx, 1234, slotW - 24, 14, '800 "Space Grotesk", sans-serif', 11);
+                    drawTextFitted(ctx, bc.lbl, bx, 1238, slotW - 20, 14, '800 "Space Grotesk", sans-serif', 11);
                     ctx.fillStyle = bc.col;
-                    drawTextFitted(ctx, bc.val, bx, 1272, slotW - 24, 26, '900 "Space Grotesk", sans-serif', 16);
-                    if (idx < 2) {
+                    drawTextFitted(ctx, bc.val, bx, 1274, slotW - 20, 26, '900 "Space Grotesk", sans-serif', 16);
+                    if (idx < brkCols.length - 1) {
                         const dx = marginX + slotW * (idx + 1);
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
                         ctx.lineWidth = 1.2;
-                        ctx.beginPath(); ctx.moveTo(dx, 1218); ctx.lineTo(dx, 1284); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(dx, 1222); ctx.lineTo(dx, 1286); ctx.stroke();
                     }
                 });
             } else {
-                drawVectorLock(ctx, midX, 1138, 34, '#2ecc71');
+                drawVectorCheck(ctx, midX, 1136, 22, '#2ecc71');
                 ctx.fillStyle = '#2ecc71';
                 ctx.textAlign = 'center';
-                drawTextFitted(ctx, 'PRONÓSTICO REGISTRADO Y ASEGURADO', midX, 1202, W - 160, 30, '900 "Space Grotesk", sans-serif', 18);
+                drawTextFitted(ctx, 'PRONÓSTICO REGISTRADO', midX, 1202, W - 160, 30, '900 "Space Grotesk", sans-serif', 18);
                 ctx.fillStyle = 'rgba(229, 214, 240, 0.80)';
-                drawTextFitted(ctx, 'Acumularás tus puntos automáticamente al terminar el partido', midX, 1246, W - 160, 19, '600 sans-serif', 13);
+                drawTextFitted(ctx, 'Acumularás tus puntos automáticamente al terminar el partido', midX, 1246, W - 160, 19, '600 "Plus Jakarta Sans", sans-serif', 13);
             }
         }
     } else {
@@ -4742,7 +4982,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         drawTextFitted(ctx, msgTitle, midX, emptyCy - 14, W - marginX * 2 - 40, isStory ? 30 : 25, '900 "Space Grotesk", sans-serif', 16);
 
         ctx.fillStyle = '#f3ce5e';
-        drawTextFitted(ctx, msgSub, midX, emptyCy + (isStory ? 34 : 26), W - marginX * 2 - 40, isStory ? 21 : 18, '700 sans-serif', 13);
+        drawTextFitted(ctx, msgSub, midX, emptyCy + (isStory ? 34 : 26), W - marginX * 2 - 40, isStory ? 21 : 18, '700 "Plus Jakarta Sans", sans-serif', 13);
 
         ctx.fillStyle = 'rgba(205, 190, 216, 0.68)';
         const rulesHint = `GANADOR +${ptsGanador} PTS   ·   SETS EXACTOS +${ptsSets} PTS   ·   DIF. EXACTA +${ptsDiffExacta} PTS`;
@@ -4809,7 +5049,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
 
         const txX = avCx + avR + (isStory ? 34 : 26);
         const txMaxW = (W - marginX) - txX;
-        let topEyebrow = match.mvp_oficial ? 'GANADOR OFICIAL MVP VALCYL' : 'MI CANDIDATO A MVP VALCYL';
+        let topEyebrow = match.mvp_oficial ? 'GANADOR MVP VALCYL' : 'MI CANDIDATO A MVP VALCYL';
         let playerLine = `${mvpFocusInfo.dorsal ? '#' + mvpFocusInfo.dorsal + ' ' : ''}${String(mvpFocusInfo.apodo || '').toUpperCase()}`;
         let verdictLine = '';
         let verdictColor = '#f3ce5e';
@@ -4840,7 +5080,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
         drawTextFitted(ctx, playerLine, txX, avCy + (isStory ? 12 : 10), txMaxW, isStory ? 46 : 38, '900 "Space Grotesk", sans-serif', 22);
 
         ctx.fillStyle = verdictColor;
-        drawTextFitted(ctx, verdictLine, txX, avCy + (isStory ? 48 : 38), txMaxW, isStory ? 21 : 18, '700 sans-serif', 13);
+        drawTextFitted(ctx, verdictLine, txX, avCy + (isStory ? 48 : 38), txMaxW, isStory ? 21 : 18, '700 "Plus Jakarta Sans", sans-serif', 13);
     } else if (candListInfo.length > 0) {
         // Sin oficial ni voto del usuario: mostrar los medallones de los candidatos
         const nC = candListInfo.length;
@@ -4893,7 +5133,7 @@ async function dibujarTarjetaPartidoCanvas(ctx, W, H, uName, nReal, data) {
             drawTextFitted(ctx, nameTxt, tx, avCy + 8, tw, isStory ? 22 : 20, '900 "Space Grotesk", sans-serif', 13);
             if (posTxt) {
                 ctx.fillStyle = 'rgba(205, 190, 216, 0.72)';
-                drawTextFitted(ctx, posTxt, tx, avCy + 28, tw, 13, '600 sans-serif', 10);
+                drawTextFitted(ctx, posTxt, tx, avCy + 28, tw, 13, '600 "Plus Jakarta Sans", sans-serif', 10);
             }
         }
     } else {
@@ -4953,8 +5193,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
 
     // Cargar escudo VCV + avatar real del jugador y avatares del Top 3
     const [vcvCrestPrimary, vcvCrestFallback, myAvatar, ...topAvatars] = await Promise.all([
-        cargarImagenCanvas('files/images/escudos/valcyl_vcv.webp'),
-        cargarImagenCanvas('files/images/logo_vcv_circle.png'),
+        cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
+        cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         loadUserAvatarEntry(data, uName),
         ...top3Entries.map(t => (t.jugador === uName ? Promise.resolve(null) : loadUserAvatarEntry(data, t.jugador)))
     ]);
@@ -4975,10 +5215,12 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         if (avEntry && avEntry.img) {
             ctx.save();
             ctx.beginPath(); ctx.arc(cx, cy, r - 2, 0, Math.PI * 2); ctx.clip();
-            const ratio = Math.max((r * 2) / avEntry.img.width, (r * 2) / avEntry.img.height);
-            const nw = avEntry.img.width * ratio;
-            const nh = avEntry.img.height * ratio;
-            ctx.drawImage(avEntry.img, cx - nw / 2, cy - nh / 2, nw, nh);
+            const iw = avEntry.img.naturalWidth || avEntry.img.width || 1;
+            const ih = avEntry.img.naturalHeight || avEntry.img.height || 1;
+            const ratio = Math.max((r * 2) / iw, (r * 2) / ih);
+            const nw = iw * ratio;
+            const nh = ih * ratio;
+            drawImageStepped(ctx, avEntry.img, cx - nw / 2, cy - nh / 2, nw, nh);
             ctx.restore();
         } else if (avEntry && avEntry.emoji) {
             ctx.font = `${Math.round(r * 1.05)}px sans-serif`;
@@ -5030,29 +5272,11 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     ctx.strokeText(ghostTag, marginX - 16, isStory ? 560 : 415);
     ctx.restore();
 
-    // Calcular stats históricas y bonus MVP
+    // Calcular stats históricas
     let stats = (typeof window.calculateUserStatsHelper === 'function') ? window.calculateUserStatsHelper(uName, liga) : null;
     let mPts = stats ? stats.mediaPuntos : '-';
     let mPos = stats ? stats.mediaPos : '-';
     let recJ = stats ? stats.recordJornada : '-';
-
-    let matchesToCheck = data.equipos || data.todos_partidos || [];
-    let mvpHitsInLiga = 0;
-    matchesToCheck.forEach(m => {
-        if (m.mvp_oficial && data.mvp_votos && data.mvp_votos[m.id_partido]) {
-            const rawVote = data.mvp_votos[m.id_partido];
-            let isHit = false;
-            if (typeof window.isSameMvpPlayer === 'function') {
-                isHit = window.isSameMvpPlayer(m.mvp_oficial, rawVote);
-            } else {
-                let dorOf = (String(m.mvp_oficial).match(/#(\d+)/) || [])[1];
-                let dorVo = (String(rawVote).match(/#(\d+)/) || [])[1];
-                isHit = (dorOf && dorVo) ? (parseInt(dorOf, 10) === parseInt(dorVo, 10)) : (String(m.mvp_oficial).trim().toLowerCase() === String(rawVote).trim().toLowerCase());
-            }
-            if (isHit) mvpHitsInLiga++;
-        }
-    });
-    let pctMvpVal = (data.reglas && data.reglas.pct_mvp !== undefined) ? data.reglas.pct_mvp : 10;
 
     // 2. ZONA HERO PERFIL + IDENTIDAD DEL JUGADOR
     if (!isStory) {
@@ -5162,30 +5386,20 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
             }
         });
 
-        drawEditorialRule(ctx, marginX, W - marginX, 792, 0.38, 1.4, 0);
+        drawEditorialRule(ctx, marginX, W - marginX, 792, 0.42, 1.4, 0);
 
-        // 5. TIRA INFERIOR: BONUS MVP (SI APLICA) + PODIO TOP 3 ABIERTO (Y = 812..978)
-        let podioRowY = mvpHitsInLiga > 0 ? 928 : 900;
-        if (mvpHitsInLiga > 0) {
-            const bonusY = 842;
-            const bonusTxt = `BONUS MVP ACTIVO: ¡+${pctMvpVal}% EXTRA SUMADO POR ACIERTO MVP!`;
-            ctx.font = '900 17px "Space Grotesk", sans-serif';
-            const bw = Math.min(W - marginX * 2 - 40, ctx.measureText(bonusTxt).width);
-            const starStart = midX - (18 + 10 + bw) / 2;
-            drawVectorStar(ctx, starStart + 9, bonusY - 5, 9, '#ffd700');
-            ctx.fillStyle = '#f3ce5e';
-            ctx.textAlign = 'left';
-            drawTextFitted(ctx, bonusTxt, starStart + 28, bonusY, W - marginX * 2 - 40, 17, '900 "Space Grotesk", sans-serif', 12);
+        // 5. TIRA INFERIOR: PODIO TOP 3 ABIERTO DE LA LIGA (Y = 816..980)
+        ctx.fillStyle = '#d4af37';
+        ctx.font = '900 15px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'left';
+        const podSqLbl = 'LÍDERES DE LA LIGA';
+        ctx.fillText(podSqLbl, marginX, 836);
+        const podSqW = ctx.measureText(podSqLbl).width;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(marginX + podSqW + 16, 831); ctx.lineTo(W - marginX, 831); ctx.stroke();
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
-            ctx.lineWidth = 1.2;
-            ctx.beginPath(); ctx.moveTo(marginX + 60, 868); ctx.lineTo(W - marginX - 60, 868); ctx.stroke();
-        } else {
-            ctx.fillStyle = '#d4af37';
-            ctx.font = '900 14px "Space Grotesk", sans-serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('LÍDERES DE LA LIGA', marginX, 834);
-        }
+        const podioRowY = 910;
 
         if (top3Entries.length > 0) {
             const podCols = top3Entries.length;
@@ -5320,24 +5534,11 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
             }
         });
 
-        let podioStartY = 1234;
-        if (mvpHitsInLiga > 0) {
-            drawEditorialRule(ctx, marginX + 40, W - marginX - 40, 1188, 0.25, 1.2, 0.05);
-            const bonusTxt = `BONUS MVP ACTIVO: ¡+${pctMvpVal}% EXTRA SUMADO POR ACIERTO MVP!`;
-            ctx.font = '900 18px "Space Grotesk", sans-serif';
-            const bw = Math.min(W - marginX * 2 - 40, ctx.measureText(bonusTxt).width);
-            const bStart = midX - (18 + 12 + bw) / 2;
-            drawVectorStar(ctx, bStart + 9, 1230 - 5, 9, '#ffd700');
-            ctx.fillStyle = '#f3ce5e';
-            ctx.textAlign = 'left';
-            drawTextFitted(ctx, bonusTxt, bStart + 30, 1230, W - marginX * 2 - 40, 18, '900 "Space Grotesk", sans-serif', 13);
-            podioStartY = 1284;
-        }
-
+        const podioStartY = 1220;
         drawEditorialRule(ctx, marginX, W - marginX, podioStartY, 0.45, 1.5, 0);
 
-        // 5. PODIO TOP 3 ABIERTO DE LA LIGA (Y = podioStartY+40..1670)
-        const podTitleY = podioStartY + 52;
+        // 5. PODIO TOP 3 ABIERTO DE LA LIGA (Y = podioStartY+58..1680)
+        const podTitleY = podioStartY + 60;
         drawVectorTrophy(ctx, marginX + 14, podTitleY - 6, 24, '#d4af37');
         ctx.fillStyle = '#d4af37';
         ctx.font = '900 18px "Space Grotesk", sans-serif';
@@ -5352,8 +5553,8 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         }
 
         if (top3Entries.length > 0) {
-            const rowStartY = podTitleY + 34;
-            const rowH = 104;
+            const rowStartY = podTitleY + 44;
+            const rowH = 114;
             top3Entries.forEach((tp, idx) => {
                 const ry = rowStartY + idx * rowH;
                 const cy = ry + rowH / 2;
@@ -5403,7 +5604,7 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         } else {
             ctx.fillStyle = 'rgba(229, 214, 240, 0.72)';
             ctx.textAlign = 'center';
-            drawTextFitted(ctx, 'Aún no hay puntuaciones registradas en esta liga', midX, podTitleY + 120, W - 160, 24, '700 sans-serif', 14);
+            drawTextFitted(ctx, 'Aún no hay puntuaciones registradas en esta liga', midX, podTitleY + 120, W - 160, 24, '700 "Plus Jakarta Sans", sans-serif', 14);
         }
     }
 
@@ -5425,8 +5626,11 @@ function getShareCardFilename() {
 window.ejecutarCompartirTarjeta = async function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
+    if (window._activeShareRenderPromise) {
+        try { await window._activeShareRenderPromise; } catch(e) {}
+    }
 
-    const data = window.appData || {};
+    const data = getShareSourceData();
     const uName = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (data.usuario || 'Jugador');
     let shareTitle = 'VCV Play 26/27';
     let shareText = '';
@@ -5435,9 +5639,7 @@ window.ejecutarCompartirTarjeta = async function() {
 
     if (window.currentShareMode === 'match') {
         const idPart = window.currentShareMatchId;
-        let match = null;
-        if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
-        if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+        const match = findShareMatchById(data, idPart);
 
         if (match) {
             const locName = (match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival;
@@ -5466,13 +5668,12 @@ window.ejecutarCompartirTarjeta = async function() {
         }
     } else if (window.currentShareMode === 'mvp') {
         const idPart = window.currentShareMatchId;
-        let match = null;
-        if (data.equipos) match = data.equipos.find(m => m.id_partido === idPart);
-        if (!match && data.todos_partidos) match = data.todos_partidos.find(m => m.id_partido === idPart);
+        const match = findShareMatchById(data, idPart);
 
         const locName = match ? ((match.ubicacion === 'LOCAL') ? match.equipo_local : match.rival) : 'VCV';
         const visName = match ? ((match.ubicacion === 'LOCAL') ? match.rival : match.equipo_local) : 'Rival';
         const uVote = (data.mvp_votos && idPart) ? data.mvp_votos[idPart] : null;
+        const votingClosed = isMvpVotingClosedForMatch(match);
 
         if (window.isMvpAdminClubCard) {
             let winOv = window.currentShareWinnerOverride || (match && match.mvp_oficial) || 'Jugador';
@@ -5495,14 +5696,22 @@ window.ejecutarCompartirTarjeta = async function() {
 
             if (isHit) {
                 shareText = `👑 ¡Acerté el MVP VALCYL del partido ${locName} vs ${visName}! El ganador ha sido ${oInf.apodo} (+${pctMvpVal}% bonus ganado). ¡Juega tú también en VCV Play!`;
+                shareTitle = `MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
+            } else if (uVote && window.currentShareMvpFocus === 'vote') {
+                let vInf = window.parseCandInfo(uVote);
+                shareText = `⭐ ¡Mi voto MVP VALCYL en el ${locName} vs ${visName} fue para ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}! El ganador final fue ${oInf.apodo}. ¡Juega en VCV Play!`;
+                shareTitle = `Mi Voto MVP VALCYL: ${vInf.apodo} | ${locName} vs ${visName}`;
             } else {
                 shareText = `👑 El MVP VALCYL del partido ${locName} vs ${visName} es ${oInf.apodo}. ¡Descubre todas las estadísticas y compite en VCV Play!`;
+                shareTitle = `MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
             }
-            shareTitle = `MVP VALCYL: ${oInf.apodo} | ${locName} vs ${visName}`;
         } else if (uVote) {
             let vInf = window.parseCandInfo(uVote);
             shareText = `⭐ ¡Mi candidato a MVP VALCYL en el ${locName} vs ${visName} es ${vInf.dorsal ? '#' + vInf.dorsal + ' ' : ''}${vInf.apodo}! ¿Cuál es el tuyo? Vota en VCV Play:`;
             shareTitle = `Mi Voto MVP VALCYL: ${vInf.apodo} | VCV Play`;
+        } else if (votingClosed) {
+            shareText = `⭐ ¡Votación MVP VALCYL cerrada para el ${locName} vs ${visName}! Muy pronto conoceremos al ganador en VCV Play:`;
+            shareTitle = `MVP VALCYL | ${locName} vs ${visName}`;
         } else {
             shareText = `⭐ ¡Vota al MVP VALCYL del partido ${locName} vs ${visName} en VCV Play y llévate un +${pctMvpVal}% de bonus en tus puntos! Regístrate gratis en:`;
             shareTitle = `Vota al MVP VALCYL | ${locName} vs ${visName}`;
@@ -5557,11 +5766,33 @@ window.ejecutarCompartirTarjeta = async function() {
     }, 'image/png');
 };
 
-window.descargarTarjetaCanvas = function() {
+window.descargarTarjetaCanvas = async function() {
     const canvas = document.getElementById('shareCardCanvas');
     if (!canvas) return;
+    if (window._activeShareRenderPromise) {
+        try { await window._activeShareRenderPromise; } catch(e) {}
+    }
+    const filename = getShareCardFilename();
+    if (canvas.toBlob) {
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                const fallbackLink = document.createElement('a');
+                fallbackLink.download = filename;
+                fallbackLink.href = canvas.toDataURL('image/png');
+                fallbackLink.click();
+                return;
+            }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        }, 'image/png');
+        return;
+    }
     const link = document.createElement('a');
-    link.download = getShareCardFilename();
+    link.download = filename;
     link.href = canvas.toDataURL('image/png');
     link.click();
 };

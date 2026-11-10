@@ -96,22 +96,33 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             if (hasLoc && hasRiv) isDerbyMatch = true;
         }
 
+        const safeShareId = match.id_partido ? String(match.id_partido).replace(/'/g, "\\'") : '';
+        const btnShareHistHtml = safeShareId ? `
+        <button type="button" onclick="window.abrirModalCompartirPartido('${safeShareId}')" title="Compartir imagen de este partido" aria-label="Compartir imagen de este partido" style="background:transparent; border:none; color:#c794ce; width:26px; height:26px; min-width:26px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.88; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.88'; this.style.transform='none';">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+        </button>` : '';
+
+        const isMatchClosed = Boolean(match.estado === "CERRADO" || match.estado === "FINALIZADO" || (match.oficial_sets && String(match.oficial_sets).trim() !== ""));
+
         const pred = (data.predicciones_usuario && data.predicciones_usuario[match.id_partido]) 
             ? data.predicciones_usuario[match.id_partido] 
             : null;
 
         if (!pred) {
             // NO PREDICTION MADE
-            if (match.estado !== "CERRADO") {
+            if (!isMatchClosed) {
                 // ABIERTO (WARNING)
                 partidosEvaluados.push(`
                 <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--vcv-dorado); margin-bottom:12px; border-left:4px solid var(--vcv-dorado); box-shadow:0 4px 10px rgba(212,175,55,0.1);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap:8px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:wrap;">
                       <span style="font-size: 0.75rem; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--vcv-dorado);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                       ${isDerbyMatch ? `<span style="font-size:0.65rem; background:rgba(231,76,60,0.18); color:#ff4757; padding:2px 6px; border-radius:4px; font-weight:800;">🔥 Derby x2</span>` : ''}
                     </div>
-                    <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
+                      ${btnShareHistHtml}
+                      <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                    </div>
                   </div>
                   <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
                   
@@ -125,24 +136,31 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
                 let oDiffStr = "Sin acta";
                 let oficialTxt = "Sin acta";
                 if (match.oficial_sets) {
-                    let oDiff = 0;
-                    const setsP = match.oficial_parciales.split(",");
-                    for (const sp of setsP) {
-                        const nums = sp.split("-");
-                        if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+                    if (match.oficial_parciales) {
+                        let oDiff = 0;
+                        const setsP = String(match.oficial_parciales).split(",");
+                        for (const sp of setsP) {
+                            const nums = sp.split("-");
+                            if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+                        }
+                        oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
+                        oficialTxt = `${match.oficial_sets} (${oDiffStr} pts local)`;
+                    } else {
+                        oficialTxt = `${match.oficial_sets}`;
                     }
-                    oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
-                    oficialTxt = `${match.oficial_sets} (${oDiffStr} pts local)`;
                 }
 
                 partidosEvaluados.push(`
                 <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--text-muted); opacity: 0.65; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap:8px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:wrap;">
                       <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
                       ${isDerbyMatch ? `<span style="font-size:0.65rem; background:rgba(231,76,60,0.18); color:#ff4757; padding:2px 6px; border-radius:4px; font-weight:800;">🔥 Derby x2</span>` : ''}
                     </div>
-                    <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                    <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
+                      ${btnShareHistHtml}
+                      <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                    </div>
                   </div>
                   <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
                   <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
@@ -165,19 +183,22 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         }
 
         // --- PREDICCIÓN EXISTE ---
-        if (match.estado !== "CERRADO" || !match.oficial_sets) {
+        if (!isMatchClosed || !match.oficial_sets) {
             let uDiff = parseInt(pred.puntos) || 0;
             if (pred.signo && pred.signo.toLowerCase().includes("en contra")) uDiff = -uDiff;
             let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
 
             partidosEvaluados.push(`
             <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid var(--border-color); opacity: 0.85;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                <div style="display:flex; align-items:center; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap:8px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:wrap;">
                   <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Pendiente</span>
                   ${isDerbyMatch ? `<span style="font-size:0.65rem; background:rgba(231,76,60,0.18); color:#ff4757; padding:2px 6px; border-radius:4px; font-weight:800;">🔥 Derby x2</span>` : ''}
                 </div>
-                <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
+                  ${btnShareHistHtml}
+                  <span style="font-size: 0.95rem; color: var(--text-muted); font-weight: 900;">- PTS</span>
+                </div>
               </div>
               <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
               <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
@@ -210,18 +231,23 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         if (pred.sets === match.oficial_sets) { matchPts += ptsSets; acertoSets = true; setsExactos++; }
 
         let oDiff = 0;
-        const setsP = match.oficial_parciales.split(",");
-        for (const sp of setsP) {
-            const nums = sp.split("-");
-            if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+        let hasOficialParciales = Boolean(match.oficial_parciales && String(match.oficial_parciales).trim() !== '');
+        if (hasOficialParciales) {
+            const setsP = String(match.oficial_parciales).split(",");
+            for (const sp of setsP) {
+                const nums = sp.split("-");
+                if (nums.length === 2) oDiff += (parseInt(nums[0]) - parseInt(nums[1]));
+            }
         }
         let uDiff = parseInt(pred.puntos) || 0;
         if (pred.signo && pred.signo.toLowerCase().includes("en contra")) uDiff = -uDiff;
 
-        const dist = Math.abs(oDiff - uDiff);
-        if (dist === 0) matchPts += ptsDiffExacta;
-        else if (maxDistancia > 0 && dist < maxDistancia) {
-            matchPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+        const dist = hasOficialParciales ? Math.abs(oDiff - uDiff) : Infinity;
+        if (hasOficialParciales) {
+            if (dist === 0) matchPts += ptsDiffExacta;
+            else if (maxDistancia > 0 && dist < maxDistancia) {
+                matchPts += Math.round(ptsDiffExacta * ((maxDistancia - dist) / maxDistancia));
+            }
         }
 
         // Bonificación MVP (+pctMvp% redondeado hacia arriba si acertó el MVP oficial)
@@ -259,6 +285,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         if (acertoGanador && acertoSets && dist <= 2) plenos++;
 
         let oDiffStr = oDiff >= 0 ? `+${oDiff}` : `${oDiff}`;
+        let oficialScoreDisplay = hasOficialParciales ? `${match.oficial_sets} (${oDiffStr} pts local)` : `${match.oficial_sets}`;
         let uDiffStr = uDiff >= 0 ? `+${uDiff}` : `${uDiff}`;
         let userVotedMvp = (data.mvp_votos && data.mvp_votos[match.id_partido]) ? String(data.mvp_votos[match.id_partido]) : null;
         let officialMvp = match.mvp_oficial ? String(match.mvp_oficial) : null;
@@ -279,12 +306,15 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
         partidosEvaluados.push(`
         <!-- Tarjeta Historial -->
         <div class="vcv-card-v2" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border-color); margin-bottom:12px; border-left:4px solid ${colorClass}; box-shadow:0 4px 6px rgba(0,0,0,0.05);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; flex-wrap:wrap;">
               <span style="font-size: 0.75rem; background:var(--bg-card-alt); padding:3px 8px; border-radius:4px; font-weight: 700; color:var(--text-muted);">Jornada ${match.jornada_eq || '-'} • Finalizado</span>
               ${derbyBadgeHtml}
             </div>
-            <span style="font-size: 0.95rem; color: ${colorClass}; font-weight: 900;">${ptsCardDisplay}</span>
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
+              ${btnShareHistHtml}
+              <span style="font-size: 0.95rem; color: ${colorClass}; font-weight: 900;">${ptsCardDisplay}</span>
+            </div>
           </div>
           <div style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color:var(--text-main);">${localName} <span style="color:var(--text-muted); font-weight:400;">vs</span> ${visitName}</div>
           <div style="background: var(--bg-card-alt); padding: 12px; border-radius: 8px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; border:1px solid var(--border-color);">
@@ -305,7 +335,7 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
             })() : ''}
             <div style="display: flex; justify-content: space-between; align-items:center;">
               <span style="color: var(--text-muted);">Acta Oficial:</span>
-              <strong style="color: var(--text-main);">${match.oficial_sets} (${oDiffStr} pts local)</strong>
+              <strong style="color: var(--text-main);">${oficialScoreDisplay}</strong>
             </div>
             ${officialMvp ? (function(){
                 let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(officialMvp) : { apodo: officialMvp };
@@ -427,7 +457,8 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
 
     container.innerHTML = topBar + statsHTML + miniBotonTotalesHTML + `<h3 style="font-size:1.1rem; font-weight:800; color:var(--text-main); margin-bottom:12px; margin-top:15px;">Desglose de Partidos</h3>` + listHTML;
     
-    if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
+    if(window.renderLucideIcons) window.renderLucideIcons(container);
+    else if(window.lucide) setTimeout(() => window.lucide.createIcons(), 10);
 }
 
 window.irAPrediccionTotales = function() {
@@ -441,290 +472,3 @@ window.irAPrediccionTotales = function() {
         sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 40);
 };
-
-function cargarDatosAntiguos() {
-    fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'load', usuario: currentUser, password: currentPassword }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null && val !== "") el.value = String(val).trim(); };
-            var preds = data.data.predicciones;
-            for(var idPart in preds) {
-                setVal(`e${idPart}_sets`, preds[idPart].sets);
-                setVal(`e${idPart}_puntos`, preds[idPart].puntos);
-                setVal(`e${idPart}_signo`, preds[idPart].signo);
-                
-                // --- V2 UI Sync ---
-                let isFilled = false;
-                if (preds[idPart].sets) {
-                    const btn = document.querySelector(`button[onclick*="seleccionarSetV2(this, '${preds[idPart].sets}', '${idPart}')"]`);
-                    if (btn) btn.classList.add('selected');
-                    isFilled = true;
-                }
-                if (preds[idPart].puntos !== undefined) {
-                    const span = document.getElementById(`val-v2-${idPart}`);
-                    if (span) span.innerText = preds[idPart].puntos;
-                    // If it's 0, we can also force the tied state just in case
-                    if (parseInt(preds[idPart].puntos) === 0) {
-                        const btnPlus = document.getElementById(`signo-plus-v2-${idPart}`);
-                        const btnMinus = document.getElementById(`signo-minus-v2-${idPart}`);
-                        const btnStepMinus = document.getElementById(`btn-step-minus-${idPart}`);
-                        if(btnPlus) { btnPlus.classList.add('tied-btn'); btnPlus.disabled = true; }
-                        if(btnMinus) { btnMinus.classList.add('tied-btn'); btnMinus.disabled = true; }
-                        if(btnStepMinus) {
-                            btnStepMinus.disabled = true;
-                            btnStepMinus.style.background = 'var(--secondary-color)';
-                            btnStepMinus.style.color = '#000';
-                            btnStepMinus.style.cursor = 'not-allowed';
-                        }
-                    }
-                }
-                if (preds[idPart].signo) {
-                    const signoVal = preds[idPart].signo;
-                    if (signoVal === "A favor") {
-                        const btn = document.getElementById(`signo-plus-v2-${idPart}`);
-                        if (btn) btn.classList.add('selected');
-                    } else if (signoVal === "En contra") {
-                        const btn = document.getElementById(`signo-minus-v2-${idPart}`);
-                        if (btn) btn.classList.add('selected');
-                    } else if (signoVal === "Empate") {
-                        const btnPlus = document.getElementById(`signo-plus-v2-${idPart}`);
-                        const btnMinus = document.getElementById(`signo-minus-v2-${idPart}`);
-                        if(btnPlus) { btnPlus.classList.add('tied-btn'); btnPlus.disabled = true; }
-                        if(btnMinus) { btnMinus.classList.add('tied-btn'); btnMinus.disabled = true; }
-                    }
-                }
-                
-                if (isFilled) {
-                    const card = document.getElementById('card-v2-' + idPart);
-                    const btn = document.getElementById('btn-save-' + idPart);
-                    const summary = document.getElementById('summary-v2-' + idPart);
-                    const inputs = document.getElementById('inputs_eq_' + idPart);
-                    if(card && btn && summary && inputs) {
-                        const s = preds[idPart].sets;
-                        const p = preds[idPart].puntos;
-                        const sig = preds[idPart].signo;
-                        
-                    const selectedSignBtn = document.querySelector(`#signo-plus-v2-${idPart}.selected`) || document.querySelector(`#signo-minus-v2-${idPart}.selected`);
-                    let signText = selectedSignBtn ? selectedSignBtn.innerText : (sig === 'Empate' ? 'Empate' : sig);
-                    if(p == 0) signText = "Empate";
-                    
-
-                        card.classList.add('collapsed');
-                        inputs.style.display = 'none';
-                        summary.style.display = 'block';
-                        btn.innerText = 'Modificar Predicción';
-                        btn.style.background = 'transparent';
-                        btn.style.color = 'var(--text-muted)';
-                        btn.style.border = '1px solid var(--border-color)';
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Prevenir envío global de formulario heredado de la V1 (cada partido se guarda individualmente en V2)
-const prediccionFormEl = document.getElementById('prediccionForm');
-if (prediccionFormEl) {
-    prediccionFormEl.addEventListener('submit', function(e) {
-        e.preventDefault();
-        return false;
-    });
-}
-
-// Al pulsar Enter en el input de puntos de un partido, guardar solo ese partido de forma natural en V2
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target && e.target.id && e.target.id.startsWith('val-v2-')) {
-        e.preventDefault();
-        e.target.blur();
-        const idPart = e.target.id.replace('val-v2-', '');
-        if (typeof window.handleSaveOrModifyV2 === 'function') {
-            window.handleSaveOrModifyV2(idPart);
-        }
-    }
-});
-const btnToggleSortEl = document.getElementById('btnToggleSort');
-if (btnToggleSortEl) btnToggleSortEl.addEventListener('click', function(e) {
-    e.preventDefault();
-    isSortDesc = !isSortDesc;
-    this.innerText = isSortDesc ? "⬇️ Orden Descendente (Nuevos primero)" : "⬆️ Orden Ascendente (Viejos primero)";
-    renderizarHistorial();
-});
-
-const btnHistoryEl = document.getElementById('btnHistory');
-if (btnHistoryEl) btnHistoryEl.addEventListener('click', function(e) {
-    e.preventDefault();
-    const msgBox = document.getElementById('historyMessage');
-    const container = document.getElementById('historyListContainer');
-    const controls = document.getElementById('historyControls');
-    const btnHist = this;
-
-    btnHist.disabled = true; 
-    btnHist.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando historial...'; 
-    msgBox.style.display = "none";
-
-    fetchSeguro(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'get_history', usuario: currentUser, password: currentPassword }), headers: { 'Content-Type': 'text/plain;charset=utf-8' } })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            if (data.history.length === 0) {
-                msgBox.style.display = "block";
-        if (typeof window.vcvHaptic === "function") window.vcvHaptic("success");
-          updateProgressBar(); msgBox.className = "alert-box alert-warning"; msgBox.innerText = "Aún no tienes predicciones ni resultados."; container.style.display = "none"; controls.style.display = "none";
-            } else {
-                globalHistorialData = data.history;
-                
-                let equiposEnHistorial = new Set();
-                globalHistorialData.forEach(r => {
-                    r.partidos.forEach(p => { equiposEnHistorial.add(p.equipo_local); });
-                });
-                
-                let equiposArray = Array.from(equiposEnHistorial).sort();
-                let checksHtml = "";
-                equiposArray.forEach(eq => {
-                    checksHtml += `<label class="filter-checkbox"><input type="checkbox" class="chk-equipo" value="${eq}" checked> ${eq}</label>`;
-                });
-                document.getElementById('filterEquiposContainer').innerHTML = checksHtml;
-
-                document.querySelectorAll('.chk-equipo').forEach(chk => {
-                    chk.addEventListener('change', renderizarHistorial);
-                });
-
-                controls.style.display = "block"; 
-                renderizarHistorial(); 
-            }
-        }
-    })
-    .finally(() => { 
-        btnHist.innerText = " Cargar mi historial"; 
-        btnHist.disabled = false; 
-    });
-});
-
-function renderizarHistorial() {
-    const container = document.getElementById('historyListContainer');
-    let sortedHistory = JSON.parse(JSON.stringify(globalHistorialData));
-    
-    sortedHistory.sort((a, b) => {
-        let numA = parseInt(a.ronda.replace(/\D/g, '')) || 0;
-        let numB = parseInt(b.ronda.replace(/\D/g, '')) || 0;
-        return isSortDesc ? numB - numA : numA - numB;
-    });
-
-    let checkedEquipos = Array.from(document.querySelectorAll('.chk-equipo:checked')).map(cb => cb.value);
-
-    let histHtml = "";
-    
-    sortedHistory.forEach(ronda => {
-        ronda.partidos.sort((a, b) => {
-            let tA = a.timestamp || 0;
-            let tB = b.timestamp || 0;
-            return isSortDesc ? tB - tA : tA - tB;
-        });
-
-        let esActual = (ronda.ronda == currentJornadaGlobal);
-        let blockHtml = `<div style="background:var(--vcv-blanco); border-radius:10px; padding:20px; margin-bottom:20px; box-shadow:0 4px 8px rgba(0,0,0,0.05); border:1px solid #e0e0e0; border-left: 5px solid var(--vcv-dorado);">`;
-        blockHtml += `<h4 style="color:var(--vcv-morado); border-bottom:2px solid var(--bg-general); padding-bottom:10px; margin-top:0; font-weight:bold;">Ronda ${ronda.ronda}</h4>`;
-        
-        let hayDatosEnEsteBloque = false;
-        
-        ronda.partidos.forEach(p => {
-            if (!checkedEquipos.includes(p.equipo_local)) return; 
-            
-            hayDatosEnEsteBloque = true;
-            let eqName = p.equipo_local;
-            let rivalName = p.rival;
-            
-            let ofText = `<i style="color:#999;">Pendiente de disputarse</i>`;
-            if (p.oficial_sets && p.oficial_sets.includes("-")) {
-                let sL = parseInt(p.oficial_sets.split("-")[0]);
-                let sV = parseInt(p.oficial_sets.split("-")[1]);
-                let textoRes = sL > sV ? `<span style="color:#28a745; font-weight:bold; margin-left:5px;">🟢 Ganado</span>` : `<span style="color:var(--vcv-rojo); font-weight:bold; margin-left:5px;">🔴 Perdido</span>`;
-                ofText = `<b style="color:var(--vcv-negro); font-size:1.05rem;">${p.oficial_sets}</b> ${textoRes} <br><span style="font-size:0.85rem;">(${p.oficial_parciales})</span>`;
-            }
-            
-            let valJornada = String(p.jornada_eq || "").trim();
-            let infoJornadaEq = "";
-            if(valJornada) {
-                infoJornadaEq = isNaN(valJornada) ? ` <span style="font-size:0.85rem; color:#666; font-weight:normal;">(${valJornada})</span>` : ` <span style="font-size:0.85rem; color:#666; font-weight:normal;">(Jornada ${valJornada})</span>`;
-            }
-
-            let streamIconHist = p.streaming ? ` <a href="${p.streaming}" target="_blank" style="margin-left:8px; display:inline-block; vertical-align:middle;" title="Ver Streaming Oficial"><img loading="lazy" src="files/images/play_icon.png" style="width:16px; height:16px; display:block;"></a>` : "";
-            let infoLocFecha = streamIconHist ? `<span style="margin-left:10px;">${streamIconHist}</span>` : "";
-            let htmlReloj = "";
-            let iconoLoc = p.ubicacion === "CASA" ? "🏠" : (p.ubicacion === "FUERA" ? "✈️" : "");
-            
-            if (esActual) {
-                if(iconoLoc || p.timestamp) {
-                    infoLocFecha = `<span style="font-weight:normal; font-size:0.85rem; color:#666; margin-left:10px;">${iconoLoc} ${formatFecha(p.timestamp)}${streamIconHist}</span>`;
-                }
-                if(p.timestamp && p.estado === "ABIERTO") {
-                    htmlReloj = `<div class="reloj-partido" data-ts="${p.timestamp}" style="margin-top:8px; font-size:0.85rem; font-weight:bold; padding:4px 8px; background:#fff3cd; color:#856404; border-radius:4px; display:inline-block;">Calculando tiempo...</div>`;
-                }
-            }
-            
-            let puntosInfo = "";
-            if (p.oficial_sets && p.oficial_parciales) {
-                let pts = p.puntos_partido !== undefined ? p.puntos_partido : "?";
-                let mot = p.motivos || "Cálculo pendiente";
-                let bgColor = pts > 0 ? "#e8f5e9" : "#fde8e8";
-                let textColor = pts > 0 ? "#2e7d32" : "var(--vcv-rojo)";
-                if (mot === "No pronosticado") { bgColor = "#eeeeee"; textColor = "#666666"; }
-                
-                puntosInfo = `
-                <div style="margin-top:10px; background:${bgColor}; border-radius:6px; padding:10px; text-align:center;">
-                    <div style="color:${textColor}; font-weight:bold; font-size:1.1rem;">+${pts} Puntos</div>
-                    <div style="color:#666; font-size:0.85rem; margin-top:2px;">${mot}</div>
-                </div>`;
-            } else {
-                puntosInfo = `
-                <div style="margin-top:10px; background:#fff8e1; border-radius:6px; padding:10px; text-align:center;">
-                    <div style="color:#f57f17; font-weight:bold; font-size:0.9rem;">⏳ Partido sin puntuar aún</div>
-                </div>`;
-            }
-
-            let txtPorraSets = p.sets ? p.sets : `<i style="color:#999;">Sin predicción</i>`;
-            let txtPorraPtos = p.sets ? `<span style="font-size:0.9rem; color:#555;">| ${p.puntos} pts (${p.signo})</span>` : "";
-            
-            let cleanPab = window.cleanPabellon ? window.cleanPabellon(p.pabellon) : (p.pabellon || "");
-            let infoPabellon = cleanPab ? `<div style="font-size:0.85rem; color:#777; margin-top:2px;">📍 ${cleanPab}</div>` : "";
-            
-            // INSIGNIA DE CATEGORÍA PARA EL HISTORIAL
-            let categoryHtml = getCategoryHTML(p.categoria);
-
-            blockHtml += `
-            <div class="card-match" style="margin-bottom:20px; font-size:0.95rem; border-bottom:1px dashed #ccc; padding-bottom:15px; padding-top: 10px;">
-                ${categoryHtml}
-                <div style="font-weight:bold; color:#444; margin-bottom:6px; padding-right: 90px;">
-                    🏐 ${eqName} vs ${rivalName}${infoJornadaEq}${infoLocFecha}
-                    ${infoPabellon}
-                </div>
-                ${htmlReloj}
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; background:var(--bg-general); padding:12px; border-radius:6px; border-left: 4px solid var(--vcv-morado); margin-top:10px;">
-                    <div style="margin-right:15px; margin-bottom:8px;">
-                        <span style="color:#777; font-size:0.85rem; display:block; text-transform:uppercase; letter-spacing:0.5px;">Tu Predicción</span>
-                        <span style="font-weight:bold; color:var(--vcv-morado); font-size:1.05rem;">${txtPorraSets}</span> ${txtPorraPtos}
-                    </div>
-                    <div>
-                        <span style="color:#777; font-size:0.85rem; display:block; text-transform:uppercase; letter-spacing:0.5px;">Resultado Oficial</span>
-                        ${ofText}
-                    </div>
-                </div>
-                ${puntosInfo}
-            </div>`;
-        });
-        
-        blockHtml += `</div>`;
-        
-        if(hayDatosEnEsteBloque) { histHtml += blockHtml; }
-    });
-    
-    if (histHtml === "") {
-        histHtml = `<div class="alert-box alert-warning" style="display:block;">Ningún partido coincide con los filtros seleccionados.</div>`;
-    }
-
-    container.innerHTML = histHtml;
-    container.style.display = "block";
-    iniciarRelojes(); 
-}

@@ -830,7 +830,8 @@ window.renderCarteleraHTML = function(data) {
     if (appMsg && window.isGuestMode) appMsg.style.display = 'none';
     if(window.updateCategoryFilter) window.updateCategoryFilter();
     if(typeof iniciarRelojes === 'function') iniciarRelojes();
-    if(window.lucide) setTimeout(() => lucide.createIcons(), 50);
+    if(window.renderLucideIcons) window.renderLucideIcons('carteleraSection');
+    else if(window.lucide) lucide.createIcons();
 };
 
 

@@ -2,12 +2,12 @@
 // CALENDARIO OFICIAL, FILTROS Y RESULTADOS DE PARTIDOS JUGADOS
 // ==================================================================
 
-// Registrar Service Worker para PWA
+// Registrar Service Worker para PWA sin forzar descarga en cada arranque
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-            reg.update(); // Forzar actualización siempre
-        }).catch(err => console.log('SW Error:', err));
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (!reg) return navigator.serviceWorker.register('sw.js');
+        }).catch(err => console.warn('SW Error:', err));
     });
 }
 
@@ -95,7 +95,7 @@ window.cambiarSubTabCalendario = function(tab) {
             window.renderCalendar();
         }
     }
-    if (window.lucide) window.lucide.createIcons();
+    if (window.renderLucideIcons) window.renderLucideIcons('calendarioSection');
 };
 
 // ---------------------------------------------------
@@ -524,11 +524,22 @@ function renderMatchResultCardHtml(eq) {
         </div>`;
     }
 
-    // MVP Oficial (bloque dedicado y limpio, sin el botón de grabación)
+    // MVP VALCYL (bloque dedicado y limpio, con botón para compartir MVP o voto del usuario)
     let mvpHtml = "";
     if (eq.mvp_oficial && String(eq.mvp_oficial).trim() !== "") {
         let oInfo = formatMvpCandidate(eq.mvp_oficial);
         let displayName = oInfo.nombre || oInfo.apodo || eq.mvp_oficial;
+        let myCalVote = (window.appData && window.appData.mvp_votos) ? window.appData.mvp_votos[eq.id_partido] : null;
+        let myCalVoteNote = '';
+        if (myCalVote) {
+            let vCalInfo = formatMvpCandidate(myCalVote);
+            let isCalHit = (typeof window.isSameMvpPlayer === 'function')
+                ? window.isSameMvpPlayer(eq.mvp_oficial, myCalVote)
+                : Boolean(vCalInfo.dorsal && oInfo.dorsal && parseInt(vCalInfo.dorsal, 10) === parseInt(oInfo.dorsal, 10));
+            myCalVoteNote = isCalHit
+                ? `<div style="font-size:0.68rem; color:#2ecc71; font-weight:800; margin-top:3px;">✅ ¡Acertaste tu voto MVP!</div>`
+                : `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; word-break:break-word;">Tu voto en la jornada: <strong style="color:var(--text-main);">${vCalInfo.dorsal ? '#' + vCalInfo.dorsal + ' ' : ''}${vCalInfo.apodo}</strong></div>`;
+        }
         let hasPhoto = oInfo.photoSrc && String(oInfo.photoSrc).trim() !== "";
         let photoHtml = hasPhoto
             ? `<div style="position:relative; width:44px; height:44px; min-width:44px; aspect-ratio:1/1; border-radius:10px; border:1.5px solid var(--vcv-dorado); overflow:hidden; background:radial-gradient(circle, rgba(212,175,55,0.2) 0%, rgba(93,23,137,0.3) 100%); display:flex; align-items:flex-end; justify-content:center; flex-shrink:0;">
@@ -605,21 +616,34 @@ function renderMatchResultCardHtml(eq) {
 
         mvpHtml = `
         <div class="calendario-mvp-card" style="margin-top:12px; padding:10px 12px; background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(106,44,112,0.18)); border:1px solid rgba(212,175,55,0.35); border-radius:12px; display:flex; flex-direction:column; gap:6px; box-sizing:border-box;">
-            <div style="display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:12px; width:100%;">
-                ${photoHtml}
-                <div style="min-width:0; flex:1; text-align:left;">
-                    <div style="font-size:0.68rem; font-weight:800; color:var(--vcv-dorado); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:flex-start; gap:5px; flex-wrap:wrap;">
-                        <span>👑 MVP VALCYL</span>
-                        ${oInfo.posicion ? `<span style="font-size:0.62rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; text-transform:none;">${oInfo.posicion}</span>` : ''}
-                    </div>
-                    <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); line-height:1.25; word-break:break-word; margin-top:3px; text-align:left;">
-                        ${oInfo.dorsal ? `<span style="color:var(--vcv-dorado); font-weight:900;">#${oInfo.dorsal}</span> ` : ''}${displayName}
+            <div style="display:flex; align-items:center; justify-content:space-between; text-align:left; gap:10px; width:100%;">
+                <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+                    ${photoHtml}
+                    <div style="min-width:0; flex:1; text-align:left;">
+                        <div style="font-size:0.68rem; font-weight:800; color:var(--vcv-dorado); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:flex-start; gap:5px; flex-wrap:wrap;">
+                            <span>👑 MVP VALCYL</span>
+                            ${oInfo.posicion ? `<span style="font-size:0.62rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; text-transform:none;">${oInfo.posicion}</span>` : ''}
+                        </div>
+                        <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); line-height:1.25; word-break:break-word; margin-top:3px; text-align:left;">
+                            ${oInfo.dorsal ? `<span style="color:var(--vcv-dorado); font-weight:900;">#${oInfo.dorsal}</span> ` : ''}${displayName}
+                        </div>
+                        ${myCalVoteNote}
                     </div>
                 </div>
+                ${eq.id_partido ? `
+                <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP VALCYL" style="background: rgba(212,175,55,0.18); border: 1px solid var(--vcv-dorado); color: var(--vcv-dorado); border-radius: 8px; padding: 5px 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: all 0.2s ease;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                    Compartir
+                </button>` : ''}
             </div>
             ${calVotingBarsHtml}
         </div>`;
     }
+
+    let btnCalShareHtml = eq.id_partido ? `
+    <button type="button" onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir resultado de este partido" style="background:transparent; border:none; color:#c794ce; width:24px; height:24px; min-width:24px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+    </button>` : '';
 
     let headerStripHtml = `
     <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
@@ -627,8 +651,11 @@ function renderMatchResultCardHtml(eq) {
             <div style="display:flex; align-items:center; gap:6px; min-width:0;">
                 ${catLogoHtml}
             </div>
-            <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
-                <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
+                ${btnCalShareHtml}
+                <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap;">
+                    <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
+                </div>
             </div>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
@@ -759,7 +786,7 @@ window.renderResultados = function() {
 
     resultsContainer.innerHTML = html_res;
 
-    if (window.lucide) window.lucide.createIcons();
+    if (window.renderLucideIcons) window.renderLucideIcons('calendarioResultadosView');
 };
 
 // ---------------------------------------------------
@@ -854,7 +881,7 @@ window.renderCalendar = function() {
     const calResultsEl = document.getElementById('calendarResults');
     if (calResultsEl) calResultsEl.innerHTML = html_res;
 
-    if (window.lucide) window.lucide.createIcons();
+    if (window.renderLucideIcons) window.renderLucideIcons('calendarioFuturosView');
     if (typeof iniciarRelojes === 'function') iniciarRelojes();
 };
 

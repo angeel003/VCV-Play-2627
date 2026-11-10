@@ -15,27 +15,35 @@
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=Space+Grotesk:wght@600;700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 <script>
   (function() {
+    window._vcvHeadStartTs = Date.now();
     try {
       if (localStorage.getItem('vcv_saved_session') && !sessionStorage.getItem('vcv_just_logged_out')) {
+        window._autoLoginPending = true;
         document.documentElement.classList.add('vcv-auto-logging-in');
-        // Temporizador de emergencia: Si en 4.5 segundos no ha cargado, retirar overlay
+        // Si tarda mas de 4.5s (red movil lenta), informar al usuario sin descubrir #btnLogin bloqueado
         setTimeout(function() {
+          if (!window._autoLoginPending) return;
+          var txt = document.querySelector('#splashStatusText span:last-child');
+          if (txt) txt.textContent = 'Conectando con el servidor...';
+        }, 4500);
+        // Red de seguridad solo si la peticion queda colgada indefinidamente (>18s)
+        setTimeout(function() {
+          if (!window._autoLoginPending) return;
+          window._autoLoginPending = false;
           if (typeof window.ocultarOverlayAutoLogin === 'function') {
-            window.ocultarOverlayAutoLogin();
+            window.ocultarOverlayAutoLogin(true);
           } else {
             document.documentElement.classList.remove('vcv-auto-logging-in');
             var o = document.getElementById('vcvAutoLoginOverlay');
             if (o) o.style.setProperty('display', 'none', 'important');
           }
-        }, 4500);
+        }, 18000);
       }
     } catch(e) {}
   })();
@@ -281,9 +289,6 @@
     .faq-email { font-weight: bold; color: var(--vcv-morado); }
     
     footer { background: var(--vcv-negro); color: var(--vcv-blanco); padding: 20px 0; text-align: center; border-top: 3px solid var(--vcv-dorado); }
-
-    .filter-checkbox { display:inline-block; margin-right:15px; margin-bottom:10px; background:var(--bg-general); padding:5px 12px; border-radius:20px; font-size:0.9rem; border:1px solid #ddd; cursor:pointer; }
-    .filter-checkbox input { margin-right:6px; cursor:pointer; }
     
     /* ---------------------------------------------------
        7. ESTILOS DE LOS VERIFICADOS Y TOOLTIP FLOTANTE
@@ -1223,7 +1228,7 @@
     }
     .mvp-bottom-confirmation-panel.is-visible {
       opacity: 1;
-      max-height: 80px;
+      max-height: 130px;
       transform: translateY(0);
       pointer-events: auto;
     }
@@ -1232,7 +1237,7 @@
 
 
   <!-- NEW V2 STYLES PARA CARTELERA Y LOGIN (DARK MODE) -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lucide@1.71.0/dist/umd/lucide.min.js"></script>
   <style>
     :root {
       --primary-color: #7b2cbf;
@@ -3997,6 +4002,19 @@
             </select>
         </div>
 
+        <!-- Selector de Enfoque MVP para usuarios (cuando ya hay ganador y votaron otro candidato) -->
+        <div id="shareMvpFocusSelectorContainer" style="display:none; margin-bottom:10px; text-align:left;">
+            <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:5px;">⭐ Qué destacar en la tarjeta MVP:</label>
+            <div style="display:flex; gap:8px;">
+                <button type="button" id="btnShareMvpFocusWinner" onclick="window.cambiarEnfoqueMvpTarjeta('winner')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1.5px solid var(--secondary-color); background:rgba(212,175,55,0.2); color:#ffd700; transition:all 0.2s;">
+                    👑 Ganador elegido
+                </button>
+                <button type="button" id="btnShareMvpFocusVote" onclick="window.cambiarEnfoqueMvpTarjeta('vote')" style="flex:1; padding:8px 10px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-muted); transition:all 0.2s;">
+                    ⭐ Mi voto
+                </button>
+            </div>
+        </div>
+
         <!-- Selector de Formato 1080x1080 / 1080x1920 para cualquier tarjeta compartible -->
         <div id="shareMvpFormatSelectorContainer" style="display:none; margin-bottom:12px; text-align:left;">
             <label style="font-size:0.72rem; color:var(--secondary-color); text-transform:uppercase; font-weight:800; display:block; margin-bottom:5px;">📐 Tamaño / Formato:</label>
@@ -4028,16 +4046,16 @@
     </div>
 </div>
 
-<!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261110_v6"></script>
-<script src="js/admin.js?v=20261110_v6"></script>
-<script src="js/cartelera.js?v=20261110_v6"></script>
-<script src="js/ranking.js?v=20261110_v6"></script>
-<script src="js/calendario.js?v=20261110_v6"></script>
-<script src="js/cartelera_interactive.js?v=20261110_v8"></script>
-<script src="js/ui_gestures.js?v=20261031_v20"></script>
-<script src="js/auth.js?v=20261107_v28"></script>
-<script src="js/push_notifications.js?v=20261106_v26"></script>
+<!-- Modulos JavaScript cargados en orden de dependencia (cache-busted y diferidos para acelerar carga) -->
+<script defer src="js/config.js?v=20261110_v11"></script>
+<script defer src="js/admin.js?v=20261110_v11"></script>
+<script defer src="js/cartelera.js?v=20261110_v11"></script>
+<script defer src="js/ranking.js?v=20261110_v11"></script>
+<script defer src="js/calendario.js?v=20261110_v11"></script>
+<script defer src="js/cartelera_interactive.js?v=20261110_v11"></script>
+<script defer src="js/ui_gestures.js?v=20261110_v11"></script>
+<script defer src="js/auth.js?v=20261110_v11"></script>
+<script defer src="js/push_notifications.js?v=20261110_v11"></script>
 
 
 

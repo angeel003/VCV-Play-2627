@@ -10,8 +10,6 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('push', function(event) {
-    console.log('[SW] Push recibido:', event);
-
     let title = '🏐 Fantasy VCV';
     let body = '¡Tienes una nueva actualización de partido en VCV Play!';
     let payloadData = { url: '/' };
