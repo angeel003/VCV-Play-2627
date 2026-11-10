@@ -165,45 +165,106 @@ window.renderCarteleraHTML = function(data) {
                         // 1. Ganador Oficial proclamado y publicado
                         let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
                         let myVoteNote = myMvpVote ? `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; word-break:break-word;">Tu voto en la jornada: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
+
+                        // Barras y porcentajes de votación popular (Opción A)
+                        let votingBarsHtml = '';
+                        let mostrarPct = (eq.mvp_mostrar_porcentajes !== false && eq.mvp_mostrar_porcentajes !== 0 && eq.mvp_mostrar_porcentajes !== '0');
+                        let recuentoList = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
+
+                        if (mostrarPct && recuentoList.length >= 2) {
+                            let totalGeneral = recuentoList.reduce((acc, cur) => acc + (parseInt(cur.total) || 0), 0);
+                            let sortedList = [...recuentoList].map(item => {
+                                let pInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(item.jugador) : { apodo: item.jugador, dorsal: null };
+                                let count = parseInt(item.total) || 0;
+                                let pct = totalGeneral > 0 ? Math.round((count / totalGeneral) * 100) : 0;
+                                let isWinner = (mvpOficial && (item.jugador === mvpOficial || (pInf.dorsal && oInfo.dorsal && pInf.dorsal === oInfo.dorsal) || (pInf.apodo && oInfo.apodo && pInf.apodo.toLowerCase() === oInfo.apodo.toLowerCase())));
+                                return { ...item, pInf, count, pct, isWinner };
+                            });
+
+                            sortedList.sort((a, b) => (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0) || (b.count - a.count));
+
+                            let barsRows = sortedList.map(cand => {
+                                let nameLabel = `${cand.isWinner ? '👑 ' : ''}${cand.pInf.dorsal ? '#' + cand.pInf.dorsal + ' ' : ''}${cand.pInf.apodo || cand.jugador}`;
+                                let labelColor = cand.isWinner ? '#ffd700' : 'rgba(255, 255, 255, 0.9)';
+                                let pctColor = cand.isWinner ? '#f1c40f' : 'var(--text-muted)';
+                                let barBg = cand.isWinner 
+                                    ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
+                                    : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
+                                let barGlow = cand.isWinner ? 'box-shadow: 0 0 8px rgba(241, 196, 15, 0.5);' : '';
+                                let fontWeight = cand.isWinner ? '800' : '600';
+
+                                return `
+                                <div style="margin-bottom: 5px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; margin-bottom: 3px;">
+                                        <span style="font-weight: ${fontWeight}; color: ${labelColor}; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            ${nameLabel}
+                                        </span>
+                                        <span style="font-weight: 800; color: ${pctColor}; font-size: 0.75rem; margin-left: 8px; flex-shrink: 0;">
+                                            ${cand.pct}%
+                                        </span>
+                                    </div>
+                                    <div style="width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
+                                        <div style="width: ${Math.max(cand.pct, 2)}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
+                                    </div>
+                                </div>`;
+                            }).join('');
+
+                            votingBarsHtml = `
+                            <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(212, 175, 55, 0.2); width: 100%;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span style="font-size: 0.66rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 4px;">
+                                        <span>📊</span> Resultados de la Votación
+                                    </span>
+                                    <span style="font-size: 0.64rem; color: var(--text-muted); font-weight: 700;">
+                                        ${totalGeneral} votos
+                                    </span>
+                                </div>
+                                ${barsRows}
+                            </div>`;
+                        }
+
                         mvpHtml = `
-                        <div class="mvp-winner-proclaimed-card" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 10px 12px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; box-sizing: border-box; min-width: 0;">
-                            <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
-                                <div class="mvp-photo-wrapper mvp-winner-photo" style="position: relative; width: 58px; height: 58px; min-width: 58px; min-height: 58px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 12px rgba(212, 175, 55, 0.45); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
-                                    <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\'>${oInfo.initials}</span>';">
+                        <div class="mvp-winner-proclaimed-card" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 10px 12px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; min-width: 0;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0;">
+                                <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                    <div class="mvp-photo-wrapper mvp-winner-photo" style="position: relative; width: 58px; height: 58px; min-width: 58px; min-height: 58px; aspect-ratio: 1 / 1; border-radius: 10px; flex-shrink: 0; border: 2px solid var(--secondary-color); box-shadow: 0 0 12px rgba(212, 175, 55, 0.45); overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: radial-gradient(circle at 50% 80%, rgba(212, 175, 55, 0.25) 0%, rgba(93, 23, 137, 0.4) 60%, rgba(17, 5, 25, 0.9) 100%);">
+                                        <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\'>${oInfo.initials}</span>';">
+                                    </div>
+                                    <div style="min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                                            <span>👑 MVP VALCYL</span>
+                                            <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación y elección del MVP" style="background: rgba(212,175,55,0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0;">
+                                                ?
+                                            </button>
+                                        </div>
+                                        <div style="font-size: clamp(0.92rem, 3.5vw, 1.05rem); font-weight: 900; color: #fff; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; line-height: 1.2;">
+                                            <span style="word-break: break-word;">${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
+                                            ${oInfo.posicion ? `<span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; flex-shrink: 0;">${oInfo.posicion}</span>` : ''}
+                                        </div>
+                                        ${(function() {
+                                            let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
+                                            if (statsList.length === 0) return '';
+                                            let badges = statsList.map(st => `
+                                                <span style="display:inline-flex; align-items:center; gap:3px; font-size:0.68rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.4); border:1px solid rgba(212,175,55,0.35); padding:2px 6px; border-radius:6px; max-width: 100%; word-break: break-word;">
+                                                    <span style="color:var(--secondary-color); flex-shrink:0;">⚡</span> <span>${st}</span>
+                                                </span>
+                                            `).join('');
+                                            return `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;">${badges}</div>`;
+                                        })()}
+                                        ${myVoteNote}
+                                    </div>
                                 </div>
-                                <div style="min-width: 0; flex: 1 1 auto; overflow: hidden;">
-                                    <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
-                                        <span>👑 MVP VALCYL</span>
-                                        <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación y elección del MVP" style="background: rgba(212,175,55,0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0;">
-                                            ?
-                                        </button>
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;">
+                                    <div style="font-size: 1.5rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">
+                                        🏆
                                     </div>
-                                    <div style="font-size: clamp(0.92rem, 3.5vw, 1.05rem); font-weight: 900; color: #fff; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; line-height: 1.2;">
-                                        <span style="word-break: break-word;">${oInfo.dorsal ? '#' + oInfo.dorsal + ' ' : ''}${oInfo.apodo}</span>
-                                        ${oInfo.posicion ? `<span style="font-size:0.7rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; flex-shrink: 0;">${oInfo.posicion}</span>` : ''}
-                                    </div>
-                                    ${(function() {
-                                        let statsList = Array.isArray(eq.mvp_stats) ? eq.mvp_stats.filter(Boolean) : [];
-                                        if (statsList.length === 0) return '';
-                                        let badges = statsList.map(st => `
-                                            <span style="display:inline-flex; align-items:center; gap:3px; font-size:0.68rem; font-weight:700; color:#fff; background:rgba(0,0,0,0.4); border:1px solid rgba(212,175,55,0.35); padding:2px 6px; border-radius:6px; max-width: 100%; word-break: break-word;">
-                                                <span style="color:var(--secondary-color); flex-shrink:0;">⚡</span> <span>${st}</span>
-                                            </span>
-                                        `).join('');
-                                        return `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;">${badges}</div>`;
-                                    })()}
-                                    ${myVoteNote}
+                                    <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+                                        Compartir
+                                    </button>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0;">
-                                <div style="font-size: 1.5rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">
-                                    🏆
-                                </div>
-                                <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                                    Compartir
-                                </button>
-                            </div>
+                            ${votingBarsHtml}
                         </div>`;
                     } else if (!isVotingClosed) {
                         // 2. Votación ABIERTA (cuenta atrás hasta el cierre de votaciones, por defecto 12:00)

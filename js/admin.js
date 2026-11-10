@@ -776,8 +776,20 @@ window.onDirectMvpPartidoChange = function(idPart) {
         }
     }
 
+    const chkMostrarPct = document.getElementById('adminMvpMostrarPorcentajes');
+    if (chkMostrarPct) {
+        chkMostrarPct.checked = (matchObj && matchObj.mvp_mostrar_porcentajes !== undefined)
+            ? (matchObj.mvp_mostrar_porcentajes === true || matchObj.mvp_mostrar_porcentajes === 1 || matchObj.mvp_mostrar_porcentajes === '1')
+            : true;
+    }
+
     // Actualizar banner de estado visual de este partido
     window.actualizarBannerEstadoMvp(matchObj);
+
+    // Cargar recuento de votos del partido para ver y ajustar porcentajes
+    if (typeof window.cargarRecuentoVotosMvp === 'function') {
+        window.cargarRecuentoVotosMvp();
+    }
 };
 
 window.actualizarOpcionesMvpOficial = function(valorSeleccionadoPrevio) {
@@ -1056,6 +1068,25 @@ window.guardarMvpOficial = function(e) {
             collectedStats.push(el.value.trim());
         }
     }
+
+    const chkMostrarPct = document.getElementById('adminMvpMostrarPorcentajes');
+    const targetMostrarPct = chkMostrarPct ? chkMostrarPct.checked : true;
+
+    // Recoger votos personalizados o editados si existen inputs en el recuento
+    let customVotosRecuento = [];
+    const voteInputs = document.querySelectorAll('.admin-mvp-vote-input');
+    if (voteInputs && voteInputs.length > 0) {
+        voteInputs.forEach(inp => {
+            let cand = inp.getAttribute('data-cand');
+            let val = parseInt(inp.value);
+            if (cand) {
+                customVotosRecuento.push({
+                    jugador: cand,
+                    total: isNaN(val) ? 0 : Math.max(0, val)
+                });
+            }
+        });
+    }
     
     if (!window.appData) window.appData = {};
     if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];
@@ -1068,6 +1099,8 @@ window.guardarMvpOficial = function(e) {
     if (pObj) {
         pObj.mvp_oficial = valOficial;
         pObj.mvp_stats = collectedStats;
+        pObj.mvp_mostrar_porcentajes = targetMostrarPct;
+        if (customVotosRecuento.length > 0) pObj.mvp_votos_recuento = customVotosRecuento;
         pObj.visibilidad = "MOSTRAR";
         pObj.permitido = true;
     }
@@ -1102,6 +1135,8 @@ window.guardarMvpOficial = function(e) {
                     p.mvp_stats = collectedStats;
                     p.mvp_proclamado_ts = proclamadoNow;
                     p.mvp_publicacion_ts = targetPubTs;
+                    p.mvp_mostrar_porcentajes = targetMostrarPct;
+                    if (customVotosRecuento.length > 0) p.mvp_votos_recuento = customVotosRecuento;
                     p.visibilidad = "MOSTRAR";
                 }
             });
@@ -1119,7 +1154,9 @@ window.guardarMvpOficial = function(e) {
             id_partido: idPart,
             mvp_oficial: valOficial,
             mvp_stats: collectedStats,
-            mvp_publicacion_ts: targetPubTs
+            mvp_publicacion_ts: targetPubTs,
+            mvp_mostrar_porcentajes: targetMostrarPct,
+            mvp_votos_recuento: customVotosRecuento
         }),
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }
     })
@@ -1214,9 +1251,27 @@ window.cargarRecuentoVotosMvp = function() {
     const idPart = selPart ? selPart.value : '';
     const cont = document.getElementById('adminRecuentoVotosMvp');
     if (!idPart || !cont) return;
-    
+
+    let matchObj = null;
+    if (window.appData && Array.isArray(window.appData.equipos)) matchObj = window.appData.equipos.find(p => p.id_partido === idPart);
+    if (!matchObj && window.appData && Array.isArray(window.appData.todos_partidos)) matchObj = window.appData.todos_partidos.find(p => p.id_partido === idPart);
+
+    // Candidatos activos desde desplegables o matchObj
+    let s1 = document.getElementById('directMvp1')?.value;
+    let s2 = document.getElementById('directMvp2')?.value;
+    let s3 = document.getElementById('directMvp3')?.value;
+    let activeCands = [s1, s2, s3].filter(c => c && c.trim() !== '');
+    if (activeCands.length === 0 && matchObj && Array.isArray(matchObj.mvp_candidatos)) {
+        activeCands = matchObj.mvp_candidatos.filter(Boolean);
+    }
+
+    if (activeCands.length === 0) {
+        cont.innerHTML = '<span style="color:var(--text-muted);">Selecciona los nominados a MVP arriba para ver y configurar los votos.</span>';
+        return;
+    }
+
     cont.innerHTML = '<span style="color:var(--text-muted);">Consultando votos en la base de datos...</span>';
-    
+
     fetchSeguro(scriptURL, {
         method: 'POST',
         body: JSON.stringify({
@@ -1229,25 +1284,151 @@ window.cargarRecuentoVotosMvp = function() {
     })
     .then(r => r.json())
     .then(d => {
-        if (d && d.status === 'success' && Array.isArray(d.votos) && d.votos.length > 0) {
-            let totalGeneral = d.votos.reduce((acc, cur) => acc + (parseInt(cur.total) || 0), 0);
-            let items = d.votos.map(v => {
-                let pInfo = window.parseCandInfo(v.jugador);
-                let pct = totalGeneral > 0 ? Math.round((v.total / totalGeneral) * 100) : 0;
-                return `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <span style="font-weight:700; color:#fff;">${pInfo.dorsal ? '#' + pInfo.dorsal + ' ' : ''}${pInfo.apodo}:</span>
-                    <span style="font-weight:800; color:var(--secondary-color);">${v.total} votos (${pct}%)</span>
-                </div>`;
-            }).join('');
-            cont.innerHTML = `<div style="margin-top:4px;">${items}<div style="text-align:right; margin-top:4px; font-weight:800; color:var(--text-muted); font-size:0.7rem;">Total: ${totalGeneral} votos</div></div>`;
-        } else {
-            cont.innerHTML = '<span style="color:var(--text-muted);">Aún no hay votos registrados por aficionados para este partido.</span>';
+        let dbVotesMap = {};
+        if (d && d.status === 'success' && Array.isArray(d.votos)) {
+            d.votos.forEach(v => {
+                if (v && v.jugador) dbVotesMap[v.jugador] = parseInt(v.total) || 0;
+            });
         }
+
+        // Votos guardados previamente en matchObj si existen
+        let savedVotesMap = {};
+        if (matchObj && Array.isArray(matchObj.mvp_votos_recuento) && matchObj.mvp_votos_recuento.length > 0) {
+            matchObj.mvp_votos_recuento.forEach(v => {
+                if (v && v.jugador) savedVotesMap[v.jugador] = parseInt(v.total) || 0;
+            });
+        }
+
+        const selOficial = document.getElementById('directMvpOficialSelect');
+        const winnerVal = selOficial ? selOficial.value : (matchObj ? matchObj.mvp_oficial : '');
+
+        let rowsHtml = activeCands.map((candStr, idx) => {
+            let pInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(candStr) : { apodo: candStr, dorsal: '' };
+            let realVotes = dbVotesMap[candStr] !== undefined ? dbVotesMap[candStr] : 0;
+            let initVal = savedVotesMap[candStr] !== undefined ? savedVotesMap[candStr] : realVotes;
+            let isWinner = (winnerVal && (candStr === winnerVal || candStr.includes(winnerVal)));
+
+            return `
+            <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;">
+                        <span style="font-weight: 800; color: #fff; font-size: 0.76rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${isWinner ? '👑 ' : ''}${pInfo.dorsal ? '#' + pInfo.dorsal + ' ' : ''}${pInfo.apodo}
+                        </span>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); flex-shrink: 0;" title="Votos reales registrados por usuarios en BD">
+                            (Real: ${realVotes})
+                        </span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                        <input type="number" min="0" step="1" class="admin-mvp-vote-input" id="adminMvpVote_${idx}" data-cand="${candStr}" value="${initVal}" oninput="window.recalcularPorcentajesMvpAdmin()" style="width: 58px; padding: 4px 6px; font-size: 0.78rem; font-weight: 800; background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.4); border-radius: 4px; color: #fff; text-align: right;">
+                        <span id="adminMvpPctBadge_${idx}" style="font-weight: 800; font-size: 0.75rem; min-width: 44px; text-align: right; color: var(--secondary-color);">0%</span>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 5px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; margin-top: 4px;">
+                    <div id="adminMvpBar_${idx}" style="width: 0%; height: 100%; background: linear-gradient(90deg, #d4af37, #f1c40f); border-radius: 999px; transition: width 0.3s ease;"></div>
+                </div>
+            </div>`;
+        }).join('');
+
+        cont.innerHTML = `
+        <div style="margin-top: 4px;">
+            ${rowsHtml}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 0.68rem; color: var(--text-muted);">
+                <span>ℹ️ Modifica los números si necesitas cuadrar el MVP deseado.</span>
+                <span id="adminMvpTotalVotesRecuento" style="font-weight: 800; color: #fff;">Total: 0 votos</span>
+            </div>
+        </div>`;
+
+        window.recalcularPorcentajesMvpAdmin();
     })
     .catch(() => {
         cont.innerHTML = '<span style="color:#e74c3c;">No se pudo conectar para obtener los votos.</span>';
     });
+};
+
+window.recalcularPorcentajesMvpAdmin = function() {
+    const inputs = document.querySelectorAll('.admin-mvp-vote-input');
+    if (!inputs || inputs.length === 0) return;
+
+    let vals = [];
+    let total = 0;
+    inputs.forEach(inp => {
+        let v = parseInt(inp.value) || 0;
+        if (v < 0) v = 0;
+        vals.push(v);
+        total += v;
+    });
+
+    const selOficial = document.getElementById('directMvpOficialSelect');
+    const winnerVal = selOficial ? selOficial.value : '';
+
+    inputs.forEach((inp, idx) => {
+        let v = vals[idx];
+        let pct = total > 0 ? Math.round((v / total) * 100) : 0;
+        let cand = inp.getAttribute('data-cand') || '';
+        let isWinner = (winnerVal && (winnerVal === cand || cand.includes(winnerVal)));
+
+        const badge = document.getElementById(`adminMvpPctBadge_${idx}`);
+        if (badge) {
+            badge.innerText = `${pct}%`;
+            badge.style.color = isWinner ? '#ffd700' : 'var(--text-muted)';
+        }
+
+        const bar = document.getElementById(`adminMvpBar_${idx}`);
+        if (bar) {
+            bar.style.width = `${Math.max(pct, 2)}%`;
+            bar.style.background = isWinner 
+                ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
+                : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
+        }
+    });
+
+    const totalEl = document.getElementById('adminMvpTotalVotesRecuento');
+    if (totalEl) totalEl.innerText = `Total: ${total} votos`;
+};
+
+window.autoAjustarVotosGanadorMvp = function() {
+    const selOficial = document.getElementById('directMvpOficialSelect');
+    const winnerVal = selOficial ? selOficial.value : '';
+    if (!winnerVal) {
+        alert("Por favor selecciona primero qué jugador es el Ganador MVP en el desplegable superior.");
+        return;
+    }
+
+    const inputs = document.querySelectorAll('.admin-mvp-vote-input');
+    if (!inputs || inputs.length < 2) {
+        alert("Debes tener al menos 2 candidatos nominados para ajustar los porcentajes.");
+        return;
+    }
+
+    let candElements = Array.from(inputs).map(inp => ({
+        input: inp,
+        cand: inp.getAttribute('data-cand') || '',
+        isWinner: false
+    }));
+
+    let winIdx = candElements.findIndex(c => (c.cand === winnerVal || c.cand.includes(winnerVal)));
+    if (winIdx < 0) winIdx = 0;
+
+    if (candElements.length === 2) {
+        candElements[winIdx].input.value = 28; // 56%
+        let otherIdx = winIdx === 0 ? 1 : 0;
+        candElements[otherIdx].input.value = 22; // 44%
+    } else {
+        candElements[winIdx].input.value = 27; // 54%
+        let others = candElements.filter((_, idx) => idx !== winIdx);
+        if (others.length >= 2) {
+            others[0].input.value = 14; // 28%
+            others[1].input.value = 9;  // 18%
+        } else if (others.length === 1) {
+            others[0].input.value = 23;
+        }
+    }
+
+    window.recalcularPorcentajesMvpAdmin();
+    if (typeof mostrarToast === 'function') {
+        mostrarToast("⚡ Votos ajustados: Mayoría asignada al Ganador MVP");
+    }
 };
 
 const btnAdminSyncEl = document.getElementById('btnAdminSync');

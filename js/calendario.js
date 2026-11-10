@@ -538,18 +538,75 @@ function renderMatchResultCardHtml(eq) {
                    ⭐
                </div>`;
 
-        mvpHtml = `
-        <div class="calendario-mvp-card" style="margin-top:12px; padding:10px 12px; background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(106,44,112,0.18)); border:1px solid rgba(212,175,55,0.35); border-radius:12px; display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:12px; box-sizing:border-box;">
-            ${photoHtml}
-            <div style="min-width:0; flex:1; text-align:left;">
-                <div style="font-size:0.68rem; font-weight:800; color:var(--vcv-dorado); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:flex-start; gap:5px; flex-wrap:wrap;">
-                    <span>👑 MVP VALCYL</span>
-                    ${oInfo.posicion ? `<span style="font-size:0.62rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; text-transform:none;">${oInfo.posicion}</span>` : ''}
+        let calVotingBarsHtml = '';
+        let mostrarPct = (eq.mvp_mostrar_porcentajes !== false && eq.mvp_mostrar_porcentajes !== 0 && eq.mvp_mostrar_porcentajes !== '0');
+        let recuentoList = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
+        if (mostrarPct && recuentoList.length >= 2) {
+            let totalGeneral = recuentoList.reduce((acc, cur) => acc + (parseInt(cur.total) || 0), 0);
+            let sortedList = [...recuentoList].map(item => {
+                let pInf = formatMvpCandidate(item.jugador);
+                let count = parseInt(item.total) || 0;
+                let pct = totalGeneral > 0 ? Math.round((count / totalGeneral) * 100) : 0;
+                let isWinner = (eq.mvp_oficial && (item.jugador === eq.mvp_oficial || (pInf.dorsal && oInfo.dorsal && pInf.dorsal === oInfo.dorsal) || (pInf.apodo && oInfo.apodo && pInf.apodo.toLowerCase() === oInfo.apodo.toLowerCase())));
+                return { ...item, pInf, count, pct, isWinner };
+            });
+            sortedList.sort((a, b) => (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0) || (b.count - a.count));
+
+            let barsRows = sortedList.map(cand => {
+                let nameLabel = `${cand.isWinner ? '👑 ' : ''}${cand.pInf.dorsal ? '#' + cand.pInf.dorsal + ' ' : ''}${cand.pInf.apodo || cand.jugador}`;
+                let labelColor = cand.isWinner ? '#ffd700' : 'rgba(255, 255, 255, 0.9)';
+                let pctColor = cand.isWinner ? '#f1c40f' : 'var(--text-muted)';
+                let barBg = cand.isWinner 
+                    ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
+                    : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
+                let barGlow = cand.isWinner ? 'box-shadow: 0 0 6px rgba(241, 196, 15, 0.4);' : '';
+                let fontWeight = cand.isWinner ? '800' : '600';
+
+                return `
+                <div style="margin-bottom: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-bottom: 2px;">
+                        <span style="font-weight: ${fontWeight}; color: ${labelColor}; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${nameLabel}
+                        </span>
+                        <span style="font-weight: 800; color: ${pctColor}; font-size: 0.72rem; margin-left: 6px; flex-shrink: 0;">
+                            ${cand.pct}%
+                        </span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
+                        <div style="width: ${Math.max(cand.pct, 2)}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            calVotingBarsHtml = `
+            <div style="margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(212, 175, 55, 0.2); width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span style="font-size: 0.64rem; font-weight: 800; color: var(--vcv-dorado); text-transform: uppercase; letter-spacing: 0.4px;">
+                        📊 Votación Popular
+                    </span>
+                    <span style="font-size: 0.62rem; color: var(--text-muted); font-weight: 700;">
+                        ${totalGeneral} votos
+                    </span>
                 </div>
-                <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); line-height:1.25; word-break:break-word; margin-top:3px; text-align:left;">
-                    ${oInfo.dorsal ? `<span style="color:var(--vcv-dorado); font-weight:900;">#${oInfo.dorsal}</span> ` : ''}${displayName}
+                ${barsRows}
+            </div>`;
+        }
+
+        mvpHtml = `
+        <div class="calendario-mvp-card" style="margin-top:12px; padding:10px 12px; background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(106,44,112,0.18)); border:1px solid rgba(212,175,55,0.35); border-radius:12px; display:flex; flex-direction:column; gap:6px; box-sizing:border-box;">
+            <div style="display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:12px; width:100%;">
+                ${photoHtml}
+                <div style="min-width:0; flex:1; text-align:left;">
+                    <div style="font-size:0.68rem; font-weight:800; color:var(--vcv-dorado); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:flex-start; gap:5px; flex-wrap:wrap;">
+                        <span>👑 MVP VALCYL</span>
+                        ${oInfo.posicion ? `<span style="font-size:0.62rem; color:var(--text-muted); font-weight:600; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px; text-transform:none;">${oInfo.posicion}</span>` : ''}
+                    </div>
+                    <div style="font-size:0.92rem; font-weight:800; color:var(--text-main); line-height:1.25; word-break:break-word; margin-top:3px; text-align:left;">
+                        ${oInfo.dorsal ? `<span style="color:var(--vcv-dorado); font-weight:900;">#${oInfo.dorsal}</span> ` : ''}${displayName}
+                    </div>
                 </div>
             </div>
+            ${calVotingBarsHtml}
         </div>`;
     }
 

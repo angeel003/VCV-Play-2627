@@ -3121,7 +3121,7 @@
                     Selecciona quién ha sido galardonado definitivamente como el MVP de este partido (se guardará en la base de datos):
                   </div>
                   <div style="margin-bottom: 8px;">
-                    <select id="directMvpOficialSelect" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
+                    <select id="directMvpOficialSelect" onchange="if(typeof window.recalcularPorcentajesMvpAdmin==='function') window.recalcularPorcentajesMvpAdmin();" style="width: 100%; padding: 8px; font-size: 0.82rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600;">
                     </select>
                   </div>
                   <!-- ESTADÍSTICAS DESTACADAS DEL MVP (OPCIONALES 1 a 4) -->
@@ -3183,6 +3183,14 @@
                     </label>
                   </div>
 
+                  <!-- CASILLA MOSTRAR PORCENTAJES AL PÚBLICO -->
+                  <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.08); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <input type="checkbox" id="adminMvpMostrarPorcentajes" checked style="accent-color: #f1c40f; width: 16px; height: 16px; cursor: pointer;">
+                    <label for="adminMvpMostrarPorcentajes" style="font-size: 0.72rem; color: #fff; font-weight: 700; cursor: pointer; line-height: 1.3;">
+                      📊 Mostrar porcentajes y barras de votación al público en Cartelera y Calendario
+                    </label>
+                  </div>
+
                   <div style="display:flex; gap:6px;">
                     <button type="button" id="btnGuardarMvpOficial" class="btn" onclick="window.guardarMvpOficial(event)" style="flex: 1; padding: 10px; background: #27ae60; color: #fff; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; font-size: 0.82rem;">
                       👑 Guardar Ganador MVP en BD
@@ -3190,16 +3198,21 @@
                   </div>
                 </div>
 
-                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN -->
+                <!-- VER RECUENTO DE VOTOS DE LA AFICIÓN Y AJUSTAR RESULTADOS FINALES -->
                 <div style="margin-top: 10px; padding: 10px; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición en este partido:</span>
-                    <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
-                      🔄 Consultar Votos
-                    </button>
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color);">🗳️ Votos de la afición y porcentajes finales:</span>
+                    <div style="display:flex; gap:6px;">
+                      <button type="button" onclick="window.cargarRecuentoVotosMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--secondary-color); color:var(--secondary-color); border-radius:6px; cursor:pointer;">
+                        🔄 Consultar Votos
+                      </button>
+                      <button type="button" id="btnAutoAjustarVotosMvp" onclick="window.autoAjustarVotosGanadorMvp()" style="padding:4px 8px; font-size:0.7rem; font-weight:800; background:rgba(46,204,113,0.18); border:1px solid #2ecc71; color:#2ecc71; border-radius:6px; cursor:pointer;" title="Ajusta automáticamente los votos para que el jugador elegido en el desplegable quede en primer lugar con mayoría clara">
+                        ⚡ Dar Mayoría al Ganador
+                      </button>
+                    </div>
                   </div>
                   <div id="adminRecuentoVotosMvp" style="font-size:0.72rem; color:var(--text-muted); margin-top:6px;">
-                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido.
+                    Pulsa 'Consultar Votos' para ver cuántos votos ha recibido cada jugador en este partido o editarlos antes de guardar.
                   </div>
                 </div>
               </div>
