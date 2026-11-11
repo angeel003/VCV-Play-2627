@@ -700,17 +700,10 @@ window.onDirectMvpPartidoChange = function(idPart) {
         }
     }
 
-    const chkMostrarPct = document.getElementById('adminMvpMostrarPorcentajes');
-    if (chkMostrarPct) {
-        chkMostrarPct.checked = (matchObj && matchObj.mvp_mostrar_porcentajes !== undefined)
-            ? (matchObj.mvp_mostrar_porcentajes === true || matchObj.mvp_mostrar_porcentajes === 1 || matchObj.mvp_mostrar_porcentajes === '1')
-            : true;
-    }
-
     // Actualizar banner de estado visual de este partido
     window.actualizarBannerEstadoMvp(matchObj);
 
-    // Cargar recuento de votos del partido para ver y ajustar porcentajes
+    // Cargar recuento de votos del partido para uso exclusivo del panel admin
     if (typeof window.cargarRecuentoVotosMvp === 'function') {
         window.cargarRecuentoVotosMvp();
     }
@@ -1069,8 +1062,7 @@ window.guardarMvpOficial = function(e) {
         }
     }
 
-    const chkMostrarPct = document.getElementById('adminMvpMostrarPorcentajes');
-    const targetMostrarPct = chkMostrarPct ? chkMostrarPct.checked : true;
+    const targetMostrarPct = false;
     
     if (!window.appData) window.appData = {};
     if (!Array.isArray(window.appData.equipos)) window.appData.equipos = [];

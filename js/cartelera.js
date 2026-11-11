@@ -166,72 +166,6 @@ window.renderCarteleraHTML = function(data) {
                         let oInfo = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(mvpOficial) : { apodo: mvpOficial, photoSrc: '', initials: 'VC' };
                         let myVoteNote = myMvpVote ? `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px; word-break:break-word;">Tu voto en la jornada: <strong style="color:var(--text-main);">${(typeof window.parseCandInfo === 'function') ? window.parseCandInfo(myMvpVote).apodo : myMvpVote}</strong></div>` : '';
 
-                        // Barras y porcentajes de votación popular (Opción A)
-                        let votingBarsHtml = '';
-                        let mostrarPct = (eq.mvp_mostrar_porcentajes !== false && eq.mvp_mostrar_porcentajes !== 0 && eq.mvp_mostrar_porcentajes !== '0');
-                        let recuentoRaw = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
-                        let recuentoMerged = (typeof window.mergeMvpRecuentoWithCandidates === 'function')
-                            ? window.mergeMvpRecuentoWithCandidates(recuentoRaw, mvpCands)
-                            : recuentoRaw;
-                        let totalGeneral = recuentoMerged.reduce((acc, cur) => acc + (parseInt(cur.total, 10) || 0), 0);
-
-                        if (mostrarPct && recuentoMerged.length >= 2 && totalGeneral > 0) {
-                            let sortedList = [...recuentoMerged].map(item => {
-                                let pInf = (typeof window.parseCandInfo === 'function') ? window.parseCandInfo(item.jugador) : { apodo: item.jugador, dorsal: null };
-                                let count = parseInt(item.total, 10) || 0;
-                                let isWinner = (typeof window.isSameMvpPlayer === 'function')
-                                    ? window.isSameMvpPlayer(item.jugador, mvpOficial)
-                                    : Boolean(mvpOficial && (item.jugador === mvpOficial || (pInf.dorsal && oInfo.dorsal && parseInt(pInf.dorsal, 10) === parseInt(oInfo.dorsal, 10))));
-                                return { ...item, pInf, count, pct: 0, isWinner };
-                            });
-
-                            sortedList.sort((a, b) => (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0) || (b.count - a.count));
-                            let exactPcts = (typeof window.calcularPorcentajesExactos === 'function')
-                                ? window.calcularPorcentajesExactos(sortedList.map(x => x.count))
-                                : sortedList.map(x => totalGeneral > 0 ? Math.round((x.count / totalGeneral) * 100) : 0);
-                            sortedList.forEach((cand, idx) => { cand.pct = exactPcts[idx] || 0; });
-
-                            let barsRows = sortedList.map(cand => {
-                                let nameLabel = `${cand.isWinner ? '👑 ' : ''}${cand.pInf.dorsal ? '#' + cand.pInf.dorsal + ' ' : ''}${cand.pInf.apodo || cand.jugador}`;
-                                let labelColor = cand.isWinner ? '#ffd700' : 'rgba(255, 255, 255, 0.9)';
-                                let pctColor = cand.isWinner ? '#f1c40f' : 'var(--text-muted)';
-                                let barBg = cand.isWinner 
-                                    ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
-                                    : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
-                                let barGlow = cand.isWinner ? 'box-shadow: 0 0 8px rgba(241, 196, 15, 0.5);' : '';
-                                let fontWeight = cand.isWinner ? '800' : '600';
-                                let barWidth = cand.pct > 0 ? Math.max(cand.pct, 2) : 0;
-
-                                return `
-                                <div style="margin-bottom: 5px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; margin-bottom: 3px;">
-                                        <span style="font-weight: ${fontWeight}; color: ${labelColor}; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            ${nameLabel}
-                                        </span>
-                                        <span style="font-weight: 800; color: ${pctColor}; font-size: 0.75rem; margin-left: 8px; flex-shrink: 0;">
-                                            ${cand.pct}%
-                                        </span>
-                                    </div>
-                                    <div style="width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
-                                        <div style="width: ${barWidth}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
-                                    </div>
-                                </div>`;
-                            }).join('');
-
-                            votingBarsHtml = `
-                            <div style="margin-top: 4px; padding-top: 8px; border-top: 1px solid rgba(212, 175, 55, 0.2); width: 100%;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <span style="font-size: 0.66rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 4px;">
-                                        <span>📊</span> Resultados de la Votación
-                                    </span>
-                                    <span style="font-size: 0.64rem; color: var(--text-muted); font-weight: 700;">
-                                        ${totalGeneral} votos
-                                    </span>
-                                </div>
-                                ${barsRows}
-                            </div>`;
-                        }
-
                         mvpHtml = `
                         <div class="mvp-winner-proclaimed-card" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(93, 23, 137, 0.25)); border: 1.5px solid var(--secondary-color); border-radius: 14px; padding: 10px 12px; margin-top: 12px; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25); display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box; min-width: 0;">
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0;">
@@ -240,7 +174,7 @@ window.renderCarteleraHTML = function(data) {
                                         <img loading="lazy" src="${oInfo.photoSrc}" alt="${oInfo.apodo}" class="mvp-photo-img" style="width: 100%; height: 100%; object-fit: contain; object-position: bottom center;" onerror="this.onerror=null; this.outerHTML='<span style=\'font-weight:900; font-size:1.15rem; color:var(--secondary-color);\'>${oInfo.initials}</span>';">
                                     </div>
                                     <div style="min-width: 0; flex: 1 1 auto; overflow: hidden;">
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                                        <div style="font-size: 0.68rem; font-weight: 800; color:var(--secondary-color); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
                                             <span>👑 MVP VALCYL</span>
                                             <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación y elección del MVP" style="background: rgba(212,175,55,0.2); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0;">
                                                 ?
@@ -273,7 +207,6 @@ window.renderCarteleraHTML = function(data) {
                                     </button>
                                 </div>
                             </div>
-                            ${votingBarsHtml}
                         </div>`;
                     } else if (!isVotingClosed) {
                         // 2. Votación ABIERTA (cuenta atrás hasta el cierre de votaciones, por defecto 12:00)

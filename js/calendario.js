@@ -549,71 +549,6 @@ function renderMatchResultCardHtml(eq) {
                    ⭐
                </div>`;
 
-        let calVotingBarsHtml = '';
-        let mostrarPct = (eq.mvp_mostrar_porcentajes !== false && eq.mvp_mostrar_porcentajes !== 0 && eq.mvp_mostrar_porcentajes !== '0');
-        let mvpCandsCal = Array.isArray(eq.mvp_candidatos) ? eq.mvp_candidatos.filter(Boolean) : [];
-        let recuentoRawCal = Array.isArray(eq.mvp_votos_recuento) ? eq.mvp_votos_recuento.filter(v => v && v.jugador) : [];
-        let recuentoList = (typeof window.mergeMvpRecuentoWithCandidates === 'function')
-            ? window.mergeMvpRecuentoWithCandidates(recuentoRawCal, mvpCandsCal)
-            : recuentoRawCal;
-        let totalGeneral = recuentoList.reduce((acc, cur) => acc + (parseInt(cur.total, 10) || 0), 0);
-
-        if (mostrarPct && recuentoList.length >= 2 && totalGeneral > 0) {
-            let sortedList = [...recuentoList].map(item => {
-                let pInf = formatMvpCandidate(item.jugador);
-                let count = parseInt(item.total, 10) || 0;
-                let isWinner = (typeof window.isSameMvpPlayer === 'function')
-                    ? window.isSameMvpPlayer(item.jugador, eq.mvp_oficial)
-                    : Boolean(eq.mvp_oficial && (item.jugador === eq.mvp_oficial || (pInf.dorsal && oInfo.dorsal && parseInt(pInf.dorsal, 10) === parseInt(oInfo.dorsal, 10))));
-                return { ...item, pInf, count, pct: 0, isWinner };
-            });
-            sortedList.sort((a, b) => (b.isWinner ? 1 : 0) - (a.isWinner ? 1 : 0) || (b.count - a.count));
-            let exactPcts = (typeof window.calcularPorcentajesExactos === 'function')
-                ? window.calcularPorcentajesExactos(sortedList.map(x => x.count))
-                : sortedList.map(x => totalGeneral > 0 ? Math.round((x.count / totalGeneral) * 100) : 0);
-            sortedList.forEach((cand, idx) => { cand.pct = exactPcts[idx] || 0; });
-
-            let barsRows = sortedList.map(cand => {
-                let nameLabel = `${cand.isWinner ? '👑 ' : ''}${cand.pInf.dorsal ? '#' + cand.pInf.dorsal + ' ' : ''}${cand.pInf.apodo || cand.jugador}`;
-                let labelColor = cand.isWinner ? '#ffd700' : 'rgba(255, 255, 255, 0.9)';
-                let pctColor = cand.isWinner ? '#f1c40f' : 'var(--text-muted)';
-                let barBg = cand.isWinner 
-                    ? 'linear-gradient(90deg, #d4af37, #f1c40f)' 
-                    : 'linear-gradient(90deg, rgba(142, 68, 173, 0.7), rgba(186, 104, 200, 0.7))';
-                let barGlow = cand.isWinner ? 'box-shadow: 0 0 6px rgba(241, 196, 15, 0.4);' : '';
-                let fontWeight = cand.isWinner ? '800' : '600';
-                let barWidth = cand.pct > 0 ? Math.max(cand.pct, 2) : 0;
-
-                return `
-                <div style="margin-bottom: 4px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-bottom: 2px;">
-                        <span style="font-weight: ${fontWeight}; color: ${labelColor}; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${nameLabel}
-                        </span>
-                        <span style="font-weight: 800; color: ${pctColor}; font-size: 0.72rem; margin-left: 6px; flex-shrink: 0;">
-                            ${cand.pct}%
-                        </span>
-                    </div>
-                    <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden; position: relative;">
-                        <div style="width: ${barWidth}%; height: 100%; background: ${barBg}; border-radius: 999px; ${barGlow} transition: width 0.6s ease;"></div>
-                    </div>
-                </div>`;
-            }).join('');
-
-            calVotingBarsHtml = `
-            <div style="margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(212, 175, 55, 0.2); width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <span style="font-size: 0.64rem; font-weight: 800; color: var(--vcv-dorado); text-transform: uppercase; letter-spacing: 0.4px;">
-                        📊 Votación Popular
-                    </span>
-                    <span style="font-size: 0.62rem; color: var(--text-muted); font-weight: 700;">
-                        ${totalGeneral} votos
-                    </span>
-                </div>
-                ${barsRows}
-            </div>`;
-        }
-
         mvpHtml = `
         <div class="calendario-mvp-card" style="margin-top:12px; padding:10px 12px; background:linear-gradient(135deg, rgba(212,175,55,0.12), rgba(106,44,112,0.18)); border:1px solid rgba(212,175,55,0.35); border-radius:12px; display:flex; flex-direction:column; gap:6px; box-sizing:border-box;">
             <div style="display:flex; align-items:center; justify-content:space-between; text-align:left; gap:10px; width:100%;">
@@ -636,7 +571,6 @@ function renderMatchResultCardHtml(eq) {
                     Compartir
                 </button>` : ''}
             </div>
-            ${calVotingBarsHtml}
         </div>`;
     }
 

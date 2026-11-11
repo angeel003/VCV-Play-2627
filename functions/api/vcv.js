@@ -429,7 +429,7 @@ async function ensureResultadosMvpSchema(db) {
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_cierre_votacion_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_votos_recuento" TEXT',
-        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_mostrar_porcentajes" INTEGER DEFAULT 1'
+        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_mostrar_porcentajes" INTEGER DEFAULT 0'
     ];
     await Promise.allSettled(alters.map(sql => db.prepare(sql).run()));
 }
@@ -1125,7 +1125,7 @@ export async function onRequestPost(context) {
         try { await db.prepare('UPDATE "Resultados_Oficiales" SET "mvp_cierre_votacion_ts" = "mvp_publicacion_ts" - (3 * 3600000) WHERE ("mvp_cierre_votacion_ts" IS NULL OR "mvp_cierre_votacion_ts" = 0) AND "mvp_publicacion_ts" > 0').run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_publicacion_ts INTEGER").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_votos_recuento TEXT").run(); } catch(e) {}
-        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_mostrar_porcentajes INTEGER DEFAULT 1").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Resultados_Oficiales ADD COLUMN mvp_mostrar_porcentajes INTEGER DEFAULT 0").run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
@@ -1468,26 +1468,8 @@ export async function onRequestPost(context) {
         return buckets;
     }
 
-    async function getMvpVotesByMatchMap() {
-        try {
-            const { results } = await db.prepare('SELECT id_partido, jugador, COUNT(*) as total FROM MVP_Votos GROUP BY id_partido, jugador ORDER BY total DESC').all();
-            const map = {};
-            for (const row of results || []) {
-                if (!row || !row.id_partido || !row.jugador) continue;
-                if (!map[row.id_partido]) map[row.id_partido] = [];
-                map[row.id_partido].push({
-                    jugador: row.jugador,
-                    total: parseInt(row.total, 10) || 0
-                });
-            }
-            return map;
-        } catch (e) {
-            return null;
-        }
-    }
-
     // HELPER: Formatear fila de Ajustes al objeto que espera el frontend
-    function formatMatch(r, resOficialMap = {}, mvpVotesMap = null) {
+    function formatMatch(r, resOficialMap = {}, mvpVotesMap = null, includeMvpVotes = false) {
         const idPart = r.ID_Partido || "";
         const oRes = resOficialMap[idPart] || {};
         // PARSE FECHA 'DD/MM/YYYY HH:MM' TO TIMESTAMP
@@ -1556,10 +1538,12 @@ export async function onRequestPost(context) {
         }
 
         const mvpCandidatos = oRes.mvp_candidatos ? (function(){ try { return JSON.parse(oRes.mvp_candidatos); } catch(e){ return []; } })() : [];
-        const savedRecuento = oRes.mvp_votos_recuento ? (function(){ try { return JSON.parse(oRes.mvp_votos_recuento); } catch(e){ return []; } })() : [];
-        const liveOrSavedRecuento = (mvpVotesMap !== null)
-            ? buildMvpVotesRecuento(mvpCandidatos, mvpVotesMap[idPart] || [])
-            : buildMvpVotesRecuento(mvpCandidatos, savedRecuento);
+        const savedRecuento = (includeMvpVotes && oRes.mvp_votos_recuento) ? (function(){ try { return JSON.parse(oRes.mvp_votos_recuento); } catch(e){ return []; } })() : [];
+        const liveOrSavedRecuento = includeMvpVotes
+            ? ((mvpVotesMap !== null)
+                ? buildMvpVotesRecuento(mvpCandidatos, mvpVotesMap[idPart] || [])
+                : buildMvpVotesRecuento(mvpCandidatos, savedRecuento))
+            : [];
 
         return {
             id_partido: idPart,
@@ -1588,7 +1572,7 @@ export async function onRequestPost(context) {
             mvp_cierre_votacion_ts: oRes.mvp_cierre_votacion_ts ? parseInt(oRes.mvp_cierre_votacion_ts) : (oRes.mvp_publicacion_ts ? parseInt(oRes.mvp_publicacion_ts) - 3 * 3600000 : 0),
             mvp_publicacion_ts: oRes.mvp_publicacion_ts ? parseInt(oRes.mvp_publicacion_ts) : 0,
             mvp_votos_recuento: liveOrSavedRecuento,
-            mvp_mostrar_porcentajes: oRes.mvp_mostrar_porcentajes !== undefined ? (oRes.mvp_mostrar_porcentajes === 1 || oRes.mvp_mostrar_porcentajes === '1' || oRes.mvp_mostrar_porcentajes === true) : true,
+            mvp_mostrar_porcentajes: false,
             mvp_visible: oRes.mvp_visible !== undefined ? (oRes.mvp_visible === 1 || oRes.mvp_visible === '1' || oRes.mvp_visible === true || oRes.mvp_visible === 'true' || oRes.mvp_visible === 'SI') : true
         };
     }
@@ -1619,7 +1603,6 @@ export async function onRequestPost(context) {
         const [
             rawPartidosRes,
             resOfRes,
-            mvpVotesMap,
             rowPerm,
             notifRes,
             cacheGuestRes,
@@ -1627,7 +1610,6 @@ export async function onRequestPost(context) {
         ] = await Promise.all([
             db.prepare('SELECT * FROM "Ajustes" WHERE "Visibilidad" != \'OCULTAR\' ORDER BY "timestamp" ASC').all(),
             db.prepare('SELECT * FROM "Resultados_Oficiales"').all(),
-            getMvpVotesByMatchMap(),
             db.prepare('SELECT * FROM "Permisos_Equipos" WHERE lower("Jugador") = \'invitado\'').first(),
             db.prepare(`
                 SELECT * FROM "Notificaciones" 
@@ -1643,7 +1625,7 @@ export async function onRequestPost(context) {
         const resMap = {};
         for (const ro of resOf) resMap[ro["ID Partido"]] = ro;
 
-        const partidos = rawPartidos.map(r => formatMatch(r, resMap, mvpVotesMap));
+        const partidos = rawPartidos.map(r => formatMatch(r, resMap, null, false));
 
         // Permisos Equipos del usuario 'Invitado'
         const misPermisos = {};
@@ -2032,36 +2014,47 @@ export async function onRequestPost(context) {
         const resMap = {};
         for (const ro of resOf) resMap[ro["ID Partido"]] = ro;
 
+        const allInsignias = (allInsigniasRes && allInsigniasRes.results) || [];
+        const userInsignia = allInsignias.find(i => i.Usuario === usuario);
+        const isUserAdmin = Boolean(userInsignia && (userInsignia["Admin Web"] === "X"));
+        const isUserGestorMvp = Boolean(userInsignia && (userInsignia["Permiso_MVP"] === "X"));
+        const hasPermisoResultados = Boolean(userInsignia && Boolean(userInsignia["Permiso_Resultados"]));
+        const canViewMvpVotes = isUserAdmin || isUserGestorMvp;
+
         const rawMvpVotes = rawMvpVotesRes ? (rawMvpVotesRes.results || []) : null;
         let mvpVotesByMatchMap = null;
         const misVotosMvp = {};
         const userMvpVotesLookup = {};
         const userMvpVotesLowerLookup = {};
         if (rawMvpVotes !== null) {
-            mvpVotesByMatchMap = {};
+            if (canViewMvpVotes) mvpVotesByMatchMap = {};
             const mvpCountsByMatch = {};
             for (const mv of rawMvpVotes) {
                 if (!mv || !mv.id_partido || !mv.jugador) continue;
                 const idP = mv.id_partido;
                 const mvUser = String(mv.usuario || '').trim();
-                if (!mvpCountsByMatch[idP]) mvpCountsByMatch[idP] = {};
-                mvpCountsByMatch[idP][mv.jugador] = (mvpCountsByMatch[idP][mv.jugador] || 0) + 1;
+                if (canViewMvpVotes) {
+                    if (!mvpCountsByMatch[idP]) mvpCountsByMatch[idP] = {};
+                    mvpCountsByMatch[idP][mv.jugador] = (mvpCountsByMatch[idP][mv.jugador] || 0) + 1;
+                }
                 if (mv.usuario === usuario) {
                     misVotosMvp[idP] = mv.jugador;
                 }
                 userMvpVotesLookup[`${idP}_${mv.usuario}`] = mv.jugador;
                 if (mvUser) userMvpVotesLowerLookup[`${idP}_${mvUser.toLowerCase()}`] = mv.jugador;
             }
-            for (const idP in mvpCountsByMatch) {
-                const list = Object.keys(mvpCountsByMatch[idP]).map(jug => ({
-                    jugador: jug,
-                    total: mvpCountsByMatch[idP][jug]
-                }));
-                list.sort((a, b) => b.total - a.total);
-                mvpVotesByMatchMap[idP] = list;
+            if (canViewMvpVotes) {
+                for (const idP in mvpCountsByMatch) {
+                    const list = Object.keys(mvpCountsByMatch[idP]).map(jug => ({
+                        jugador: jug,
+                        total: mvpCountsByMatch[idP][jug]
+                    }));
+                    list.sort((a, b) => b.total - a.total);
+                    mvpVotesByMatchMap[idP] = list;
+                }
             }
         }
-        const partidos = rawPartidos.map(r => formatMatch(r, resMap, mvpVotesByMatchMap));
+        const partidos = rawPartidos.map(r => formatMatch(r, resMap, canViewMvpVotes ? mvpVotesByMatchMap : null, canViewMvpVotes));
 
         // Permisos Equipos del usuario (leer fila de Permisos_Equipos)
         const misPermisos = {};
@@ -2108,7 +2101,6 @@ export async function onRequestPost(context) {
         }
 
         // Insignias
-        const allInsignias = (allInsigniasRes && allInsigniasRes.results) || [];
         const insigniasMap = {};
         const plantillaSuperliga = (plantillaRowsRes && plantillaRowsRes.results) || [];
         for (const b of allInsignias || []) {
@@ -2260,12 +2252,6 @@ export async function onRequestPost(context) {
         const cartelera = [];
         const todosPartidos = [];
         const idsEnCartelera = {};
-
-        // Comprobar si el usuario es Admin o Gestor MVP para asegurar que reciba los partidos de Superliga
-        const userInsignia = (allInsignias || []).find(i => i.Usuario === usuario);
-        const isUserAdmin = userInsignia && (userInsignia["Admin Web"] === "X");
-        const isUserGestorMvp = userInsignia && (userInsignia["Permiso_MVP"] === "X");
-        const hasPermisoResultados = userInsignia && Boolean(userInsignia["Permiso_Resultados"]);
 
         for (const p of partidos) {
             // SI ESTÁ OCULTADO A MANO EN LA BD, IGNORAR POR COMPLETO
@@ -3289,7 +3275,7 @@ export async function onRequestPost(context) {
 
     // ADMIN: SET MVP OFICIAL DE JORNADA / PARTIDO
     if (action === 'set_mvp_oficial') {
-        const { id_partido, mvp_oficial, mvp_stats, mvp_publicacion_ts, mvp_mostrar_porcentajes } = body;
+        const { id_partido, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
@@ -3300,7 +3286,7 @@ export async function onRequestPost(context) {
         const statsStr = Array.isArray(mvp_stats) ? JSON.stringify(mvp_stats) : (mvp_stats || '');
         const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
         const publicacionTs = (mvp_publicacion_ts !== undefined && mvp_publicacion_ts !== null) ? (parseInt(mvp_publicacion_ts) || 0) : (proclamadoTs > 0 ? proclamadoTs : 0);
-        const mostrarPorcentajesVal = (mvp_mostrar_porcentajes === false || mvp_mostrar_porcentajes === 0 || mvp_mostrar_porcentajes === '0') ? 0 : 1;
+        const mostrarPorcentajesVal = 0;
 
         const [exist, votosRes] = await Promise.all([
             db.prepare('SELECT mvp_candidatos FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(id_partido).first(),
