@@ -1521,10 +1521,10 @@ export async function onRequestPost(context) {
             r.Pabellon = 'Polideportivo Cristo Rey, Valladolid';
             ts = 1795881600000;
         } else if (idPart === 'FVCL_2M004_MES') {
-            r.Fecha = '28/11/2026 19:00';
-            r.timestamp = 1795888800000;
+            r.Fecha = '28/11/2026 18:30';
+            r.timestamp = 1795887000000;
             r.Pabellon = 'Polideportivo Cristo Rey, Valladolid';
-            ts = 1795888800000;
+            ts = 1795887000000;
         } else if (idPart === 'FVCL_2M011_MES') {
             r.Fecha = '06/03/2027 20:00';
             r.timestamp = 1804359600000;
