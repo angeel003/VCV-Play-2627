@@ -1130,15 +1130,31 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
 
-        // Columnas de equipos en Porras
+        // Columnas de equipos y localía en Porras
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Visitante" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Ubicacion_Club" TEXT').run(); } catch(e) {}
         try {
             await db.prepare(`
                 UPDATE "Porras"
-                SET "Equipo_Local" = (SELECT "Equipo_Local" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"),
-                    "Rival" = (SELECT "Rival" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
-                WHERE ("Equipo_Local" IS NULL OR "Equipo_Local" = '' OR "Rival" IS NULL OR "Rival" = '')
+                SET "Equipo_Local" = (
+                        SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Rival" ELSE "Ajustes"."Equipo_Local" END
+                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                    ),
+                    "Equipo_Visitante" = (
+                        SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Equipo_Local" ELSE "Ajustes"."Rival" END
+                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                    ),
+                    "Ubicacion_Club" = (
+                        SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN 'FUERA' ELSE 'CASA' END
+                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                    ),
+                    "Rival" = (
+                        SELECT "Ajustes"."Rival"
+                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                    )
+                WHERE EXISTS (SELECT 1 FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
             `).run();
         } catch(e) {}
 
@@ -1314,15 +1330,31 @@ export async function onRequestPost(context) {
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/03/2027 14:00', "timestamp" = 1804424400000, "Pabellon" = 'P. Pajaritos Sur' WHERE "ID_Partido" = 'FVCL_2F011'`)
             ]);
 
-            // Sincronizar columnas de equipos en Porras
+            // Sincronizar columnas de equipos y localía en Porras
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Visitante" TEXT').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Ubicacion_Club" TEXT').run(); } catch(e) {}
             try {
                 await db.prepare(`
                     UPDATE "Porras"
-                    SET "Equipo_Local" = (SELECT "Equipo_Local" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"),
-                        "Rival" = (SELECT "Rival" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
-                    WHERE ("Equipo_Local" IS NULL OR "Equipo_Local" = '' OR "Rival" IS NULL OR "Rival" = '')
+                    SET "Equipo_Local" = (
+                            SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Rival" ELSE "Ajustes"."Equipo_Local" END
+                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                        ),
+                        "Equipo_Visitante" = (
+                            SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Equipo_Local" ELSE "Ajustes"."Rival" END
+                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                        ),
+                        "Ubicacion_Club" = (
+                            SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN 'FUERA' ELSE 'CASA' END
+                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                        ),
+                        "Rival" = (
+                            SELECT "Ajustes"."Rival"
+                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
+                        )
+                    WHERE EXISTS (SELECT 1 FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
                 `).run();
             } catch(e) {}
 
@@ -1794,7 +1826,7 @@ export async function onRequestPost(context) {
         for (let i = 0; i < predIds.length; i += 80) {
             const chunk = predIds.slice(i, i + 80);
             const placeholders = chunk.map(() => '?').join(',');
-            const { results: partidosCheck } = await db.prepare(`SELECT "ID_Partido", "Equipo_Local", "Rival", "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" IN (${placeholders})`).bind(...chunk).all();
+            const { results: partidosCheck } = await db.prepare(`SELECT "ID_Partido", "Equipo_Local", "Rival", "Ubicacion", "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" IN (${placeholders})`).bind(...chunk).all();
             for (const partido of partidosCheck || []) {
                 matchInfoMap[partido.ID_Partido] = partido;
                 if (partido.Estado === "CERRADO" || (partido.timestamp && nowMs >= partido.timestamp)) {
@@ -1810,10 +1842,14 @@ export async function onRequestPost(context) {
             batchStmts.push(db.prepare('DELETE FROM "Porras" WHERE "Usuario" = ? AND "ID Partido" = ?').bind(usuario, idPart));
             const p = preds[idPart];
             if (p && p.sets) {
-                const eqLoc = (matchInfoMap[idPart] && matchInfoMap[idPart].Equipo_Local) || '';
-                const eqRiv = (matchInfoMap[idPart] && matchInfoMap[idPart].Rival) || '';
-                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local", "Equipo_Local", "Rival") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo, eqLoc, eqRiv));
+                const m = matchInfoMap[idPart] || {};
+                const isVis = (m.Ubicacion || '').toUpperCase() === 'VISITANTE';
+                const eqCasa = isVis ? (m.Rival || '') : (m.Equipo_Local || '');
+                const eqFuera = isVis ? (m.Equipo_Local || '') : (m.Rival || '');
+                const ubiClub = isVis ? 'FUERA' : 'CASA';
+                const eqRiv = m.Rival || '';
+                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local", "Equipo_Local", "Rival", "Equipo_Visitante", "Ubicacion_Club") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo, eqCasa, eqRiv, eqFuera, ubiClub));
             }
         }
         await flushBatch(db, batchStmts);
@@ -3020,11 +3056,18 @@ export async function onRequestPost(context) {
                     p."Puntos Dif" as puntos_dif,
                     p."a favor o en contra del local" as signo,
                     p."Equipo_Local" as equipo_local,
+                    p."Equipo_Visitante" as equipo_visitante,
+                    p."Ubicacion_Club" as ubicacion_club,
                     p."Rival" as rival
                 FROM "Porras" p
                 LEFT JOIN "Usuarios" u ON p."Usuario" = u."Usuario"
                 WHERE p."ID Partido" = ?
             `).bind(idPartido).all();
+
+            const isVis = partido && (partido.Ubicacion || '').toUpperCase() === 'VISITANTE';
+            const defaultEqLocal = partido ? (isVis ? partido.Rival : partido.Equipo_Local) : '';
+            const defaultEqVisitante = partido ? (isVis ? partido.Equipo_Local : partido.Rival) : '';
+            const defaultUbiClub = isVis ? 'FUERA' : 'CASA';
 
             const pronosticos = (rawPronosticos || []).map(pr => ({
                 usuario: pr.usuario,
@@ -3033,7 +3076,9 @@ export async function onRequestPost(context) {
                 puntos_dif: pr.puntos_dif !== undefined && pr.puntos_dif !== null ? pr.puntos_dif : 0,
                 signo: pr.signo || '',
                 timestamp: pr.timestamp || '',
-                equipo_local: pr.equipo_local || (partido ? partido.Equipo_Local : ''),
+                equipo_local: pr.equipo_local || defaultEqLocal,
+                equipo_visitante: pr.equipo_visitante || defaultEqVisitante,
+                ubicacion_club: pr.ubicacion_club || defaultUbiClub,
                 rival: pr.rival || (partido ? partido.Rival : '')
             }));
 

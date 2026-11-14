@@ -3104,10 +3104,13 @@ window.adminCargarPrediccionesPartido = async function() {
 
     window._adminCurrentSelectedMatch = partido;
 
-    const loc = partido.equipo_local || 'Local';
-    const riv = partido.rival || 'Rival';
+    const locClub = (partido.equipo_local || 'Local').trim();
+    const rivClub = (partido.rival || 'Rival').trim();
     const ubi = (partido.ubicacion || 'LOCAL').toUpperCase();
-    const isLocal = ubi === 'LOCAL';
+    const isLocal = (ubi === 'LOCAL');
+    const teamCasa = isLocal ? locClub : rivClub;
+    const teamFuera = isLocal ? rivClub : locClub;
+
     const fecha = partido.fecha || (partido.timestamp ? new Date(partido.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : 'Por definir');
     const pab = partido.pabellon || 'Por definir';
     const setsOficial = partido.oficial_sets ? String(partido.oficial_sets).trim() : '';
@@ -3116,11 +3119,14 @@ window.adminCargarPrediccionesPartido = async function() {
     infoCont.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
             <div style="font-weight:800; color:var(--text-main); font-size:0.92rem;">
-                ${isLocal ? `<b style="color:var(--secondary-color);">${loc}</b>` : loc} <span style="color:var(--text-muted); font-weight:normal;">vs</span> ${!isLocal ? `<b style="color:var(--secondary-color);">${riv}</b>` : riv}
+                <span style="${isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamCasa}</span>
+                <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin:0 4px;">(Local) vs</span>
+                <span style="${!isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamFuera}</span>
+                <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin-left:4px;">(Visitante)</span>
             </div>
             <div style="display:flex; gap:4px; align-items:center;">
-                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(46,204,113,0.15); color:#2ecc71;">
-                    ${ubi === 'LOCAL' ? '🏠 LOCAL' : '✈️ VISITANTE'}
+                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${isLocal ? 'rgba(46,204,113,0.15); color:#2ecc71;' : 'rgba(52,152,219,0.15); color:#3498db;'}">
+                    ${isLocal ? `🏠 ${locClub} juega en Casa` : `✈️ ${locClub} juega Fuera`}
                 </span>
                 <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${setsOficial ? 'rgba(52,152,219,0.15); color:#3498db;' : (estado === 'CERRADO' ? 'rgba(231,76,60,0.15); color:#e74c3c;' : 'rgba(46,204,113,0.15); color:#2ecc71;')}">
                     ${setsOficial ? `FINAL: ${setsOficial}` : estado}
@@ -3196,6 +3202,13 @@ window.adminRenderizarListaPredicciones = function(list, filtro = '') {
     const totalGlobal = (window._adminLoadedPronosticos || []).length;
     const partido = window._adminCurrentSelectedMatch || {};
 
+    const locClub = (partido.equipo_local || 'Local').trim();
+    const rivClub = (partido.rival || 'Rival').trim();
+    const ubi = (partido.ubicacion || 'LOCAL').toUpperCase();
+    const isLocal = (ubi === 'LOCAL');
+    const teamCasa = isLocal ? locClub : rivClub;
+    const teamFuera = isLocal ? rivClub : locClub;
+
     if (!list || list.length === 0) {
         listCont.innerHTML = filtro
             ? `<div style="color:var(--text-muted); font-size:0.78rem; text-align:center; padding:16px;">No se encontraron usuarios que coincidan con "${filtro}".</div>`
@@ -3206,23 +3219,41 @@ window.adminRenderizarListaPredicciones = function(list, filtro = '') {
         return;
     }
 
-    let votosAFavor = 0;
-    let votosEnContra = 0;
-    (window._adminLoadedPronosticos || []).forEach(p => {
+    // Helper para determinar el equipo ganador pronosticado
+    function getWinnerTeam(p) {
+        if (p.sets && p.sets.includes('-')) {
+            const [s1, s2] = p.sets.split('-').map(x => parseInt(x));
+            if (!isNaN(s1) && !isNaN(s2)) {
+                if (s1 > s2) return teamCasa;
+                if (s2 > s1) return teamFuera;
+            }
+        }
         const s = (p.signo || '').toLowerCase();
-        if (s.includes('favor')) votosAFavor++;
-        else if (s.includes('contra')) votosEnContra++;
+        if (s.includes('favor')) return teamCasa;
+        if (s.includes('contra')) return teamFuera;
+        return teamCasa;
+    }
+
+    let votosCasa = 0;
+    let votosFuera = 0;
+    (window._adminLoadedPronosticos || []).forEach(p => {
+        const w = getWinnerTeam(p);
+        if (w === teamCasa) votosCasa++;
+        else if (w === teamFuera) votosFuera++;
     });
 
-    const pctFavor = totalGlobal > 0 ? Math.round((votosAFavor / totalGlobal) * 100) : 0;
-    const pctContra = totalGlobal > 0 ? Math.round((votosEnContra / totalGlobal) * 100) : 0;
+    const pctCasa = totalGlobal > 0 ? Math.round((votosCasa / totalGlobal) * 100) : 0;
+    const pctFuera = totalGlobal > 0 ? Math.round((votosFuera / totalGlobal) * 100) : 0;
+
+    const colorCasa = (teamCasa === locClub) ? '#2ecc71' : '#e67e22';
+    const colorFuera = (teamFuera === locClub) ? '#2ecc71' : '#e67e22';
 
     if (resumenCont) {
         resumenCont.innerHTML = `
             <span>Mostrando <b>${list.length}</b> de <b>${totalGlobal}</b> pronósticos</span>
-            <div style="display:flex; gap:8px;">
-                <span style="color:#2ecc71; font-weight:700;">A favor: ${votosAFavor} (${pctFavor}%)</span>
-                <span style="color:#e67e22; font-weight:700;">En contra: ${votosEnContra} (${pctContra}%)</span>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <span style="color:${colorCasa}; font-weight:700;">Gana ${teamCasa}: ${votosCasa} (${pctCasa}%)</span>
+                <span style="color:${colorFuera}; font-weight:700;">Gana ${teamFuera}: ${votosFuera} (${pctFuera}%)</span>
             </div>
         `;
     }
@@ -3235,8 +3266,9 @@ window.adminRenderizarListaPredicciones = function(list, filtro = '') {
         const n = p.nombre_real || '';
         const hasDiffName = n && n.toLowerCase() !== u.toLowerCase();
         const sets = p.sets || '-';
-        const signo = p.signo || '';
-        const isAFavor = signo.toLowerCase().includes('favor');
+        const winnerTeam = getWinnerTeam(p);
+        const isClubWinner = (winnerTeam === locClub);
+        const colorWinner = isClubWinner ? '#2ecc71' : '#e67e22';
         const ptsDif = (p.puntos_dif !== undefined && p.puntos_dif !== null && p.puntos_dif !== '') ? `+${p.puntos_dif} pts dif.` : '';
         const ts = p.timestamp || 'Hora no registrada';
 
@@ -3276,11 +3308,11 @@ window.adminRenderizarListaPredicciones = function(list, filtro = '') {
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:0.72rem; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.06);">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-weight:700; color:${isAFavor ? '#2ecc71' : '#e67e22'};">
-                            ${isAFavor ? '✔ A favor' : '✖ En contra'}
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span style="font-weight:800; color:${colorWinner}; font-size:0.76rem;">
+                            🏆 Gana ${winnerTeam}
                         </span>
-                        ${ptsDif ? `<span style="color:var(--text-muted);">${ptsDif}</span>` : ''}
+                        ${ptsDif ? `<span style="color:var(--text-muted); font-size:0.72rem;">(${ptsDif})</span>` : ''}
                     </div>
                     <div style="display:flex; align-items:center; gap:4px; color:var(--text-muted);">
                         <i class="fas fa-clock" style="font-size:0.7rem; color:var(--secondary-color);"></i>
