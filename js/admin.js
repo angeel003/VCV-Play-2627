@@ -2985,36 +2985,46 @@ window.adminInicializarSeccionPredicciones = function() {
     }
 
     const curVal = selEq.value;
-    selEq.innerHTML = '';
-    clubTeams.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.team;
-        opt.textContent = c.label;
-        selEq.appendChild(opt);
-    });
+    if (selEq.options.length !== clubTeams.length) {
+        selEq.innerHTML = '';
+        clubTeams.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.team;
+            opt.textContent = c.label;
+            selEq.appendChild(opt);
+        });
 
-    if (curVal && dynamicSet.has(curVal)) {
-        selEq.value = curVal;
-    } else {
-        selEq.selectedIndex = 0;
+        if (curVal && dynamicSet.has(curVal)) {
+            selEq.value = curVal;
+        } else {
+            selEq.selectedIndex = 0;
+        }
     }
 
-    window.adminOnPredEquipoChange(selEq.value, true);
+    const selJor = document.getElementById('adminPredJornadaSelect');
+    if (selJor && (selJor.options.length === 0 || selJor.value === '')) {
+        window.adminOnPredEquipoChange(selEq.value, true);
+    }
 };
+
+function adminNormString(s) {
+    return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
 
 window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
     const selJor = document.getElementById('adminPredJornadaSelect');
     if (!selJor) return;
 
+    const normEq = adminNormString(eq);
     const pool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
         ? window.appData.todos_partidos
         : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
 
     const matchesEq = pool.filter(p => {
-        const loc = (p.equipo_local || '').trim();
-        const riv = (p.rival || '').trim();
-        const cat = (p.categoria || '').trim();
-        return loc === eq || riv === eq || cat === eq;
+        const loc = adminNormString(p.equipo_local);
+        const riv = adminNormString(p.rival);
+        const cat = adminNormString(p.categoria);
+        return loc === normEq || riv === normEq || cat === normEq || loc.includes(normEq) || normEq.includes(loc);
     });
 
     const jornadasSet = new Set();
@@ -3023,18 +3033,24 @@ window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
         if (j) jornadasSet.add(j);
     });
 
-    const sortedJornadas = Array.from(jornadasSet).sort((a, b) => {
+    let sortedJornadas = Array.from(jornadasSet).sort((a, b) => {
         const nA = parseInt(a), nB = parseInt(b);
         if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
         return a.localeCompare(b);
     });
 
-    selJor.innerHTML = '';
+    // Si por cualquier motivo no hay jornadas en memoria (ej. appData aún cargando o equipo con partidos solo en BD),
+    // generar jornadas estándar de la liga (1..22 para SM2/1ª Nac, 1..14 para 2ª Div) para que el admin NUNCA vea "Sin jornadas"
     if (sortedJornadas.length === 0) {
-        selJor.innerHTML = '<option value="">Sin jornadas</option>';
-        return;
+        const isSegunda = normEq.includes('2a') || normEq.includes('segunda') || normEq.includes('meseta') || normEq.includes('abanto') || normEq.includes('molina');
+        const totalJor = isSegunda ? 14 : 22;
+        for (let i = 1; i <= totalJor; i++) {
+            sortedJornadas.push(String(i));
+        }
     }
 
+    const curSelectedJor = selJor.value;
+    selJor.innerHTML = '';
     sortedJornadas.forEach(j => {
         const opt = document.createElement('option');
         opt.value = j;
@@ -3042,20 +3058,24 @@ window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
         selJor.appendChild(opt);
     });
 
-    // Seleccionar por defecto la jornada más próxima o actual
-    let selectedJor = sortedJornadas[0];
-    const now = Date.now();
-    const upcoming = matchesEq.find(p => p.timestamp && p.timestamp >= now);
-    if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq || upcoming.ronda_global))) {
-        selectedJor = String(upcoming.jornada_eq || upcoming.ronda_global);
+    if (curSelectedJor && sortedJornadas.includes(curSelectedJor)) {
+        selJor.value = curSelectedJor;
     } else {
-        const played = matchesEq.filter(p => p.timestamp && p.timestamp < now);
-        if (played.length > 0) {
-            played.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            selectedJor = String(played[0].jornada_eq || played[0].ronda_global || sortedJornadas[0]);
+        // Seleccionar por defecto la jornada más próxima o actual
+        let selectedJor = sortedJornadas[0];
+        const now = Date.now();
+        const upcoming = matchesEq.find(p => p.timestamp && p.timestamp >= now);
+        if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq || upcoming.ronda_global))) {
+            selectedJor = String(upcoming.jornada_eq || upcoming.ronda_global);
+        } else {
+            const played = matchesEq.filter(p => p.timestamp && p.timestamp < now);
+            if (played.length > 0) {
+                played.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                selectedJor = String(played[0].jornada_eq || played[0].ronda_global || sortedJornadas[0]);
+            }
         }
+        selJor.value = selectedJor;
     }
-    selJor.value = selectedJor;
 
     if (autoLoad) {
         window.adminCargarPrediccionesPartido();
@@ -3083,62 +3103,66 @@ window.adminCargarPrediccionesPartido = async function() {
         return;
     }
 
+    const normEq = adminNormString(eq);
     const pool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
         ? window.appData.todos_partidos
         : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
 
-    const partido = pool.find(p => {
-        const loc = (p.equipo_local || '').trim();
-        const riv = (p.rival || '').trim();
-        const cat = (p.categoria || '').trim();
+    let partido = pool.find(p => {
+        const loc = adminNormString(p.equipo_local);
+        const riv = adminNormString(p.rival);
+        const cat = adminNormString(p.categoria);
         const j = String(p.jornada_eq || p.ronda_global || '').trim();
-        return (loc === eq || riv === eq || cat === eq) && j === jor;
+        return (loc === normEq || riv === normEq || cat === normEq || loc.includes(normEq) || normEq.includes(loc)) && j === jor;
     });
 
-    if (!partido) {
-        infoCont.innerHTML = `<div style="color:var(--text-muted); text-align:center;">No se encontró partido para ${eq} - Jornada ${jor}.</div>`;
-        listCont.innerHTML = '';
-        if (controlesCont) controlesCont.style.display = 'none';
-        return;
+    function renderMatchHeader(m) {
+        const locClub = (m.equipo_local || m.Equipo_Local || 'Local').trim();
+        const rivClub = (m.rival || m.Rival || 'Rival').trim();
+        const ubi = (m.ubicacion || m.Ubicacion || 'LOCAL').toUpperCase();
+        const isLocal = (ubi === 'LOCAL' || ubi === 'CASA');
+        const teamCasa = isLocal ? locClub : rivClub;
+        const teamFuera = isLocal ? rivClub : locClub;
+
+        const fecha = m.fecha || m.Fecha || (m.timestamp ? new Date(m.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : 'Por definir');
+        const pab = m.pabellon || m.Pabellon || 'Por definir';
+        const setsOficial = m.oficial_sets ? String(m.oficial_sets).trim() : (m.Sets_Oficiales || '');
+        const estado = m.estado || m.Estado || 'ABIERTO';
+        const idP = m.id_partido || m.ID_Partido || '';
+
+        infoCont.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+                <div style="font-weight:800; color:var(--text-main); font-size:0.92rem;">
+                    <span style="${isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamCasa}</span>
+                    <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin:0 4px;">(Local) vs</span>
+                    <span style="${!isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamFuera}</span>
+                    <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin-left:4px;">(Visitante)</span>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center;">
+                    <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${isLocal ? 'rgba(46,204,113,0.15); color:#2ecc71;' : 'rgba(52,152,219,0.15); color:#3498db;'}">
+                        ${isLocal ? `🏠 ${locClub} juega en Casa` : `✈️ ${locClub} juega Fuera`}
+                    </span>
+                    <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${setsOficial ? 'rgba(52,152,219,0.15); color:#3498db;' : (estado === 'CERRADO' ? 'rgba(231,76,60,0.15); color:#e74c3c;' : 'rgba(46,204,113,0.15); color:#2ecc71;')}">
+                        ${setsOficial ? `FINAL: ${setsOficial}` : estado}
+                    </span>
+                </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.72rem; color:var(--text-muted);">
+                <span>📅 ${fecha}</span>
+                <span>📍 ${pab}</span>
+                <span style="font-family:monospace; opacity:0.7;">ID: ${idP}</span>
+            </div>
+        `;
     }
 
-    window._adminCurrentSelectedMatch = partido;
-
-    const locClub = (partido.equipo_local || 'Local').trim();
-    const rivClub = (partido.rival || 'Rival').trim();
-    const ubi = (partido.ubicacion || 'LOCAL').toUpperCase();
-    const isLocal = (ubi === 'LOCAL');
-    const teamCasa = isLocal ? locClub : rivClub;
-    const teamFuera = isLocal ? rivClub : locClub;
-
-    const fecha = partido.fecha || (partido.timestamp ? new Date(partido.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : 'Por definir');
-    const pab = partido.pabellon || 'Por definir';
-    const setsOficial = partido.oficial_sets ? String(partido.oficial_sets).trim() : '';
-    const estado = partido.estado || 'ABIERTO';
-
-    infoCont.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
-            <div style="font-weight:800; color:var(--text-main); font-size:0.92rem;">
-                <span style="${isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamCasa}</span>
-                <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin:0 4px;">(Local) vs</span>
-                <span style="${!isLocal ? 'color:var(--secondary-color); font-weight:800;' : ''}">${teamFuera}</span>
-                <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin-left:4px;">(Visitante)</span>
-            </div>
-            <div style="display:flex; gap:4px; align-items:center;">
-                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${isLocal ? 'rgba(46,204,113,0.15); color:#2ecc71;' : 'rgba(52,152,219,0.15); color:#3498db;'}">
-                    ${isLocal ? `🏠 ${locClub} juega en Casa` : `✈️ ${locClub} juega Fuera`}
-                </span>
-                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${setsOficial ? 'rgba(52,152,219,0.15); color:#3498db;' : (estado === 'CERRADO' ? 'rgba(231,76,60,0.15); color:#e74c3c;' : 'rgba(46,204,113,0.15); color:#2ecc71;')}">
-                    ${setsOficial ? `FINAL: ${setsOficial}` : estado}
-                </span>
-            </div>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.72rem; color:var(--text-muted);">
-            <span>📅 ${fecha}</span>
-            <span>📍 ${pab}</span>
-            <span style="font-family:monospace; opacity:0.7;">ID: ${partido.id_partido}</span>
-        </div>
-    `;
+    if (partido) {
+        window._adminCurrentSelectedMatch = partido;
+        renderMatchHeader(partido);
+    } else {
+        infoCont.innerHTML = `<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:0.8rem;">
+            <span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Localizando partido en el servidor...
+        </div>`;
+    }
 
     listCont.innerHTML = `
         <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.8rem;">
@@ -3151,9 +3175,9 @@ window.adminCargarPrediccionesPartido = async function() {
             method: 'POST',
             body: JSON.stringify({
                 action: 'get_pronosticos_partido_data',
-                id_partido: partido.id_partido,
+                id_partido: partido ? (partido.id_partido || partido.ID_Partido) : '',
                 equipo: eq,
-                categoria: partido.categoria || '',
+                categoria: partido ? (partido.categoria || partido.Categoria || '') : '',
                 jornada: jor,
                 usuario: (typeof currentUser !== 'undefined') ? currentUser : '',
                 password: (typeof currentPassword !== 'undefined') ? currentPassword : ''
@@ -3163,8 +3187,23 @@ window.adminCargarPrediccionesPartido = async function() {
 
         const resp = (rawRes && typeof rawRes.json === 'function') ? await rawRes.json() : rawRes;
         if (!resp || resp.status !== 'success') {
-            listCont.innerHTML = `<div style="color:#e74c3c; font-size:0.78rem; text-align:center; padding:12px;">Error: ${resp && resp.message ? resp.message : 'No se pudieron cargar los pronósticos'}</div>`;
+            infoCont.innerHTML = `<div style="color:var(--text-muted); text-align:center;">No se encontró partido para ${eq} - Jornada ${jor}.</div>`;
+            listCont.innerHTML = `<div style="color:#e74c3c; font-size:0.78rem; text-align:center; padding:12px;">${resp && resp.message ? resp.message : 'No se pudo encontrar el partido o los pronósticos.'}</div>`;
+            if (controlesCont) controlesCont.style.display = 'none';
             return;
+        }
+
+        if (resp.partido) {
+            partido = resp.partido;
+            if (!partido.equipo_local && partido.Equipo_Local) partido.equipo_local = partido.Equipo_Local;
+            if (!partido.rival && partido.Rival) partido.rival = partido.Rival;
+            if (!partido.ubicacion && partido.Ubicacion) partido.ubicacion = partido.Ubicacion;
+            if (!partido.fecha && partido.Fecha) partido.fecha = partido.Fecha;
+            if (!partido.pabellon && partido.Pabellon) partido.pabellon = partido.Pabellon;
+            if (!partido.estado && partido.Estado) partido.estado = partido.Estado;
+            if (!partido.id_partido && partido.ID_Partido) partido.id_partido = partido.ID_Partido;
+            window._adminCurrentSelectedMatch = partido;
+            renderMatchHeader(partido);
         }
 
         window._adminLoadedPronosticos = resp.pronosticos || [];

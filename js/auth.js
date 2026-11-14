@@ -1159,7 +1159,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 const mb = document.getElementById('mantenimientoBannerLogin');
                 if (mb) mb.style.display = 'block';
                 msgBox.className = "alert-box alert-danger";
-                msgBox.innerHTML = `<b>🚧 Modo Mantenimiento Activo</b><br><span style="font-size:0.8rem;">${data.message || 'El acceso está reservado exclusivamente a administradores.'}</span>`;
+                msgBox.innerHTML = `<b>🚧 Modo Mantenimiento Activo</b><br><span style="font-size:0.8rem;">${data.message || 'El acceso está reservado exclusivamente a administradores. Por favor, vuelve a intentarlo en 5 minutos.'}</span>`;
                 msgBox.style.display = "block";
                 if (typeof updateProgressBar === 'function') updateProgressBar();
                 return;

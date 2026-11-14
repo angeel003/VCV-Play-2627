@@ -2447,7 +2447,7 @@
             <span>🚧</span> Modo Mantenimiento
           </div>
           <div style="font-size: 0.78rem; color: var(--text-main); line-height: 1.4;">
-            La plataforma se encuentra temporalmente en mantenimiento y optimización. El acceso está restringido exclusivamente a <b>administradores</b>.
+            La plataforma se encuentra temporalmente en mantenimiento y optimización. El acceso está restringido exclusivamente a <b>administradores</b>. Por favor, vuelve a intentarlo en 5 minutos.
           </div>
         </div>
 
@@ -2957,7 +2957,7 @@
           </details>
 
           <!-- 5.C Consultar Predicciones y Porras por Partido -->
-          <details id="secAdminVerPredicciones" class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.12), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+          <details id="secAdminVerPredicciones" class="admin-collapsible" ontoggle="if(this.open && typeof window.adminInicializarSeccionPredicciones === 'function') window.adminInicializarSeccionPredicciones();" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.12), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
               <span style="display:flex; align-items:center; gap:6px;">📋 Consultar Predicciones por Partido</span>
               <span style="font-size: 0.72rem; background: rgba(46, 204, 113, 0.15); color: #2ecc71; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Porras</span>

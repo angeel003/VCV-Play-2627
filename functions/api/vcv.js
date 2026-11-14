@@ -1954,14 +1954,14 @@ export async function onRequestPost(context) {
         // CONTROL DE MODO MANTENIMIENTO: Restringido exclusivamente a administradores
         if (mantenimientoActivo) {
             const adminCheckBadge = usuario
-                ? await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first().catch(() => null)
+                ? await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE lower("Usuario") = lower(?)').bind(usuario).first().catch(() => null)
                 : null;
             const esAdmin = adminCheckBadge && adminCheckBadge["Admin Web"] === "X";
             if (!esAdmin) {
                 return jsonResponse({
                     status: "error",
                     code: "MODO_MANTENIMIENTO",
-                    message: "🚧 La plataforma se encuentra temporalmente en modo mantenimiento. El acceso está restringido exclusivamente a administradores del club."
+                    message: "🚧 La plataforma se encuentra temporalmente en modo mantenimiento. El acceso está restringido exclusivamente a administradores del club. Por favor, vuelve a intentarlo en 5 minutos."
                 }, 403);
             }
         }
@@ -3024,11 +3024,15 @@ export async function onRequestPost(context) {
             if (idPartido) {
                 partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
             } else if (equipo && jornada) {
-                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE ("Equipo_Local" = ? OR "Rival" = ?) AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
+                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE (lower("Equipo_Local") = lower(?) OR lower("Rival") = lower(?)) AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
                     .bind(equipo, equipo, jornada, jornada).first();
+                if (!partido) {
+                    partido = await db.prepare('SELECT * FROM "Ajustes" WHERE (lower("Equipo_Local") LIKE lower(?) OR lower("Rival") LIKE lower(?)) AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
+                        .bind(`%${equipo}%`, `%${equipo}%`, jornada, jornada).first();
+                }
                 if (partido) idPartido = partido.ID_Partido;
             } else if (categoria && jornada) {
-                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "Categoria" = ? AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
+                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE lower("Categoria") = lower(?) AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
                     .bind(categoria, jornada, jornada).first();
                 if (partido) idPartido = partido.ID_Partido;
             }
@@ -3038,7 +3042,7 @@ export async function onRequestPost(context) {
             if (usuario && password) {
                 const user = await getAuthUser();
                 if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
-                const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+                const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE lower("Usuario") = lower(?)').bind(usuario).first();
                 const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
                 const hasPerm = adminCheck && (adminCheck["Permiso_MVP"] === "X" || !!adminCheck["Permiso_Resultados"]);
                 if (!isAdmin && !hasPerm) {
