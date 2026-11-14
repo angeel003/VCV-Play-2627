@@ -2961,11 +2961,48 @@ window._adminCurrentSelectedMatch = null;
 window.adminInicializarSeccionPredicciones = function() {
     const selEq = document.getElementById('adminPredEquipoSelect');
     if (!selEq) return;
-    const curCat = selEq.value || 'SM2';
-    window.adminOnPredEquipoChange(curCat, true);
+
+    // Equipos del club por defecto (los mismos a los que se otorgan permisos)
+    const clubTeams = [
+        { team: 'Universidad de Valladolid VCV', label: 'Univ. de Valladolid (SM2)' },
+        { team: 'VALCYL VCV', label: 'VALCYL VCV (1ª Nac. Masc.)' },
+        { team: 'Valladolid CV Vacceas', label: 'VCV Vacceas (1ª Nac. Fem.)' },
+        { team: 'CD San José', label: 'CD San José (1ª Nac. Fem.)' },
+        { team: 'VCV Meseta', label: 'VCV Meseta (2ª Masc.)' },
+        { team: 'Pegamo Abanto', label: 'Pegamo Abanto (2ª Masc.)' },
+        { team: 'VCV Maria Molina', label: 'VCV Maria Molina (2ª Fem.)' }
+    ];
+
+    // Detectar si hay más equipos en appData (equipos_totales_publicos o partidos)
+    const dynamicSet = new Set(clubTeams.map(c => c.team));
+    if (window.appData && Array.isArray(window.appData.equipos_totales_publicos)) {
+        window.appData.equipos_totales_publicos.forEach(t => {
+            if (t && !dynamicSet.has(t)) {
+                clubTeams.push({ team: t, label: t });
+                dynamicSet.add(t);
+            }
+        });
+    }
+
+    const curVal = selEq.value;
+    selEq.innerHTML = '';
+    clubTeams.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.team;
+        opt.textContent = c.label;
+        selEq.appendChild(opt);
+    });
+
+    if (curVal && dynamicSet.has(curVal)) {
+        selEq.value = curVal;
+    } else {
+        selEq.selectedIndex = 0;
+    }
+
+    window.adminOnPredEquipoChange(selEq.value, true);
 };
 
-window.adminOnPredEquipoChange = function(cat, autoLoad = true) {
+window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
     const selJor = document.getElementById('adminPredJornadaSelect');
     if (!selJor) return;
 
@@ -2973,13 +3010,15 @@ window.adminOnPredEquipoChange = function(cat, autoLoad = true) {
         ? window.appData.todos_partidos
         : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
 
-    const matchesCat = pool.filter(p => {
-        const c = (p.categoria || '').trim();
-        return c === cat;
+    const matchesEq = pool.filter(p => {
+        const loc = (p.equipo_local || '').trim();
+        const riv = (p.rival || '').trim();
+        const cat = (p.categoria || '').trim();
+        return loc === eq || riv === eq || cat === eq;
     });
 
     const jornadasSet = new Set();
-    matchesCat.forEach(p => {
+    matchesEq.forEach(p => {
         const j = String(p.jornada_eq || p.ronda_global || '').trim();
         if (j) jornadasSet.add(j);
     });
@@ -3006,14 +3045,14 @@ window.adminOnPredEquipoChange = function(cat, autoLoad = true) {
     // Seleccionar por defecto la jornada más próxima o actual
     let selectedJor = sortedJornadas[0];
     const now = Date.now();
-    const upcoming = matchesCat.find(p => p.timestamp && p.timestamp >= now);
-    if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq))) {
-        selectedJor = String(upcoming.jornada_eq);
+    const upcoming = matchesEq.find(p => p.timestamp && p.timestamp >= now);
+    if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq || upcoming.ronda_global))) {
+        selectedJor = String(upcoming.jornada_eq || upcoming.ronda_global);
     } else {
-        const played = matchesCat.filter(p => p.timestamp && p.timestamp < now);
+        const played = matchesEq.filter(p => p.timestamp && p.timestamp < now);
         if (played.length > 0) {
             played.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            selectedJor = String(played[0].jornada_eq || sortedJornadas[0]);
+            selectedJor = String(played[0].jornada_eq || played[0].ronda_global || sortedJornadas[0]);
         }
     }
     selJor.value = selectedJor;
@@ -3035,9 +3074,9 @@ window.adminCargarPrediccionesPartido = async function() {
     const controlesCont = document.getElementById('adminPredControles');
     if (!selEq || !selJor || !infoCont || !listCont) return;
 
-    const cat = selEq.value;
+    const eq = selEq.value;
     const jor = selJor.value;
-    if (!cat || !jor) {
+    if (!eq || !jor) {
         infoCont.innerHTML = '<div style="color:var(--text-muted); text-align:center;">Selecciona equipo y jornada.</div>';
         listCont.innerHTML = '';
         if (controlesCont) controlesCont.style.display = 'none';
@@ -3049,13 +3088,15 @@ window.adminCargarPrediccionesPartido = async function() {
         : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
 
     const partido = pool.find(p => {
-        const c = (p.categoria || '').trim();
+        const loc = (p.equipo_local || '').trim();
+        const riv = (p.rival || '').trim();
+        const cat = (p.categoria || '').trim();
         const j = String(p.jornada_eq || p.ronda_global || '').trim();
-        return c === cat && j === jor;
+        return (loc === eq || riv === eq || cat === eq) && j === jor;
     });
 
     if (!partido) {
-        infoCont.innerHTML = `<div style="color:var(--text-muted); text-align:center;">No se encontró partido para ${cat} - Jornada ${jor}.</div>`;
+        infoCont.innerHTML = `<div style="color:var(--text-muted); text-align:center;">No se encontró partido para ${eq} - Jornada ${jor}.</div>`;
         listCont.innerHTML = '';
         if (controlesCont) controlesCont.style.display = 'none';
         return;
@@ -3105,6 +3146,9 @@ window.adminCargarPrediccionesPartido = async function() {
             body: JSON.stringify({
                 action: 'get_pronosticos_partido_data',
                 id_partido: partido.id_partido,
+                equipo: eq,
+                categoria: partido.categoria || '',
+                jornada: jor,
                 usuario: (typeof currentUser !== 'undefined') ? currentUser : '',
                 password: (typeof currentPassword !== 'undefined') ? currentPassword : ''
             }),

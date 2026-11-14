@@ -2980,12 +2980,17 @@ export async function onRequestPost(context) {
     if (action === 'get_pronosticos_partido_data') {
         try {
             let idPartido = (body.id_partido || "").trim();
+            const equipo = (body.equipo || "").trim();
             const categoria = (body.categoria || "").trim();
             const jornada = (body.jornada !== undefined && body.jornada !== null) ? String(body.jornada).trim() : "";
 
             let partido = null;
             if (idPartido) {
                 partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
+            } else if (equipo && jornada) {
+                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE ("Equipo_Local" = ? OR "Rival" = ?) AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
+                    .bind(equipo, equipo, jornada, jornada).first();
+                if (partido) idPartido = partido.ID_Partido;
             } else if (categoria && jornada) {
                 partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "Categoria" = ? AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
                     .bind(categoria, jornada, jornada).first();
