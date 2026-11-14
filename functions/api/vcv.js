@@ -1130,6 +1130,18 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
 
+        // Columnas de equipos en Porras
+        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
+        try {
+            await db.prepare(`
+                UPDATE "Porras"
+                SET "Equipo_Local" = (SELECT "Equipo_Local" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"),
+                    "Rival" = (SELECT "Rival" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
+                WHERE ("Equipo_Local" IS NULL OR "Equipo_Local" = '' OR "Rival" IS NULL OR "Rival" = '')
+            `).run();
+        } catch(e) {}
+
         // Tablas silenciosas de auditoría y monitorización de accesos
         try {
             await db.prepare(`CREATE TABLE IF NOT EXISTS "Monitor_Usuarios" (
@@ -1301,7 +1313,20 @@ export async function onRequestPost(context) {
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/03/2027 20:00', "timestamp" = 1804359600000, "Pabellon" = 'P. Pajaritos Sur' WHERE "ID_Partido" = 'FVCL_2M011_MES'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '07/03/2027 14:00', "timestamp" = 1804424400000, "Pabellon" = 'P. Pajaritos Sur' WHERE "ID_Partido" = 'FVCL_2F011'`)
             ]);
-            return jsonResponse({ status: "success", message: "Todos los partidos han sido sincronizados en la base de datos." });
+
+            // Sincronizar columnas de equipos en Porras
+            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
+            try {
+                await db.prepare(`
+                    UPDATE "Porras"
+                    SET "Equipo_Local" = (SELECT "Equipo_Local" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"),
+                        "Rival" = (SELECT "Rival" FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
+                    WHERE ("Equipo_Local" IS NULL OR "Equipo_Local" = '' OR "Rival" IS NULL OR "Rival" = '')
+                `).run();
+            } catch(e) {}
+
+            return jsonResponse({ status: "success", message: "Todos los partidos y datos han sido sincronizados en la base de datos." });
         } catch(err) {
             return jsonResponse({ status: "error", message: err.message }, 500);
         }
@@ -1765,11 +1790,13 @@ export async function onRequestPost(context) {
         const predIds = Object.keys(preds).filter(Boolean);
 
         // Validar seguridad en 1 sola consulta por lote: partido no cerrado ni iniciado
+        const matchInfoMap = {};
         for (let i = 0; i < predIds.length; i += 80) {
             const chunk = predIds.slice(i, i + 80);
             const placeholders = chunk.map(() => '?').join(',');
-            const { results: partidosCheck } = await db.prepare(`SELECT "ID_Partido", "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" IN (${placeholders})`).bind(...chunk).all();
+            const { results: partidosCheck } = await db.prepare(`SELECT "ID_Partido", "Equipo_Local", "Rival", "Estado", "timestamp" FROM "Ajustes" WHERE "ID_Partido" IN (${placeholders})`).bind(...chunk).all();
             for (const partido of partidosCheck || []) {
+                matchInfoMap[partido.ID_Partido] = partido;
                 if (partido.Estado === "CERRADO" || (partido.timestamp && nowMs >= partido.timestamp)) {
                     return jsonResponse({ status: "error", message: `⚠️ Seguridad: El partido ${partido.ID_Partido} ya ha comenzado o está cerrado.` });
                 }
@@ -1778,13 +1805,15 @@ export async function onRequestPost(context) {
 
         // Optimización: agrupar sentencias DELETE e INSERT en db.batch para ejecutarlas en 1 solo viaje a SQLite
         const batchStmts = [];
-        const nowStr = new Date().toLocaleString("es-ES");
+        const nowStr = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
         for (const idPart of predIds) {
             batchStmts.push(db.prepare('DELETE FROM "Porras" WHERE "Usuario" = ? AND "ID Partido" = ?').bind(usuario, idPart));
             const p = preds[idPart];
             if (p && p.sets) {
-                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local") VALUES (?, ?, ?, ?, ?, ?)')
-                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo));
+                const eqLoc = (matchInfoMap[idPart] && matchInfoMap[idPart].Equipo_Local) || '';
+                const eqRiv = (matchInfoMap[idPart] && matchInfoMap[idPart].Rival) || '';
+                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local", "Equipo_Local", "Rival") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo, eqLoc, eqRiv));
             }
         }
         await flushBatch(db, batchStmts);
@@ -2947,13 +2976,34 @@ export async function onRequestPost(context) {
         });
     }
 
-    // EXPORT DATA: OBTENER PRONÓSTICOS DE UN PARTIDO
+    // EXPORT DATA / ADMIN: OBTENER PRONÓSTICOS DE UN PARTIDO
     if (action === 'get_pronosticos_partido_data') {
         try {
-            const idPartido = (body.id_partido || "").trim();
-            if (!idPartido) return jsonResponse({ status: 'error', message: 'ID de partido requerido' }, 400);
+            let idPartido = (body.id_partido || "").trim();
+            const categoria = (body.categoria || "").trim();
+            const jornada = (body.jornada !== undefined && body.jornada !== null) ? String(body.jornada).trim() : "";
 
-            const partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
+            let partido = null;
+            if (idPartido) {
+                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "ID_Partido" = ?').bind(idPartido).first();
+            } else if (categoria && jornada) {
+                partido = await db.prepare('SELECT * FROM "Ajustes" WHERE "Categoria" = ? AND ("Jornada_Eq" = ? OR "Ronda_Global" = ?) LIMIT 1')
+                    .bind(categoria, jornada, jornada).first();
+                if (partido) idPartido = partido.ID_Partido;
+            }
+
+            if (!idPartido) return jsonResponse({ status: 'error', message: 'ID de partido requerido o no encontrado.' }, 400);
+
+            if (usuario && password) {
+                const user = await getAuthUser();
+                if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+                const adminCheck = await db.prepare('SELECT "Admin Web", "Permiso_MVP", "Permiso_Resultados" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+                const isAdmin = adminCheck && adminCheck["Admin Web"] === "X";
+                const hasPerm = adminCheck && (adminCheck["Permiso_MVP"] === "X" || !!adminCheck["Permiso_Resultados"]);
+                if (!isAdmin && !hasPerm) {
+                    return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+                }
+            }
 
             // Consulta optimizada con LEFT JOIN: solo lee las filas de este partido en lugar de toda la tabla de usuarios
             const { results: rawPronosticos } = await db.prepare(`
@@ -2963,7 +3013,9 @@ export async function onRequestPost(context) {
                     COALESCE(u."Nombre Real", p."Usuario") as nombre_real,
                     p."Sets" as sets,
                     p."Puntos Dif" as puntos_dif,
-                    p."a favor o en contra del local" as signo
+                    p."a favor o en contra del local" as signo,
+                    p."Equipo_Local" as equipo_local,
+                    p."Rival" as rival
                 FROM "Porras" p
                 LEFT JOIN "Usuarios" u ON p."Usuario" = u."Usuario"
                 WHERE p."ID Partido" = ?
@@ -2975,7 +3027,9 @@ export async function onRequestPost(context) {
                 sets: pr.sets || '',
                 puntos_dif: pr.puntos_dif !== undefined && pr.puntos_dif !== null ? pr.puntos_dif : 0,
                 signo: pr.signo || '',
-                timestamp: pr.timestamp || ''
+                timestamp: pr.timestamp || '',
+                equipo_local: pr.equipo_local || (partido ? partido.Equipo_Local : ''),
+                rival: pr.rival || (partido ? partido.Rival : '')
             }));
 
             // Ordenar por usuario

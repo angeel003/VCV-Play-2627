@@ -2956,6 +2956,56 @@
             </div>
           </details>
 
+          <!-- 5.C Consultar Predicciones y Porras por Partido -->
+          <details id="secAdminVerPredicciones" class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.12), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">📋 Consultar Predicciones por Partido</span>
+              <span style="font-size: 0.72rem; background: rgba(46, 204, 113, 0.15); color: #2ecc71; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Porras</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.15);">
+              <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.35;">
+                Selecciona cualquier equipo y jornada para ver las predicciones de los usuarios, sus pronósticos de sets y la <b>hora exacta de registro</b>.
+              </p>
+
+              <!-- SELECTORES: EQUIPO Y JORNADA -->
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <div>
+                  <label for="adminPredEquipoSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Equipo / Categoría:</label>
+                  <select id="adminPredEquipoSelect" onchange="window.adminOnPredEquipoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                    <option value="SM2">Superliga 2 (Univ. de Valladolid)</option>
+                    <option value="1ª Nacional Masc.">1ª Nacional Masc. (VALCYL VCV)</option>
+                    <option value="1ª Nacional Fem.">1ª Nacional Fem. (VCV Vacceas)</option>
+                    <option value="2ª Fem.">2ª Fem. (VCV Maria Molina)</option>
+                    <option value="2ª Masc.">2ª Masc. (VCV Meseta)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="adminPredJornadaSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Jornada:</label>
+                  <select id="adminPredJornadaSelect" onchange="window.adminOnPredJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  </select>
+                </div>
+              </div>
+
+              <!-- FICHA DEL PARTIDO DETECTADO -->
+              <div id="adminPredInfoPartido" style="margin-bottom: 12px; padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(46, 204, 113, 0.25); border-radius: 8px; font-size: 0.78rem;">
+                <div style="color:var(--text-muted); text-align:center;">Cargando información del partido...</div>
+              </div>
+
+              <!-- BUSCADOR Y RESUMEN -->
+              <div id="adminPredControles" style="display: none; margin-bottom: 10px;">
+                <input type="text" id="adminPredBuscador" oninput="window.adminFiltrarPredicciones(this.value)" placeholder="🔍 Filtrar por @usuario o nombre real..." style="width: 100%; padding: 8px 12px; font-size: 0.8rem; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-bottom: 8px;">
+                <div id="adminPredResumen" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); flex-wrap: wrap; gap: 6px; padding: 4px 2px;"></div>
+              </div>
+
+              <!-- LISTADO DE PREDICCIONES -->
+              <div id="adminPredListaCont" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 16px;">
+                  Selecciona un equipo y jornada para ver las predicciones.
+                </div>
+              </div>
+            </div>
+          </details>
+
           <!-- 6. Subida Rápida de Resultados y Links -->
           <details id="secAdminResultados" class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">

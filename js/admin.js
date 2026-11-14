@@ -220,6 +220,9 @@ ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); 
     if (typeof window.populateDirectMvpBoxes === 'function') {
         window.populateDirectMvpBoxes();
     }
+    if (typeof window.adminInicializarSeccionPredicciones === 'function') {
+        window.adminInicializarSeccionPredicciones();
+    }
 }
 
 window.getJugadorPhotoUrl = function(dorsal) {
@@ -1636,7 +1639,9 @@ window.adminExportarPdfPartido = async function(event, idPartido) {
             method: 'POST',
             body: JSON.stringify({
                 action: 'get_pronosticos_partido_data',
-                id_partido: idPartido
+                id_partido: idPartido,
+                usuario: (typeof currentUser !== 'undefined') ? currentUser : '',
+                password: (typeof currentPassword !== 'undefined') ? currentPassword : ''
             }),
             headers: { 'Content-Type': 'application/json' }
         });
@@ -2944,4 +2949,303 @@ window.adminToggleMantenimiento = function() {
         if (btn) btn.disabled = false;
         alert(`❌ Error de red: ${err.message}`);
     });
+};
+
+// ==================================================================
+// CONSULTA DE PREDICCIONES POR PARTIDO PARA ADMINISTRADORES
+// ==================================================================
+
+window._adminLoadedPronosticos = [];
+window._adminCurrentSelectedMatch = null;
+
+window.adminInicializarSeccionPredicciones = function() {
+    const selEq = document.getElementById('adminPredEquipoSelect');
+    if (!selEq) return;
+    const curCat = selEq.value || 'SM2';
+    window.adminOnPredEquipoChange(curCat, true);
+};
+
+window.adminOnPredEquipoChange = function(cat, autoLoad = true) {
+    const selJor = document.getElementById('adminPredJornadaSelect');
+    if (!selJor) return;
+
+    const pool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
+        ? window.appData.todos_partidos
+        : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
+
+    const matchesCat = pool.filter(p => {
+        const c = (p.categoria || '').trim();
+        return c === cat;
+    });
+
+    const jornadasSet = new Set();
+    matchesCat.forEach(p => {
+        const j = String(p.jornada_eq || p.ronda_global || '').trim();
+        if (j) jornadasSet.add(j);
+    });
+
+    const sortedJornadas = Array.from(jornadasSet).sort((a, b) => {
+        const nA = parseInt(a), nB = parseInt(b);
+        if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
+        return a.localeCompare(b);
+    });
+
+    selJor.innerHTML = '';
+    if (sortedJornadas.length === 0) {
+        selJor.innerHTML = '<option value="">Sin jornadas</option>';
+        return;
+    }
+
+    sortedJornadas.forEach(j => {
+        const opt = document.createElement('option');
+        opt.value = j;
+        opt.textContent = `Jornada ${j}`;
+        selJor.appendChild(opt);
+    });
+
+    // Seleccionar por defecto la jornada más próxima o actual
+    let selectedJor = sortedJornadas[0];
+    const now = Date.now();
+    const upcoming = matchesCat.find(p => p.timestamp && p.timestamp >= now);
+    if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq))) {
+        selectedJor = String(upcoming.jornada_eq);
+    } else {
+        const played = matchesCat.filter(p => p.timestamp && p.timestamp < now);
+        if (played.length > 0) {
+            played.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            selectedJor = String(played[0].jornada_eq || sortedJornadas[0]);
+        }
+    }
+    selJor.value = selectedJor;
+
+    if (autoLoad) {
+        window.adminCargarPrediccionesPartido();
+    }
+};
+
+window.adminOnPredJornadaChange = function(jor) {
+    window.adminCargarPrediccionesPartido();
+};
+
+window.adminCargarPrediccionesPartido = async function() {
+    const selEq = document.getElementById('adminPredEquipoSelect');
+    const selJor = document.getElementById('adminPredJornadaSelect');
+    const infoCont = document.getElementById('adminPredInfoPartido');
+    const listCont = document.getElementById('adminPredListaCont');
+    const controlesCont = document.getElementById('adminPredControles');
+    if (!selEq || !selJor || !infoCont || !listCont) return;
+
+    const cat = selEq.value;
+    const jor = selJor.value;
+    if (!cat || !jor) {
+        infoCont.innerHTML = '<div style="color:var(--text-muted); text-align:center;">Selecciona equipo y jornada.</div>';
+        listCont.innerHTML = '';
+        if (controlesCont) controlesCont.style.display = 'none';
+        return;
+    }
+
+    const pool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
+        ? window.appData.todos_partidos
+        : ((window.appData && Array.isArray(window.appData.equipos)) ? window.appData.equipos : []);
+
+    const partido = pool.find(p => {
+        const c = (p.categoria || '').trim();
+        const j = String(p.jornada_eq || p.ronda_global || '').trim();
+        return c === cat && j === jor;
+    });
+
+    if (!partido) {
+        infoCont.innerHTML = `<div style="color:var(--text-muted); text-align:center;">No se encontró partido para ${cat} - Jornada ${jor}.</div>`;
+        listCont.innerHTML = '';
+        if (controlesCont) controlesCont.style.display = 'none';
+        return;
+    }
+
+    window._adminCurrentSelectedMatch = partido;
+
+    const loc = partido.equipo_local || 'Local';
+    const riv = partido.rival || 'Rival';
+    const ubi = (partido.ubicacion || 'LOCAL').toUpperCase();
+    const isLocal = ubi === 'LOCAL';
+    const fecha = partido.fecha || (partido.timestamp ? new Date(partido.timestamp).toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }) : 'Por definir');
+    const pab = partido.pabellon || 'Por definir';
+    const setsOficial = partido.oficial_sets ? String(partido.oficial_sets).trim() : '';
+    const estado = partido.estado || 'ABIERTO';
+
+    infoCont.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+            <div style="font-weight:800; color:var(--text-main); font-size:0.92rem;">
+                ${isLocal ? `<b style="color:var(--secondary-color);">${loc}</b>` : loc} <span style="color:var(--text-muted); font-weight:normal;">vs</span> ${!isLocal ? `<b style="color:var(--secondary-color);">${riv}</b>` : riv}
+            </div>
+            <div style="display:flex; gap:4px; align-items:center;">
+                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(46,204,113,0.15); color:#2ecc71;">
+                    ${ubi === 'LOCAL' ? '🏠 LOCAL' : '✈️ VISITANTE'}
+                </span>
+                <span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:${setsOficial ? 'rgba(52,152,219,0.15); color:#3498db;' : (estado === 'CERRADO' ? 'rgba(231,76,60,0.15); color:#e74c3c;' : 'rgba(46,204,113,0.15); color:#2ecc71;')}">
+                    ${setsOficial ? `FINAL: ${setsOficial}` : estado}
+                </span>
+            </div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.72rem; color:var(--text-muted);">
+            <span>📅 ${fecha}</span>
+            <span>📍 ${pab}</span>
+            <span style="font-family:monospace; opacity:0.7;">ID: ${partido.id_partido}</span>
+        </div>
+    `;
+
+    listCont.innerHTML = `
+        <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.8rem;">
+            <span style="display:inline-block; animation:spin 1s linear infinite;">⏳</span> Cargando pronósticos registrados...
+        </div>
+    `;
+
+    try {
+        const rawRes = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_pronosticos_partido_data',
+                id_partido: partido.id_partido,
+                usuario: (typeof currentUser !== 'undefined') ? currentUser : '',
+                password: (typeof currentPassword !== 'undefined') ? currentPassword : ''
+            }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const resp = (rawRes && typeof rawRes.json === 'function') ? await rawRes.json() : rawRes;
+        if (!resp || resp.status !== 'success') {
+            listCont.innerHTML = `<div style="color:#e74c3c; font-size:0.78rem; text-align:center; padding:12px;">Error: ${resp && resp.message ? resp.message : 'No se pudieron cargar los pronósticos'}</div>`;
+            return;
+        }
+
+        window._adminLoadedPronosticos = resp.pronosticos || [];
+        if (controlesCont) controlesCont.style.display = window._adminLoadedPronosticos.length > 0 ? 'block' : 'none';
+
+        const buscador = document.getElementById('adminPredBuscador');
+        if (buscador) buscador.value = '';
+
+        window.adminRenderizarListaPredicciones(window._adminLoadedPronosticos);
+    } catch(err) {
+        listCont.innerHTML = `<div style="color:#e74c3c; font-size:0.78rem; text-align:center; padding:12px;">Error de conexión: ${err.message}</div>`;
+    }
+};
+
+window.adminFiltrarPredicciones = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    if (!window._adminLoadedPronosticos) return;
+    if (!q) {
+        window.adminRenderizarListaPredicciones(window._adminLoadedPronosticos);
+        return;
+    }
+    const filtrados = window._adminLoadedPronosticos.filter(p => {
+        const u = (p.usuario || '').toLowerCase();
+        const n = (p.nombre_real || '').toLowerCase();
+        return u.includes(q) || n.includes(q);
+    });
+    window.adminRenderizarListaPredicciones(filtrados, q);
+};
+
+window.adminRenderizarListaPredicciones = function(list, filtro = '') {
+    const listCont = document.getElementById('adminPredListaCont');
+    const resumenCont = document.getElementById('adminPredResumen');
+    if (!listCont) return;
+
+    const totalGlobal = (window._adminLoadedPronosticos || []).length;
+    const partido = window._adminCurrentSelectedMatch || {};
+
+    if (!list || list.length === 0) {
+        listCont.innerHTML = filtro
+            ? `<div style="color:var(--text-muted); font-size:0.78rem; text-align:center; padding:16px;">No se encontraron usuarios que coincidan con "${filtro}".</div>`
+            : `<div style="color:var(--text-muted); font-size:0.78rem; text-align:center; padding:20px; background:rgba(255,255,255,0.02); border-radius:8px;">
+                Ningún usuario ha registrado pronóstico para este partido todavía.
+               </div>`;
+        if (resumenCont) resumenCont.innerHTML = `<span>Total registrados: <b>0</b></span>`;
+        return;
+    }
+
+    let votosAFavor = 0;
+    let votosEnContra = 0;
+    (window._adminLoadedPronosticos || []).forEach(p => {
+        const s = (p.signo || '').toLowerCase();
+        if (s.includes('favor')) votosAFavor++;
+        else if (s.includes('contra')) votosEnContra++;
+    });
+
+    const pctFavor = totalGlobal > 0 ? Math.round((votosAFavor / totalGlobal) * 100) : 0;
+    const pctContra = totalGlobal > 0 ? Math.round((votosEnContra / totalGlobal) * 100) : 0;
+
+    if (resumenCont) {
+        resumenCont.innerHTML = `
+            <span>Mostrando <b>${list.length}</b> de <b>${totalGlobal}</b> pronósticos</span>
+            <div style="display:flex; gap:8px;">
+                <span style="color:#2ecc71; font-weight:700;">A favor: ${votosAFavor} (${pctFavor}%)</span>
+                <span style="color:#e67e22; font-weight:700;">En contra: ${votosEnContra} (${pctContra}%)</span>
+            </div>
+        `;
+    }
+
+    const oficialSets = partido.oficial_sets ? String(partido.oficial_sets).trim() : null;
+
+    let html = '';
+    list.forEach(p => {
+        const u = p.usuario || '';
+        const n = p.nombre_real || '';
+        const hasDiffName = n && n.toLowerCase() !== u.toLowerCase();
+        const sets = p.sets || '-';
+        const signo = p.signo || '';
+        const isAFavor = signo.toLowerCase().includes('favor');
+        const ptsDif = (p.puntos_dif !== undefined && p.puntos_dif !== null && p.puntos_dif !== '') ? `+${p.puntos_dif} pts dif.` : '';
+        const ts = p.timestamp || 'Hora no registrada';
+
+        let aciertoBadge = '';
+        if (oficialSets && sets && sets.includes('-') && oficialSets.includes('-')) {
+            const [predS1, predS2] = sets.split('-').map(x => parseInt(x));
+            const [ofS1, ofS2] = oficialSets.split('-').map(x => parseInt(x));
+            const exacto = (predS1 === ofS1 && predS2 === ofS2);
+            const mismoGanador = ((predS1 > predS2 && ofS1 > ofS2) || (predS1 < predS2 && ofS1 < ofS2));
+            if (exacto) {
+                aciertoBadge = `<span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">🎯 Pleno (+5 pts)</span>`;
+            } else if (mismoGanador) {
+                aciertoBadge = `<span style="font-size:0.68rem; font-weight:800; padding:2px 6px; border-radius:4px; background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">✔ Acertó Ganador (+3 pts)</span>`;
+            } else {
+                aciertoBadge = `<span style="font-size:0.68rem; font-weight:600; padding:2px 6px; border-radius:4px; background:rgba(231,76,60,0.12); color:#e74c3c;">Falló resultado</span>`;
+            }
+        }
+
+        html += `
+            <div style="background:var(--bg-general); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg, var(--vcv-morado), #e67e22); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.75rem;">
+                            ${(u.charAt(0) || 'U').toUpperCase()}
+                        </div>
+                        <div>
+                            <span style="font-weight:800; color:var(--text-main); font-size:0.84rem;">@${u}</span>
+                            ${hasDiffName ? `<span style="font-size:0.72rem; color:var(--text-muted); margin-left:4px;">(${n})</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${aciertoBadge}
+                        <span style="font-size:0.82rem; font-weight:900; padding:3px 8px; border-radius:6px; background:rgba(230,126,34,0.15); color:#e67e22; border:1px solid rgba(230,126,34,0.3);">
+                            ${sets}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:0.72rem; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.06);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-weight:700; color:${isAFavor ? '#2ecc71' : '#e67e22'};">
+                            ${isAFavor ? '✔ A favor' : '✖ En contra'}
+                        </span>
+                        ${ptsDif ? `<span style="color:var(--text-muted);">${ptsDif}</span>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px; color:var(--text-muted);">
+                        <i class="fas fa-clock" style="font-size:0.7rem; color:var(--secondary-color);"></i>
+                        <span style="font-family:monospace; font-size:0.72rem; color:var(--text-main); font-weight:600;">${ts}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    listCont.innerHTML = html;
 };
