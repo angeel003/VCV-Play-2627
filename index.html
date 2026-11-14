@@ -2983,7 +2983,29 @@
                 </div>
                 <div>
                   <label for="adminPredJornadaSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Jornada:</label>
-                  <select id="adminPredJornadaSelect" onchange="window.adminOnPredJornadaChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                  <select id="adminPredJornadaSelect" onchange="window.adminOnPredJornadaChange(this.value)" onfocus="if(this.options.length <= 1 && typeof window.adminOnPredEquipoChange === 'function') window.adminOnPredEquipoChange(document.getElementById('adminPredEquipoSelect').value, false);" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                    <option value="1" selected>Jornada 1</option>
+                    <option value="2">Jornada 2</option>
+                    <option value="3">Jornada 3</option>
+                    <option value="4">Jornada 4</option>
+                    <option value="5">Jornada 5</option>
+                    <option value="6">Jornada 6</option>
+                    <option value="7">Jornada 7</option>
+                    <option value="8">Jornada 8</option>
+                    <option value="9">Jornada 9</option>
+                    <option value="10">Jornada 10</option>
+                    <option value="11">Jornada 11</option>
+                    <option value="12">Jornada 12</option>
+                    <option value="13">Jornada 13</option>
+                    <option value="14">Jornada 14</option>
+                    <option value="15">Jornada 15</option>
+                    <option value="16">Jornada 16</option>
+                    <option value="17">Jornada 17</option>
+                    <option value="18">Jornada 18</option>
+                    <option value="19">Jornada 19</option>
+                    <option value="20">Jornada 20</option>
+                    <option value="21">Jornada 21</option>
+                    <option value="22">Jornada 22</option>
                   </select>
                 </div>
               </div>
@@ -4095,7 +4117,7 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted y diferidos para acelerar carga) -->
 <script defer src="js/config.js?v=20261110_v12"></script>
-<script defer src="js/admin.js?v=20261111_v14"></script>
+<script defer src="js/admin.js?v=20261114_jornadas_v1"></script>
 <script defer src="js/cartelera.js?v=20261111_v14"></script>
 <script defer src="js/ranking.js?v=20261110_v12"></script>
 <script defer src="js/calendario.js?v=20261111_v14"></script>

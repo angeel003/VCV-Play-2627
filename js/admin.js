@@ -3001,10 +3001,7 @@ window.adminInicializarSeccionPredicciones = function() {
         }
     }
 
-    const selJor = document.getElementById('adminPredJornadaSelect');
-    if (selJor && (selJor.options.length === 0 || selJor.value === '')) {
-        window.adminOnPredEquipoChange(selEq.value, true);
-    }
+    window.adminOnPredEquipoChange(selEq.value, true);
 };
 
 function adminNormString(s) {
@@ -3014,6 +3011,12 @@ function adminNormString(s) {
 window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
     const selJor = document.getElementById('adminPredJornadaSelect');
     if (!selJor) return;
+
+    if (!eq) {
+        const selEq = document.getElementById('adminPredEquipoSelect');
+        if (selEq && selEq.value) eq = selEq.value;
+        else eq = 'Universidad de Valladolid VCV';
+    }
 
     const normEq = adminNormString(eq);
     const pool = (window.appData && Array.isArray(window.appData.todos_partidos) && window.appData.todos_partidos.length > 0)
@@ -3062,7 +3065,7 @@ window.adminOnPredEquipoChange = function(eq, autoLoad = true) {
         selJor.value = curSelectedJor;
     } else {
         // Seleccionar por defecto la jornada más próxima o actual
-        let selectedJor = sortedJornadas[0];
+        let selectedJor = sortedJornadas[0] || '1';
         const now = Date.now();
         const upcoming = matchesEq.find(p => p.timestamp && p.timestamp >= now);
         if (upcoming && sortedJornadas.includes(String(upcoming.jornada_eq || upcoming.ronda_global))) {
@@ -3364,3 +3367,12 @@ window.adminRenderizarListaPredicciones = function(list, filtro = '') {
 
     listCont.innerHTML = html;
 };
+
+// Auto-inicializar la sección de predicciones al cargar el DOM si existe el panel
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof window.adminInicializarSeccionPredicciones === 'function') {
+            try { window.adminInicializarSeccionPredicciones(); } catch(e) {}
+        }
+    });
+}
