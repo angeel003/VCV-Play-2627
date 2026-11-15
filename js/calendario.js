@@ -260,8 +260,8 @@ function renderMatchCardHtml(eq) {
     let localAbrev = (abrevLocalRaw || localTeamName.substring(0,3)).toUpperCase();
     let visitAbrev = (abrevVisitRaw || visitTeamName.substring(0,3)).toUpperCase();
 
-    let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    let safeLocalName = (window.getEscudoSlug ? window.getEscudoSlug(localTeamName) : localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
+    let safeVisitName = (window.getEscudoSlug ? window.getEscudoSlug(visitTeamName) : visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
     let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261115_v1" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261115_v1" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     
@@ -374,8 +374,8 @@ function renderMatchResultCardHtml(eq) {
     let localAbrev = (abrevLocalRaw || localTeamName.substring(0,3)).toUpperCase();
     let visitAbrev = (abrevVisitRaw || visitTeamName.substring(0,3)).toUpperCase();
 
-    let safeLocalName = localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-    let safeVisitName = visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    let safeLocalName = (window.getEscudoSlug ? window.getEscudoSlug(localTeamName) : localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
+    let safeVisitName = (window.getEscudoSlug ? window.getEscudoSlug(visitTeamName) : visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
     let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261115_v1" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261115_v1" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:900; font-size: 1.2rem;\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
     

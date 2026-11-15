@@ -2769,7 +2769,7 @@ function cargarImagenCanvas(src) {
 
 // Helper para cargar escudo de club (.png alta resolución primero con fallback a .webp)
 async function cargarEscudoCanvas(teamName) {
-    const slug = String(teamName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const slug = (window.getEscudoSlug ? window.getEscudoSlug(teamName) : String(teamName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
     if (!slug) return null;
     const imPng = await cargarImagenCanvas(`files/images/escudos/${slug}.png?v=${SHARE_ASSET_VER}`);
     if (imPng) return imPng;

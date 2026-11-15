@@ -21,6 +21,68 @@ window.renderLucideIcons = function(root) {
     }
 };
 
+// Helper canónico para resolver el nombre de archivo del escudo sin duplicados
+window.getEscudoSlug = function(teamName) {
+    if (!teamName) return '';
+    const norm = String(teamName).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    
+    // 1. Equipos de Palencia (DISTINGUIR AMBOS CLUBES DIFERENTES)
+    if (norm.includes('palencia 2028') || norm.includes('cyl palencia')) {
+        return 'cyl_palencia_2028';
+    }
+    if (norm.includes('palencia')) {
+        return 'cv_palencia';
+    }
+    
+    // 2. Burgos / UBU
+    if (norm.includes('burgos') || norm.includes('ubu')) {
+        return 'cv_burgos_ubu';
+    }
+    
+    // 3. Segovoley
+    if (norm.includes('segovoley')) {
+        return 'cd_segovoley';
+    }
+    
+    // 4. Salamanca
+    if (norm.includes('salamanca')) {
+        return 'cd_voleibol_salamanca';
+    }
+    
+    // 5. Alcorcon
+    if (norm.includes('alcorcon')) {
+        return 'cuv_alcorcon';
+    }
+    
+    // 6. Sporting Santo Domingo / Cañada Real / Moreno Sáez (Soria)
+    if (norm.includes('sporting') || norm.includes('canada real') || norm.includes('moreno saez') || norm.includes('santo domingo')) {
+        return 'canada_real_sporting_santo_domingo';
+    }
+    
+    // 7. Las Rozas
+    if (norm.includes('rozas')) {
+        return 'cv_las_rozas';
+    }
+    
+    // 8. Collado Villalba
+    if (norm.includes('villalba')) {
+        return 'cox_cv_collado_villalba';
+    }
+    
+    // 9. Covadonga
+    if (norm.includes('covadonga')) {
+        return 'rgc_covadonga';
+    }
+    
+    // 10. Maristas Inmaculada
+    if (norm.includes('marista') || norm.includes('inmaculada')) {
+        return 'maristas_inmaculada';
+    }
+    
+    // Por defecto: slug estándar sin tildes ni símbolos
+    return norm.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+};
+
 
 
 // POLYFILL PARA REINTENTOS AUTOMATICOS (Soluciona los errores 500 y timeouts del primer login)
