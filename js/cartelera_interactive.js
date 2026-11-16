@@ -2722,7 +2722,7 @@ window.cambiarLigaCompartir = function(nuevaLiga) {
     window.dibujarTarjetaCompartir();
 };
 
-const SHARE_ASSET_VER = '20261115_v1';
+const SHARE_ASSET_VER = '20261116_v2';
 let canvasFontsReadyPromise = null;
 
 function waitForCanvasFonts() {
