@@ -2652,6 +2652,7 @@ window.closeShareCardModal = function() {
 };
 
 window.abrirModalCompartirPartido = function(idPart) {
+    if (window._vcvCanvasImgCache) window._vcvCanvasImgCache.clear();
     ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'match';
     window.currentShareMatchId = idPart;
@@ -2664,6 +2665,7 @@ window.abrirModalCompartirPartido = function(idPart) {
 };
 
 window.abrirModalCompartirMVP = function(idPart) {
+    if (window._vcvCanvasImgCache) window._vcvCanvasImgCache.clear();
     ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'mvp';
     window.currentShareMatchId = idPart;
@@ -2700,6 +2702,7 @@ window.abrirModalCompartirMVP = function(idPart) {
 };
 
 window.abrirModalCompartirJornada = function(ligaDefault) {
+    if (window._vcvCanvasImgCache) window._vcvCanvasImgCache.clear();
     ocultarControlesAdminModalTarjeta();
     window.currentShareMode = 'jornada';
     window.currentShareLiga = ligaDefault || (window.currentLiga || (window.appData && window.appData.ligas ? window.appData.ligas[0] : ''));
@@ -2722,7 +2725,7 @@ window.cambiarLigaCompartir = function(nuevaLiga) {
     window.dibujarTarjetaCompartir();
 };
 
-const SHARE_ASSET_VER = '20261116_v2';
+const SHARE_ASSET_VER = '20261116_v3';
 let canvasFontsReadyPromise = null;
 
 function waitForCanvasFonts() {
@@ -2788,7 +2791,11 @@ async function cargarFotoJugadorCanvas(info) {
         return await cargarImagenCanvas(`files/images/jugadores/dorsal_${info.dorsal}.webp?v=${ver}`);
     }
     if (info.photoSrc) {
-        return await cargarImagenCanvas(info.photoSrc);
+        let src = info.photoSrc;
+        if (!src.includes('?v=')) {
+            src += (src.includes('?') ? '&' : '?') + 'v=' + ver;
+        }
+        return await cargarImagenCanvas(src);
     }
     return null;
 }
