@@ -273,11 +273,42 @@ async function verifyPasswordHash(password, storedHash) {
     return diff === 0;
 }
 
+async function ensureUsuarioAliasSchema(db) {
+    try {
+        await db.prepare(`CREATE TABLE IF NOT EXISTS "Usuario_Alias" (
+            "usuario_actual" TEXT NOT NULL,
+            "usuario_antiguo" TEXT NOT NULL,
+            "activo" INTEGER DEFAULT 1,
+            "fecha_creacion" INTEGER NOT NULL,
+            "usos" INTEGER DEFAULT 0,
+            PRIMARY KEY ("usuario_actual", "usuario_antiguo")
+        )`).run();
+        await db.prepare('CREATE INDEX IF NOT EXISTS idx_usuario_alias_antiguo ON "Usuario_Alias"("usuario_antiguo")').run();
+    } catch(e) {}
+}
+
 async function verifyAndMigrateUser(db, usuario, password) {
     if (!usuario || !password) return null;
     let userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE lower("Usuario") = lower(?) OR lower("Correo") = lower(?)').bind(usuario, usuario).first();
+    let isViaAlias = false;
+    let aliasAntiguo = null;
     
-    // Si no se encuentra directamente, comprobar si usó un Usuario_Original previo renombrado por moderación
+    // Si no se encuentra directamente, comprobar si usó un alias antiguo activo en Usuario_Alias
+    if (!userRow) {
+        try {
+            await ensureUsuarioAliasSchema(db);
+            const aliasRow = await db.prepare('SELECT * FROM "Usuario_Alias" WHERE lower("usuario_antiguo") = lower(?) AND "activo" = 1').bind(usuario).first().catch(() => null);
+            if (aliasRow && aliasRow.usuario_actual) {
+                userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(aliasRow.usuario_actual).first().catch(() => null);
+                if (userRow) {
+                    isViaAlias = true;
+                    aliasAntiguo = aliasRow.usuario_antiguo;
+                }
+            }
+        } catch(e) {}
+    }
+
+    // Si aún no se encuentra directamente, comprobar si usó un Usuario_Original previo renombrado por moderación
     if (!userRow) {
         const origReq = await db.prepare('SELECT "Usuario" FROM "Solicitudes_Registro" WHERE lower("Usuario_Original") = lower(?) LIMIT 1').bind(usuario).first().catch(() => null);
         if (origReq && origReq.Usuario) {
@@ -290,15 +321,14 @@ async function verifyAndMigrateUser(db, usuario, password) {
     const storedPwd = (userRow.Password || "").toString().trim();
     const inputPwd = password.toString().trim();
 
+    let isPasswordValid = false;
+
     // 1. Si la contraseña ya está en formato hash v1$
     if (storedPwd.startsWith("v1$")) {
-        const isValid = await verifyPasswordHash(inputPwd, storedPwd);
-        return isValid ? userRow : null;
-    }
-
-    // 2. Si es contraseña legacy en texto plano
-    if (storedPwd === inputPwd) {
-        // MIGRACIÓN PEREZOSA (Lazy Migration): Generar hash y actualizar D1 de inmediato
+        isPasswordValid = await verifyPasswordHash(inputPwd, storedPwd);
+    } else if (storedPwd === inputPwd) {
+        // 2. Si es contraseña legacy en texto plano
+        isPasswordValid = true;
         try {
             const newHashed = await hashPassword(inputPwd);
             await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(newHashed, canonicalUsuario).run();
@@ -306,10 +336,22 @@ async function verifyAndMigrateUser(db, usuario, password) {
         } catch(e) {
             console.error("Error en lazy migration de contraseña:", e);
         }
-        return userRow;
     }
 
-    return null;
+    if (!isPasswordValid) return null;
+
+    // Si el usuario inició sesión utilizando su alias antiguo, DESACTIVARLO de inmediato tras este primer uso
+    if (isViaAlias && aliasAntiguo) {
+        try {
+            await db.prepare('UPDATE "Usuario_Alias" SET "usos" = "usos" + 1, "activo" = 0 WHERE lower("usuario_antiguo") = lower(?)').bind(aliasAntiguo).run();
+            userRow.alias_migrado = true;
+            userRow.alias_antiguo = aliasAntiguo;
+        } catch(e) {
+            console.error("Error desactivando alias de usuario:", e);
+        }
+    }
+
+    return userRow;
 }
 
 function runInBg(context, promise) {
@@ -444,6 +486,7 @@ async function ensureSolicitudesRegistroSchema(db) {
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Custom_Desc" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Custom_Badge" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run(); } catch(e) {}
+    await ensureUsuarioAliasSchema(db);
     try {
         const checkPurged = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'PURGED_123asdas_v1'").first().catch(() => null);
         if (!checkPurged) {
@@ -478,6 +521,9 @@ async function purgeUserFromAllTablesExceptSolicitud(db, targetUser) {
             await db.prepare(`DELETE FROM "${t.table}" WHERE lower("${t.col}") = lower(?)`).bind(u).run();
         } catch(e) {}
     }
+    try {
+        await db.prepare('DELETE FROM "Usuario_Alias" WHERE lower("usuario_actual") = lower(?) OR lower("usuario_antiguo") = lower(?)').bind(u, u).run();
+    } catch(e) {}
     try {
         await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
     } catch(e) {}
@@ -526,6 +572,10 @@ async function renameUserInAllTables(db, oldU, newU) {
             console.warn(`Error renombrando en ${t.table}:`, e);
         }
     }
+
+    try {
+        await db.prepare('UPDATE OR IGNORE "Usuario_Alias" SET "usuario_actual" = ? WHERE "usuario_actual" = ?').bind(newU, oldU).run();
+    } catch(e) {}
 
     try {
         await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
@@ -2162,6 +2212,31 @@ export async function onRequestPost(context) {
             isModoMantenimientoActivo(db)
         ]);
         if (!userRow) {
+            // A. Comprobar si introdujo un nuevo usuario que todavía está pendiente de aprobación por el admin
+            try {
+                const peticionPendiente = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE lower("Nuevo Usuario Sol") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(usuario).first().catch(() => null);
+                if (peticionPendiente) {
+                    return jsonResponse({
+                        status: "error",
+                        code: "USUARIO_CAMBIO_PENDIENTE",
+                        message: `⏳ Tu solicitud para usar el nuevo usuario @${peticionPendiente["Nuevo Usuario Sol"]} aún está pendiente de aprobación por el administrador. Por favor, inicia sesión con tu usuario actual (@${peticionPendiente["Usuario Actual"]}).`
+                    }, 403);
+                }
+            } catch(e) {}
+
+            // B. Comprobar si introdujo un alias antiguo que ya agotó su inicio de sesión único
+            try {
+                await ensureUsuarioAliasSchema(db);
+                const aliasExpirado = await db.prepare('SELECT * FROM "Usuario_Alias" WHERE lower("usuario_antiguo") = lower(?) AND "activo" = 0').bind(usuario).first().catch(() => null);
+                if (aliasExpirado) {
+                    return jsonResponse({
+                        status: "error",
+                        code: "ALIAS_EXPIRADO",
+                        message: `⚠️ El nombre de usuario @${aliasExpirado.usuario_antiguo} ya no está activo porque completaste la transición a @${aliasExpirado.usuario_actual}. Por favor, inicia sesión con tu usuario actual (@${aliasExpirado.usuario_actual}) o con tu correo electrónico.`
+                    }, 403);
+                }
+            } catch(e) {}
+
             const rejected = await db.prepare('SELECT "Motivo_Rechazo" FROM "Solicitudes_Registro" WHERE (lower("Usuario") = lower(?) OR lower("Email") = lower(?) OR lower("Usuario_Original") = lower(?)) AND "Estado" = \'RECHAZADA\' ORDER BY "Fecha_Resolucion" DESC LIMIT 1').bind(usuario, usuario, usuario).first().catch(() => null);
             if (rejected) {
                 const mot = rejected.Motivo_Rechazo ? ` (${rejected.Motivo_Rechazo})` : '';
@@ -2968,13 +3043,39 @@ export async function onRequestPost(context) {
             solo_admin: pushSoloAdmin
         };
 
+        let avisoNombrePendiente = null;
+        try {
+            const petPendiente = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE lower("Usuario Actual") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(canonicalUsuario).first().catch(() => null);
+            if (petPendiente && petPendiente["Nuevo Usuario Sol"]) {
+                avisoNombrePendiente = `ℹ️ Tienes una solicitud para cambiar tu nombre de usuario a @${petPendiente["Nuevo Usuario Sol"]} pendiente de revisión por el administrador. Mientras tanto, tu usuario activo sigue siendo @${canonicalUsuario}.`;
+            }
+        } catch(e) {}
+
+        let avisoAliasMigrado = null;
+        if (userRow.alias_migrado) {
+            avisoAliasMigrado = `📢 ¡Atención! Tu cambio de nombre a @${canonicalUsuario} ya está activo. Esta ha sido tu última sesión permitida con tu antiguo usuario (@${userRow.alias_antiguo}). A partir de tu próximo inicio de sesión, deberás usar exclusivamente @${canonicalUsuario} o tu correo electrónico.`;
+        }
+
+        const avisoModDb = (userInsignia && userInsignia.Aviso_Moderacion) ? String(userInsignia.Aviso_Moderacion).trim() : '';
+        let avisoModeracionFinal = '';
+        if (avisoAliasMigrado) {
+            avisoModeracionFinal = avisoModDb ? `${avisoAliasMigrado}\n\n${avisoModDb}` : avisoAliasMigrado;
+        } else if (avisoNombrePendiente) {
+            avisoModeracionFinal = avisoModDb ? `${avisoNombrePendiente}\n\n${avisoModDb}` : avisoNombrePendiente;
+        } else {
+            avisoModeracionFinal = avisoModDb;
+        }
+
         return jsonResponse({
             status: "success",
             usuario: canonicalUsuario,
+            alias_migrado: Boolean(userRow.alias_migrado),
+            usuario_anterior: userRow.alias_antiguo || null,
+            aviso_cambio_usuario: avisoAliasMigrado || avisoNombrePendiente || null,
             es_provisional: Boolean(userInsignia && userInsignia.Verificado === 'PENDIENTE'),
             verificado: (userInsignia && userInsignia.Verificado) || 'APROBADO',
             equipo_club: (userInsignia && userInsignia.Equipo_Club) || '',
-            aviso_moderacion: (userInsignia && userInsignia.Aviso_Moderacion) || '',
+            aviso_moderacion: avisoModeracionFinal,
             modo_mantenimiento: mantenimientoActivo,
             notificaciones: notificaciones,
             push_config: pushConfigPayload,
@@ -3471,7 +3572,10 @@ export async function onRequestPost(context) {
                     return jsonResponse({ status: 'error', message: `El nombre de usuario @${nuevoUsuarioInput} ya está en uso. Por favor, elige otro.` }, 400);
                 }
 
+                await ensureUsuarioAliasSchema(db);
                 await renameUserInAllTables(db, uTarget, nuevoUsuarioInput);
+                await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
+                    .bind(nuevoUsuarioInput, uTarget, Date.now()).run().catch(() => {});
                 await db.prepare('UPDATE "Solicitudes_Registro" SET "Usuario_Original" = ? WHERE id = ?').bind(uTarget, id).run().catch(() => {});
                 uFinal = nuevoUsuarioInput;
                 usernameChanged = true;
@@ -3756,7 +3860,10 @@ export async function onRequestPost(context) {
             if (checkTaken) {
                 return jsonResponse({ status: 'error', message: `El nombre de usuario @${nuevoU} ya está en uso por otra persona.` }, 400);
             }
+            await ensureUsuarioAliasSchema(db);
             await renameUserInAllTables(db, canonicalOldU, nuevoU);
+            await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
+                .bind(nuevoU, canonicalOldU, Date.now()).run().catch(() => {});
             canonicalU = nuevoU;
             usernameChanged = true;
         }
@@ -4593,14 +4700,26 @@ export async function onRequestPost(context) {
         }
 
         if (new_usuario) {
-            const check = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE LOWER("Usuario") = LOWER(?)').bind(new_usuario).first();
-            if (check) return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está cogido.'}, 400);
+            const cleanNewU = String(new_usuario).trim().replace(/^@/, '');
+            if (!cleanNewU) return jsonResponse({status: 'error', message: 'Nombre de usuario no válido.'}, 400);
+
+            const [checkUser, checkReq, checkAlias] = await Promise.all([
+                db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(cleanNewU).first().catch(() => null),
+                db.prepare('SELECT "Usuario" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(cleanNewU).first().catch(() => null),
+                db.prepare('SELECT "usuario_actual" FROM "Usuario_Alias" WHERE lower("usuario_antiguo") = lower(?) AND "activo" = 1').bind(cleanNewU).first().catch(() => null)
+            ]);
+            if (checkUser || checkReq || checkAlias) {
+                return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está en uso o reservado.'}, 400);
+            }
             
             await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(usuario).run();
             await db.prepare('INSERT INTO "Peticiones_Nombre" ("Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
-                .bind(usuario, new_usuario, new_nombre || '', new Date().toISOString(), 'PENDIENTE').run();
+                .bind(usuario, cleanNewU, (new_nombre || '').trim(), new Date().toISOString(), 'PENDIENTE').run();
             
-            return jsonResponse({status: 'success', message: 'Un administrador la revisará. Si tras varios días no se ha cambiado, avísanos por correo. Mientras tanto, usa tu usuario actual.'});
+            return jsonResponse({
+                status: 'success', 
+                message: `Tu solicitud para cambiar tu usuario a @${cleanNewU} ha sido enviada al administrador. Mientras se revisa, debes seguir iniciando sesión con tu usuario actual (@${usuario}).`
+            });
         } else {
             await db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(new_nombre, usuario).run();
             return jsonResponse({status: 'success', message: 'Tu Nombre Real se ha actualizado inmediatamente.'});
@@ -4637,7 +4756,8 @@ export async function onRequestPost(context) {
             return jsonResponse({status: 'success', message: 'Petición rechazada.'});
         }
 
-                if (resolution === 'approve') {
+        if (resolution === 'approve') {
+            await ensureUsuarioAliasSchema(db);
             const peticion = await db.prepare('SELECT * FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(target_user).first();
             if (!peticion) return jsonResponse({status: 'error', message: 'No se encontró la petición.'}, 404);
 
@@ -4645,48 +4765,27 @@ export async function onRequestPost(context) {
             const newU = peticion["Nuevo Usuario Sol"];
             const newN = peticion["Nuevo Nombre Sol"];
             
-            const stmts = [];
-
-            if (newU) {
-                const tables = [
-                    "Usuarios", "Porras", "Ligas", "Permisos_Equipos", 
-                    "Permisos_Secreta", "Insignias", "Predicciones_Secretas", "Plantilla_Superliga_2_Masc", "Resultados_Oficiales"
-                ];
-                
-                for (const table of tables) {
-                    let col = (table === "Ligas" || table === "Permisos_Equipos") ? "Jugador" : "Usuario";
-                    if (table === "Plantilla_Superliga_2_Masc") col = "usuario";
-                    if (table === "Resultados_Oficiales") col = "actualizado_por";
-                    stmts.push(db.prepare(`UPDATE OR IGNORE "${table}" SET "${col}" = ? WHERE "${col}" = ?`).bind(newU, oldU));
-                    if (table !== "Plantilla_Superliga_2_Masc" && table !== "Resultados_Oficiales") {
-                        stmts.push(db.prepare(`DELETE FROM "${table}" WHERE "${col}" = ?`).bind(oldU));
-                    }
+            if (newU && newU.toLowerCase() !== oldU.toLowerCase()) {
+                const checkTaken = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?) AND lower("Usuario") != lower(?)').bind(newU, oldU).first();
+                if (checkTaken) {
+                    return jsonResponse({ status: 'error', message: `El nombre de usuario @${newU} ya está en uso por otra persona.` }, 400);
                 }
+
+                await renameUserInAllTables(db, oldU, newU);
+                await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
+                    .bind(newU, oldU, Date.now()).run().catch(() => {});
             }
-            
+
             const targetU = newU ? newU : oldU;
-
             if (newN) {
-                stmts.push(db.prepare(`UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?`).bind(newN, targetU));
+                await db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(newN, targetU).run();
             }
             
-            stmts.push(db.prepare(`UPDATE "Peticiones_Nombre" SET "Estado" = 'APROBADO' WHERE "Usuario Actual" = ?`).bind(oldU));
-            stmts.push(db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'"));
-
-            await flushBatch(db, stmts);
-
-            if (newU) {
-                await Promise.allSettled([
-                    db.prepare('UPDATE OR IGNORE "MVP_Votos" SET "usuario" = ? WHERE "usuario" = ?').bind(newU, oldU).run()
-                        .then(() => db.prepare('DELETE FROM "MVP_Votos" WHERE "usuario" = ?').bind(oldU).run()),
-                    db.prepare('UPDATE "Suscripciones_Push_Dispositivos" SET "Usuario" = ? WHERE "Usuario" = ?').bind(newU, oldU).run(),
-                    db.prepare('UPDATE OR IGNORE "Monitor_Usuarios" SET "usuario" = ? WHERE "usuario" = ?').bind(newU, oldU).run()
-                        .then(() => db.prepare('DELETE FROM "Monitor_Usuarios" WHERE "usuario" = ?').bind(oldU).run())
-                ]);
-            }
+            await db.prepare('UPDATE "Peticiones_Nombre" SET "Estado" = \'APROBADO\' WHERE "Usuario Actual" = ?').bind(oldU).run();
+            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run().catch(() => {});
 
             let msg = 'Petición aprobada con éxito.';
-            if (newU) msg = `Usuario ${oldU} renombrado a ${newU} con éxito.`;
+            if (newU) msg = `Usuario @${oldU} renombrado a @${newU} con éxito. El usuario podrá iniciar sesión una vez con su nombre anterior antes de migrar definitivamente al nuevo.`;
             return jsonResponse({status: 'success', message: msg});
         }
     }

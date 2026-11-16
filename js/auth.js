@@ -1214,6 +1214,29 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                 return;
             }
 
+            // Si intenta entrar con un nuevo usuario que todavía está pendiente de aprobación
+            if (data.code === 'USUARIO_CAMBIO_PENDIENTE') {
+                if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+                else document.documentElement.classList.remove('vcv-auto-logging-in');
+                msgBox.className = "alert-box alert-warning";
+                msgBox.innerHTML = `<b>⏳ Cambio de Usuario Pendiente</b><br><span style="font-size:0.85rem; line-height:1.4; display:inline-block; margin-top:4px;">${data.message}</span>`;
+                msgBox.style.display = "block";
+                if (typeof updateProgressBar === 'function') updateProgressBar();
+                return;
+            }
+
+            // Si intenta entrar con un usuario antiguo cuyo periodo de gracia / uso único ya expiró
+            if (data.code === 'ALIAS_EXPIRADO') {
+                localStorage.removeItem('vcv_saved_session');
+                if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+                else document.documentElement.classList.remove('vcv-auto-logging-in');
+                msgBox.className = "alert-box alert-warning";
+                msgBox.innerHTML = `<b>⚠️ Usuario Antiguo Desactivado</b><br><span style="font-size:0.85rem; line-height:1.4; display:inline-block; margin-top:4px;">${data.message}</span>`;
+                msgBox.style.display = "block";
+                if (typeof updateProgressBar === 'function') updateProgressBar();
+                return;
+            }
+
             // Si la solicitud de registro fue rechazada por el administrador
             if (data.code === 'REGISTRO_RECHAZADO') {
                 localStorage.removeItem('vcv_saved_session');
