@@ -3394,6 +3394,11 @@ window.abrirSolicitudesAdmin = function() {
     const mainDet = document.getElementById('adminMainDetails');
     if (mainDet) mainDet.open = true;
 
+    // 2.5 Cambiar a la categoría 'usuarios'
+    if (typeof window.cambiarAdminCategoria === 'function') {
+        window.cambiarAdminCategoria('usuarios');
+    }
+
     // 3. Abrir la sección de solicitudes de registro
     const sec = document.getElementById('secAdminSolicitudesRegistro');
     if (sec) {
@@ -3444,6 +3449,16 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                 } else {
                     badge.style.background = 'rgba(255,255,255,0.1)';
                     badge.style.color = 'var(--text-muted)';
+                }
+            }
+
+            const catBadge = document.getElementById('badgeAdminCatUsuarios');
+            if (catBadge) {
+                if (pendientes > 0) {
+                    catBadge.innerText = pendientes;
+                    catBadge.style.display = 'inline-block';
+                } else {
+                    catBadge.style.display = 'none';
                 }
             }
 
@@ -3797,6 +3812,130 @@ window.adminGuardarLigasUsuario = async function() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '💾 Guardar Ligas del Usuario';
+    }
+};
+
+// ==========================================================================
+// ORGANIZACIÓN POR TEMAS Y BÚSQUEDA RÁPIDA DE LA INTRANET ADMIN
+// ==========================================================================
+window.cambiarAdminCategoria = function(catName, keepSearch = false) {
+    if (!keepSearch) {
+        const searchInput = document.getElementById('adminQuickSearch');
+        if (searchInput && searchInput.value) {
+            searchInput.value = '';
+            const clearBtn = document.getElementById('adminQuickSearchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+        }
+        const noResultsMsg = document.getElementById('adminSearchNoResults');
+        if (noResultsMsg) noResultsMsg.style.display = 'none';
+    }
+
+    try { sessionStorage.setItem('vcv_admin_tab', catName); } catch(e) {}
+
+    // Botones de pestañas
+    const navBtns = document.querySelectorAll('.admin-tab-btn');
+    navBtns.forEach(btn => {
+        if (btn.getAttribute('data-admin-cat') === catName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Paneles de categoría
+    const catPanels = document.querySelectorAll('.admin-category-panel');
+    catPanels.forEach(panel => {
+        const pCat = panel.getAttribute('data-admin-cat');
+        const header = panel.querySelector('.admin-category-header');
+        if (catName === 'todas') {
+            panel.style.display = 'block';
+            if (header) header.classList.add('show-header');
+            const tools = panel.querySelectorAll('.admin-collapsible, .admin-card-block');
+            tools.forEach(t => t.style.display = '');
+        } else if (pCat === catName) {
+            panel.style.display = 'block';
+            if (header) header.classList.remove('show-header');
+            const tools = panel.querySelectorAll('.admin-collapsible, .admin-card-block');
+            tools.forEach(t => t.style.display = '');
+        } else {
+            panel.style.display = 'none';
+            if (header) header.classList.remove('show-header');
+        }
+    });
+
+    // Mensaje explicativo
+    const infoText = document.getElementById('adminCatInfoText');
+    if (infoText) {
+        const descMap = {
+            'usuarios': '👥 <b>Usuarios y Accesos:</b> Registro de cuentas, ligas asignadas, creación manual, contraseñas, permisos especiales y buzón de sugerencias.',
+            'partidos': '🏐 <b>Partidos y Competición:</b> Subir resultados de jornadas, gestión de plantilla y MVP de Superliga 2, y porras de aficionados.',
+            'rankings': '❄️ <b>Rankings y Clasificaciones:</b> Control de congelación de fin de semana, descongelado inmediato y configuración de ligas activas.',
+            'sistema': '⚙️ <b>Servidor y Sistema:</b> Modo mantenimiento web, monitor silencioso de accesos, sincronizaciones de servidor, pruebas push y optimización D1.',
+            'todas': '📋 <b>Todas las herramientas:</b> Vista completa desplegada y agrupada por categorías temáticas.'
+        };
+        infoText.innerHTML = descMap[catName] || '';
+    }
+};
+
+window.filtrarHerramientasAdmin = function(query) {
+    const q = (query || '').trim().toLowerCase();
+    const clearBtn = document.getElementById('adminQuickSearchClear');
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    const catPanels = document.querySelectorAll('.admin-category-panel');
+    const noResultsMsg = document.getElementById('adminSearchNoResults');
+    const infoText = document.getElementById('adminCatInfoText');
+
+    if (!q) {
+        if (noResultsMsg) noResultsMsg.style.display = 'none';
+        if (infoText) infoText.style.display = 'block';
+        let savedTab = 'usuarios';
+        try { savedTab = sessionStorage.getItem('vcv_admin_tab') || 'usuarios'; } catch(e) {}
+        window.cambiarAdminCategoria(savedTab, true);
+        return;
+    }
+
+    if (infoText) infoText.style.display = 'none';
+
+    let totalMatches = 0;
+    catPanels.forEach(panel => {
+        let panelMatches = 0;
+        const tools = panel.querySelectorAll('.admin-collapsible, .admin-card-block');
+        tools.forEach(tool => {
+            const summary = tool.querySelector('summary');
+            const titleText = (summary ? (summary.textContent || summary.innerText) : '') || '';
+            const fullText = (tool.textContent || tool.innerText) || '';
+            const matches = titleText.toLowerCase().includes(q) || fullText.toLowerCase().includes(q);
+            if (matches) {
+                tool.style.display = '';
+                panelMatches++;
+                totalMatches++;
+            } else {
+                tool.style.display = 'none';
+            }
+        });
+
+        const header = panel.querySelector('.admin-category-header');
+        if (panelMatches > 0) {
+            panel.style.display = 'block';
+            if (header) header.classList.add('show-header');
+        } else {
+            panel.style.display = 'none';
+            if (header) header.classList.remove('show-header');
+        }
+    });
+
+    // Desactivar pestaña activa para indicar modo búsqueda
+    const navBtns = document.querySelectorAll('.admin-tab-btn');
+    navBtns.forEach(btn => btn.classList.remove('active'));
+
+    if (noResultsMsg) {
+        if (totalMatches === 0) {
+            noResultsMsg.style.display = 'block';
+            noResultsMsg.innerHTML = `🔍 No se encontraron herramientas que coincidan con "<b>${query.replace(/</g, '&lt;')}</b>"`;
+        } else {
+            noResultsMsg.style.display = 'none';
+        }
     }
 };
 

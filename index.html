@@ -2734,122 +2734,117 @@
                 grid-template-columns: 1fr !important;
               }
             }
+
+            /* --- NAVEGACIÓN Y PESTAÑAS TEMÁTICAS ADMIN --- */
+            .admin-tab-nav {
+              display: flex;
+              gap: 6px;
+              overflow-x: auto;
+              padding: 4px 2px 10px 2px;
+              scrollbar-width: none;
+              -webkit-overflow-scrolling: touch;
+            }
+            .admin-tab-nav::-webkit-scrollbar {
+              display: none;
+            }
+            .admin-tab-btn {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 8px 14px;
+              font-size: 0.8rem;
+              font-weight: 700;
+              color: var(--text-muted);
+              background: rgba(255, 255, 255, 0.05);
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              border-radius: 20px;
+              cursor: pointer;
+              white-space: nowrap;
+              transition: all 0.2s ease;
+              user-select: none;
+              flex-shrink: 0;
+            }
+            .admin-tab-btn:hover {
+              background: rgba(230, 126, 34, 0.15);
+              color: var(--text-main);
+              border-color: rgba(230, 126, 34, 0.4);
+            }
+            .admin-tab-btn.active {
+              background: linear-gradient(135deg, rgba(230, 126, 34, 0.35) 0%, rgba(230, 126, 34, 0.18) 100%);
+              color: #f39c12;
+              border-color: #f39c12;
+              box-shadow: 0 2px 8px rgba(243, 156, 18, 0.25);
+            }
+            .admin-category-panel {
+              display: none;
+            }
+            .admin-category-panel.active-cat {
+              display: block;
+            }
+            .admin-category-header {
+              display: none;
+              align-items: center;
+              justify-content: space-between;
+              padding: 8px 12px;
+              margin: 16px 0 10px 0;
+              background: rgba(230, 126, 34, 0.1);
+              border-left: 3px solid #e67e22;
+              border-radius: 6px;
+              font-size: 0.78rem;
+              font-weight: 800;
+              color: #e67e22;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .admin-category-header.show-header {
+              display: flex !important;
+            }
           </style>
 
-          <!-- 0. Monitor Silencioso de Accesos (Exclusivo Admin) -->
-          <details id="secAdminMonitor" class="admin-collapsible" ontoggle="if(this.open && window.cargarDatosMonitor) window.cargarDatosMonitor();" style="background: linear-gradient(to right, rgba(39, 174, 96, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">👁️ Monitor Silencioso de Accesos</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
-              <div style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-                Supervisa discretamente a usuarios concretos (cuántas veces entran, a qué hora exacta y dispositivo). El usuario vigilado <b>no ve nada</b> en su pantalla.
-              </div>
-
-              <!-- Selector de usuario a vigilar y botón de añadir -->
-              <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
-                <input type="text" id="inputMonitorNuevoUsuario" placeholder="Escribe @usuario a vigilar..." style="flex:1; min-width:180px; padding:7px 10px; font-size:0.8rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-                <button type="button" onclick="window.agregarUsuarioMonitor()" style="background:#27ae60; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
-                  ➕ Activar Seguimiento
-                </button>
-                <button type="button" onclick="window.cargarDatosMonitor()" style="background:var(--bg-card-alt); color:var(--text-main); border:1px solid var(--border-color); padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
-                  🔄 Actualizar
-                </button>
-              </div>
-
-              <!-- Lista de vigilados y registro -->
-              <div id="adminMonitorContenido" style="font-size:0.75rem; color:var(--text-muted);">
-                <div style="text-align:center; padding:10px;">Cargando lista de usuarios vigilados...</div>
-              </div>
-            </div>
-          </details>
-          
-          <!-- 0. Modo Mantenimiento Web -->
-          <div style="background: rgba(243, 156, 18, 0.12); border: 1.5px solid #f39c12; border-radius: 12px; margin-bottom: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.2rem;">🚧</span>
-                <div>
-                  <strong style="color: #f39c12; font-size: 0.92rem;">Modo Mantenimiento</strong>
-                  <div style="font-size: 0.72rem; color: var(--text-muted);">Restringe el acceso web exclusivamente a administradores</div>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span id="badgeEstadoMantenimientoAdmin" style="padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: #e74c3c; color: #fff;">
-                  ACTIVO
-                </span>
-                <button type="button" class="btn" id="btnToggleMantenimientoAdmin" onclick="window.adminToggleMantenimiento()" style="padding: 7px 14px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 1px solid #f39c12; background: rgba(243, 156, 18, 0.2); color: #f39c12;">
-                  Desactivar
-                </button>
-              </div>
-            </div>
-            <div id="descMantenimientoAdmin" style="font-size: 0.75rem; color: var(--text-main); margin-top: 2px; line-height: 1.35;">
-              ⚠️ El modo mantenimiento está actualmente <b>ACTIVADO</b>. Los usuarios no administradores verán un aviso en el inicio de sesión y no podrán entrar a la plataforma.
+          <!-- NAVEGACIÓN POR CATEGORÍAS TEMÁTICAS -->
+          <div id="adminCategoryNav" style="margin-top: 12px; margin-bottom: 8px;">
+            <div class="admin-tab-nav">
+              <button type="button" class="admin-tab-btn active" data-admin-cat="usuarios" onclick="window.cambiarAdminCategoria('usuarios')">
+                <span>👥</span> Usuarios y Cuentas
+                <span id="badgeAdminCatUsuarios" style="display:none; font-size:0.68rem; background:#e67e22; color:#fff; padding:1px 6px; border-radius:10px; font-weight:800; margin-left:3px;">0</span>
+              </button>
+              <button type="button" class="admin-tab-btn" data-admin-cat="partidos" onclick="window.cambiarAdminCategoria('partidos')">
+                <span>🏐</span> Partidos y MVP
+              </button>
+              <button type="button" class="admin-tab-btn" data-admin-cat="rankings" onclick="window.cambiarAdminCategoria('rankings')">
+                <span>❄️</span> Rankings y Ligas
+              </button>
+              <button type="button" class="admin-tab-btn" data-admin-cat="sistema" onclick="window.cambiarAdminCategoria('sistema')">
+                <span>⚙️</span> Servidor y Sistema
+              </button>
+              <button type="button" class="admin-tab-btn" data-admin-cat="todas" onclick="window.cambiarAdminCategoria('todas')">
+                <span>📋</span> Ver Todas
+              </button>
             </div>
           </div>
 
-          <!-- 1. Botones de Control Servidor -->
-          <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">⚡ Controles y Sincronización Servidor</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Auto-Permisos
-                </button>
-                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnForceSyncExcel">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-ccw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg> Sincronizar Fechas
-                </button>
-                <button class="btn" id="btnAdminClearCache" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e74c3c; background:rgba(231, 76, 60, 0.1); color:#e74c3c; font-weight:bold;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg> Recalcular Puntos
-                </button>
-              </div>
+          <!-- BUSCADOR RÁPIDO DE HERRAMIENTAS -->
+          <div id="adminQuickSearchContainer" style="position: relative; margin-bottom: 12px;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; opacity: 0.6; pointer-events: none;">🔍</span>
+            <input type="text" id="adminQuickSearch" oninput="window.filtrarHerramientasAdmin(this.value)" placeholder="Buscar herramienta (ej: registro, contraseña, congelar, mvp, resultados, monitor...)" style="width: 100%; box-sizing: border-box; padding: 9px 34px 9px 34px; font-size: 0.8rem; border-radius: 8px; background: rgba(0,0,0,0.25); border: 1px solid rgba(230, 126, 34, 0.35); color: var(--text-main); outline: none;">
+            <button type="button" id="adminQuickSearchClear" onclick="document.getElementById('adminQuickSearch').value=''; window.filtrarHerramientasAdmin('');" style="display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 4px;">✕</button>
+          </div>
+
+          <!-- INFO / RESUMEN DE LA CATEGORÍA ACTIVA -->
+          <div id="adminCatInfoText" style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 14px; line-height: 1.35; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 2px solid #e67e22;">
+            👥 <b>Usuarios y Accesos:</b> Registro de cuentas, ligas asignadas, creación manual, contraseñas, permisos especiales y buzón de sugerencias.
+          </div>
+
+          <!-- MENSAJE SI NO HAY RESULTADOS EN BÚSQUEDA -->
+          <div id="adminSearchNoResults" style="display: none; padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.8rem; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 12px;"></div>
+          <!-- ============================================== -->
+          <!-- CATEGORÍA 1: USUARIOS Y ACCESOS (8 HERRAMIENTAS) -->
+          <!-- ============================================== -->
+          <div class="admin-category-panel active-cat" data-admin-cat="usuarios" style="display: block;">
+            <div class="admin-category-header">
+              <span>👥 Usuarios y Accesos</span>
+              <span style="font-size: 0.68rem; opacity: 0.8;">8 herramientas</span>
             </div>
-          </details>
-
-          <!-- 2. Herramienta Congelar Ligas (Fin de Semana) -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.12), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">❄️ Control y Congelación de Rankings</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.2);">
-              
-              <!-- ESTADO EN VIVO Y CONTROL INMEDIATO -->
-              <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
-                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between;">
-                  <span>Estado actual de las clasificaciones:</span>
-                  <span id="adminFreezeStatusBadge" style="padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db;">Cargando...</span>
-                </div>
-                <p id="adminFreezeStatusDesc" style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.3;">
-                  Cargando información del horario...
-                </p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                  <button type="button" class="btn" id="btnAdminUnfreezeNow" style="padding: 9px 8px; font-size: 0.78rem; background: #2ecc71; color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);" onclick="cambiarModoCongelacion('UNFREEZE')">
-                    🔓 Descongelar Ahora
-                  </button>
-                  <button type="button" class="btn" id="btnAdminFreezeNow" style="padding: 9px 8px; font-size: 0.78rem; background: #3498db; color: #fff; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);" onclick="cambiarModoCongelacion('FREEZE')">
-                    ❄️ Congelar Ahora
-                  </button>
-                </div>
-                <button type="button" class="btn" id="btnAdminAutoFreeze" style="width: 100%; padding: 8px; font-size: 0.75rem; background: rgba(255,255,255,0.08); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="cambiarModoCongelacion('AUTO')">
-                  ⏱️ Restablecer a Horario Automático
-                </button>
-              </div>
-
-              <!-- LIGAS AFECTADAS -->
-              <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; line-height:1.3;">
-                <b>Ligas a congelar:</b> Marca qué ligas ocultarán sus resultados cuando la congelación esté activa. Las desmarcadas puntúan <b>siempre en directo</b>.
-              </p>
-              <div id="adminLigasCongelarCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                <span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>
-              </div>
-              <button class="btn" id="btnSaveLigasFreeze" style="width:100%; padding: 10px; font-size: 0.82rem; background:rgba(52, 152, 219, 0.85); color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(52,152,219,0.2);" onclick="guardarAjusteLigasFreeze(event)">
-                💾 Guardar Ajuste de Ligas
-              </button>
-            </div>
-          </details>
-
           <!-- Solicitudes de Registro de Nuevos Usuarios -->
           <details id="secAdminSolicitudesRegistro" class="admin-collapsible" ontoggle="if(this.open && window.cargarSolicitudesRegistroAdmin) window.cargarSolicitudesRegistroAdmin();" style="background: linear-gradient(to right, rgba(243, 156, 18, 0.15), var(--bg-card)); border: 1.5px solid rgba(243, 156, 18, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #f39c12; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2876,32 +2871,6 @@
             </div>
           </details>
 
-          <!-- 3. Formulario Crear Nuevo Usuario -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">➕ Añadir Nuevo Usuario</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <div class="form-group" style="margin-bottom:8px;">
-                <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-              </div>
-              <div class="form-group" style="margin-bottom:8px;">
-                <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-              </div>
-              <div class="form-group" style="margin-bottom:8px;">
-                <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
-              </div>
-              <div class="form-group" style="margin-bottom:12px;">
-                <label style="font-size: 0.75rem; color:var(--text-muted);">Inscribir a Ligas:</label>
-                <div id="adminLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
-                  <!-- Populated by JS -->
-                </div>
-              </div>
-              <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
-                Crear Usuario en Sheets
-              </button>
-            </div>
-          </details>
 
           <!-- Gestión de Ligas por Usuario -->
           <details id="secAdminGestionLigas" class="admin-collapsible" ontoggle="if(this.open && window.adminCargarUsuariosLigas) window.adminCargarUsuariosLigas();" style="background: linear-gradient(to right, rgba(142, 68, 173, 0.18), var(--bg-card)); border: 1.5px solid rgba(155, 89, 182, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
@@ -2934,6 +2903,35 @@
             </div>
           </details>
 
+
+          <!-- 3. Formulario Crear Nuevo Usuario -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">➕ Añadir Nuevo Usuario</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="text" id="addUsrName" class="form-control" placeholder="@nombre_usuario" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="text" id="addUsrRealName" class="form-control" placeholder="Nombre Real (Opcional)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <input type="password" id="addUsrPwd" class="form-control" placeholder="Contraseña inicial" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+              </div>
+              <div class="form-group" style="margin-bottom:12px;">
+                <label style="font-size: 0.75rem; color:var(--text-muted);">Inscribir a Ligas:</label>
+                <div id="adminLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
+                Crear Usuario en Sheets
+              </button>
+            </div>
+          </details>
+
+
           <!-- Restablecer Contraseña de Usuario por Olvido -->
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(231, 76, 60, 0.18), var(--bg-card)); border: 1px solid rgba(231, 76, 60, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e74c3c; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2958,48 +2956,6 @@
             </div>
           </details>
 
-          <!-- Buzón de Sugerencias y Reportes de Errores -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.2), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">💡 Buzón de Sugerencias y Errores</span>
-              <span style="font-size: 0.72rem; background: rgba(52, 152, 219, 0.15); color: #3498db; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Comunidad</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.15);">
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Consulta las sugerencias y avisos de errores enviados por los usuarios desde su perfil.</p>
-              <button type="button" id="btnCargarSugerenciasAdmin" onclick="window.cargarSugerenciasAdmin()" class="btn btn-primary btn-block" style="background: #3498db; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
-                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios
-              </button>
-              <div id="adminSugerenciasBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-          </details>
-
-          <!-- 4. Herramienta Aprobación Nombres -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">👤 Peticiones de Cambio de Nombre</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
-              <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
-                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
-              </button>
-              <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-          </details>
-
-          <!-- 5. Peticiones de Insignias -->
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">🛡️ Peticiones de Insignias</span>
-            </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
-              <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
-                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
-              </button>
-              <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-          </details>
 
           <!-- 5.B Gestión de Permisos Especiales (MVP y Resultados) -->
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(230, 126, 34, 0.15), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
@@ -3023,80 +2979,62 @@
             </div>
           </details>
 
-          <!-- 5.C Consultar Predicciones y Porras por Partido -->
-          <details id="secAdminVerPredicciones" class="admin-collapsible" ontoggle="if(this.open && typeof window.adminInicializarSeccionPredicciones === 'function') window.adminInicializarSeccionPredicciones();" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.12), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">📋 Consultar Predicciones por Partido</span>
-              <span style="font-size: 0.72rem; background: rgba(46, 204, 113, 0.15); color: #2ecc71; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Porras</span>
+
+          <!-- 4. Herramienta Aprobación Nombres -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">👤 Peticiones de Cambio de Nombre</span>
             </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.15);">
-              <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.35;">
-                Selecciona cualquier equipo y jornada para ver las predicciones de los usuarios, sus pronósticos de sets y la <b>hora exacta de registro</b>.
-              </p>
-
-              <!-- SELECTORES: EQUIPO Y JORNADA -->
-              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; margin-bottom: 12px;">
-                <div>
-                  <label for="adminPredEquipoSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Equipo Local / Club:</label>
-                  <select id="adminPredEquipoSelect" onchange="window.adminOnPredEquipoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
-                    <option value="Universidad de Valladolid VCV">Univ. de Valladolid (SM2)</option>
-                    <option value="VALCYL VCV">VALCYL VCV (1ª Nac. Masc.)</option>
-                    <option value="Valladolid CV Vacceas">VCV Vacceas (1ª Nac. Fem.)</option>
-                    <option value="CD San José">CD San José (1ª Nac. Fem.)</option>
-                    <option value="VCV Meseta">VCV Meseta (2ª Masc.)</option>
-                    <option value="Pegamo Abanto">Pegamo Abanto (2ª Masc.)</option>
-                    <option value="VCV Maria Molina">VCV Maria Molina (2ª Fem.)</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="adminPredJornadaSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Jornada:</label>
-                  <select id="adminPredJornadaSelect" onchange="window.adminOnPredJornadaChange(this.value)" onfocus="if(this.options.length <= 1 && typeof window.adminOnPredEquipoChange === 'function') window.adminOnPredEquipoChange(document.getElementById('adminPredEquipoSelect').value, false);" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
-                    <option value="1" selected>Jornada 1</option>
-                    <option value="2">Jornada 2</option>
-                    <option value="3">Jornada 3</option>
-                    <option value="4">Jornada 4</option>
-                    <option value="5">Jornada 5</option>
-                    <option value="6">Jornada 6</option>
-                    <option value="7">Jornada 7</option>
-                    <option value="8">Jornada 8</option>
-                    <option value="9">Jornada 9</option>
-                    <option value="10">Jornada 10</option>
-                    <option value="11">Jornada 11</option>
-                    <option value="12">Jornada 12</option>
-                    <option value="13">Jornada 13</option>
-                    <option value="14">Jornada 14</option>
-                    <option value="15">Jornada 15</option>
-                    <option value="16">Jornada 16</option>
-                    <option value="17">Jornada 17</option>
-                    <option value="18">Jornada 18</option>
-                    <option value="19">Jornada 19</option>
-                    <option value="20">Jornada 20</option>
-                    <option value="21">Jornada 21</option>
-                    <option value="22">Jornada 22</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- FICHA DEL PARTIDO DETECTADO -->
-              <div id="adminPredInfoPartido" style="margin-bottom: 12px; padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(46, 204, 113, 0.25); border-radius: 8px; font-size: 0.78rem;">
-                <div style="color:var(--text-muted); text-align:center;">Cargando información del partido...</div>
-              </div>
-
-              <!-- BUSCADOR Y RESUMEN -->
-              <div id="adminPredControles" style="display: none; margin-bottom: 10px;">
-                <input type="text" id="adminPredBuscador" oninput="window.adminFiltrarPredicciones(this.value)" placeholder="🔍 Filtrar por @usuario o nombre real..." style="width: 100%; padding: 8px 12px; font-size: 0.8rem; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-bottom: 8px;">
-                <div id="adminPredResumen" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); flex-wrap: wrap; gap: 6px; padding: 4px 2px;"></div>
-              </div>
-
-              <!-- LISTADO DE PREDICCIONES -->
-              <div id="adminPredListaCont" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px;">
-                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 16px;">
-                  Selecciona un equipo y jornada para ver las predicciones.
-                </div>
-              </div>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios de nombre de usuario.</p>
+              <button id="btnLoadNameRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones Pendientes
+              </button>
+              <div id="adminNameRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
           </details>
 
+
+          <!-- 5. Peticiones de Insignias -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🛡️ Peticiones de Insignias</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Aprueba o rechaza los cambios en los perfiles (equipos, exjugador, staff).</p>
+              <button id="btnLoadBadgeRequests" class="btn btn-primary btn-block" style="background: #e67e22; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                  <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Peticiones de Insignias
+              </button>
+              <div id="adminBadgeRequestsBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </details>
+
+
+          <!-- Buzón de Sugerencias y Reportes de Errores -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.2), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">💡 Buzón de Sugerencias y Errores</span>
+              <span style="font-size: 0.72rem; background: rgba(52, 152, 219, 0.15); color: #3498db; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Comunidad</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.15);">
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Consulta las sugerencias y avisos de errores enviados por los usuarios desde su perfil.</p>
+              <button type="button" id="btnCargarSugerenciasAdmin" onclick="window.cargarSugerenciasAdmin()" class="btn btn-primary btn-block" style="background: #3498db; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; margin-bottom: 10px; width:100%;">
+                <i data-lucide="refresh-cw" style="width:16px; height:16px; margin-right:5px; vertical-align:middle;"></i> Cargar Mensajes de Usuarios
+              </button>
+              <div id="adminSugerenciasBox" style="font-size: 0.8rem; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+          </details>
+
+
+          </div>
+          <!-- ============================================== -->
+          <!-- CATEGORÍA 2: PARTIDOS Y MVP (3 HERRAMIENTAS)   -->
+          <!-- ============================================== -->
+          <div class="admin-category-panel" data-admin-cat="partidos" style="display: none;">
+            <div class="admin-category-header">
+              <span>🏐 Partidos y Competición</span>
+              <span style="font-size: 0.68rem; opacity: 0.8;">3 herramientas</span>
+            </div>
           <!-- 6. Subida Rápida de Resultados y Links -->
           <details id="secAdminResultados" class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -3126,6 +3064,7 @@
           </details>
 
           <!-- 7. Optimización y Rendimiento de BD -->
+
           <!-- 6.B Plantilla Superliga (MVP) -->
           <details id="secAdminMvp" class="admin-collapsible" style="background: linear-gradient(to right, rgba(212, 175, 55, 0.12), var(--bg-card)); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: var(--secondary-color); display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -3374,18 +3313,217 @@
           </details>
 
           
-          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
-            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #27ae60; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-              <span style="display:flex; align-items:center; gap:6px;">⚡ Optimización de Base de Datos</span>
+
+          <!-- 5.C Consultar Predicciones y Porras por Partido -->
+          <details id="secAdminVerPredicciones" class="admin-collapsible" ontoggle="if(this.open && typeof window.adminInicializarSeccionPredicciones === 'function') window.adminInicializarSeccionPredicciones();" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.12), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">📋 Consultar Predicciones por Partido</span>
+              <span style="font-size: 0.72rem; background: rgba(46, 204, 113, 0.15); color: #2ecc71; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Porras</span>
             </summary>
-            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
-              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.3;">Crea y activa los índices compuestos de alto rendimiento en Cloudflare D1 (clasificaciones, porras y autenticación instantáneas).</p>
-              <button id="btnApplyDbIndexes" class="btn btn-primary btn-block" style="background: #27ae60; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; width:100%; box-shadow: 0 4px 6px rgba(46,204,113,0.2);" onclick="aplicarIndicesBD(event)">
-                  🚀 Aplicar Índices de Rendimiento en D1
-              </button>
-              <div id="adminDbIndexesStatus" style="font-size: 0.8rem; margin-top: 8px;"></div>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.15);">
+              <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.35;">
+                Selecciona cualquier equipo y jornada para ver las predicciones de los usuarios, sus pronósticos de sets y la <b>hora exacta de registro</b>.
+              </p>
+
+              <!-- SELECTORES: EQUIPO Y JORNADA -->
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; margin-bottom: 12px;">
+                <div>
+                  <label for="adminPredEquipoSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Equipo Local / Club:</label>
+                  <select id="adminPredEquipoSelect" onchange="window.adminOnPredEquipoChange(this.value)" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                    <option value="Universidad de Valladolid VCV">Univ. de Valladolid (SM2)</option>
+                    <option value="VALCYL VCV">VALCYL VCV (1ª Nac. Masc.)</option>
+                    <option value="Valladolid CV Vacceas">VCV Vacceas (1ª Nac. Fem.)</option>
+                    <option value="CD San José">CD San José (1ª Nac. Fem.)</option>
+                    <option value="VCV Meseta">VCV Meseta (2ª Masc.)</option>
+                    <option value="Pegamo Abanto">Pegamo Abanto (2ª Masc.)</option>
+                    <option value="VCV Maria Molina">VCV Maria Molina (2ª Fem.)</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="adminPredJornadaSelect" style="font-size: 0.7rem; color: #2ecc71; display: block; margin-bottom: 3px; font-weight: 700;">Jornada:</label>
+                  <select id="adminPredJornadaSelect" onchange="window.adminOnPredJornadaChange(this.value)" onfocus="if(this.options.length <= 1 && typeof window.adminOnPredEquipoChange === 'function') window.adminOnPredEquipoChange(document.getElementById('adminPredEquipoSelect').value, false);" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer;">
+                    <option value="1" selected>Jornada 1</option>
+                    <option value="2">Jornada 2</option>
+                    <option value="3">Jornada 3</option>
+                    <option value="4">Jornada 4</option>
+                    <option value="5">Jornada 5</option>
+                    <option value="6">Jornada 6</option>
+                    <option value="7">Jornada 7</option>
+                    <option value="8">Jornada 8</option>
+                    <option value="9">Jornada 9</option>
+                    <option value="10">Jornada 10</option>
+                    <option value="11">Jornada 11</option>
+                    <option value="12">Jornada 12</option>
+                    <option value="13">Jornada 13</option>
+                    <option value="14">Jornada 14</option>
+                    <option value="15">Jornada 15</option>
+                    <option value="16">Jornada 16</option>
+                    <option value="17">Jornada 17</option>
+                    <option value="18">Jornada 18</option>
+                    <option value="19">Jornada 19</option>
+                    <option value="20">Jornada 20</option>
+                    <option value="21">Jornada 21</option>
+                    <option value="22">Jornada 22</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- FICHA DEL PARTIDO DETECTADO -->
+              <div id="adminPredInfoPartido" style="margin-bottom: 12px; padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(46, 204, 113, 0.25); border-radius: 8px; font-size: 0.78rem;">
+                <div style="color:var(--text-muted); text-align:center;">Cargando información del partido...</div>
+              </div>
+
+              <!-- BUSCADOR Y RESUMEN -->
+              <div id="adminPredControles" style="display: none; margin-bottom: 10px;">
+                <input type="text" id="adminPredBuscador" oninput="window.adminFiltrarPredicciones(this.value)" placeholder="🔍 Filtrar por @usuario o nombre real..." style="width: 100%; padding: 8px 12px; font-size: 0.8rem; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); margin-bottom: 8px;">
+                <div id="adminPredResumen" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); flex-wrap: wrap; gap: 6px; padding: 4px 2px;"></div>
+              </div>
+
+              <!-- LISTADO DE PREDICCIONES -->
+              <div id="adminPredListaCont" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 16px;">
+                  Selecciona un equipo y jornada para ver las predicciones.
+                </div>
+              </div>
             </div>
           </details>
+
+
+          </div>
+          <!-- ============================================== -->
+          <!-- CATEGORÍA 3: RANKINGS Y LIGAS (1 HERRAMIENTA)  -->
+          <!-- ============================================== -->
+          <div class="admin-category-panel" data-admin-cat="rankings" style="display: none;">
+            <div class="admin-category-header">
+              <span>❄️ Rankings y Clasificaciones</span>
+              <span style="font-size: 0.68rem; opacity: 0.8;">1 herramienta</span>
+            </div>
+          <!-- 2. Herramienta Congelar Ligas (Fin de Semana) -->
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(52, 152, 219, 0.12), var(--bg-card)); border: 1px solid rgba(52, 152, 219, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #3498db; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">❄️ Control y Congelación de Rankings</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(52, 152, 219, 0.2);">
+              
+              <!-- ESTADO EN VIVO Y CONTROL INMEDIATO -->
+              <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+                <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; display:flex; align-items:center; justify-content:space-between;">
+                  <span>Estado actual de las clasificaciones:</span>
+                  <span id="adminFreezeStatusBadge" style="padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db;">Cargando...</span>
+                </div>
+                <p id="adminFreezeStatusDesc" style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.3;">
+                  Cargando información del horario...
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <button type="button" class="btn" id="btnAdminUnfreezeNow" style="padding: 9px 8px; font-size: 0.78rem; background: #2ecc71; color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);" onclick="cambiarModoCongelacion('UNFREEZE')">
+                    🔓 Descongelar Ahora
+                  </button>
+                  <button type="button" class="btn" id="btnAdminFreezeNow" style="padding: 9px 8px; font-size: 0.78rem; background: #3498db; color: #fff; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);" onclick="cambiarModoCongelacion('FREEZE')">
+                    ❄️ Congelar Ahora
+                  </button>
+                </div>
+                <button type="button" class="btn" id="btnAdminAutoFreeze" style="width: 100%; padding: 8px; font-size: 0.75rem; background: rgba(255,255,255,0.08); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="cambiarModoCongelacion('AUTO')">
+                  ⏱️ Restablecer a Horario Automático
+                </button>
+              </div>
+
+              <!-- LIGAS AFECTADAS -->
+              <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; line-height:1.3;">
+                <b>Ligas a congelar:</b> Marca qué ligas ocultarán sus resultados cuando la congelación esté activa. Las desmarcadas puntúan <b>siempre en directo</b>.
+              </p>
+              <div id="adminLigasCongelarCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                <span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>
+              </div>
+              <button class="btn" id="btnSaveLigasFreeze" style="width:100%; padding: 10px; font-size: 0.82rem; background:rgba(52, 152, 219, 0.85); color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(52,152,219,0.2);" onclick="guardarAjusteLigasFreeze(event)">
+                💾 Guardar Ajuste de Ligas
+              </button>
+            </div>
+          </details>
+
+
+          </div>
+          <!-- ============================================== -->
+          <!-- CATEGORÍA 4: SERVIDOR Y SISTEMA (5 HERRAMIENTAS) -->
+          <!-- ============================================== -->
+          <div class="admin-category-panel" data-admin-cat="sistema" style="display: none;">
+            <div class="admin-category-header">
+              <span>⚙️ Servidor y Sistema</span>
+              <span style="font-size: 0.68rem; opacity: 0.8;">5 herramientas</span>
+            </div>
+          <!-- 0. Modo Mantenimiento Web -->
+          <div class="admin-card-block" style="background: rgba(243, 156, 18, 0.12); border: 1.5px solid #f39c12; border-radius: 12px; margin-bottom: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.2rem;">🚧</span>
+                <div>
+                  <strong style="color: #f39c12; font-size: 0.92rem;">Modo Mantenimiento</strong>
+                  <div style="font-size: 0.72rem; color: var(--text-muted);">Restringe el acceso web exclusivamente a administradores</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="badgeEstadoMantenimientoAdmin" style="padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; background: #e74c3c; color: #fff;">
+                  ACTIVO
+                </span>
+                <button type="button" class="btn" id="btnToggleMantenimientoAdmin" onclick="window.adminToggleMantenimiento()" style="padding: 7px 14px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; cursor: pointer; border: 1px solid #f39c12; background: rgba(243, 156, 18, 0.2); color: #f39c12;">
+                  Desactivar
+                </button>
+              </div>
+            </div>
+            <div id="descMantenimientoAdmin" style="font-size: 0.75rem; color: var(--text-main); margin-top: 2px; line-height: 1.35;">
+              ⚠️ El modo mantenimiento está actualmente <b>ACTIVADO</b>. Los usuarios no administradores verán un aviso en el inicio de sesión y no podrán entrar a la plataforma.
+            </div>
+          </div>
+
+
+          <!-- 0. Monitor Silencioso de Accesos (Exclusivo Admin) -->
+          <details id="secAdminMonitor" class="admin-collapsible" ontoggle="if(this.open && window.cargarDatosMonitor) window.cargarDatosMonitor();" style="background: linear-gradient(to right, rgba(39, 174, 96, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">👁️ Monitor Silencioso de Accesos</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
+              <div style="font-size: 0.74rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                Supervisa discretamente a usuarios concretos (cuántas veces entran, a qué hora exacta y dispositivo). El usuario vigilado <b>no ve nada</b> en su pantalla.
+              </div>
+
+              <!-- Selector de usuario a vigilar y botón de añadir -->
+              <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="inputMonitorNuevoUsuario" placeholder="Escribe @usuario a vigilar..." style="flex:1; min-width:180px; padding:7px 10px; font-size:0.8rem; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main);">
+                <button type="button" onclick="window.agregarUsuarioMonitor()" style="background:#27ae60; color:#fff; border:none; padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
+                  ➕ Activar Seguimiento
+                </button>
+                <button type="button" onclick="window.cargarDatosMonitor()" style="background:var(--bg-card-alt); color:var(--text-main); border:1px solid var(--border-color); padding:7px 12px; border-radius:6px; font-size:0.78rem; font-weight:bold; cursor:pointer;">
+                  🔄 Actualizar
+                </button>
+              </div>
+
+              <!-- Lista de vigilados y registro -->
+              <div id="adminMonitorContenido" style="font-size:0.75rem; color:var(--text-muted);">
+                <div style="text-align:center; padding:10px;">Cargando lista de usuarios vigilados...</div>
+              </div>
+            </div>
+          </details>
+          
+
+          <!-- 1. Botones de Control Servidor -->
+          <details class="admin-collapsible" style="background: rgba(230, 126, 34, 0.06); border: 1px solid rgba(230, 126, 34, 0.3); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">⚡ Controles y Sincronización Servidor</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(230, 126, 34, 0.15);">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnAdminSync">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="users" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Auto-Permisos
+                </button>
+                <button class="btn" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e67e22; background:rgba(230, 126, 34, 0.1); color:#e67e22; font-weight:bold;" id="btnForceSyncExcel">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-ccw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-ccw"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 16h5v5"></path></svg> Sincronizar Fechas
+                </button>
+                <button class="btn" id="btnAdminClearCache" style="flex: 1; min-width: 130px; padding:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:0.85rem; border:1px solid #e74c3c; background:rgba(231, 76, 60, 0.1); color:#e74c3c; font-weight:bold;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="refresh-cw" aria-hidden="true" style="width: 14px; height: 14px;" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg> Recalcular Puntos
+                </button>
+              </div>
+            </div>
+          </details>
+
 
           <!-- 🔔 PANEL DE PRUEBAS DE NOTIFICACIONES PUSH (2 HORAS) -->
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(168, 85, 247, 0.15), var(--bg-card)); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;" ontoggle="if(this.open && window.initAdminPushPanel) window.initAdminPushPanel();">
@@ -3468,6 +3606,22 @@
               </div>
             </div>
           </details>
+
+          <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.15), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #27ae60; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">⚡ Optimización de Base de Datos</span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
+              <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.3;">Crea y activa los índices compuestos de alto rendimiento en Cloudflare D1 (clasificaciones, porras y autenticación instantáneas).</p>
+              <button id="btnApplyDbIndexes" class="btn btn-primary btn-block" style="background: #27ae60; color: white; border: none; font-weight: bold; padding: 10px; border-radius:8px; cursor: pointer; width:100%; box-shadow: 0 4px 6px rgba(46,204,113,0.2);" onclick="aplicarIndicesBD(event)">
+                  🚀 Aplicar Índices de Rendimiento en D1
+              </button>
+              <div id="adminDbIndexesStatus" style="font-size: 0.8rem; margin-top: 8px;"></div>
+            </div>
+          </details>
+
+
+          </div>
         </div>
     </details>
 </div>
@@ -4270,13 +4424,13 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted y diferidos para acelerar carga) -->
 <script defer src="js/config.js?v=20261116_v4"></script>
-<script defer src="js/admin.js?v=20261116_v4"></script>
+<script defer src="js/admin.js?v=20261116_v5"></script>
 <script defer src="js/cartelera.js?v=20261116_v4"></script>
 <script defer src="js/ranking.js?v=20261116_v4"></script>
 <script defer src="js/calendario.js?v=20261116_v4"></script>
 <script defer src="js/cartelera_interactive.js?v=20261116_v4"></script>
 <script defer src="js/ui_gestures.js?v=20261110_v12"></script>
-<script defer src="js/auth.js?v=20261116_v4"></script>
+<script defer src="js/auth.js?v=20261116_v5"></script>
 <script defer src="js/push_notifications.js?v=20261111_v13"></script>
 
 

@@ -868,6 +868,32 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         }
                     }
                 });
+
+                // Sincronizar categorías temáticas del panel admin
+                if (isAdmin) {
+                    const catNav = document.getElementById('adminCategoryNav');
+                    const searchCont = document.getElementById('adminQuickSearchContainer');
+                    const catInfo = document.getElementById('adminCatInfoText');
+                    if (catNav) catNav.style.display = 'block';
+                    if (searchCont) searchCont.style.display = 'block';
+                    if (catInfo) catInfo.style.display = 'block';
+                    if (typeof window.cambiarAdminCategoria === 'function') {
+                        let savedTab = 'usuarios';
+                        try { savedTab = sessionStorage.getItem('vcv_admin_tab') || 'usuarios'; } catch(e) {}
+                        window.cambiarAdminCategoria(savedTab);
+                    }
+                } else if (hasPermisoMvp || hasPermisoResultados) {
+                    const catNav = document.getElementById('adminCategoryNav');
+                    const searchCont = document.getElementById('adminQuickSearchContainer');
+                    const catInfo = document.getElementById('adminCatInfoText');
+                    if (catNav) catNav.style.display = 'none';
+                    if (searchCont) searchCont.style.display = 'none';
+                    if (catInfo) catInfo.style.display = 'none';
+                    const catPanels = document.querySelectorAll('.admin-category-panel');
+                    catPanels.forEach(p => {
+                        p.style.display = (p.getAttribute('data-admin-cat') === 'partidos') ? 'block' : 'none';
+                    });
+                }
             } else {
                 if (admWrap) admWrap.style.display = "none";
             }
