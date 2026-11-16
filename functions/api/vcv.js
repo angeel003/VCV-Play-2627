@@ -287,6 +287,44 @@ async function ensureUsuarioAliasSchema(db) {
     } catch(e) {}
 }
 
+async function isUsernameTakenOrReserved(db, usernameCandidate, excludeUser = null) {
+    if (!usernameCandidate) return { taken: true, reason: 'Nombre de usuario no válido.' };
+    const uClean = usernameCandidate.toString().trim().replace(/^@/, '');
+    if (!uClean || uClean.length < 3) return { taken: true, reason: 'El nombre de usuario debe tener al menos 3 caracteres.' };
+    if (/\s/.test(uClean)) return { taken: true, reason: 'El nombre de usuario no puede contener espacios.' };
+
+    await ensureUsuarioAliasSchema(db);
+
+    const [existUser, existPendingReq, existPendingName, existAlias] = await Promise.all([
+        db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(uClean).first().catch(() => null),
+        db.prepare('SELECT "Usuario" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(uClean).first().catch(() => null),
+        db.prepare('SELECT "Usuario Actual", "Nuevo Usuario Sol" FROM "Peticiones_Nombre" WHERE lower("Nuevo Usuario Sol") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(uClean).first().catch(() => null),
+        db.prepare('SELECT "usuario_actual", "usuario_antiguo", "activo" FROM "Usuario_Alias" WHERE lower("usuario_antiguo") = lower(?)').bind(uClean).first().catch(() => null)
+    ]);
+
+    if (existUser && (!excludeUser || existUser.Usuario.toLowerCase() !== excludeUser.toLowerCase())) {
+        return { taken: true, reason: `El nombre de usuario @${uClean} ya está en uso por otra persona.` };
+    }
+
+    if (existPendingReq && (!excludeUser || existPendingReq.Usuario.toLowerCase() !== excludeUser.toLowerCase())) {
+        return { taken: true, reason: `El nombre de usuario @${uClean} está reservado por una solicitud de registro pendiente de aprobación.` };
+    }
+
+    if (existPendingName && (!excludeUser || existPendingName["Usuario Actual"].toLowerCase() !== excludeUser.toLowerCase())) {
+        return { taken: true, reason: `El nombre de usuario @${uClean} ha sido solicitado por otro usuario (@${existPendingName["Usuario Actual"]}) y está pendiente de aprobación.` };
+    }
+
+    if (existAlias && (!excludeUser || existAlias.usuario_actual.toLowerCase() !== excludeUser.toLowerCase())) {
+        if (existAlias.activo === 1) {
+            return { taken: true, reason: `El nombre de usuario @${uClean} pertenece a una cuenta en periodo de transición y no está disponible.` };
+        } else {
+            return { taken: true, reason: `El nombre de usuario @${uClean} ya ha pertenecido a otro usuario del club y permanece reservado por seguridad.` };
+        }
+    }
+
+    return { taken: false, cleanUsername: uClean };
+}
+
 async function verifyAndMigrateUser(db, usuario, password) {
     if (!usuario || !password) return null;
     let userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE lower("Usuario") = lower(?) OR lower("Correo") = lower(?)').bind(usuario, usuario).first();
@@ -2066,7 +2104,7 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: "error", message: "La nueva contraseña debe tener al menos 3 caracteres." });
         }
         const hashedNew = await hashPassword(newPwd);
-        await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(hashedNew, usuario).run();
+        await db.prepare('UPDATE "Usuarios" SET "Password" = ? WHERE "Usuario" = ?').bind(hashedNew, user.Usuario).run();
         return jsonResponse({ status: "success", message: "¡Contraseña actualizada con éxito!" });
     }
 
@@ -2375,7 +2413,7 @@ export async function onRequestPost(context) {
                 runInBg(context, (async () => {
                     if (shouldUpdateLastAccess) {
                         try {
-                            await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(usuario).run();
+                            await db.prepare('UPDATE "Usuarios" SET ultimo_acceso = CURRENT_TIMESTAMP WHERE "Usuario" = ?').bind(canonicalUsuario).run();
                         } catch(e) {}
                     }
                     if (shouldLogMonitor) {
@@ -2388,7 +2426,7 @@ export async function onRequestPost(context) {
                                 ? body.dispositivo.substring(0, 150)
                                 : uAgent.substring(0, 150);
                             await db.prepare('INSERT INTO "Log_Accesos" ("usuario", "fecha_hora", "timestamp", "origen", "dispositivo") VALUES (?, ?, ?, ?, ?)')
-                                .bind(usuario, nowMadrid, nowTs, origen, disp).run();
+                                .bind(canonicalUsuario, nowMadrid, nowTs, origen, disp).run();
                         } catch(e) {}
                     }
                 })());
@@ -3308,20 +3346,20 @@ export async function onRequestPost(context) {
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 401);
         
+        const checkU = await isUsernameTakenOrReserved(db, new_u);
+        if (checkU.taken) return jsonResponse({ status: 'error', message: checkU.reason }, 400);
+        const cleanUser = checkU.cleanUsername;
+
         const hasSelectedLigas = Array.isArray(ligas_seleccionadas) && ligas_seleccionadas.length > 0;
-        const [exist, ligasEqRes] = await Promise.all([
-            db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE "Usuario" = ?').bind(new_u).first(),
-            hasSelectedLigas ? db.prepare('SELECT * FROM "Ligas_Equipos"').all() : Promise.resolve(null)
-        ]);
-        if (exist) return jsonResponse({ status: 'error', message: 'El usuario ya existe' });
+        const ligasEqRes = hasSelectedLigas ? await db.prepare('SELECT * FROM "Ligas_Equipos"').all() : null;
 
         const hashedNewP = await hashPassword(new_p);
         const addStmts = [
-            db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(new_u, hashedNewP, new_n || new_u),
-            db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u),
-            db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u),
-            db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(new_u),
-            db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(new_u)
+            db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(cleanUser, hashedNewP, new_n || cleanUser),
+            db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(cleanUser),
+            db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(cleanUser),
+            db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(cleanUser),
+            db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(cleanUser)
         ];
 
         // Ligas and Auto-Assign Permissions
@@ -3378,22 +3416,16 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: 'error', message: 'Por favor, introduce un correo electrónico válido.' }, 400);
         }
 
-        // Comprobar si el nombre de usuario ya existe en Usuarios
-        const existUser = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(new_u).first();
-        if (existUser) {
-            return jsonResponse({ status: 'error', message: 'El nombre de usuario ya está en uso. Por favor, elige otro nombre de usuario.' }, 400);
+        const checkU = await isUsernameTakenOrReserved(db, new_u);
+        if (checkU.taken) {
+            return jsonResponse({ status: 'error', message: checkU.reason }, 400);
         }
+        const cleanUser = checkU.cleanUsername;
 
         // Comprobar si el correo electrónico ya está registrado en otra cuenta
         const existEmail = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Correo") = lower(?)').bind(new_email).first();
         if (existEmail) {
             return jsonResponse({ status: 'error', message: 'Ya existe una cuenta registrada con este correo electrónico. Solo se permite una cuenta por correo.' }, 400);
-        }
-
-        // Comprobar si ya existe una solicitud PENDIENTE con este usuario o correo
-        const existPendingUser = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_u).first();
-        if (existPendingUser) {
-            return jsonResponse({ status: 'error', message: 'Ya existe una solicitud de registro pendiente para este usuario. El administrador la revisará pronto.' }, 400);
         }
 
         const existPendingEmail = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Email") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_email).first();
@@ -3422,21 +3454,21 @@ export async function onRequestPost(context) {
 
         // Insertar usuario directamente con estado PENDIENTE (cuenta provisional)
         const stmts = [
-            db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real", "Correo") VALUES (?, ?, ?, ?)').bind(new_u, hashedPwd, new_n || new_u, new_email),
-            db.prepare('INSERT INTO "Insignias" ("Usuario", "Verificado", "Equipo_Club") VALUES (?, \'PENDIENTE\', ?)').bind(new_u, equipo_club),
-            db.prepare('INSERT INTO "Ligas" ("Jugador", "Global") VALUES (?, \'X\')').bind(new_u),
-            db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u),
-            db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u),
+            db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real", "Correo") VALUES (?, ?, ?, ?)').bind(cleanUser, hashedPwd, new_n || cleanUser, new_email),
+            db.prepare('INSERT INTO "Insignias" ("Usuario", "Verificado", "Equipo_Club") VALUES (?, \'PENDIENTE\', ?)').bind(cleanUser, equipo_club),
+            db.prepare('INSERT INTO "Ligas" ("Jugador", "Global") VALUES (?, \'X\')').bind(cleanUser),
+            db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(cleanUser),
+            db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(cleanUser),
             db.prepare(`
                 INSERT INTO "Solicitudes_Registro" 
                 ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Equipo_Club", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud")
                 VALUES (?, ?, ?, ?, ?, '["Global"]', 'PENDIENTE', ?)
-            `).bind(new_u, hashedPwd, new_n || new_u, new_email, equipo_club, nowTs)
+            `).bind(cleanUser, hashedPwd, new_n || cleanUser, new_email, equipo_club, nowTs)
         ];
 
         for (const team of globalTeams) {
-            stmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(new_u));
-            stmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(new_u));
+            stmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(cleanUser));
+            stmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(cleanUser));
         }
 
         await flushBatch(db, stmts);
@@ -3444,7 +3476,7 @@ export async function onRequestPost(context) {
         // Notificación Push nativa ÚNICAMENTE para Administradores
         const eqLabel = equipo_club ? ` (${equipo_club})` : '';
         const notifTitle = '🏐 Nueva Solicitud de Registro';
-        const notifBody = `¡${new_n || new_u} (@${new_u})${eqLabel} se ha registrado! Toca para verificar su cuenta y asignar ligas.`;
+        const notifBody = `¡${new_n || cleanUser} (@${cleanUser})${eqLabel} se ha registrado! Toca para verificar su cuenta y asignar ligas.`;
         
         runInBg(context, notifyAdminsPush(db, env, {
             title: notifTitle,
@@ -3564,20 +3596,17 @@ export async function onRequestPost(context) {
             let usernameChanged = false;
 
             if (nuevoUsuarioInput && nuevoUsuarioInput.toLowerCase() !== uTarget.toLowerCase()) {
-                const [existU, existReq] = await Promise.all([
-                    db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(nuevoUsuarioInput).first(),
-                    db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND id != ?').bind(nuevoUsuarioInput, id).first()
-                ]);
-                if (existU || existReq) {
-                    return jsonResponse({ status: 'error', message: `El nombre de usuario @${nuevoUsuarioInput} ya está en uso. Por favor, elige otro.` }, 400);
+                const checkU = await isUsernameTakenOrReserved(db, nuevoUsuarioInput, uTarget);
+                if (checkU.taken) {
+                    return jsonResponse({ status: 'error', message: checkU.reason }, 400);
                 }
 
                 await ensureUsuarioAliasSchema(db);
-                await renameUserInAllTables(db, uTarget, nuevoUsuarioInput);
+                await renameUserInAllTables(db, uTarget, checkU.cleanUsername);
                 await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
-                    .bind(nuevoUsuarioInput, uTarget, Date.now()).run().catch(() => {});
+                    .bind(checkU.cleanUsername, uTarget, Date.now()).run().catch(() => {});
                 await db.prepare('UPDATE "Solicitudes_Registro" SET "Usuario_Original" = ? WHERE id = ?').bind(uTarget, id).run().catch(() => {});
-                uFinal = nuevoUsuarioInput;
+                uFinal = checkU.cleanUsername;
                 usernameChanged = true;
             }
 
@@ -3856,15 +3885,15 @@ export async function onRequestPost(context) {
         // 1. Si se ha modificado el nombre de usuario
         let usernameChanged = false;
         if (nuevoU && nuevoU.toLowerCase() !== canonicalOldU.toLowerCase()) {
-            const checkTaken = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(nuevoU).first();
-            if (checkTaken) {
-                return jsonResponse({ status: 'error', message: `El nombre de usuario @${nuevoU} ya está en uso por otra persona.` }, 400);
+            const checkU = await isUsernameTakenOrReserved(db, nuevoU, canonicalOldU);
+            if (checkU.taken) {
+                return jsonResponse({ status: 'error', message: checkU.reason }, 400);
             }
             await ensureUsuarioAliasSchema(db);
-            await renameUserInAllTables(db, canonicalOldU, nuevoU);
+            await renameUserInAllTables(db, canonicalOldU, checkU.cleanUsername);
             await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
-                .bind(nuevoU, canonicalOldU, Date.now()).run().catch(() => {});
-            canonicalU = nuevoU;
+                .bind(checkU.cleanUsername, canonicalOldU, Date.now()).run().catch(() => {});
+            canonicalU = checkU.cleanUsername;
             usernameChanged = true;
         }
 
@@ -4700,17 +4729,9 @@ export async function onRequestPost(context) {
         }
 
         if (new_usuario) {
-            const cleanNewU = String(new_usuario).trim().replace(/^@/, '');
-            if (!cleanNewU) return jsonResponse({status: 'error', message: 'Nombre de usuario no válido.'}, 400);
-
-            const [checkUser, checkReq, checkAlias] = await Promise.all([
-                db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(cleanNewU).first().catch(() => null),
-                db.prepare('SELECT "Usuario" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(cleanNewU).first().catch(() => null),
-                db.prepare('SELECT "usuario_actual" FROM "Usuario_Alias" WHERE lower("usuario_antiguo") = lower(?) AND "activo" = 1').bind(cleanNewU).first().catch(() => null)
-            ]);
-            if (checkUser || checkReq || checkAlias) {
-                return jsonResponse({status: 'error', message: 'Ese nombre de usuario ya está en uso o reservado.'}, 400);
-            }
+            const checkU = await isUsernameTakenOrReserved(db, new_usuario, usuario);
+            if (checkU.taken) return jsonResponse({ status: 'error', message: checkU.reason }, 400);
+            const cleanNewU = checkU.cleanUsername;
             
             await db.prepare('DELETE FROM "Peticiones_Nombre" WHERE "Usuario Actual" = ?').bind(usuario).run();
             await db.prepare('INSERT INTO "Peticiones_Nombre" ("Usuario Actual", "Nuevo Usuario Sol", "Nuevo Nombre Sol", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?)')
@@ -4766,14 +4787,14 @@ export async function onRequestPost(context) {
             const newN = peticion["Nuevo Nombre Sol"];
             
             if (newU && newU.toLowerCase() !== oldU.toLowerCase()) {
-                const checkTaken = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?) AND lower("Usuario") != lower(?)').bind(newU, oldU).first();
-                if (checkTaken) {
-                    return jsonResponse({ status: 'error', message: `El nombre de usuario @${newU} ya está en uso por otra persona.` }, 400);
+                const checkU = await isUsernameTakenOrReserved(db, newU, oldU);
+                if (checkU.taken) {
+                    return jsonResponse({ status: 'error', message: checkU.reason }, 400);
                 }
 
-                await renameUserInAllTables(db, oldU, newU);
+                await renameUserInAllTables(db, oldU, checkU.cleanUsername);
                 await db.prepare('INSERT OR REPLACE INTO "Usuario_Alias" ("usuario_actual", "usuario_antiguo", "activo", "fecha_creacion", "usos") VALUES (?, ?, 1, ?, 0)')
-                    .bind(newU, oldU, Date.now()).run().catch(() => {});
+                    .bind(checkU.cleanUsername, oldU, Date.now()).run().catch(() => {});
             }
 
             const targetU = newU ? newU : oldU;
