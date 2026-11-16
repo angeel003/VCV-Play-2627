@@ -4059,8 +4059,7 @@ export async function onRequestPost(context) {
                 OR clave LIKE 'PURGED_%'
             `).bind(autoKeyActual).run();
         } catch(e) {}
-        const { results: allCache } = await db.prepare('SELECT clave, timestamp FROM Cache_App').all().catch(() => ({ results: [] }));
-        return jsonResponse({ status: 'success', activo, cache_keys: (allCache || []).map(r => r.clave) });
+        return jsonResponse({ status: 'success', activo });
     }
 
     // ADMIN: TOGGLE MODO MANTENIMIENTO
