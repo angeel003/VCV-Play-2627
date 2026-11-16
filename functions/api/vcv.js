@@ -4049,7 +4049,8 @@ export async function onRequestPost(context) {
     // PUBLIC: ESTADO MODO MANTENIMIENTO
     if (action === 'get_mantenimiento_status') {
         const activo = await isModoMantenimientoActivo(db);
-        return jsonResponse({ status: 'success', activo });
+        const { results: allCache } = await db.prepare('SELECT clave, timestamp FROM Cache_App').all().catch(() => ({ results: [] }));
+        return jsonResponse({ status: 'success', activo, cache_keys: (allCache || []).map(r => r.clave) });
     }
 
     // ADMIN: TOGGLE MODO MANTENIMIENTO
