@@ -531,11 +531,10 @@ async function ensureSolicitudesRegistroSchema(db) {
             await purgeUserFromAllTables(db, '123asdas');
             await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('PURGED_123asdas_v1', '1', ?)").bind(Date.now()).run().catch(() => {});
         }
-        const checkPurgedAngel = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'PURGED_TEST_ANGEL_v1'").first().catch(() => null);
-        if (!checkPurgedAngel) {
+        try {
             await purgeUserFromAllTables(db, 'angel');
-            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('PURGED_TEST_ANGEL_v1', '1', ?)").bind(Date.now()).run().catch(() => {});
-        }
+            await db.prepare('DELETE FROM "Notificaciones" WHERE "Mensaje" LIKE \'%@angel%\' OR "Titulo" LIKE \'%@angel%\'').run().catch(() => {});
+        } catch(e) {}
     } catch(e) {}
 }
 
