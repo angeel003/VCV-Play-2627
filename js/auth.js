@@ -1436,23 +1436,60 @@ window.abrirModalSolicitarCuenta = function() {
     if (em) em.value = '';
     if (p1) p1.value = '';
     if (p2) p2.value = '';
-    if (selEq) selEq.value = 'Ninguno (Aficionado / Seguidor)';
+    if (selEq) selEq.value = 'NINGUNO';
     if (otroEq) otroEq.value = '';
-    if (boxOtro) boxOtro.style.display = 'none';
+    if (typeof window.toggleSolicitarEquipoOtro === 'function') {
+        window.toggleSolicitarEquipoOtro(selEq ? selEq.value : 'NINGUNO');
+    }
     if (msg) { msg.style.display = 'none'; msg.innerHTML = ''; }
     if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta Provisional</span>'; btn.style.background = ''; }
     
     modal.style.display = 'flex';
+
+    // Detector de scroll para la pista visual de "Desliza hacia abajo"
+    const card = document.getElementById('cardSolicitarCuenta');
+    if (card) {
+        card.scrollTop = 0;
+        const hint = document.getElementById('scrollHintSolicitarModal');
+        if (hint) {
+            hint.style.opacity = '1';
+            hint.style.pointerEvents = 'auto';
+        }
+        if (!card._vcvScrollHintBound) {
+            card._vcvScrollHintBound = true;
+            card.addEventListener('scroll', function() {
+                const h = document.getElementById('scrollHintSolicitarModal');
+                if (!h) return;
+                const isNearBottom = (card.scrollHeight - card.scrollTop - card.clientHeight) < 60;
+                h.style.opacity = isNearBottom ? '0' : '1';
+                h.style.pointerEvents = isNearBottom ? 'none' : 'auto';
+            });
+        }
+    }
+};
+
+window.scrollDownModalSolicitar = function() {
+    const card = document.getElementById('cardSolicitarCuenta');
+    if (card) {
+        card.scrollBy({ top: 220, behavior: 'smooth' });
+    }
 };
 
 window.toggleSolicitarEquipoOtro = function(val) {
     const box = document.getElementById('contenedorSolicitarEquipoOtro');
-    if (box) {
-        box.style.display = (val === 'OTRO') ? 'block' : 'none';
-        if (val === 'OTRO') {
-            const txt = document.getElementById('solicitarEquipoOtroTexto');
-            if (txt) txt.focus();
-        }
+    const txt = document.getElementById('solicitarEquipoOtroTexto');
+    if (!box || !txt) return;
+
+    if (val === 'NINGUNO') {
+        box.style.display = 'block';
+        txt.placeholder = 'Especifica tu relación (ej. Aficionado, Familiar, Entrenador...)';
+    } else if (val === 'OTRO') {
+        box.style.display = 'block';
+        txt.placeholder = 'Especifica tu categoría o equipo (ej. Juvenil Masc, Cadete Fem...)';
+        txt.focus();
+    } else {
+        box.style.display = 'none';
+        txt.value = '';
     }
 };
 
@@ -1469,9 +1506,12 @@ window.enviarSolicitudRegistro = async function(e) {
     const em = (document.getElementById('solicitarEmail')?.value || '').trim().toLowerCase();
     const p1 = (document.getElementById('solicitarPassword')?.value || '').trim();
     const p2 = (document.getElementById('solicitarPassword2')?.value || '').trim();
-    const selEq = document.getElementById('solicitarEquipoClub')?.value || 'Ninguno (Aficionado / Seguidor)';
+    const selEq = document.getElementById('solicitarEquipoClub')?.value || 'NINGUNO';
     let equipoFinal = selEq;
-    if (selEq === 'OTRO') {
+    if (selEq === 'NINGUNO') {
+        const txtEsp = (document.getElementById('solicitarEquipoOtroTexto')?.value || '').trim();
+        equipoFinal = txtEsp ? `Ninguno (${txtEsp})` : 'Ninguno (Aficionado / Seguidor)';
+    } else if (selEq === 'OTRO') {
         const txtOtro = (document.getElementById('solicitarEquipoOtroTexto')?.value || '').trim();
         if (!txtOtro) {
             showError('Por favor, indica tu equipo o categoría en el campo de texto.');

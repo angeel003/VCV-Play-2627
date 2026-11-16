@@ -3136,16 +3136,27 @@ export async function onRequestPost(context) {
             return jsonResponse({ status: 'error', message: 'Por favor, introduce un correo electrónico válido.' }, 400);
         }
 
-        // Comprobar si ya existe en Usuarios
+        // Comprobar si el nombre de usuario ya existe en Usuarios
         const existUser = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(new_u).first();
         if (existUser) {
-            return jsonResponse({ status: 'error', message: 'El nombre de usuario ya está registrado en Fantasy VCV.' }, 400);
+            return jsonResponse({ status: 'error', message: 'El nombre de usuario ya está en uso. Por favor, elige otro nombre de usuario.' }, 400);
         }
 
-        // Comprobar si ya existe una solicitud PENDIENTE
-        const existPending = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_u).first();
-        if (existPending) {
+        // Comprobar si el correo electrónico ya está registrado en otra cuenta
+        const existEmail = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Correo") = lower(?)').bind(new_email).first();
+        if (existEmail) {
+            return jsonResponse({ status: 'error', message: 'Ya existe una cuenta registrada con este correo electrónico. Solo se permite una cuenta por correo.' }, 400);
+        }
+
+        // Comprobar si ya existe una solicitud PENDIENTE con este usuario o correo
+        const existPendingUser = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_u).first();
+        if (existPendingUser) {
             return jsonResponse({ status: 'error', message: 'Ya existe una solicitud de registro pendiente para este usuario. El administrador la revisará pronto.' }, 400);
+        }
+
+        const existPendingEmail = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Email") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_email).first();
+        if (existPendingEmail) {
+            return jsonResponse({ status: 'error', message: 'Ya existe una solicitud pendiente registrada con este correo electrónico.' }, 400);
         }
 
         const hashedPwd = await hashPassword(new_p);
