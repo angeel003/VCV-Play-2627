@@ -4268,8 +4268,8 @@
 </div>
 
 <!-- MODAL SOLICITAR REGISTRO DE CUENTA -->
-<div id="modalSolicitarCuenta" onclick="if(event.target === this) window.cerrarModalSolicitarCuenta()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10002; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); overscroll-behavior:contain;">
-    <div style="background:var(--bg-card); width:100%; max-width:440px; max-height:min(90vh, 90dvh); overflow-y:auto; border-radius:20px; padding:24px 20px; box-shadow:0 14px 48px rgba(0,0,0,0.7); position:relative; border:1.5px solid rgba(243, 156, 18, 0.4); box-sizing:border-box; text-align:left;">
+<div id="modalSolicitarCuenta" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10002; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); overscroll-behavior:contain;">
+    <div onclick="event.stopPropagation()" style="background:var(--bg-card); width:100%; max-width:440px; max-height:min(90vh, 90dvh); overflow-y:auto; border-radius:20px; padding:24px 20px; box-shadow:0 14px 48px rgba(0,0,0,0.7); position:relative; border:1.5px solid rgba(243, 156, 18, 0.4); box-sizing:border-box; text-align:left; user-select:text; -webkit-user-select:text;">
         <button type="button" onclick="window.cerrarModalSolicitarCuenta()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.4); border:none; color:var(--text-main); font-size:1.6rem; cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1; z-index:5;">&times;</button>
         
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
@@ -4348,6 +4348,9 @@
 
             <button type="submit" id="btnEnviarSolicitud" class="btn-gold-v2" style="width:100%; padding:12px; font-weight:800; font-size:0.95rem; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <span>🚀</span> <span>Crear Cuenta Provisional</span>
+            </button>
+            <button type="button" onclick="window.cerrarModalSolicitarCuenta()" style="width:100%; margin-top:8px; padding:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text-muted); font-size:0.82rem; border-radius:8px; cursor:pointer; font-weight:700; transition:all 0.2s;">
+                Cancelar
             </button>
         </form>
     </div>
