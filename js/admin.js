@@ -3473,11 +3473,11 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                 let bgCard = 'rgba(0,0,0,0.2)';
 
                 if (isPendiente) {
-                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);">⏳ Pendiente</span>';
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);">⏳ Pendiente (Cuenta Provisional)</span>';
                     borderColor = 'rgba(243, 156, 18, 0.45)';
                     bgCard = 'rgba(243, 156, 18, 0.05)';
                 } else if (isAprobada) {
-                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(46, 204, 113, 0.2); color:#2ecc71; border:1px solid rgba(46, 204, 113, 0.4);">✅ Aprobada</span>';
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(46, 204, 113, 0.2); color:#2ecc71; border:1px solid rgba(46, 204, 113, 0.4);">✅ Aprobada / Verificada</span>';
                     borderColor = 'rgba(46, 204, 113, 0.3)';
                 } else if (isRechazada) {
                     estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(231, 76, 60, 0.2); color:#e74c3c; border:1px solid rgba(231, 76, 60, 0.4);">❌ Rechazada</span>';
@@ -3498,16 +3498,34 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                     } catch(e) { fechaSol = String(sol.Fecha_Solicitud); }
                 }
 
+                let camposEdicionHtml = '';
                 let ligasCheckboxesHtml = '';
                 if (isPendiente) {
+                    camposEdicionHtml = `
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+                            <div>
+                                <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Nombre Completo / Apodo:</label>
+                                <input type="text" id="sol_nombre_${sol.id}" value="${sol.Nombre_Real || ''}" style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Equipo / Vinculación con el club:</label>
+                                <input type="text" id="sol_equipo_${sol.id}" value="${sol.Equipo_Club || ''}" placeholder="Ej. Superliga 2, Juvenil, Aficionado..." style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box;">
+                            </div>
+                        </div>
+                    `;
+
                     ligasCheckboxesHtml = `
                         <div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.25); border-radius:8px; border:1px solid var(--border-color);">
-                            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:6px; text-transform:uppercase;">
-                                Asignar a ligas al aprobar:
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
+                                <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">
+                                    Asignar a Ligas al aprobar (actualiza partidos y predicciones):
+                                </div>
+                                <span style="font-size:0.68rem; color:#f39c12; font-weight:600;">(Global por defecto)</span>
                             </div>
                             <div id="sol_ligas_${sol.id}" style="display:flex; gap:6px; flex-wrap:wrap;">
                                 ${ligasDisponibles.map(liga => {
-                                    const checked = (ligasPedidasArr.length === 0 || ligasPedidasArr.includes(liga)) ? 'checked' : '';
+                                    const isGlobal = liga === 'Global';
+                                    const checked = (isGlobal || ligasPedidasArr.includes(liga)) ? 'checked' : '';
                                     return `
                                         <label style="margin:0; cursor:pointer; font-size:0.76rem; background:var(--bg-input); padding:5px 10px; border-radius:6px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:5px; user-select:none;">
                                             <input type="checkbox" value="${liga}" ${checked} style="accent-color:var(--secondary-color); cursor:pointer;">
@@ -3537,21 +3555,21 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                             </div>
                         </div>
 
-                        ${ligasPedidasArr.length > 0 ? `
-                            <div style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                                <span>Ligas que solicitó el usuario:</span>
-                                ${ligasPedidasArr.map(l => `<span style="background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:4px; font-weight:700; color:var(--text-main); border:1px solid var(--border-color);">${l}</span>`).join('')}
+                        ${isPendiente ? camposEdicionHtml : `
+                            <div style="font-size:0.76rem; color:var(--text-muted); display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                                <span>🏐 <b>Equipo:</b> ${sol.Equipo_Club || 'No especificado'}</span>
+                                ${ligasPedidasArr.length > 0 ? `<span>🏆 <b>Ligas:</b> ${ligasPedidasArr.join(', ')}</span>` : ''}
                             </div>
-                        ` : ''}
+                        `}
 
                         ${isPendiente ? ligasCheckboxesHtml : ''}
 
                         ${isPendiente ? `
                             <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
-                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'APROBAR')" style="flex:1; min-width:140px; padding:8px 14px; font-size:0.78rem; font-weight:800; border-radius:8px; background:#27ae60; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(39,174,96,0.3);">
-                                    <span>✅</span> <span>Aprobar y Dar Acceso</span>
+                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'APROBAR')" style="flex:1; min-width:160px; padding:9px 14px; font-size:0.8rem; font-weight:800; border-radius:8px; background:#27ae60; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(39,174,96,0.3);">
+                                    <span>✅</span> <span>Aprobar y Asignar Ligas</span>
                                 </button>
-                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'RECHAZAR')" style="padding:8px 14px; font-size:0.78rem; font-weight:800; border-radius:8px; background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid #e74c3c; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'RECHAZAR')" style="padding:9px 14px; font-size:0.8rem; font-weight:800; border-radius:8px; background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid #e74c3c; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
                                     <span>❌</span> <span>Rechazar</span>
                                 </button>
                             </div>
@@ -3582,18 +3600,29 @@ window.adminResolverSolicitud = async function(id, decision) {
     if (!id || !decision) return;
 
     let ligasSel = [];
+    let nombreReal = '';
+    let equipoClub = '';
+
     if (decision === 'APROBAR') {
         const cont = document.getElementById(`sol_ligas_${id}`);
         if (cont) {
             const cbs = cont.querySelectorAll('input[type="checkbox"]:checked');
             ligasSel = Array.from(cbs).map(cb => cb.value);
         }
-        const confirmMsg = ligasSel.length > 0 
-            ? `¿Confirmas que deseas aprobar esta cuenta y darle acceso a ${ligasSel.length} liga(s) (${ligasSel.join(', ')})?`
-            : `No has seleccionado ninguna liga. ¿Deseas aprobar al usuario sin inscribirlo en ninguna liga?`;
+        if (!ligasSel.includes('Global')) {
+            ligasSel.unshift('Global');
+        }
+
+        const inputNom = document.getElementById(`sol_nombre_${id}`);
+        if (inputNom) nombreReal = inputNom.value.trim();
+
+        const inputEq = document.getElementById(`sol_equipo_${id}`);
+        if (inputEq) equipoClub = inputEq.value.trim();
+
+        const confirmMsg = `¿Confirmas la verificación y aprobación de esta cuenta con acceso a ${ligasSel.length} liga(s) (${ligasSel.join(', ')})?`;
         if (!confirm(confirmMsg)) return;
     } else {
-        if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud de registro?')) return;
+        if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud de registro? Se revocará la cuenta provisional.')) return;
     }
 
     try {
@@ -3605,6 +3634,8 @@ window.adminResolverSolicitud = async function(id, decision) {
                 password: currentPassword,
                 id: id,
                 decision: decision,
+                nombre_real: nombreReal,
+                equipo_club: equipoClub,
                 ligas_seleccionadas: ligasSel
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }

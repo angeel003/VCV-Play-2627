@@ -412,13 +412,18 @@ async function ensureSolicitudesRegistroSchema(db) {
         "Password_Hash" TEXT NOT NULL,
         "Nombre_Real" TEXT NOT NULL,
         "Email" TEXT NOT NULL,
+        "Equipo_Club" TEXT,
         "Ligas_Solicitadas" TEXT,
         "Estado" TEXT DEFAULT 'PENDIENTE',
         "Fecha_Solicitud" INTEGER NOT NULL,
         "Fecha_Resolucion" INTEGER,
         "Revisado_Por" TEXT
     )`).run().catch(() => {});
+    try { await db.prepare('ALTER TABLE "Solicitudes_Registro" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
     try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON "Solicitudes_Registro" ("Estado")').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Verificado" TEXT DEFAULT \'APROBADO\'').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run(); } catch(e) {}
 }
 
 async function ensureMonitorSchema(db) {
@@ -1198,6 +1203,10 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Avatar_Url TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Permiso_MVP TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Permiso_Resultados TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Verificado TEXT DEFAULT 'APROBADO'").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Equipo_Club TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Usuarios ADD COLUMN Correo TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Solicitudes_Registro ADD COLUMN Equipo_Club TEXT").run(); } catch(e) {}
         try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT, apodo TEXT, posicion TEXT)").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN apodo TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Plantilla_Superliga ADD COLUMN posicion TEXT").run(); } catch(e) {}
@@ -2179,6 +2188,12 @@ export async function onRequestPost(context) {
 
         const allInsignias = (allInsigniasRes && allInsigniasRes.results) || [];
         const userInsignia = allInsignias.find(i => i.Usuario === usuario);
+        if (userInsignia && userInsignia.Verificado === 'RECHAZADA') {
+            return jsonResponse({
+                status: "error",
+                message: "Esta solicitud de cuenta fue rechazada por el administrador. Contacta con adminfantasyvcv@gmail.com si crees que es un error."
+            }, 403);
+        }
         const isUserAdmin = Boolean(userInsignia && (userInsignia["Admin Web"] === "X"));
         const isUserGestorMvp = Boolean(userInsignia && (userInsignia["Permiso_MVP"] === "X"));
         const hasPermisoResultados = Boolean(userInsignia && Boolean(userInsignia["Permiso_Resultados"]));
@@ -2743,6 +2758,12 @@ export async function onRequestPost(context) {
             ]));
         }
 
+        // Mapeo de estado de verificación de usuarios
+        const userVerificadoMap = {};
+        for (const b of allInsignias || []) {
+            if (b.Usuario) userVerificadoMap[b.Usuario] = b.Verificado || 'APROBADO';
+        }
+
         // Formatear clasificaciones por liga (reutilizando allLigasRows prefetched)
         const clasificacionesFormateadas = {};
         for (const lName of misLigas) {
@@ -2751,6 +2772,10 @@ export async function onRequestPost(context) {
             for (const row of allLigasRows) {
                 const uName = row.Jugador;
                 if (row[lName] && row[lName].toString().toUpperCase() === "X") {
+                    // Los usuarios provisionales (PENDIENTE) solo son visibles para sí mismos, no para el resto de usuarios
+                    if (userVerificadoMap[uName] === 'PENDIENTE' && uName !== usuario) {
+                        continue;
+                    }
                     ranking.push({
                         jugador: uName,
                         nombre_real: mapNombresReales[uName] || uName,
@@ -2806,6 +2831,9 @@ export async function onRequestPost(context) {
         return jsonResponse({
             status: "success",
             usuario: usuario,
+            es_provisional: Boolean(userInsignia && userInsignia.Verificado === 'PENDIENTE'),
+            verificado: (userInsignia && userInsignia.Verificado) || 'APROBADO',
+            equipo_club: (userInsignia && userInsignia.Equipo_Club) || '',
             modo_mantenimiento: mantenimientoActivo,
             notificaciones: notificaciones,
             push_config: pushConfigPayload,
@@ -3085,7 +3113,7 @@ export async function onRequestPost(context) {
     // 📝 SOLICITUDES DE REGISTRO Y GESTIÓN DE ACCESO A LIGAS
     // ==============================================================================
 
-    // PUBLIC: SOLICITAR REGISTRO DE CUENTA
+    // PUBLIC: SOLICITAR REGISTRO DE CUENTA (CREA CUENTA PROVISIONAL EN LIGA GLOBAL)
     if (action === 'request_registration') {
         await ensureSolicitudesRegistroSchema(db);
 
@@ -3093,10 +3121,13 @@ export async function onRequestPost(context) {
         const new_p = (body.new_p || '').trim();
         const new_n = (body.new_n || '').trim();
         const new_email = (body.new_email || '').trim().toLowerCase();
-        const ligas_solicitadas = Array.isArray(body.ligas) ? body.ligas : [];
+        const equipo_club = (body.equipo_club || '').trim();
 
         if (!new_u || new_u.length < 3) {
             return jsonResponse({ status: 'error', message: 'El nombre de usuario debe tener al menos 3 caracteres.' }, 400);
+        }
+        if (/\s/.test(new_u)) {
+            return jsonResponse({ status: 'error', message: 'El nombre de usuario no puede contener espacios.' }, 400);
         }
         if (!new_p || new_p.length < 4) {
             return jsonResponse({ status: 'error', message: 'La contraseña debe tener al menos 4 caracteres.' }, 400);
@@ -3119,17 +3150,48 @@ export async function onRequestPost(context) {
 
         const hashedPwd = await hashPassword(new_p);
         const nowTs = Date.now();
-        const ligasJson = JSON.stringify(ligas_solicitadas);
 
-        await db.prepare(`
-            INSERT INTO "Solicitudes_Registro" 
-            ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud")
-            VALUES (?, ?, ?, ?, ?, 'PENDIENTE', ?)
-        `).bind(new_u, hashedPwd, new_n || new_u, new_email, ligasJson, nowTs).run();
+        // Obtener equipos pertenecientes a la liga Global desde Ligas_Equipos
+        let globalTeams = [];
+        try {
+            const ligasEqRes = await db.prepare('SELECT * FROM "Ligas_Equipos" WHERE "Liga" = \'Global\'').first();
+            if (ligasEqRes) {
+                for (const col of Object.keys(ligasEqRes)) {
+                    if (col !== 'Liga' && col !== 'id' && ligasEqRes[col] && ligasEqRes[col].toString().toUpperCase() === 'X') {
+                        globalTeams.push(col);
+                    }
+                }
+            }
+        } catch(e) {}
+        if (globalTeams.length === 0) {
+            globalTeams = ["Universidad de Valladolid VCV", "VALCYL VCV", "Valladolid CV Vacceas", "VCV Maria Molina", "VCV Meseta"];
+        }
+
+        // Insertar usuario directamente con estado PENDIENTE (cuenta provisional)
+        const stmts = [
+            db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real", "Correo") VALUES (?, ?, ?, ?)').bind(new_u, hashedPwd, new_n || new_u, new_email),
+            db.prepare('INSERT INTO "Insignias" ("Usuario", "Verificado", "Equipo_Club") VALUES (?, \'PENDIENTE\', ?)').bind(new_u, equipo_club),
+            db.prepare('INSERT INTO "Ligas" ("Jugador", "Global") VALUES (?, \'X\')').bind(new_u),
+            db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(new_u),
+            db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(new_u),
+            db.prepare(`
+                INSERT INTO "Solicitudes_Registro" 
+                ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Equipo_Club", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud")
+                VALUES (?, ?, ?, ?, ?, '["Global"]', 'PENDIENTE', ?)
+            `).bind(new_u, hashedPwd, new_n || new_u, new_email, equipo_club, nowTs)
+        ];
+
+        for (const team of globalTeams) {
+            stmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(new_u));
+            stmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(new_u));
+        }
+
+        await flushBatch(db, stmts);
 
         // Notificación Push nativa ÚNICAMENTE para Administradores
+        const eqLabel = equipo_club ? ` (${equipo_club})` : '';
         const notifTitle = '🏐 Nueva Solicitud de Registro';
-        const notifBody = `¡${new_n || new_u} (@${new_u}) quiere unirse a Fantasy VCV! Toca para revisar y aprobar.`;
+        const notifBody = `¡${new_n || new_u} (@${new_u})${eqLabel} se ha registrado! Toca para verificar su cuenta y asignar ligas.`;
         
         runInBg(context, notifyAdminsPush(db, env, {
             title: notifTitle,
@@ -3140,7 +3202,8 @@ export async function onRequestPost(context) {
 
         return jsonResponse({
             status: 'success',
-            message: '¡Solicitud enviada con éxito! Tu registro ha sido remitido al administrador. En cuanto sea aprobado podrás iniciar sesión.'
+            message: '¡Cuenta creada! Ya puedes iniciar sesión con tu usuario y contraseña. Tu cuenta está en modo provisional mientras el administrador revisa tu vinculación y asigna tus ligas.',
+            usuario: new_u
         });
     }
 
@@ -3172,7 +3235,7 @@ export async function onRequestPost(context) {
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
 
         const { results: solicitudes } = await db.prepare(`
-            SELECT id, Usuario, Nombre_Real, Email, Ligas_Solicitadas, Estado, Fecha_Solicitud, Fecha_Resolucion, Revisado_Por
+            SELECT id, Usuario, Nombre_Real, Email, Equipo_Club, Ligas_Solicitadas, Estado, Fecha_Solicitud, Fecha_Resolucion, Revisado_Por
             FROM "Solicitudes_Registro"
             ORDER BY CASE WHEN Estado = 'PENDIENTE' THEN 0 ELSE 1 END, Fecha_Solicitud DESC
             LIMIT 50
@@ -3211,7 +3274,7 @@ export async function onRequestPost(context) {
         const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
 
-        const { id, decision, ligas_seleccionadas } = body;
+        const { id, decision, ligas_seleccionadas, nombre_real, equipo_club } = body;
         if (!id || !decision) {
             return jsonResponse({ status: 'error', message: 'ID y decisión son obligatorios.' }, 400);
         }
@@ -3225,77 +3288,81 @@ export async function onRequestPost(context) {
         }
 
         const nowTs = Date.now();
+        const uTarget = solicitud.Usuario;
 
         if (decision === 'RECHAZAR') {
-            await db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'RECHAZADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
-                .bind(nowTs, usuario, id).run();
-            return jsonResponse({ status: 'success', message: `Solicitud de @${solicitud.Usuario} rechazada correctamente.` });
+            const rejectStmts = [
+                db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'RECHAZADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
+                    .bind(nowTs, usuario, id),
+                db.prepare('UPDATE "Insignias" SET "Verificado" = \'RECHAZADA\' WHERE "Usuario" = ?').bind(uTarget),
+                db.prepare('DELETE FROM "Usuarios" WHERE "Usuario" = ?').bind(uTarget),
+                db.prepare('DELETE FROM "Ligas" WHERE "Jugador" = ?').bind(uTarget),
+                db.prepare('DELETE FROM "Permisos_Equipos" WHERE "Jugador" = ?').bind(uTarget),
+                db.prepare('DELETE FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(uTarget)
+            ];
+            await flushBatch(db, rejectStmts);
+            return jsonResponse({ status: 'success', message: `Solicitud de @${uTarget} rechazada correctamente y cuenta provisional revocada.` });
         }
 
         if (decision === 'APROBAR') {
-            const uTarget = solicitud.Usuario;
-            const pHash = solicitud.Password_Hash;
-            const nReal = solicitud.Nombre_Real;
-            const ligasSel = Array.isArray(ligas_seleccionadas) ? ligas_seleccionadas : [];
-
-            // Comprobar si ya existe en Usuarios
-            const existUser = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(uTarget).first();
-            if (existUser) {
-                await db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'APROBADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
-                    .bind(nowTs, usuario, id).run();
-                return jsonResponse({ status: 'success', message: `El usuario @${uTarget} ya existía en la plataforma. Se ha marcado la solicitud como aprobada.` });
+            const nRealFinal = (nombre_real !== undefined && nombre_real !== null && String(nombre_real).trim() !== '') ? String(nombre_real).trim() : solicitud.Nombre_Real;
+            const eqClubFinal = (equipo_club !== undefined && equipo_club !== null) ? String(equipo_club).trim() : (solicitud.Equipo_Club || '');
+            let ligasSel = Array.isArray(ligas_seleccionadas) ? ligas_seleccionadas : [];
+            if (!ligasSel.includes('Global')) {
+                ligasSel.unshift('Global');
             }
 
-            const [ligasEqRes] = await Promise.all([
-                ligasSel.length > 0 ? db.prepare('SELECT * FROM "Ligas_Equipos"').all() : Promise.resolve(null)
+            const [ligasEqRes, sampleLigas, samplePerm] = await Promise.all([
+                db.prepare('SELECT * FROM "Ligas_Equipos"').all(),
+                db.prepare('SELECT * FROM "Ligas" LIMIT 1').first(),
+                db.prepare('SELECT * FROM "Permisos_Equipos" LIMIT 1').first()
             ]);
 
-            const addStmts = [
-                db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(uTarget, pHash, nReal || uTarget),
-                db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(uTarget),
-                db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(uTarget),
-                db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(uTarget),
-                db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(uTarget),
-                db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'APROBADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?').bind(nowTs, usuario, id)
+            const updateStmts = [
+                db.prepare('UPDATE "Usuarios" SET "Nombre Real" = ? WHERE "Usuario" = ?').bind(nRealFinal, uTarget),
+                db.prepare('UPDATE "Insignias" SET "Verificado" = \'APROBADO\', "Equipo_Club" = ? WHERE "Usuario" = ?').bind(eqClubFinal, uTarget),
+                db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'APROBADA\', "Nombre_Real" = ?, "Equipo_Club" = ?, "Ligas_Solicitadas" = ?, "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
+                    .bind(nRealFinal, eqClubFinal, JSON.stringify(ligasSel), nowTs, usuario, id)
             ];
 
-            if (ligasSel.length > 0) {
-                for (const l of ligasSel) {
-                    addStmts.push(db.prepare(`UPDATE "Ligas" SET "${l}" = 'X' WHERE "Jugador" = ?`).bind(uTarget));
-                }
-                const allLigasEquipos = (ligasEqRes && ligasEqRes.results) || [];
-                const equiposToPermit = new Set();
-                for (const row of allLigasEquipos) {
-                    const lName = row.Liga;
-                    if (ligasSel.includes(lName)) {
-                        for (const col of Object.keys(row)) {
-                            if (col !== "Liga" && col !== "id" && row[col] && row[col].toString().toUpperCase() === "X") {
-                                equiposToPermit.add(col);
-                            }
+            // Asegurar que exista fila en Ligas y Permisos si no existiera
+            updateStmts.push(db.prepare('INSERT OR IGNORE INTO "Ligas" ("Jugador") VALUES (?)').bind(uTarget));
+            updateStmts.push(db.prepare('INSERT OR IGNORE INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(uTarget));
+            updateStmts.push(db.prepare('INSERT OR IGNORE INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(uTarget));
+
+            // Actualizar todas las columnas de ligas
+            const allLeagueCols = Object.keys(sampleLigas || {}).filter(k => k !== 'Jugador' && k !== 'id');
+            for (const col of allLeagueCols) {
+                const isX = ligasSel.includes(col);
+                updateStmts.push(db.prepare(`UPDATE "Ligas" SET "${col}" = ${isX ? "'X'" : "NULL"} WHERE "Jugador" = ?`).bind(uTarget));
+            }
+
+            // Sincronizar Permisos_Equipos y Permisos_Secreta según las ligas aprobadas
+            const allLigasEquipos = (ligasEqRes && ligasEqRes.results) || [];
+            const equiposToPermit = new Set();
+            for (const row of allLigasEquipos) {
+                const lName = row.Liga;
+                if (ligasSel.includes(lName)) {
+                    for (const col of Object.keys(row)) {
+                        if (col !== "Liga" && col !== "id" && row[col] && row[col].toString().toUpperCase() === "X") {
+                            equiposToPermit.add(col);
                         }
                     }
                 }
-                for (const team of equiposToPermit) {
-                    addStmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(uTarget));
-                    addStmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(uTarget));
-                }
             }
 
-            await flushBatch(db, addStmts);
+            const allPermCols = Object.keys(samplePerm || {}).filter(k => k !== 'Jugador' && k !== 'id');
+            for (const team of allPermCols) {
+                const hasAccess = equiposToPermit.has(team);
+                updateStmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = ${hasAccess ? "'X'" : "NULL"} WHERE "Jugador" = ?`).bind(uTarget));
+                updateStmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = ${hasAccess ? "'X'" : "NULL"} WHERE "Usuario" = ?`).bind(uTarget));
+            }
 
-            // Guardar correo si la columna Correo existe en Usuarios
-            try {
-                await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run();
-            } catch(e) {}
-            try {
-                if (solicitud.Email) {
-                    await db.prepare('UPDATE "Usuarios" SET "Correo" = ? WHERE "Usuario" = ?').bind(solicitud.Email, uTarget).run();
-                }
-            } catch(e) {}
+            await flushBatch(db, updateStmts);
 
             return jsonResponse({
                 status: 'success',
-                message: `¡Usuario @${uTarget} aprobado y activado con éxito en ${ligasSel.length} ligas!`
+                message: `¡Usuario @${uTarget} aprobado y verificado con éxito! Asignado a ${ligasSel.length} liga(s): ${ligasSel.join(', ')}.`
             });
         }
 

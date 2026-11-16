@@ -2623,6 +2623,16 @@
             <form id="prediccionForm">
                 
                 <div id="perfilUsuarioTop"></div>
+                <!-- BANNER CUENTA PROVISIONAL (VISIBLE SOLO CUANDO EL USUARIO ESTÁ PENDIENTE DE VERIFICACIÓN) -->
+                <div id="bannerCuentaProvisional" style="display:none; background: linear-gradient(135deg, rgba(243, 156, 18, 0.18), rgba(230, 126, 34, 0.12)); border: 1.5px solid #f39c12; border-radius: 12px; padding: 12px 14px; margin: 10px auto 14px; max-width: 600px; box-shadow: 0 4px 16px rgba(243, 156, 18, 0.15); font-size: 0.82rem; color: var(--text-main); line-height: 1.45;">
+                  <div style="display:flex; align-items:flex-start; gap:10px;">
+                    <span style="font-size:1.4rem; line-height:1; flex-shrink:0;">⏳</span>
+                    <div>
+                      <b style="color:#f39c12; font-size:0.88rem; display:block; margin-bottom:3px;">Cuenta pendiente de verificación</b>
+                      <span>Tu acceso es <b>provisional</b> mientras el administrador revisa tu solicitud de vinculación y ligas. Ya puedes realizar tus <b>pronósticos</b> de los partidos disponibles en la clasificación <b>Global</b> y votar en el <b>MVP</b>. Una vez verificada tu cuenta, tus puntos serán visibles en las clasificaciones para el resto de usuarios y se activarán tus ligas definitivas.</span>
+                    </div>
+                  </div>
+                </div>
                 <div id="pushPromoBannerPartidos"></div>
                 <div id="mvpBannerAviso" style="display:none;"></div>
 
@@ -4161,16 +4171,34 @@
             </div>
 
             <div class="form-group" style="margin-bottom:14px;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">¿En qué ligas deseas participar?</label>
-                <div id="solicitarLigasContainer" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                    <span style="font-size:0.74rem; color:var(--text-muted);">Cargando ligas...</span>
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">¿Perteneces a algún equipo del club?</label>
+                <select id="solicitarEquipoClub" class="form-control" onchange="window.toggleSolicitarEquipoOtro(this.value)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+                    <option value="Ninguno (Aficionado / Seguidor)">Ninguno (Aficionado / Seguidor)</option>
+                    <option value="Superliga 2 Masculina (VALCYL VCV)">Superliga 2 Masculina (VALCYL VCV)</option>
+                    <option value="1ª División Nacional Fem (Valladolid CV Vacceas)">1ª División Nacional Fem (Valladolid CV Vacceas)</option>
+                    <option value="2ª División Nacional Masc (VCV Meseta)">2ª División Nacional Masc (VCV Meseta)</option>
+                    <option value="2ª División Nacional Fem (VCV Maria Molina)">2ª División Nacional Fem (VCV Maria Molina)</option>
+                    <option value="Universidad de Valladolid VCV">Universidad de Valladolid VCV</option>
+                    <option value="Juvenil Masculino">Juvenil Masculino</option>
+                    <option value="Juvenil Femenino">Juvenil Femenino</option>
+                    <option value="Cadete Masculino">Cadete Masculino</option>
+                    <option value="Cadete Femenino">Cadete Femenino</option>
+                    <option value="Infantil Masculino">Infantil Masculino</option>
+                    <option value="Infantil Femenino">Infantil Femenino</option>
+                    <option value="OTRO">Otro equipo (especificar)...</option>
+                </select>
+                <div id="contenedorSolicitarEquipoOtro" style="display:none; margin-top:8px;">
+                    <input type="text" id="solicitarEquipoOtroTexto" class="form-control" placeholder="Escribe tu equipo o relación con el club..." style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
                 </div>
+                <small style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:4px;">
+                    Accederás inmediatamente con cuenta provisional en la liga <b>Global</b>. El administrador revisará tu equipo y te asignará tus ligas definitivas.
+                </small>
             </div>
 
             <div id="solicitarMensaje" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.8rem; margin-bottom:12px; font-weight:700; line-height:1.4;"></div>
 
             <button type="submit" id="btnEnviarSolicitud" class="btn-gold-v2" style="width:100%; padding:12px; font-weight:800; font-size:0.95rem; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <span>🚀</span> <span>Enviar Solicitud de Registro</span>
+                <span>🚀</span> <span>Crear Cuenta Provisional</span>
             </button>
         </form>
     </div>

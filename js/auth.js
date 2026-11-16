@@ -887,6 +887,10 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
 
             document.getElementById('loginSection').style.display = "none";
             document.getElementById('appSection').style.display = "block";
+            const bannerProv = document.getElementById('bannerCuentaProvisional');
+            if (bannerProv) {
+                bannerProv.style.display = (data.es_provisional || data.verificado === 'PENDIENTE') ? 'block' : 'none';
+            }
             if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin();
 
             const renderPrediccionesTotalesLazy = () => {
@@ -1395,6 +1399,9 @@ window.abrirModalSolicitarCuenta = function() {
     const em = document.getElementById('solicitarEmail');
     const p1 = document.getElementById('solicitarPassword');
     const p2 = document.getElementById('solicitarPassword2');
+    const selEq = document.getElementById('solicitarEquipoClub');
+    const otroEq = document.getElementById('solicitarEquipoOtroTexto');
+    const boxOtro = document.getElementById('contenedorSolicitarEquipoOtro');
     const msg = document.getElementById('solicitarMensaje');
     const btn = document.getElementById('btnEnviarSolicitud');
     
@@ -1403,34 +1410,23 @@ window.abrirModalSolicitarCuenta = function() {
     if (em) em.value = '';
     if (p1) p1.value = '';
     if (p2) p2.value = '';
+    if (selEq) selEq.value = 'Ninguno (Aficionado / Seguidor)';
+    if (otroEq) otroEq.value = '';
+    if (boxOtro) boxOtro.style.display = 'none';
     if (msg) { msg.style.display = 'none'; msg.innerHTML = ''; }
-    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Enviar Solicitud de Registro</span>'; btn.style.background = ''; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta Provisional</span>'; btn.style.background = ''; }
     
     modal.style.display = 'flex';
+};
 
-    // Cargar ligas disponibles desde el backend
-    const container = document.getElementById('solicitarLigasContainer');
-    if (container) {
-        container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>';
-        fetchSeguro(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ action: 'get_registro_ligas' }),
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const ligas = (data && data.ligas && data.ligas.length > 0) ? data.ligas : ['Oro', 'Plata'];
-            container.innerHTML = '';
-            ligas.forEach(l => {
-                const lbl = document.createElement('label');
-                lbl.style.cssText = 'margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:7px 12px; border-radius:8px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:7px; user-select:none; transition:all 0.2s;';
-                lbl.innerHTML = `<input type="checkbox" class="chk-solicitar-liga" value="${l}" checked style="accent-color:var(--secondary-color); cursor:pointer; width:16px; height:16px;"> <span>${l}</span>`;
-                container.appendChild(lbl);
-            });
-        })
-        .catch(() => {
-            container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">(El administrador te asignará las ligas correspondientes)</span>';
-        });
+window.toggleSolicitarEquipoOtro = function(val) {
+    const box = document.getElementById('contenedorSolicitarEquipoOtro');
+    if (box) {
+        box.style.display = (val === 'OTRO') ? 'block' : 'none';
+        if (val === 'OTRO') {
+            const txt = document.getElementById('solicitarEquipoOtroTexto');
+            if (txt) txt.focus();
+        }
     }
 };
 
@@ -1447,6 +1443,12 @@ window.enviarSolicitudRegistro = async function(e) {
     const em = (document.getElementById('solicitarEmail')?.value || '').trim().toLowerCase();
     const p1 = (document.getElementById('solicitarPassword')?.value || '').trim();
     const p2 = (document.getElementById('solicitarPassword2')?.value || '').trim();
+    const selEq = document.getElementById('solicitarEquipoClub')?.value || 'Ninguno (Aficionado / Seguidor)';
+    let equipoFinal = selEq;
+    if (selEq === 'OTRO') {
+        const txtOtro = (document.getElementById('solicitarEquipoOtroTexto')?.value || '').trim();
+        equipoFinal = txtOtro || 'Otro';
+    }
     const msg = document.getElementById('solicitarMensaje');
     const btn = document.getElementById('btnEnviarSolicitud');
     
@@ -1489,12 +1491,9 @@ window.enviarSolicitudRegistro = async function(e) {
         return;
     }
 
-    const cbs = document.querySelectorAll('.chk-solicitar-liga:checked');
-    const ligasSel = Array.from(cbs).map(cb => cb.value);
-
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⏳</span> <span>Enviando solicitud...</span>';
+        btn.innerHTML = '<span>⏳</span> <span>Creando cuenta provisional...</span>';
     }
     if (msg) msg.style.display = 'none';
 
@@ -1507,33 +1506,42 @@ window.enviarSolicitudRegistro = async function(e) {
                 new_p: p1,
                 new_n: nr || u,
                 new_email: em,
-                ligas: ligasSel
+                equipo_club: equipoFinal
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
         const data = await res.json();
         
         if (data && data.status === 'success') {
-            showSuccess(data.message || '¡Solicitud enviada con éxito! El administrador revisará tu cuenta.');
+            showSuccess(data.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión con tu usuario y contraseña.');
             if (btn) {
-                btn.innerHTML = '<span>✅</span> <span>¡Solicitud Enviada!</span>';
+                btn.innerHTML = '<span>✅</span> <span>¡Cuenta Creada!</span>';
                 btn.style.background = '#27ae60';
             }
+            // Autorrellenar campos de login
+            const inpU = document.getElementById('username');
+            const inpP = document.getElementById('password');
+            if (inpU) inpU.value = u;
+            if (inpP) inpP.value = p1;
+
             setTimeout(() => {
                 window.cerrarModalSolicitarCuenta();
-            }, 3500);
+                if (typeof mostrarToast === 'function') {
+                    mostrarToast('✨ Ya puedes pulsar en Iniciar Sesión para entrar con tu cuenta provisional.');
+                }
+            }, 2500);
         } else {
-            showError((data && data.message) || 'Error al procesar la solicitud.');
+            showError((data && data.message) || 'Error al procesar el registro.');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>🚀</span> <span>Reintentar Envío</span>';
+                btn.innerHTML = '<span>🚀</span> <span>Reintentar Registro</span>';
             }
         }
     } catch(err) {
         showError('Error de conexión con el servidor. Por favor, inténtalo de nuevo.');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<span>🚀</span> <span>Reintentar Envío</span>';
+            btn.innerHTML = '<span>🚀</span> <span>Reintentar Registro</span>';
         }
     }
 };
