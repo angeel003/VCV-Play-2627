@@ -526,11 +526,7 @@ async function ensureSolicitudesRegistroSchema(db) {
     try { await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run(); } catch(e) {}
     await ensureUsuarioAliasSchema(db);
     try {
-        const checkPurged = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'PURGED_123asdas_v1'").first().catch(() => null);
-        if (!checkPurged) {
-            await purgeUserFromAllTables(db, '123asdas');
-            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('PURGED_123asdas_v1', '1', ?)").bind(Date.now()).run().catch(() => {});
-        }
+        await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'PURGED_%'").run();
     } catch(e) {}
 }
 
@@ -3334,10 +3330,16 @@ export async function onRequestPost(context) {
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         try { 
+            // 1. Borrar caché de clasificaciones y estadísticas
             await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); 
+            // 2. Borrar banderas de purga temporales
+            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'PURGED_%'").run();
+            // 3. Borrar recordatorios y notificaciones automáticas antiguas de más de 7 días
+            const sieteDiasAtras = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            await db.prepare("DELETE FROM Cache_App WHERE (clave LIKE 'RECORDATORIO_%' OR clave LIKE 'MVP_NOTIF_%' OR clave LIKE 'AUTO_UNFREEZE_%') AND timestamp < ?").bind(sieteDiasAtras).run();
         } catch(e) {}
         
-        return jsonResponse({ status: 'success', message: 'Caché borrada. Las clasificaciones se recalcularán al recargar la web.' });
+        return jsonResponse({ status: 'success', message: 'Caché depurada con éxito. Se han recalculado las clasificaciones y limpiado los registros temporales obsoletos.' });
     }
 
     // ADMIN: ADD USER
