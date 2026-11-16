@@ -436,6 +436,52 @@ async function ensureSolicitudesRegistroSchema(db) {
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Aviso_Moderacion" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run(); } catch(e) {}
+    try {
+        const checkPurged = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'PURGED_123asdas_v1'").first().catch(() => null);
+        if (!checkPurged) {
+            await purgeUserFromAllTables(db, '123asdas');
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('PURGED_123asdas_v1', '1', ?)").bind(Date.now()).run().catch(() => {});
+        }
+    } catch(e) {}
+}
+
+async function purgeUserFromAllTablesExceptSolicitud(db, targetUser) {
+    if (!targetUser) return;
+    const u = targetUser.trim();
+    const tables = [
+        { table: "Usuarios", col: "Usuario" },
+        { table: "Insignias", col: "Usuario" },
+        { table: "Porras", col: "Usuario" },
+        { table: "Ligas", col: "Jugador" },
+        { table: "Permisos_Equipos", col: "Jugador" },
+        { table: "Permisos_Secreta", col: "Usuario" },
+        { table: "Predicciones_Secretas", col: "Usuario" },
+        { table: "MVP_Votos", col: "usuario" },
+        { table: "Suscripciones_Push_Dispositivos", col: "Usuario" },
+        { table: "Monitor_Usuarios", col: "usuario" },
+        { table: "Log_Accesos", col: "usuario" },
+        { table: "Notificaciones", col: "Usuario" },
+        { table: "Peticiones_Nombre", col: "Usuario Actual" },
+        { table: "Peticiones_Insignias", col: "Usuario" },
+        { table: "Sugerencias_Errores", col: "Usuario" }
+    ];
+    for (const t of tables) {
+        try {
+            await db.prepare(`DELETE FROM "${t.table}" WHERE lower("${t.col}") = lower(?)`).bind(u).run();
+        } catch(e) {}
+    }
+    try {
+        await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
+    } catch(e) {}
+}
+
+async function purgeUserFromAllTables(db, targetUser) {
+    if (!targetUser) return;
+    const u = targetUser.trim();
+    await purgeUserFromAllTablesExceptSolicitud(db, u);
+    try {
+        await db.prepare('DELETE FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) OR lower("Usuario_Original") = lower(?)').bind(u, u).run();
+    } catch(e) {}
 }
 
 async function renameUserInAllTables(db, oldU, newU) {
@@ -3367,17 +3413,17 @@ export async function onRequestPost(context) {
 
         if (decision === 'RECHAZAR') {
             const motRechazo = (motivo_rechazo || '').trim();
-            const rejectStmts = [
-                db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'RECHAZADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ?, "Motivo_Rechazo" = ? WHERE id = ?')
-                    .bind(nowTs, usuario, motRechazo || 'Rechazado por el administrador', id),
-                db.prepare('DELETE FROM "Usuarios" WHERE "Usuario" = ?').bind(uTarget),
-                db.prepare('DELETE FROM "Insignias" WHERE "Usuario" = ?').bind(uTarget),
-                db.prepare('DELETE FROM "Ligas" WHERE "Jugador" = ?').bind(uTarget),
-                db.prepare('DELETE FROM "Permisos_Equipos" WHERE "Jugador" = ?').bind(uTarget),
-                db.prepare('DELETE FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(uTarget)
-            ];
-            await flushBatch(db, rejectStmts);
-            return jsonResponse({ status: 'success', message: `Solicitud de @${uTarget} rechazada correctamente y cuenta provisional revocada.` });
+            const uOrig = solicitud.Usuario_Original || uTarget;
+
+            await db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'RECHAZADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ?, "Motivo_Rechazo" = ? WHERE id = ?')
+                .bind(nowTs, usuario, motRechazo || 'Rechazado por el administrador', id).run();
+
+            const targets = Array.from(new Set([uTarget, uOrig].filter(Boolean)));
+            for (const t of targets) {
+                await purgeUserFromAllTablesExceptSolicitud(db, t);
+            }
+
+            return jsonResponse({ status: 'success', message: `Solicitud de @${uTarget} rechazada correctamente. Cuenta provisional revocada y todos sus pronósticos y votos eliminados.` });
         }
 
         if (decision === 'APROBAR') {
@@ -3782,6 +3828,24 @@ export async function onRequestPost(context) {
             message: `Perfil de @${canonicalU} actualizado con éxito.`,
             usuario: canonicalU
         });
+    }
+
+    // ADMIN: ELIMINAR USUARIO DEFINITIVAMENTE DE TODAS LAS TABLAS
+    if (action === 'admin_delete_user') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const targetUser = (body.target_usuario || '').trim();
+        if (!targetUser) return jsonResponse({ status: 'error', message: 'Usuario objetivo no especificado.' }, 400);
+
+        if (targetUser.toLowerCase() === usuario.toLowerCase()) {
+            return jsonResponse({ status: 'error', message: 'No puedes eliminar tu propia cuenta de administrador.' }, 400);
+        }
+
+        await purgeUserFromAllTables(db, targetUser);
+        return jsonResponse({ status: 'success', message: `El usuario @${targetUser} y todos sus datos y pronósticos han sido eliminados definitivamente.` });
     }
 
     // PUBLIC: ESTADO MODO MANTENIMIENTO
@@ -4244,6 +4308,15 @@ export async function onRequestPost(context) {
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
+
+        // Bloquear voto si el usuario está en estado provisional PENDIENTE
+        const userInsignia = await db.prepare('SELECT "Verificado" FROM "Insignias" WHERE "Usuario" = ?').bind(user.Usuario).first().catch(() => null);
+        if (userInsignia && userInsignia.Verificado === 'PENDIENTE') {
+            return jsonResponse({
+                status: 'error',
+                message: 'Tu cuenta aún está pendiente de verificación por el administrador. Solo los usuarios aprobados pueden votar por el MVP.'
+            }, 403);
+        }
 
         // Leer estado de votación y voto previo en paralelo
         let [roMatch, prevVote] = await Promise.all([

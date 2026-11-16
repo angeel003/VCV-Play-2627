@@ -549,6 +549,14 @@
             </div>`;
         }
 
+        let provisionalBanner = '';
+        if (window.appData && (window.appData.es_provisional || window.appData.verificado === 'PENDIENTE') && !isClosed) {
+            provisionalBanner = `
+            <div style="background: rgba(255, 179, 0, 0.12); border: 1px dashed rgba(255, 179, 0, 0.4); border-radius: 8px; padding: 6px 10px; margin-bottom: 10px; font-size: 0.72rem; color: #ffca28; text-align: center; font-weight: 600;">
+                ⏳ Tu cuenta está en revisión. La votación de MVP se activará en cuanto el administrador la apruebe.
+            </div>`;
+        }
+
         return `
         <div style="background: linear-gradient(180deg, rgba(37, 11, 54, 0.45) 0%, rgba(20, 6, 30, 0.6) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 12px 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); position:relative;">
             <div style="font-size:0.75rem; font-weight:900; color:var(--secondary-color); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;">
@@ -560,6 +568,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                 </button>
             </div>
+            ${provisionalBanner}
             <div class="mvp-candidates-grid" id="mvp-grid-${idPart}" style="${cands.length === 2 ? 'justify-content: center; gap: 16px;' : ''}">
                 ${slotsHtml}
             </div>
@@ -588,6 +597,16 @@
         if(window.isGuestMode) { alert("Modo invitado. Inicia sesión para votar."); return; }
         if(!currentUser) { alert("Tu sesión ha expirado."); window.location.reload(); return; }
         if(!idPart || !jugador) return;
+
+        // Comprobar si el usuario es provisional / pendiente de aprobación
+        if (window.appData && (window.appData.es_provisional || window.appData.verificado === 'PENDIENTE')) {
+            if (typeof mostrarToast === 'function') {
+                mostrarToast("⏳ Tu cuenta aún está en revisión. Podrás votar al MVP una vez aprobada.", 4000);
+            } else {
+                alert("⏳ Tu cuenta aún está en revisión por el administrador. Podrás votar al MVP una vez aprobada.");
+            }
+            return;
+        }
 
         // Comprobar si la votación para este partido está cerrada
         let pMatch = null;

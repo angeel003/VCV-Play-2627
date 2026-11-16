@@ -3966,6 +3966,64 @@ window.adminGuardarLigasUsuario = function() {
     window.adminGuardarPerfilCompleto();
 };
 
+window.adminEliminarUsuarioDefinitivo = async function() {
+    const targetUser = window._adminCurrentEditingUser;
+    if (!targetUser) {
+        alert('No hay ningún usuario seleccionado.');
+        return;
+    }
+
+    if (currentUser && targetUser.toLowerCase() === currentUser.toLowerCase()) {
+        alert('No puedes eliminar tu propia cuenta de administrador.');
+        return;
+    }
+
+    const conf = confirm(`⚠️ ATENCIÓN: ¿Estás completamente seguro de que deseas ELIMINAR al usuario @${targetUser}?\n\nEsta acción borrará definitivamente su cuenta, credenciales, pronósticos, votos y permisos de todas las tablas de la base de datos. Esta acción no se puede deshacer.`);
+    if (!conf) return;
+
+    const conf2 = prompt(`Escribe el nombre de usuario "@${targetUser}" (o "${targetUser}") para confirmar la eliminación definitiva:`);
+    if (!conf2 || conf2.trim().replace(/^@/, '').toLowerCase() !== targetUser.toLowerCase()) {
+        alert('Operación cancelada. El nombre de confirmación no coincide.');
+        return;
+    }
+
+    const btn = document.getElementById('btnAdminEliminarUsuarioDefinitivo');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>Eliminando usuario y datos...</span>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_delete_user',
+                usuario: currentUser,
+                password: currentPassword,
+                target_usuario: targetUser
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (data && data.status === 'success') {
+            alert(data.message || `Usuario @${targetUser} eliminado con éxito.`);
+            const card = document.getElementById('adminCardEdicionUsuarioLigas');
+            if (card) card.style.display = 'none';
+            window._adminCurrentEditingUser = null;
+            await window.adminCargarUsuariosLigas();
+        } else {
+            alert('Error al eliminar usuario: ' + ((data && data.message) || 'Error desconocido'));
+        }
+    } catch(err) {
+        alert('Error de conexión al eliminar usuario: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🗑️</span> <span>Eliminar Usuario Definitivamente de la Base de Datos</span>';
+        }
+    }
+};
+
 // ==========================================================================
 // ORGANIZACIÓN POR TEMAS Y BÚSQUEDA RÁPIDA DE LA INTRANET ADMIN
 // ==========================================================================
