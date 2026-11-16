@@ -672,7 +672,7 @@ async function verificarDescongelacionAutomatica(db, env, context, preloaded = {
         // Limpiar si viene preloaded y expiró aunque no sea lunes
         let freezeOverride = preloaded.hasOverride ? parseOverrideRow(preloaded.overrideRow) : undefined;
 
-        // La descongelación automática ÚNICAMENTE debe dispararse los LUNES (utcDay === 1) a partir de las 18:00 hora peninsular española
+        // La descongelación automática ÚNICAMENTE debe dispararse los LUNES (utcDay === 1) a partir de las 10:00 hora peninsular española
         if (utcDay !== 1) {
             return false;
         }
@@ -684,7 +684,7 @@ async function verificarDescongelacionAutomatica(db, env, context, preloaded = {
         } catch(e) {
             hourMadrid = now.getUTCHours() + 1;
         }
-        if (hourMadrid < 18) {
+        if (hourMadrid < 10) {
             return false;
         }
 
@@ -702,9 +702,14 @@ async function verificarDescongelacionAutomatica(db, env, context, preloaded = {
             return false;
         }
 
-        // Lunes >= 18:00: clasificaciones descongeladas
+        // Lunes >= 10:00: clasificaciones descongeladas
         const lunesClave = getLunesSemanaClave(now);
         const autoKey = 'AUTO_UNFREEZE_' + lunesClave;
+
+        // Salvaguarda explícita: la notificación de hoy lunes 16/11/2026 ya fue enviada manualmente, no reenviar
+        if (lunesClave === '2026-11-16') {
+            return false;
+        }
 
         let yaEmitida = null;
         if (preloaded.hasAuto) {
@@ -2059,7 +2064,17 @@ export async function onRequestPost(context) {
             if (utcDay === 6) u.setUTCDate(u.getUTCDate() + 2);
             if (utcDay === 0) u.setUTCDate(u.getUTCDate() + 1);
             if (utcDay === 1) u.setUTCDate(u.getUTCDate() + 0);
-            u.setUTCHours(16, 0, 0, 0);
+            
+            // 10:00 hora peninsular española (Europe/Madrid)
+            try {
+                const datePart = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(u);
+                const testDate = new Date(`${datePart}T10:00:00Z`);
+                const madridHourAtUtc10 = parseInt(new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: 'numeric', hour12: false }).format(testDate), 10);
+                const offsetHours = madridHourAtUtc10 - 10;
+                u.setUTCHours(10 - offsetHours, 0, 0, 0);
+            } catch(e) {
+                u.setUTCHours(9, 0, 0, 0); // Fallback invierno Madrid (UTC+1)
+            }
             unfreezeTime = u.getTime();
 
             if (now.getTime() < unfreezeTime) {

@@ -1042,7 +1042,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                                 freezeBadge.style.background = 'rgba(52, 152, 219, 0.2)';
                                 freezeBadge.style.color = '#3498db';
                                 freezeBadge.style.borderColor = '#3498db';
-                                freezeDesc.innerHTML = 'Siguiendo el horario habitual de fin de semana. Se descongelará solo el lunes a las 18:00 (o pulsa <b>Descongelar Ahora</b> si quieres adelantarlo ya).';
+                                freezeDesc.innerHTML = 'Siguiendo el horario habitual de fin de semana. Se descongelará solo el lunes a las 10:00 (o pulsa <b>Descongelar Ahora</b> si quieres adelantarlo ya).';
                             } else {
                                 freezeBadge.innerText = '🟢 DESCONGELADO (AUTOMÁTICO)';
                                 freezeBadge.style.background = 'rgba(46, 204, 113, 0.15)';
