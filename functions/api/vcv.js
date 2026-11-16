@@ -435,6 +435,14 @@ async function ensureSolicitudesRegistroSchema(db) {
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Verificado" TEXT DEFAULT \'APROBADO\'').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Aviso_Moderacion" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Baneado" INTEGER DEFAULT 0').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Motivo_Baneo" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Fecha_Baneo" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Lesionado" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Lesion_Desc" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Custom_Emoji" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Custom_Desc" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Custom_Badge" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run(); } catch(e) {}
     try {
         const checkPurged = await db.prepare("SELECT valor FROM Cache_App WHERE clave = 'PURGED_123asdas_v1'").first().catch(() => null);
@@ -1288,6 +1296,13 @@ export async function onRequestPost(context) {
             return authUserCache;
         }
         const res = await verifyAndMigrateUser(db, targetU, targetP);
+        if (res && res.Usuario) {
+            const insBan = await db.prepare('SELECT "Baneado", "Motivo_Baneo", "Verificado" FROM "Insignias" WHERE lower("Usuario") = lower(?)').bind(res.Usuario).first().catch(() => null);
+            if (insBan && (insBan.Baneado === 1 || insBan.Baneado === '1' || insBan.Verificado === 'BANEADO')) {
+                res.is_banned = true;
+                res.motivo_baneo = insBan.Motivo_Baneo || 'Tu cuenta ha sido bloqueada temporal o indefinidamente por la administración del club.';
+            }
+        }
         if (targetU === usuario && targetP === password) {
             authUserCache = res;
         }
@@ -2009,6 +2024,9 @@ export async function onRequestPost(context) {
     if (action === "save") {
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
+        if (user.is_banned) {
+            return jsonResponse({ status: "error", code: "USUARIO_BANEADO", message: "Tu cuenta ha sido bloqueada / suspendida.", motivo_baneo: user.motivo_baneo }, 403);
+        }
 
         const preds = body.predicciones || {};
         const nowMs = Date.now();
@@ -2053,6 +2071,9 @@ export async function onRequestPost(context) {
     if (action === "save_totales") {
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: "error", message: "Credenciales incorrectas." });
+        if (user.is_banned) {
+            return jsonResponse({ status: "error", code: "USUARIO_BANEADO", message: "Tu cuenta ha sido bloqueada / suspendida.", motivo_baneo: user.motivo_baneo }, 403);
+        }
 
         const deadline = new Date("2026-10-10T12:00:00").getTime();
         if (Date.now() >= deadline) {
@@ -2154,6 +2175,16 @@ export async function onRequestPost(context) {
         }
 
         const canonicalUsuario = userRow.Usuario;
+
+        // CONTROL DE CUENTA BANEADA / SUSPENDIDA
+        if (userRow.is_banned) {
+            return jsonResponse({
+                status: "error",
+                code: "USUARIO_BANEADO",
+                message: "🚫 Tu cuenta ha sido bloqueada / suspendida por la administración del club.",
+                motivo_baneo: userRow.motivo_baneo || "Tu cuenta ha sido bloqueada temporal o indefinidamente por la administración del club."
+            }, 403);
+        }
 
         // CONTROL DE MODO MANTENIMIENTO: Restringido exclusivamente a administradores
         if (mantenimientoActivo) {
@@ -3675,6 +3706,14 @@ export async function onRequestPost(context) {
                 ultimo_acceso: userRow["ultimo_acceso"] || '',
                 admin_web: (insRow && insRow["Admin Web"] === 'X') ? 'X' : '',
                 verificado: (insRow && insRow.Verificado) || 'APROBADO',
+                baneado: Boolean(insRow && (insRow.Baneado === 1 || insRow.Baneado === '1' || insRow.Verificado === 'BANEADO')),
+                motivo_baneo: (insRow && insRow.Motivo_Baneo) || '',
+                fecha_baneo: (insRow && insRow.Fecha_Baneo) || '',
+                genero: (insRow && insRow.Genero) || 'M',
+                lesionado: (insRow && (insRow.Lesionado === 'X' || insRow.Lesionado === '1')) ? 'X' : '',
+                lesion_desc: (insRow && insRow.Lesion_Desc) || '',
+                custom_emoji: (insRow && insRow.Custom_Emoji) || '',
+                custom_desc: (insRow && insRow.Custom_Desc) || '',
                 equipo_club: (insRow && insRow.Equipo_Club) || '',
                 jugador_de: (insRow && insRow["Jugador de"]) || '',
                 entrenador_de: (insRow && insRow["Entrenador de"]) || '',
@@ -3775,11 +3814,32 @@ export async function onRequestPost(context) {
             avtrUrl = String(body.avatar_url).trim();
         }
 
+        const genVal = (body.genero === 'F' || body.genero === 'f') ? 'F' : 'M';
+        const lesVal = (body.lesionado === 'X' || body.lesionado === true || body.lesionado === 1 || body.lesionado === '1') ? 'X' : '';
+        const lesDesc = (body.lesion_desc !== undefined) ? String(body.lesion_desc).trim() : (existIns?.Lesion_Desc || '');
+        const cEmoji = (body.custom_emoji !== undefined) ? String(body.custom_emoji).trim() : (existIns?.Custom_Emoji || '');
+        const cDesc = (body.custom_desc !== undefined) ? String(body.custom_desc).trim() : (existIns?.Custom_Desc || '');
+        const banVal = (body.baneado === true || body.baneado === 1 || body.baneado === '1' || body.baneado === 'X') ? 1 : 0;
+        const motBan = (body.motivo_baneo !== undefined) ? String(body.motivo_baneo).trim() : (existIns?.Motivo_Baneo || '');
+        const fechBan = banVal ? (existIns?.Fecha_Baneo || new Date().toISOString()) : '';
+
+        if (targetUser.toLowerCase() === usuario.toLowerCase() && banVal === 1) {
+            return jsonResponse({ status: 'error', message: 'No puedes suspender/banear tu propia cuenta de administrador.' }, 400);
+        }
+
+        let verifFinal = verif;
+        if (banVal === 1) {
+            verifFinal = 'BANEADO';
+        } else if (verif === 'BANEADO') {
+            verifFinal = 'APROBADO';
+        }
+
         await db.prepare(`UPDATE "Insignias" 
             SET "Equipo_Club" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ?, 
-                "Admin Web" = ?, "Permiso_MVP" = ?, "Permiso_Resultados" = ?, "Verificado" = ?, "Avatar" = ?, "Avatar_Url" = ?, "Aviso_Moderacion" = ?
+                "Admin Web" = ?, "Permiso_MVP" = ?, "Permiso_Resultados" = ?, "Verificado" = ?, "Avatar" = ?, "Avatar_Url" = ?, "Aviso_Moderacion" = ?,
+                "Genero" = ?, "Lesionado" = ?, "Lesion_Desc" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ?, "Baneado" = ?, "Motivo_Baneo" = ?, "Fecha_Baneo" = ?
             WHERE "Usuario" = ?`
-        ).bind(eqClub, jugDe, entDe, exj, stf, admW, pMvp, pRes, verif, avtr, avtrUrl, avMod, canonicalU).run();
+        ).bind(eqClub, jugDe, entDe, exj, stf, admW, pMvp, pRes, verifFinal, avtr, avtrUrl, avMod, genVal, lesVal, lesDesc, cEmoji, cDesc, banVal, motBan, fechBan, canonicalU).run();
 
         // 5. Modificar Ligas y Sincronizar Permisos de Equipos
         if (Array.isArray(body.ligas_seleccionadas)) {
@@ -4307,6 +4367,9 @@ export async function onRequestPost(context) {
         const { id_partido, jugador } = body;
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        if (user.is_banned) {
+            return jsonResponse({ status: 'error', code: 'USUARIO_BANEADO', message: 'Tu cuenta ha sido bloqueada / suspendida.', motivo_baneo: user.motivo_baneo }, 403);
+        }
         if (!id_partido || !jugador) return jsonResponse({ status: 'error', message: 'Faltan datos de votación' }, 400);
 
         // Bloquear voto si el usuario está en estado provisional PENDIENTE

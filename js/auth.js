@@ -1198,6 +1198,22 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             }, 400);
             return;
         } else {
+            // Si el servidor rechaza por Usuario Baneado / Suspendido
+            if (data.code === 'USUARIO_BANEADO') {
+                localStorage.removeItem('vcv_saved_session');
+                if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+                else document.documentElement.classList.remove('vcv-auto-logging-in');
+                if (typeof window.mostrarPantallaBaneo === 'function') {
+                    window.mostrarPantallaBaneo(data.motivo_baneo || data.message);
+                } else {
+                    msgBox.className = "alert-box alert-danger";
+                    msgBox.innerHTML = `<b>🚫 Cuenta Suspendida</b><br><span style="font-size:0.8rem;">${data.message}<br><b>Motivo:</b> ${data.motivo_baneo || 'Decisión de la administración.'}</span>`;
+                    msgBox.style.display = "block";
+                }
+                if (typeof updateProgressBar === 'function') updateProgressBar();
+                return;
+            }
+
             // Si la solicitud de registro fue rechazada por el administrador
             if (data.code === 'REGISTRO_RECHAZADO') {
                 localStorage.removeItem('vcv_saved_session');
@@ -1687,4 +1703,52 @@ window.cerrarAvisoModeracion = function() {
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         }).catch(() => {});
     }
+};
+
+// MODAL DE BLOQUEO / CUENTA BANEADA POR ADMINISTRADOR
+// -------------------------------------------------------------
+window.mostrarPantallaBaneo = function(motivo) {
+    try {
+        localStorage.removeItem('vcv_saved_session');
+    } catch(e) {}
+    if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+    else document.documentElement.classList.remove('vcv-auto-logging-in');
+
+    let modal = document.getElementById('modalUsuarioBaneado');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalUsuarioBaneado';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,5,15,0.96); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);';
+        modal.innerHTML = `
+            <div style="background:linear-gradient(180deg, #1f0d14 0%, #14080c 100%); border:2px solid #e74c3c; border-radius:18px; max-width:440px; width:100%; padding:24px 20px; text-align:center; box-shadow:0 14px 48px rgba(231,76,60,0.4); box-sizing:border-box;">
+                <div style="width:64px; height:64px; border-radius:50%; background:rgba(231,76,60,0.15); border:2px solid rgba(231,76,60,0.5); display:flex; align-items:center; justify-content:center; font-size:2.2rem; margin:0 auto 16px auto;">
+                    🚫
+                </div>
+                <h2 style="margin:0 0 8px 0; color:#ff6b6b; font-size:1.25rem; font-weight:900; letter-spacing:-0.3px;">
+                    Cuenta Suspendida / Bloqueada
+                </h2>
+                <p style="margin:0 0 14px 0; font-size:0.82rem; color:#ddd; line-height:1.45;">
+                    El acceso a VCV Play ha sido suspendido para esta cuenta por la administración del club.
+                </p>
+                <div style="background:rgba(0,0,0,0.45); border-left:3px solid #e74c3c; border-radius:8px; padding:12px; text-align:left; margin-bottom:18px;">
+                    <div style="font-size:0.68rem; font-weight:800; color:#ff6b6b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
+                        Motivo de la suspensión:
+                    </div>
+                    <div id="modalUsuarioBaneadoMotivo" style="font-size:0.82rem; color:#fff; line-height:1.4; word-break:break-word;"></div>
+                </div>
+                <p style="margin:0 0 20px 0; font-size:0.73rem; color:var(--text-muted); line-height:1.4;">
+                    Si consideras que se trata de un error o deseas resolver esta situación, puedes ponerte en contacto con la administración del club.
+                </p>
+                <button type="button" onclick="window.cerrarSesionApp()" class="btn" style="width:100%; padding:12px; font-size:0.88rem; background:#e74c3c; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(231,76,60,0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <span>🚪</span> <span>Cerrar Sesión</span>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    const txtEl = document.getElementById('modalUsuarioBaneadoMotivo');
+    if (txtEl) {
+        txtEl.innerText = motivo || 'Tu cuenta ha sido bloqueada temporal o indefinidamente por incumplimiento de las normas o decisión de la administración.';
+    }
+    modal.style.display = 'flex';
 };

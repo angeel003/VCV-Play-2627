@@ -99,6 +99,9 @@ var fetchSeguro = (url, options, retries = 1) => {
             } catch(e) {
                 data = { status: 'error', message: text || `HTTP ${res.status} ${res.statusText}` };
             }
+            if (data && data.code === 'USUARIO_BANEADO' && typeof window.mostrarPantallaBaneo === 'function') {
+                window.mostrarPantallaBaneo(data.motivo_baneo || data.message);
+            }
             if (!res.ok && data && data.message) {
                 // If it's a 4xx or 5xx with a JSON message, resolve it so caller can show d.message or handle it
                 return { json: () => Promise.resolve(data), ok: res.ok, status: res.status };

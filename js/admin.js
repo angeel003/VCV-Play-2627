@@ -3464,21 +3464,55 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
 
             if (silent) return;
 
-            if (solicitudes.length === 0) {
-                box.innerHTML = `
-                    <div style="text-align:center; padding:20px 10px; background:rgba(0,0,0,0.15); border-radius:10px; border:1px dashed var(--border-color);">
-                        <span style="font-size:1.8rem; display:block; margin-bottom:6px;">✨</span>
-                        <b style="color:var(--text-main); font-size:0.9rem;">No hay solicitudes de registro</b>
-                        <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">
-                            Cuando un usuario complete el formulario de solicitud en el login, aparecerá aquí al instante.
-                        </p>
-                    </div>
-                `;
+            window._adminSolicitudesTab = window._adminSolicitudesTab || 'pendientes';
+            const tabActual = window._adminSolicitudesTab;
+            const resueltasCount = solicitudes.length - pendientes;
+
+            const tabsHeaderHtml = `
+                <div style="display:flex; gap:8px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+                    <button type="button" onclick="window.cambiarTabSolicitudes('pendientes')" style="padding:6px 14px; font-size:0.78rem; font-weight:800; border-radius:20px; border:1px solid ${tabActual === 'pendientes' ? '#f39c12' : 'transparent'}; background:${tabActual === 'pendientes' ? 'rgba(243,156,18,0.2)' : 'rgba(255,255,255,0.06)'}; color:${tabActual === 'pendientes' ? '#f39c12' : 'var(--text-muted)'}; cursor:pointer; transition:all 0.2s;">
+                        ⏳ Pendientes (${pendientes})
+                    </button>
+                    <button type="button" onclick="window.cambiarTabSolicitudes('historial')" style="padding:6px 14px; font-size:0.78rem; font-weight:800; border-radius:20px; border:1px solid ${tabActual === 'historial' ? '#3498db' : 'transparent'}; background:${tabActual === 'historial' ? 'rgba(52,152,219,0.2)' : 'rgba(255,255,255,0.06)'}; color:${tabActual === 'historial' ? '#3498db' : 'var(--text-muted)'}; cursor:pointer; transition:all 0.2s;">
+                        📜 Historial / Resueltas (${resueltasCount})
+                    </button>
+                </div>
+            `;
+
+            const listToShow = solicitudes.filter(s => {
+                if (tabActual === 'pendientes') return s.Estado === 'PENDIENTE';
+                return s.Estado !== 'PENDIENTE';
+            });
+
+            if (listToShow.length === 0) {
+                if (tabActual === 'pendientes') {
+                    box.innerHTML = `
+                        ${tabsHeaderHtml}
+                        <div style="text-align:center; padding:24px 12px; background:rgba(0,0,0,0.15); border-radius:10px; border:1px dashed var(--border-color);">
+                            <span style="font-size:2rem; display:block; margin-bottom:6px;">✅</span>
+                            <b style="color:var(--text-main); font-size:0.92rem;">No hay solicitudes pendientes de revisión</b>
+                            <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">
+                                Todas las solicitudes han sido resueltas. Cuando un nuevo usuario solicite cuenta, aparecerá aquí.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    box.innerHTML = `
+                        ${tabsHeaderHtml}
+                        <div style="text-align:center; padding:24px 12px; background:rgba(0,0,0,0.15); border-radius:10px; border:1px dashed var(--border-color);">
+                            <span style="font-size:1.8rem; display:block; margin-bottom:6px;">📜</span>
+                            <b style="color:var(--text-main); font-size:0.9rem;">Historial de solicitudes vacío</b>
+                            <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">
+                                Aún no hay solicitudes resueltas previamente en el sistema.
+                            </p>
+                        </div>
+                    `;
+                }
                 return;
             }
 
-            let html = '';
-            solicitudes.forEach(sol => {
+            let html = tabsHeaderHtml;
+            listToShow.forEach(sol => {
                 const isPendiente = sol.Estado === 'PENDIENTE';
                 const isAprobada = sol.Estado === 'APROBADA';
                 const isRechazada = sol.Estado === 'RECHAZADA';
@@ -3702,6 +3736,11 @@ window.adminResolverSolicitud = async function(id, decision) {
     }
 };
 
+window.cambiarTabSolicitudes = function(tab) {
+    window._adminSolicitudesTab = tab;
+    window.cargarSolicitudesRegistroAdmin();
+};
+
 // ==============================================================================
 // 🏆 GESTIÓN INTEGRAL DE PERFIL Y LIGAS POR USUARIO (ADMIN)
 // ==============================================================================
@@ -3818,6 +3857,18 @@ window.adminOnSelectUsuarioLigas = async function() {
             setVal('adminEditAvisoModeracion', p.aviso_moderacion);
             setVal('adminEditBorrarAvatarFlag', '0');
 
+            setVal('adminEditGenero', p.genero || 'M');
+            setVal('adminEditLesionDesc', p.lesion_desc || '');
+            setVal('adminEditCustomEmoji', p.custom_emoji || '');
+            setVal('adminEditCustomDesc', p.custom_desc || '');
+            setVal('adminEditMotivoBaneo', p.motivo_baneo || '');
+
+            setChk('adminEditLesionado', p.lesionado === 'X');
+            setChk('adminEditBaneado', Boolean(p.baneado));
+            if (typeof window.adminToggleBaneoInputs === 'function') {
+                window.adminToggleBaneoInputs(Boolean(p.baneado));
+            }
+
             setChk('adminEditAdminWeb', p.admin_web === 'X');
             setChk('adminEditPermisoMvp', p.permiso_mvp === 'X');
 
@@ -3896,6 +3947,14 @@ window.adminGuardarPerfilCompleto = async function() {
     const adminWeb = document.getElementById('adminEditAdminWeb')?.checked ? 'X' : '';
     const permisoMvp = document.getElementById('adminEditPermisoMvp')?.checked ? 'X' : '';
 
+    const genero = document.getElementById('adminEditGenero')?.value || 'M';
+    const lesionado = document.getElementById('adminEditLesionado')?.checked ? 'X' : '';
+    const lesionDesc = (document.getElementById('adminEditLesionDesc')?.value || '').trim();
+    const customEmoji = (document.getElementById('adminEditCustomEmoji')?.value || '').trim();
+    const customDesc = (document.getElementById('adminEditCustomDesc')?.value || '').trim();
+    const baneado = Boolean(document.getElementById('adminEditBaneado')?.checked);
+    const motivoBaneo = (document.getElementById('adminEditMotivoBaneo')?.value || '').trim();
+
     const cbs = document.querySelectorAll('.chk-admin-user-liga:checked');
     const selectedLigas = Array.from(cbs).map(cb => cb.value);
 
@@ -3922,6 +3981,13 @@ window.adminGuardarPerfilCompleto = async function() {
                 entrenador_de: entrenadorDe,
                 exjugador: exjugador,
                 staff: staff,
+                genero: genero,
+                lesionado: lesionado,
+                lesion_desc: lesionDesc,
+                custom_emoji: customEmoji,
+                custom_desc: customDesc,
+                baneado: baneado,
+                motivo_baneo: motivoBaneo,
                 admin_web: adminWeb,
                 permiso_mvp: permisoMvp,
                 permiso_resultados: permisoResultados,
@@ -3958,6 +4024,25 @@ window.adminGuardarPerfilCompleto = async function() {
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<span>💾</span> <span>Guardar Todos los Cambios del Perfil</span>';
+        }
+    }
+};
+
+window.adminToggleBaneoInputs = function(isBanned) {
+    const box = document.getElementById('adminBaneoMotivoContainer');
+    const badge = document.getElementById('badgeEstadoBaneo');
+    if (box) {
+        box.style.display = isBanned ? 'block' : 'none';
+    }
+    if (badge) {
+        if (isBanned) {
+            badge.innerText = '🚫 SUSPENDIDO (BANEADO)';
+            badge.style.background = 'rgba(231, 76, 60, 0.25)';
+            badge.style.color = '#e74c3c';
+        } else {
+            badge.innerText = '✅ ACTIVO';
+            badge.style.background = 'rgba(46, 204, 113, 0.2)';
+            badge.style.color = '#2ecc71';
         }
     }
 };

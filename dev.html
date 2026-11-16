@@ -2917,14 +2917,41 @@
                     <input type="text" id="adminEditNombreReal" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
                   </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 10px; margin-bottom: 14px;">
                   <div>
                     <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Correo Electrónico:</label>
                     <input type="email" id="adminEditCorreo" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
                   </div>
                   <div>
-                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Cambiar Contraseña (opcional):</label>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Cambiar Contraseña:</label>
                     <input type="password" id="adminEditPassword" placeholder="Dejar vacío para no cambiar" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Género:</label>
+                    <select id="adminEditGenero" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                      <option value="M">Masc (M)</option>
+                      <option value="F">Fem (F)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Sección: Control de Acceso y Baneo -->
+                <div style="margin-bottom: 14px; background: rgba(231, 76, 60, 0.1); border: 1.5px solid rgba(231, 76, 60, 0.35); border-radius: 10px; padding: 12px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <label style="margin: 0; cursor: pointer; font-size: 0.82rem; font-weight: 800; color: #e74c3c; display: inline-flex; align-items: center; gap: 8px; user-select: none;">
+                      <input type="checkbox" id="adminEditBaneado" onchange="window.adminToggleBaneoInputs(this.checked)" style="accent-color: #e74c3c; width: 18px; height: 18px; cursor: pointer;">
+                      <span>🚫 Suspender / Banear esta cuenta</span>
+                    </label>
+                    <span id="badgeEstadoBaneo" style="font-size: 0.68rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: rgba(46, 204, 113, 0.2); color: #2ecc71;">ACTIVO</span>
+                  </div>
+                  <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 8px 0; line-height: 1.3;">
+                    Si activas el baneo, la cuenta quedará totalmente bloqueada: el usuario no podrá acceder, hacer pronósticos ni ver datos, y verá en su pantalla el motivo especificado.
+                  </p>
+                  <div id="adminBaneoMotivoContainer" style="display: none; margin-top: 6px;">
+                    <label style="font-size: 0.72rem; color: #e74c3c; font-weight: 700; display: block; margin-bottom: 3px;">
+                      Motivo de la suspensión (se le mostrará al usuario bloqueado):
+                    </label>
+                    <input type="text" id="adminEditMotivoBaneo" placeholder="Ej. Suspensión temporal por incumplimiento reiterado de normas..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid rgba(231, 76, 60, 0.5); color: #fff; font-size: 0.82rem; box-sizing: border-box;">
                   </div>
                 </div>
 
@@ -2971,6 +2998,30 @@
                   <div>
                     <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Directiva / Staff:</label>
                     <input type="text" id="adminEditStaff" placeholder="Ej. Junta directiva, Prensa..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+
+                <!-- Sección: Insignias Médicas y Personalizadas -->
+                <div style="font-size: 0.78rem; font-weight: 800; color: #af7ac5; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span>✨</span> Insignias Especiales y Médicas
+                </div>
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; background: rgba(0,0,0,0.18); padding: 10px 12px; border-radius: 8px;">
+                  <label style="margin: 0; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                    <input type="checkbox" id="adminEditLesionado" style="accent-color: #e74c3c; cursor: pointer; width: 16px; height: 16px;">
+                    <span style="font-weight: 700; color: #e74c3c;">🏥 Lesionado</span>
+                  </label>
+                  <div>
+                    <input type="text" id="adminEditLesionDesc" placeholder="Descripción de la lesión (ej: Esguince de tobillo)..." style="width: 100%; padding: 7px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; box-sizing: border-box;">
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 80px 1fr; gap: 10px; align-items: center; margin-bottom: 14px; background: rgba(0,0,0,0.18); padding: 10px 12px; border-radius: 8px;">
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 2px;">Emoji:</label>
+                    <input type="text" id="adminEditCustomEmoji" placeholder="⭐" style="width: 100%; padding: 7px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; text-align: center; box-sizing: border-box;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 2px;">Insignia Personalizada (texto):</label>
+                    <input type="text" id="adminEditCustomDesc" placeholder="Ej. Capitán, Fundador, Leyenda..." style="width: 100%; padding: 7px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.8rem; box-sizing: border-box;">
                   </div>
                 </div>
 
@@ -4518,14 +4569,14 @@
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261116_v4"></script>
-<script src="js/admin.js?v=20261116_v7"></script>
+<script src="js/config.js?v=20261116_v5"></script>
+<script src="js/admin.js?v=20261116_v8"></script>
 <script src="js/cartelera.js?v=20261116_v4"></script>
 <script src="js/ranking.js?v=20261116_v4"></script>
 <script src="js/calendario.js?v=20261116_v4"></script>
 <script src="js/cartelera_interactive.js?v=20261116_v5"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
-<script src="js/auth.js?v=20261116_v8"></script>
+<script src="js/auth.js?v=20261116_v9"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>
 
 
