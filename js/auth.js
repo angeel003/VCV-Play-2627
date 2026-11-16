@@ -593,8 +593,8 @@ if (btnGuestEl) btnGuestEl.addEventListener('click', function(e) {
                         <span style="font-size:0.75rem; font-weight:800; color:var(--secondary-color); letter-spacing:0.5px; text-transform:uppercase;">Explorador Oficial</span>
                         <h2 style="font-size: 1.35rem; font-weight: 900; color: var(--text-main); margin: 2px 0 0 0;">Modo Invitado</h2>
                     </div>
-                    <button type="button" onclick="switchTabV2('guestInfoSection', document.getElementById('navItemGuestInfo'))" style="background:var(--secondary-color); color:#000; font-weight:800; border:none; padding:8px 14px; border-radius:10px; font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                        <span>¡Únete!</span> ✨
+                    <button type="button" onclick="if(window.abrirModalSolicitarCuenta) window.abrirModalSolicitarCuenta(); else switchTabV2('guestInfoSection', document.getElementById('navItemGuestInfo'));" style="background:linear-gradient(135deg, #f39c12, #e67e22); color:#fff; font-weight:800; border:none; padding:8px 14px; border-radius:10px; font-size:0.82rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 4px 12px rgba(243, 156, 18, 0.35);">
+                        <span>📝 Solicitar cuenta</span>
                     </button>
                 </div>`;
             }

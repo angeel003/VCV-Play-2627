@@ -2403,8 +2403,8 @@
             <span>Perfil</span>
           </button>
           <button class="nav-item-v2" id="navItemGuestInfo" onclick="switchTabV2('guestInfoSection', this)" style="display:none;">
-            <i data-lucide="sparkles"></i>
-            <span>¡Únete!</span>
+            <i data-lucide="user-plus"></i>
+            <span>Registrarse</span>
           </button>
         </nav>
     </div>
@@ -4028,6 +4028,21 @@
         <div id="msgFeedback" class="alert-box" style="padding: 10px; display: none; margin-top: 10px; font-size: 0.8rem; border-radius: 8px;"></div>
       </div>
 
+      <!-- Opción rápida de solicitud de registro / nueva cuenta -->
+      <div class="vcv-card-v2" style="margin-top: 15px; margin-bottom: 15px; border: 1px dashed rgba(243, 156, 18, 0.4); background: rgba(243, 156, 18, 0.05); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <div style="font-weight: 800; font-size: 0.88rem; color: #f39c12; display: flex; align-items: center; gap: 6px;">
+            <span>📝</span> <span>Solicitar registro de cuenta</span>
+          </div>
+          <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
+            ¿Quieres registrar una nueva cuenta o enviar una solicitud de prueba al club?
+          </div>
+        </div>
+        <button type="button" onclick="window.abrirModalSolicitarCuenta()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; border: none; padding: 9px 14px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 8px rgba(243, 156, 18, 0.25);">
+          <span>Abrir formulario</span> ↗
+        </button>
+      </div>
+
       <!-- Tarjeta Cerrar Sesión en Perfil -->
       <div class="vcv-card-v2" style="margin-top: 20px; margin-bottom: 25px; border: 1px solid rgba(231, 76, 60, 0.35); background: rgba(231, 76, 60, 0.05); border-radius: 14px; padding: 18px;">
         <button type="button" onclick="window.cerrarSesionApp()" style="width: 100%; background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.3)); border: 1px solid #e74c3c; color: #ff6b81; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.15);">
@@ -4289,9 +4304,13 @@
 
             <!-- Botones de Acción -->
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <a href="mailto:adminfantasyvcv@gmail.com?subject=Solicitud%20de%20Cuenta%20VCV%20Play&body=Hola!%20Me%20gustar%C3%ADa%20solicitar%20una%20cuenta%20en%20VCV%20Play.%0A%0ANombre%20completo:%0AUsuario%20deseado:%0AVinculaci%C3%B3n%20con%20el%20club%20(equipo,%20aficionado,%20etc.):" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; background: var(--secondary-color); color: #000; text-decoration: none; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35); text-align: center;">
-                    <i data-lucide="mail" style="width: 18px; height: 18px;"></i>
-                    <span>Contactar con el Administrador</span>
+                <button type="button" onclick="window.abrirModalSolicitarCuenta()" class="btn-gold-v2" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: 12px; font-weight: 800; background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; border: none; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); text-align: center; cursor: pointer;">
+                    <span>📝</span>
+                    <span>Solicitar Registro / Crear Cuenta</span>
+                </button>
+                <a href="mailto:adminfantasyvcv@gmail.com?subject=Solicitud%20de%20Cuenta%20VCV%20Play&body=Hola!%20Me%20gustar%C3%ADa%20solicitar%20una%20cuenta%20en%20VCV%20Play.%0A%0ANombre%20completo:%0AUsuario%20deseado:%0AVinculaci%C3%B3n%20con%20el%20club%20(equipo,%20aficionado,%20etc.):" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; background: rgba(212, 175, 55, 0.15); color: var(--secondary-color); border: 1px solid rgba(212, 175, 55, 0.35); text-decoration: none; font-size: 0.88rem; text-align: center;">
+                    <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                    <span>O contactar por correo electrónico</span>
                 </a>
                 <button type="button" onclick="window.cerrarSesionApp()" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 12px; font-weight: 700; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.85rem; cursor: pointer;">
                     <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
