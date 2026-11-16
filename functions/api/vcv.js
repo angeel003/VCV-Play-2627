@@ -405,6 +405,22 @@ async function ensureSugerenciasSchema(db) {
     )`).run();
 }
 
+async function ensureSolicitudesRegistroSchema(db) {
+    await db.prepare(`CREATE TABLE IF NOT EXISTS "Solicitudes_Registro" (
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "Usuario" TEXT UNIQUE NOT NULL,
+        "Password_Hash" TEXT NOT NULL,
+        "Nombre_Real" TEXT NOT NULL,
+        "Email" TEXT NOT NULL,
+        "Ligas_Solicitadas" TEXT,
+        "Estado" TEXT DEFAULT 'PENDIENTE',
+        "Fecha_Solicitud" INTEGER NOT NULL,
+        "Fecha_Resolucion" INTEGER,
+        "Revisado_Por" TEXT
+    )`).run().catch(() => {});
+    try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON "Solicitudes_Registro" ("Estado")').run(); } catch(e) {}
+}
+
 async function ensureMonitorSchema(db) {
     await db.prepare(`CREATE TABLE IF NOT EXISTS "Monitor_Usuarios" ("usuario" TEXT PRIMARY KEY, "activo" INTEGER DEFAULT 1, "fecha_alta" TEXT, "notas" TEXT)`).run();
     await db.prepare(`CREATE TABLE IF NOT EXISTS "Log_Accesos" ("id" INTEGER PRIMARY KEY AUTOINCREMENT, "usuario" TEXT, "fecha_hora" TEXT, "timestamp" INTEGER, "origen" TEXT, "dispositivo" TEXT)`).run();
@@ -522,6 +538,71 @@ async function broadcastPushToAll(db, env, { title, body, url, tipo }) {
         return sent;
     } catch(e) {
         console.warn('Error en broadcastPushToAll:', e);
+        return 0;
+    }
+}
+
+async function notifyAdminsPush(db, env, { title, body, url, action }) {
+    try {
+        let sql = `
+            SELECT s.Endpoint, s.Usuario, s.Suscripcion_JSON 
+            FROM "Suscripciones_Push_Dispositivos" s
+            INNER JOIN "Insignias" i ON lower(s.Usuario) = lower(i.Usuario)
+            WHERE UPPER(TRIM(i."Admin Web")) = 'X' AND LENGTH(s."Suscripcion_JSON") > 20
+        `;
+        let subsRes;
+        try {
+            subsRes = await db.prepare(sql).all();
+        } catch (err) {
+            if (isSchemaMissingErr(err)) {
+                await ensureSuscripcionesPushSchema(db);
+                subsRes = await db.prepare(sql).all();
+            } else {
+                throw err;
+            }
+        }
+        const subs = (subsRes && subsRes.results) || [];
+        if (subs.length === 0) return 0;
+
+        const nowMadrid = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+        const payload = {
+            title: title,
+            body: body,
+            data: { 
+                url: url || '/?admin_tab=solicitudes',
+                action: action || 'abrirSolicitudesAdmin'
+            }
+        };
+
+        const tasks = [];
+        for (const subRow of subs) {
+            try {
+                const subObj = JSON.parse(subRow.Suscripcion_JSON);
+                tasks.push({ subRow, subObj });
+            } catch(e) {}
+        }
+
+        let sent = 0;
+        const logStmts = [];
+        const expiredEndpoints = [];
+
+        await runInChunks(tasks, 10, async (t) => {
+            const pushRes = await sendWebPushNotification(t.subObj, payload, env);
+            if (pushRes && pushRes.success) {
+                sent++;
+            } else if (pushRes && pushRes.isExpired && t.subRow.Endpoint) {
+                expiredEndpoints.push(t.subRow.Endpoint);
+            }
+            logStmts.push(
+                db.prepare('INSERT INTO "Log_Notificaciones" ("Usuario", "Tipo", "Titulo", "Mensaje", "Fecha", "Estado") VALUES (?, ?, ?, ?, ?, ?)')
+                    .bind(t.subRow.Usuario || 'Admin', 'SOLICITUD_REGISTRO', title, body, nowMadrid, (pushRes && pushRes.success) ? 'ENVIADO' : `FALLIDO (${(pushRes && (pushRes.status || pushRes.error)) || 'error'})`)
+            );
+        });
+
+        await writePushLogsAndCleanup(db, logStmts, expiredEndpoints);
+        return sent;
+    } catch(e) {
+        console.warn('Error en notifyAdminsPush:', e);
         return 0;
     }
 }
@@ -2983,6 +3064,329 @@ export async function onRequestPost(context) {
 
         await flushBatch(db, addStmts);
         return jsonResponse({ status: 'success', message: 'Usuario creado con éxito en la BD de Cloudflare' });
+    }
+
+    // ==============================================================================
+    // 📝 SOLICITUDES DE REGISTRO Y GESTIÓN DE ACCESO A LIGAS
+    // ==============================================================================
+
+    // PUBLIC: SOLICITAR REGISTRO DE CUENTA
+    if (action === 'request_registration') {
+        await ensureSolicitudesRegistroSchema(db);
+
+        const new_u = (body.new_u || '').trim();
+        const new_p = (body.new_p || '').trim();
+        const new_n = (body.new_n || '').trim();
+        const new_email = (body.new_email || '').trim().toLowerCase();
+        const ligas_solicitadas = Array.isArray(body.ligas) ? body.ligas : [];
+
+        if (!new_u || new_u.length < 3) {
+            return jsonResponse({ status: 'error', message: 'El nombre de usuario debe tener al menos 3 caracteres.' }, 400);
+        }
+        if (!new_p || new_p.length < 4) {
+            return jsonResponse({ status: 'error', message: 'La contraseña debe tener al menos 4 caracteres.' }, 400);
+        }
+        if (!new_email || !new_email.includes('@') || !new_email.includes('.')) {
+            return jsonResponse({ status: 'error', message: 'Por favor, introduce un correo electrónico válido.' }, 400);
+        }
+
+        // Comprobar si ya existe en Usuarios
+        const existUser = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(new_u).first();
+        if (existUser) {
+            return jsonResponse({ status: 'error', message: 'El nombre de usuario ya está registrado en Fantasy VCV.' }, 400);
+        }
+
+        // Comprobar si ya existe una solicitud PENDIENTE
+        const existPending = await db.prepare('SELECT "id" FROM "Solicitudes_Registro" WHERE lower("Usuario") = lower(?) AND "Estado" = \'PENDIENTE\'').bind(new_u).first();
+        if (existPending) {
+            return jsonResponse({ status: 'error', message: 'Ya existe una solicitud de registro pendiente para este usuario. El administrador la revisará pronto.' }, 400);
+        }
+
+        const hashedPwd = await hashPassword(new_p);
+        const nowTs = Date.now();
+        const ligasJson = JSON.stringify(ligas_solicitadas);
+
+        await db.prepare(`
+            INSERT INTO "Solicitudes_Registro" 
+            ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud")
+            VALUES (?, ?, ?, ?, ?, 'PENDIENTE', ?)
+        `).bind(new_u, hashedPwd, new_n || new_u, new_email, ligasJson, nowTs).run();
+
+        // Notificación Push nativa ÚNICAMENTE para Administradores
+        const notifTitle = '🏐 Nueva Solicitud de Registro';
+        const notifBody = `¡${new_n || new_u} (@${new_u}) quiere unirse a Fantasy VCV! Toca para revisar y aprobar.`;
+        
+        runInBg(context, notifyAdminsPush(db, env, {
+            title: notifTitle,
+            body: notifBody,
+            url: '/?admin_tab=solicitudes',
+            action: 'abrirSolicitudesAdmin'
+        }));
+
+        return jsonResponse({
+            status: 'success',
+            message: '¡Solicitud enviada con éxito! Tu registro ha sido remitido al administrador. En cuanto sea aprobado podrás iniciar sesión.'
+        });
+    }
+
+    // PUBLIC: OBTENER LIGAS DISPONIBLES PARA EL FORMULARIO DE REGISTRO
+    if (action === 'get_registro_ligas') {
+        let ligas = [];
+        try {
+            const sample = await db.prepare('SELECT * FROM "Ligas" LIMIT 1').first();
+            if (sample) {
+                ligas = Object.keys(sample).filter(k => k !== "Jugador" && k !== "id").sort();
+            }
+        } catch(e) {}
+        if (ligas.length === 0) {
+            try {
+                const { results } = await db.prepare('SELECT DISTINCT "Liga" FROM "Ligas_Equipos"').all();
+                ligas = (results || []).map(r => r.Liga).filter(Boolean).sort();
+            } catch(e) {}
+        }
+        return jsonResponse({ status: 'success', ligas });
+    }
+
+    // ADMIN: OBTENER SOLICITUDES DE REGISTRO
+    if (action === 'get_solicitudes_registro') {
+        await ensureSolicitudesRegistroSchema(db);
+
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { results: solicitudes } = await db.prepare(`
+            SELECT id, Usuario, Nombre_Real, Email, Ligas_Solicitadas, Estado, Fecha_Solicitud, Fecha_Resolucion, Revisado_Por
+            FROM "Solicitudes_Registro"
+            ORDER BY CASE WHEN Estado = 'PENDIENTE' THEN 0 ELSE 1 END, Fecha_Solicitud DESC
+            LIMIT 50
+        `).all();
+
+        let ligasDisponibles = [];
+        try {
+            const sampleLigas = await db.prepare('SELECT * FROM "Ligas" LIMIT 1').first();
+            if (sampleLigas) {
+                ligasDisponibles = Object.keys(sampleLigas).filter(k => k !== 'Jugador' && k !== 'id').sort();
+            }
+        } catch(e) {}
+        if (ligasDisponibles.length === 0) {
+            try {
+                const { results: leRows } = await db.prepare('SELECT DISTINCT "Liga" FROM "Ligas_Equipos"').all();
+                ligasDisponibles = (leRows || []).map(r => r.Liga).filter(Boolean).sort();
+            } catch(e) {}
+        }
+
+        const pendientes = (solicitudes || []).filter(s => s.Estado === 'PENDIENTE').length;
+
+        return jsonResponse({
+            status: 'success',
+            solicitudes: solicitudes || [],
+            ligas_disponibles: ligasDisponibles,
+            pendientes
+        });
+    }
+
+    // ADMIN: RESOLVER SOLICITUD DE REGISTRO (APROBAR / RECHAZAR)
+    if (action === 'resolver_solicitud_registro') {
+        await ensureSolicitudesRegistroSchema(db);
+
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const { id, decision, ligas_seleccionadas } = body;
+        if (!id || !decision) {
+            return jsonResponse({ status: 'error', message: 'ID y decisión son obligatorios.' }, 400);
+        }
+
+        const solicitud = await db.prepare('SELECT * FROM "Solicitudes_Registro" WHERE id = ?').bind(id).first();
+        if (!solicitud) {
+            return jsonResponse({ status: 'error', message: 'Solicitud no encontrada.' }, 404);
+        }
+        if (solicitud.Estado !== 'PENDIENTE') {
+            return jsonResponse({ status: 'error', message: `Esta solicitud ya fue resuelta previamente como ${solicitud.Estado}.` }, 400);
+        }
+
+        const nowTs = Date.now();
+
+        if (decision === 'RECHAZAR') {
+            await db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'RECHAZADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
+                .bind(nowTs, usuario, id).run();
+            return jsonResponse({ status: 'success', message: `Solicitud de @${solicitud.Usuario} rechazada correctamente.` });
+        }
+
+        if (decision === 'APROBAR') {
+            const uTarget = solicitud.Usuario;
+            const pHash = solicitud.Password_Hash;
+            const nReal = solicitud.Nombre_Real;
+            const ligasSel = Array.isArray(ligas_seleccionadas) ? ligas_seleccionadas : [];
+
+            // Comprobar si ya existe en Usuarios
+            const existUser = await db.prepare('SELECT "Usuario" FROM "Usuarios" WHERE lower("Usuario") = lower(?)').bind(uTarget).first();
+            if (existUser) {
+                await db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'APROBADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?')
+                    .bind(nowTs, usuario, id).run();
+                return jsonResponse({ status: 'success', message: `El usuario @${uTarget} ya existía en la plataforma. Se ha marcado la solicitud como aprobada.` });
+            }
+
+            const [ligasEqRes] = await Promise.all([
+                ligasSel.length > 0 ? db.prepare('SELECT * FROM "Ligas_Equipos"').all() : Promise.resolve(null)
+            ]);
+
+            const addStmts = [
+                db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real") VALUES (?, ?, ?)').bind(uTarget, pHash, nReal || uTarget),
+                db.prepare('INSERT INTO "Permisos_Equipos" ("Jugador") VALUES (?)').bind(uTarget),
+                db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(uTarget),
+                db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(uTarget),
+                db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(uTarget),
+                db.prepare('UPDATE "Solicitudes_Registro" SET "Estado" = \'APROBADA\', "Fecha_Resolucion" = ?, "Revisado_Por" = ? WHERE id = ?').bind(nowTs, usuario, id)
+            ];
+
+            if (ligasSel.length > 0) {
+                for (const l of ligasSel) {
+                    addStmts.push(db.prepare(`UPDATE "Ligas" SET "${l}" = 'X' WHERE "Jugador" = ?`).bind(uTarget));
+                }
+                const allLigasEquipos = (ligasEqRes && ligasEqRes.results) || [];
+                const equiposToPermit = new Set();
+                for (const row of allLigasEquipos) {
+                    const lName = row.Liga;
+                    if (ligasSel.includes(lName)) {
+                        for (const col of Object.keys(row)) {
+                            if (col !== "Liga" && col !== "id" && row[col] && row[col].toString().toUpperCase() === "X") {
+                                equiposToPermit.add(col);
+                            }
+                        }
+                    }
+                }
+                for (const team of equiposToPermit) {
+                    addStmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(uTarget));
+                    addStmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(uTarget));
+                }
+            }
+
+            await flushBatch(db, addStmts);
+
+            // Guardar correo si la columna Correo existe en Usuarios
+            try {
+                await db.prepare('ALTER TABLE "Usuarios" ADD COLUMN "Correo" TEXT').run();
+            } catch(e) {}
+            try {
+                if (solicitud.Email) {
+                    await db.prepare('UPDATE "Usuarios" SET "Correo" = ? WHERE "Usuario" = ?').bind(solicitud.Email, uTarget).run();
+                }
+            } catch(e) {}
+
+            return jsonResponse({
+                status: 'success',
+                message: `¡Usuario @${uTarget} aprobado y activado con éxito en ${ligasSel.length} ligas!`
+            });
+        }
+
+        return jsonResponse({ status: 'error', message: 'Decisión no válida. Debe ser APROBAR o RECHAZAR.' }, 400);
+    }
+
+    // ADMIN: OBTENER TODOS LOS USUARIOS Y SUS LIGAS ACTIVAS
+    if (action === 'get_usuarios_ligas_admin') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        const [usersRes, ligasRowsRes] = await Promise.all([
+            db.prepare('SELECT "Usuario", "Nombre Real" FROM "Usuarios" ORDER BY "Usuario" ASC').all(),
+            db.prepare('SELECT * FROM "Ligas"').all()
+        ]);
+
+        const users = (usersRes && usersRes.results) || [];
+        const ligasRows = (ligasRowsRes && ligasRowsRes.results) || [];
+
+        let ligasDisponibles = [];
+        if (ligasRows.length > 0) {
+            ligasDisponibles = Object.keys(ligasRows[0]).filter(k => k !== 'Jugador' && k !== 'id').sort();
+        } else {
+            const leRes = await db.prepare('SELECT DISTINCT "Liga" FROM "Ligas_Equipos"').all().catch(() => null);
+            if (leRes && leRes.results) {
+                ligasDisponibles = leRes.results.map(r => r.Liga).filter(Boolean).sort();
+            }
+        }
+
+        const userLigasMap = {};
+        for (const row of ligasRows) {
+            const u = row.Jugador;
+            userLigasMap[u] = [];
+            for (const col of ligasDisponibles) {
+                if (row[col] && row[col].toString().toUpperCase() === 'X') {
+                    userLigasMap[u].push(col);
+                }
+            }
+        }
+
+        const list = users.map(u => ({
+            usuario: u.Usuario,
+            nombre_real: u["Nombre Real"] || u.Usuario,
+            ligas: userLigasMap[u.Usuario] || []
+        }));
+
+        return jsonResponse({
+            status: 'success',
+            usuarios: list,
+            ligas_disponibles: ligasDisponibles
+        });
+    }
+
+    // ADMIN: GUARDAR / MODIFICAR LIGAS DE UN USUARIO EXISTENTE
+    if (action === 'save_usuario_ligas_admin') {
+        const { target_usuario, ligas_seleccionadas } = body;
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+
+        if (!target_usuario) return jsonResponse({ status: 'error', message: 'Usuario objetivo no especificado' }, 400);
+
+        const ligasSel = Array.isArray(ligas_seleccionadas) ? ligas_seleccionadas : [];
+
+        let existLigasRow = await db.prepare('SELECT * FROM "Ligas" WHERE "Jugador" = ?').bind(target_usuario).first();
+        if (!existLigasRow) {
+            await db.prepare('INSERT INTO "Ligas" ("Jugador") VALUES (?)').bind(target_usuario).run();
+            existLigasRow = await db.prepare('SELECT * FROM "Ligas" WHERE "Jugador" = ?').bind(target_usuario).first();
+        }
+
+        const sampleLigas = existLigasRow || await db.prepare('SELECT * FROM "Ligas" LIMIT 1').first();
+        const allLeagueCols = Object.keys(sampleLigas || {}).filter(k => k !== 'Jugador' && k !== 'id');
+
+        const stmts = [];
+        for (const col of allLeagueCols) {
+            const isX = ligasSel.includes(col);
+            stmts.push(db.prepare(`UPDATE "Ligas" SET "${col}" = ? WHERE "Jugador" = ?`).bind(isX ? 'X' : '', target_usuario));
+        }
+
+        try {
+            const { results: ligasEqRows } = await db.prepare('SELECT * FROM "Ligas_Equipos"').all();
+            const equiposToPermit = new Set();
+            for (const row of ligasEqRows || []) {
+                if (ligasSel.includes(row.Liga)) {
+                    for (const col in row) {
+                        if (col !== 'Liga' && col !== 'id' && row[col] && row[col].toString().toUpperCase() === 'X') {
+                            equiposToPermit.add(col);
+                        }
+                    }
+                }
+            }
+            for (const team of equiposToPermit) {
+                stmts.push(db.prepare(`UPDATE "Permisos_Equipos" SET "${team}" = 'X' WHERE "Jugador" = ?`).bind(target_usuario));
+                stmts.push(db.prepare(`UPDATE "Permisos_Secreta" SET "${team}" = 'X' WHERE "Usuario" = ?`).bind(target_usuario));
+            }
+        } catch(e) {}
+
+        await flushBatch(db, stmts);
+
+        return jsonResponse({
+            status: 'success',
+            message: `Ligas de @${target_usuario} actualizadas con éxito (${ligasSel.length} ligas asignadas).`
+        });
     }
 
     // PUBLIC: ESTADO MODO MANTENIMIENTO

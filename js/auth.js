@@ -1079,6 +1079,9 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                             if (typeof window.populateDirectMvpBoxes === 'function') window.populateDirectMvpBoxes();
                         }
                         renderAdminLigasAndFreezeLazy();
+                        if (isAdmin && typeof window.cargarSolicitudesRegistroAdmin === 'function') {
+                            window.cargarSolicitudesRegistroAdmin(true);
+                        }
                     }
                     if (typeof window.renderLucideIcons === 'function') {
                         window.renderLucideIcons('enlacesRfevbSection');
@@ -1141,6 +1144,13 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                                 window.renderNotificaciones(window.appNotificaciones);
                             }
                         }).catch(() => {});
+                    }
+                    if (isAdmin && (new URLSearchParams(window.location.search).get('admin_tab') === 'solicitudes')) {
+                        setTimeout(() => {
+                            if (typeof window.abrirSolicitudesAdmin === 'function') {
+                                window.abrirSolicitudesAdmin();
+                            }
+                        }, 500);
                     }
                 }, 0);
             });
@@ -1370,3 +1380,160 @@ if (document.readyState === 'loading') {
 } else {
     initFaqAutoClose();
 }
+
+// ==============================================================================
+// 📝 MODAL Y FORMULARIO DE SOLICITUD DE REGISTRO
+// ==============================================================================
+
+window.abrirModalSolicitarCuenta = function() {
+    const modal = document.getElementById('modalSolicitarCuenta');
+    if (!modal) return;
+    
+    // Limpiar campos y alertas
+    const nr = document.getElementById('solicitarNombreReal');
+    const u = document.getElementById('solicitarUsuario');
+    const em = document.getElementById('solicitarEmail');
+    const p1 = document.getElementById('solicitarPassword');
+    const p2 = document.getElementById('solicitarPassword2');
+    const msg = document.getElementById('solicitarMensaje');
+    const btn = document.getElementById('btnEnviarSolicitud');
+    
+    if (nr) nr.value = '';
+    if (u) u.value = '';
+    if (em) em.value = '';
+    if (p1) p1.value = '';
+    if (p2) p2.value = '';
+    if (msg) { msg.style.display = 'none'; msg.innerHTML = ''; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Enviar Solicitud de Registro</span>'; btn.style.background = ''; }
+    
+    modal.style.display = 'flex';
+
+    // Cargar ligas disponibles desde el backend
+    const container = document.getElementById('solicitarLigasContainer');
+    if (container) {
+        container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">Cargando ligas...</span>';
+        fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'get_registro_ligas' }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const ligas = (data && data.ligas && data.ligas.length > 0) ? data.ligas : ['Oro', 'Plata'];
+            container.innerHTML = '';
+            ligas.forEach(l => {
+                const lbl = document.createElement('label');
+                lbl.style.cssText = 'margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:7px 12px; border-radius:8px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:7px; user-select:none; transition:all 0.2s;';
+                lbl.innerHTML = `<input type="checkbox" class="chk-solicitar-liga" value="${l}" checked style="accent-color:var(--secondary-color); cursor:pointer; width:16px; height:16px;"> <span>${l}</span>`;
+                container.appendChild(lbl);
+            });
+        })
+        .catch(() => {
+            container.innerHTML = '<span style="font-size:0.75rem; color:var(--text-muted);">(El administrador te asignará las ligas correspondientes)</span>';
+        });
+    }
+};
+
+window.cerrarModalSolicitarCuenta = function() {
+    const modal = document.getElementById('modalSolicitarCuenta');
+    if (modal) modal.style.display = 'none';
+};
+
+window.enviarSolicitudRegistro = async function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    
+    const nr = (document.getElementById('solicitarNombreReal')?.value || '').trim();
+    const u = (document.getElementById('solicitarUsuario')?.value || '').trim();
+    const em = (document.getElementById('solicitarEmail')?.value || '').trim().toLowerCase();
+    const p1 = (document.getElementById('solicitarPassword')?.value || '').trim();
+    const p2 = (document.getElementById('solicitarPassword2')?.value || '').trim();
+    const msg = document.getElementById('solicitarMensaje');
+    const btn = document.getElementById('btnEnviarSolicitud');
+    
+    const showError = (txt) => {
+        if (!msg) return;
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(231, 76, 60, 0.15)';
+        msg.style.border = '1px solid #e74c3c';
+        msg.style.color = '#ff6b81';
+        msg.innerHTML = `⚠️ ${txt}`;
+    };
+
+    const showSuccess = (txt) => {
+        if (!msg) return;
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(46, 204, 113, 0.15)';
+        msg.style.border = '1px solid #2ecc71';
+        msg.style.color = '#2ecc71';
+        msg.innerHTML = `✅ ${txt}`;
+    };
+
+    if (!u || u.length < 3) {
+        showError('El nombre de usuario debe tener al menos 3 caracteres.');
+        return;
+    }
+    if (/\s/.test(u)) {
+        showError('El nombre de usuario no puede contener espacios.');
+        return;
+    }
+    if (!em || !em.includes('@') || !em.includes('.')) {
+        showError('Introduce un correo electrónico válido.');
+        return;
+    }
+    if (!p1 || p1.length < 4) {
+        showError('La contraseña debe tener al menos 4 caracteres.');
+        return;
+    }
+    if (p1 !== p2) {
+        showError('Las contraseñas no coinciden. Por favor, revísalas.');
+        return;
+    }
+
+    const cbs = document.querySelectorAll('.chk-solicitar-liga:checked');
+    const ligasSel = Array.from(cbs).map(cb => cb.value);
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>Enviando solicitud...</span>';
+    }
+    if (msg) msg.style.display = 'none';
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'request_registration',
+                new_u: u,
+                new_p: p1,
+                new_n: nr || u,
+                new_email: em,
+                ligas: ligasSel
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        
+        if (data && data.status === 'success') {
+            showSuccess(data.message || '¡Solicitud enviada con éxito! El administrador revisará tu cuenta.');
+            if (btn) {
+                btn.innerHTML = '<span>✅</span> <span>¡Solicitud Enviada!</span>';
+                btn.style.background = '#27ae60';
+            }
+            setTimeout(() => {
+                window.cerrarModalSolicitarCuenta();
+            }, 3500);
+        } else {
+            showError((data && data.message) || 'Error al procesar la solicitud.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>🚀</span> <span>Reintentar Envío</span>';
+            }
+        }
+    } catch(err) {
+        showError('Error de conexión con el servidor. Por favor, inténtalo de nuevo.');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🚀</span> <span>Reintentar Envío</span>';
+        }
+    }
+};

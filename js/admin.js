@@ -3376,3 +3376,406 @@ if (typeof document !== 'undefined') {
         }
     });
 }
+
+// ==============================================================================
+// 📝 GESTIÓN DE SOLICITUDES DE REGISTRO (ADMIN)
+// ==============================================================================
+
+window.abrirSolicitudesAdmin = function() {
+    // 1. Cambiar a la pestaña de administración/perfil
+    if (typeof window.switchTabV2 === 'function') {
+        const navBtn = document.querySelector('.nav-item-v2[onclick*="enlacesRfevbSection"]');
+        window.switchTabV2('enlacesRfevbSection', navBtn);
+    } else if (typeof window.switchTab === 'function') {
+        window.switchTab('enlacesRfevbSection');
+    }
+
+    // 2. Abrir el details principal de Admin
+    const mainDet = document.getElementById('adminMainDetails');
+    if (mainDet) mainDet.open = true;
+
+    // 3. Abrir la sección de solicitudes de registro
+    const sec = document.getElementById('secAdminSolicitudesRegistro');
+    if (sec) {
+        sec.open = true;
+        setTimeout(() => {
+            sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+    }
+
+    // 4. Cargar la lista actualizada de solicitudes
+    if (typeof window.cargarSolicitudesRegistroAdmin === 'function') {
+        window.cargarSolicitudesRegistroAdmin();
+    }
+};
+
+window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
+    const box = document.getElementById('adminSolicitudesRegistroBox');
+    const badge = document.getElementById('badgeAdminSolicitudes');
+    if (!box && !silent) return;
+
+    if (!silent && box) {
+        box.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:16px;">⏳ Cargando solicitudes de registro...</div>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_solicitudes_registro',
+                usuario: currentUser,
+                password: currentPassword
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+            const solicitudes = data.solicitudes || [];
+            const ligasDisponibles = data.ligas_disponibles || [];
+            const pendientes = data.pendientes !== undefined ? data.pendientes : solicitudes.filter(s => s.Estado === 'PENDIENTE').length;
+
+            if (badge) {
+                badge.innerText = pendientes;
+                if (pendientes > 0) {
+                    badge.style.background = '#e67e22';
+                    badge.style.color = '#fff';
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.background = 'rgba(255,255,255,0.1)';
+                    badge.style.color = 'var(--text-muted)';
+                }
+            }
+
+            if (silent) return;
+
+            if (solicitudes.length === 0) {
+                box.innerHTML = `
+                    <div style="text-align:center; padding:20px 10px; background:rgba(0,0,0,0.15); border-radius:10px; border:1px dashed var(--border-color);">
+                        <span style="font-size:1.8rem; display:block; margin-bottom:6px;">✨</span>
+                        <b style="color:var(--text-main); font-size:0.9rem;">No hay solicitudes de registro</b>
+                        <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">
+                            Cuando un usuario complete el formulario de solicitud en el login, aparecerá aquí al instante.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            solicitudes.forEach(sol => {
+                const isPendiente = sol.Estado === 'PENDIENTE';
+                const isAprobada = sol.Estado === 'APROBADA';
+                const isRechazada = sol.Estado === 'RECHAZADA';
+
+                let estadoBadge = '';
+                let borderColor = 'var(--border-color)';
+                let bgCard = 'rgba(0,0,0,0.2)';
+
+                if (isPendiente) {
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);">⏳ Pendiente</span>';
+                    borderColor = 'rgba(243, 156, 18, 0.45)';
+                    bgCard = 'rgba(243, 156, 18, 0.05)';
+                } else if (isAprobada) {
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(46, 204, 113, 0.2); color:#2ecc71; border:1px solid rgba(46, 204, 113, 0.4);">✅ Aprobada</span>';
+                    borderColor = 'rgba(46, 204, 113, 0.3)';
+                } else if (isRechazada) {
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(231, 76, 60, 0.2); color:#e74c3c; border:1px solid rgba(231, 76, 60, 0.4);">❌ Rechazada</span>';
+                    borderColor = 'rgba(231, 76, 60, 0.3)';
+                }
+
+                let ligasPedidasArr = [];
+                try {
+                    ligasPedidasArr = sol.Ligas_Solicitadas ? JSON.parse(sol.Ligas_Solicitadas) : [];
+                } catch(e) {
+                    ligasPedidasArr = [];
+                }
+
+                let fechaSol = '';
+                if (sol.Fecha_Solicitud) {
+                    try {
+                        fechaSol = new Date(sol.Fecha_Solicitud).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' });
+                    } catch(e) { fechaSol = String(sol.Fecha_Solicitud); }
+                }
+
+                let ligasCheckboxesHtml = '';
+                if (isPendiente) {
+                    ligasCheckboxesHtml = `
+                        <div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.25); border-radius:8px; border:1px solid var(--border-color);">
+                            <div style="font-size:0.72rem; color:var(--text-muted); font-weight:700; margin-bottom:6px; text-transform:uppercase;">
+                                Asignar a ligas al aprobar:
+                            </div>
+                            <div id="sol_ligas_${sol.id}" style="display:flex; gap:6px; flex-wrap:wrap;">
+                                ${ligasDisponibles.map(liga => {
+                                    const checked = (ligasPedidasArr.length === 0 || ligasPedidasArr.includes(liga)) ? 'checked' : '';
+                                    return `
+                                        <label style="margin:0; cursor:pointer; font-size:0.76rem; background:var(--bg-input); padding:5px 10px; border-radius:6px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:5px; user-select:none;">
+                                            <input type="checkbox" value="${liga}" ${checked} style="accent-color:var(--secondary-color); cursor:pointer;">
+                                            <span>${liga}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div style="background:${bgCard}; border:1px solid ${borderColor}; border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+                            <div>
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <strong style="color:var(--text-main); font-size:0.95rem;">@${sol.Usuario}</strong>
+                                    ${estadoBadge}
+                                </div>
+                                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                                    👤 <b>${sol.Nombre_Real}</b> &nbsp;|&nbsp; ✉️ <a href="mailto:${sol.Email}" style="color:var(--secondary-color); text-decoration:none;">${sol.Email}</a>
+                                </div>
+                            </div>
+                            <div style="font-size:0.7rem; color:var(--text-muted); text-align:right;">
+                                📅 ${fechaSol}
+                            </div>
+                        </div>
+
+                        ${ligasPedidasArr.length > 0 ? `
+                            <div style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span>Ligas que solicitó el usuario:</span>
+                                ${ligasPedidasArr.map(l => `<span style="background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:4px; font-weight:700; color:var(--text-main); border:1px solid var(--border-color);">${l}</span>`).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${isPendiente ? ligasCheckboxesHtml : ''}
+
+                        ${isPendiente ? `
+                            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'APROBAR')" style="flex:1; min-width:140px; padding:8px 14px; font-size:0.78rem; font-weight:800; border-radius:8px; background:#27ae60; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 8px rgba(39,174,96,0.3);">
+                                    <span>✅</span> <span>Aprobar y Dar Acceso</span>
+                                </button>
+                                <button type="button" class="btn" onclick="window.adminResolverSolicitud(${sol.id}, 'RECHAZAR')" style="padding:8px 14px; font-size:0.78rem; font-weight:800; border-radius:8px; background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid #e74c3c; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                    <span>❌</span> <span>Rechazar</span>
+                                </button>
+                            </div>
+                        ` : `
+                            <div style="font-size:0.7rem; color:var(--text-muted); border-top:1px dashed rgba(255,255,255,0.08); padding-top:6px; margin-top:2px;">
+                                ${sol.Revisado_Por ? `Revisado por <b>@${sol.Revisado_Por}</b>` : ''}
+                                ${sol.Fecha_Resolucion ? `el ${new Date(sol.Fecha_Resolucion).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'short' })}` : ''}
+                            </div>
+                        `}
+                    </div>
+                `;
+            });
+
+            box.innerHTML = html;
+        } else {
+            if (!silent && box) {
+                box.innerHTML = `<div style="text-align:center; color:#e74c3c; padding:12px;">❌ Error al cargar solicitudes: ${(data && data.message) || 'Error desconocido'}</div>`;
+            }
+        }
+    } catch(err) {
+        if (!silent && box) {
+            box.innerHTML = '<div style="text-align:center; color:#e74c3c; padding:12px;">❌ Error de conexión al cargar solicitudes.</div>';
+        }
+    }
+};
+
+window.adminResolverSolicitud = async function(id, decision) {
+    if (!id || !decision) return;
+
+    let ligasSel = [];
+    if (decision === 'APROBAR') {
+        const cont = document.getElementById(`sol_ligas_${id}`);
+        if (cont) {
+            const cbs = cont.querySelectorAll('input[type="checkbox"]:checked');
+            ligasSel = Array.from(cbs).map(cb => cb.value);
+        }
+        const confirmMsg = ligasSel.length > 0 
+            ? `¿Confirmas que deseas aprobar esta cuenta y darle acceso a ${ligasSel.length} liga(s) (${ligasSel.join(', ')})?`
+            : `No has seleccionado ninguna liga. ¿Deseas aprobar al usuario sin inscribirlo en ninguna liga?`;
+        if (!confirm(confirmMsg)) return;
+    } else {
+        if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud de registro?')) return;
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'resolver_solicitud_registro',
+                usuario: currentUser,
+                password: currentPassword,
+                id: id,
+                decision: decision,
+                ligas_seleccionadas: ligasSel
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+            if (typeof mostrarToast === 'function') {
+                mostrarToast(data.message || 'Solicitud resuelta con éxito');
+            } else {
+                alert(data.message);
+            }
+            window.cargarSolicitudesRegistroAdmin();
+            if (typeof window.adminCargarUsuariosLigas === 'function') {
+                window.adminCargarUsuariosLigas();
+            }
+        } else {
+            alert('Error: ' + ((data && data.message) || 'No se pudo resolver la solicitud'));
+        }
+    } catch(err) {
+        alert('Error de conexión al resolver la solicitud.');
+    }
+};
+
+// ==============================================================================
+// 🏆 GESTIÓN Y MODIFICACIÓN DE LIGAS POR USUARIO (ADMIN)
+// ==============================================================================
+
+window.adminCargarUsuariosLigas = async function() {
+    const sel = document.getElementById('selAdminGestionLigasUsuario');
+    if (!sel) return;
+
+    const prevVal = sel.value;
+    sel.innerHTML = '<option value="">⏳ Cargando usuarios y ligas...</option>';
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'get_usuarios_ligas_admin',
+                usuario: currentUser,
+                password: currentPassword
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+            window._adminUsuariosLigasCache = data;
+            const usuarios = data.usuarios || [];
+            
+            let opts = '<option value="">-- Elige un usuario (' + usuarios.length + ' usuarios) --</option>';
+            usuarios.forEach(u => {
+                const ligasCount = (u.ligas || []).length;
+                opts += `<option value="${u.usuario}">@${u.usuario} (${u.nombre_real}) [${ligasCount} ligas]</option>`;
+            });
+            sel.innerHTML = opts;
+
+            if (prevVal && usuarios.some(u => u.usuario === prevVal)) {
+                sel.value = prevVal;
+                window.adminOnSelectUsuarioLigas();
+            } else {
+                const cCont = document.getElementById('adminGestionLigasCheckboxesContainer');
+                const bBtn = document.getElementById('btnAdminGuardarLigasUsuario');
+                if (cCont) cCont.style.display = 'none';
+                if (bBtn) bBtn.style.display = 'none';
+            }
+        } else {
+            sel.innerHTML = '<option value="">❌ Error al cargar usuarios</option>';
+        }
+    } catch(err) {
+        sel.innerHTML = '<option value="">❌ Error de conexión</option>';
+    }
+};
+
+window.adminOnSelectUsuarioLigas = function() {
+    const sel = document.getElementById('selAdminGestionLigasUsuario');
+    const boxCont = document.getElementById('adminGestionLigasCheckboxesContainer');
+    const chkCont = document.getElementById('adminGestionLigasCheckboxes');
+    const btn = document.getElementById('btnAdminGuardarLigasUsuario');
+
+    if (!sel || !boxCont || !chkCont || !btn) return;
+    const targetUser = sel.value;
+
+    if (!targetUser || !window._adminUsuariosLigasCache) {
+        boxCont.style.display = 'none';
+        btn.style.display = 'none';
+        return;
+    }
+
+    const userObj = (window._adminUsuariosLigasCache.usuarios || []).find(u => u.usuario === targetUser);
+    const ligasDisponibles = window._adminUsuariosLigasCache.ligas_disponibles || [];
+    const activeLigas = (userObj && userObj.ligas) ? userObj.ligas : [];
+
+    chkCont.innerHTML = ligasDisponibles.map(liga => {
+        const isChecked = activeLigas.includes(liga) ? 'checked' : '';
+        return `
+            <label style="margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:7px 12px; border-radius:8px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:7px; user-select:none; transition:all 0.2s;">
+                <input type="checkbox" class="chk-admin-user-liga" value="${liga}" ${isChecked} style="accent-color:var(--secondary-color); cursor:pointer; width:16px; height:16px;">
+                <span style="font-weight:700;">${liga}</span>
+            </label>
+        `;
+    }).join('');
+
+    boxCont.style.display = 'block';
+    btn.style.display = 'block';
+};
+
+window.adminGuardarLigasUsuario = async function() {
+    const sel = document.getElementById('selAdminGestionLigasUsuario');
+    const btn = document.getElementById('btnAdminGuardarLigasUsuario');
+    if (!sel || !btn) return;
+
+    const targetUser = sel.value;
+    if (!targetUser) {
+        alert('Por favor, selecciona un usuario primero.');
+        return;
+    }
+
+    const cbs = document.querySelectorAll('.chk-admin-user-liga:checked');
+    const selectedLigas = Array.from(cbs).map(cb => cb.value);
+
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> <span>Guardando ligas...</span>';
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'save_usuario_ligas_admin',
+                usuario: currentUser,
+                password: currentPassword,
+                target_usuario: targetUser,
+                ligas_seleccionadas: selectedLigas
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+            if (typeof mostrarToast === 'function') {
+                mostrarToast(data.message || 'Ligas actualizadas correctamente');
+            } else {
+                alert(data.message);
+            }
+            if (window._adminUsuariosLigasCache && window._adminUsuariosLigasCache.usuarios) {
+                const uObj = window._adminUsuariosLigasCache.usuarios.find(u => u.usuario === targetUser);
+                if (uObj) {
+                    uObj.ligas = selectedLigas;
+                    const opt = sel.querySelector(`option[value="${targetUser}"]`);
+                    if (opt) opt.innerText = `@${uObj.usuario} (${uObj.nombre_real}) [${selectedLigas.length} ligas]`;
+                }
+            }
+        } else {
+            alert('Error: ' + ((data && data.message) || 'No se pudieron guardar las ligas'));
+        }
+    } catch(err) {
+        alert('Error de conexión al guardar ligas.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '💾 Guardar Ligas del Usuario';
+    }
+};
+
+// Escuchar mensajes push enviados desde el Service Worker
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data && event.data.action === 'abrirSolicitudesAdmin') {
+            if (typeof window.abrirSolicitudesAdmin === 'function') {
+                window.abrirSolicitudesAdmin();
+            }
+        }
+    });
+}

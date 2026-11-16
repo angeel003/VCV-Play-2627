@@ -2,7 +2,7 @@
 // CONFIGURACIÓN GLOBAL, ESTADO Y UTILIDADES
 // ==================================================================
 
-window._imgCacheBust = '20261116_v3';
+window._imgCacheBust = '20261116_v4';
 
 // Helper global para renderizar iconos Lucide de forma acotada a un contenedor
 window.renderLucideIcons = function(root) {

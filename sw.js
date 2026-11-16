@@ -53,7 +53,9 @@ self.addEventListener('notificationclick', function(event) {
             for (let i = 0; i < clientList.length; i++) {
                 const client = clientList[i];
                 if ('focus' in client) {
-                    if (payloadData.id_partido) {
+                    if (payloadData.action === 'abrirSolicitudesAdmin' || (payloadData.url && payloadData.url.includes('admin_tab=solicitudes'))) {
+                        client.postMessage({ action: 'abrirSolicitudesAdmin' });
+                    } else if (payloadData.id_partido) {
                         client.postMessage({ action: 'scrollToPartido', id_partido: payloadData.id_partido });
                     }
                     return client.focus();

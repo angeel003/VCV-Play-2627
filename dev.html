@@ -2472,6 +2472,10 @@
           👀 Entrar como invitado
         </button>
 
+        <button type="button" id="btnSolicitarCuenta" onclick="window.abrirModalSolicitarCuenta()" class="btn-outline-v2" style="width: 100%; margin-top: 8px; border-color: rgba(243, 156, 18, 0.45); color: #f39c12; background: rgba(243, 156, 18, 0.08); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700;">
+          <span>📝</span> <span>¿No tienes cuenta? Solicitar registro</span>
+        </button>
+
         <!-- Botón discreto Preguntas frecuentes con flecha -->
         <div style="text-align: center; margin-top: 8px;">
           <button type="button" onclick="window.abrirFaqDesplegado()" style="background: transparent; border: none; color: var(--text-muted); font-size: 0.76rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; opacity: 0.75; padding: 4px 10px; border-radius: 12px; transition: all 0.2s; user-select: none;" onmouseover="this.style.opacity='1'; this.style.color='var(--secondary-color)';" onmouseout="this.style.opacity='0.75'; this.style.color='var(--text-muted)';">
@@ -2835,6 +2839,32 @@
             </div>
           </details>
 
+          <!-- Solicitudes de Registro de Nuevos Usuarios -->
+          <details id="secAdminSolicitudesRegistro" class="admin-collapsible" ontoggle="if(this.open && window.cargarSolicitudesRegistroAdmin) window.cargarSolicitudesRegistroAdmin();" style="background: linear-gradient(to right, rgba(243, 156, 18, 0.15), var(--bg-card)); border: 1.5px solid rgba(243, 156, 18, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #f39c12; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <span>📝</span> Solicitudes de Registro de Cuenta
+              </span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="badgeAdminSolicitudes" style="font-size: 0.72rem; background: #e67e22; color: #fff; font-weight: 800; padding: 2px 8px; border-radius: 6px;">0</span>
+                <span class="admin-main-arrow" style="color: #f39c12; font-size: 0.75rem;">▼</span>
+              </div>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(243, 156, 18, 0.2);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35;">
+                  Revisa las solicitudes de acceso, elige en qué ligas inscribir a cada usuario y aprueba o rechaza con un clic.
+                </span>
+                <button type="button" class="btn" onclick="window.cargarSolicitudesRegistroAdmin()" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 6px; background: rgba(243, 156, 18, 0.2); color: #f39c12; border: 1px solid #f39c12; cursor: pointer; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                  🔄 Actualizar
+                </button>
+              </div>
+              <div id="adminSolicitudesRegistroBox" style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 12px;">
+                <div style="text-align: center; color: var(--text-muted); padding: 14px;">Pulsa actualizar para cargar solicitudes...</div>
+              </div>
+            </div>
+          </details>
+
           <!-- 3. Formulario Crear Nuevo Usuario -->
           <details class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #e67e22; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -2858,6 +2888,37 @@
               </div>
               <button class="btn" style="width:100%; padding: 10px; font-size: 0.85rem; background:#e67e22; color:#fff; border:none; border-radius:8px; font-weight:bold; box-shadow: 0 4px 6px rgba(230,126,34,0.2);" onclick="crearUsuarioAdmin(event)">
                 Crear Usuario en Sheets
+              </button>
+            </div>
+          </details>
+
+          <!-- Gestión de Ligas por Usuario -->
+          <details id="secAdminGestionLigas" class="admin-collapsible" ontoggle="if(this.open && window.adminCargarUsuariosLigas) window.adminCargarUsuariosLigas();" style="background: linear-gradient(to right, rgba(142, 68, 173, 0.18), var(--bg-card)); border: 1.5px solid rgba(155, 89, 182, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #af7ac5; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">
+                <span>🏆</span> Gestión de Ligas por Usuario
+              </span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size: 0.7rem; background: rgba(155, 89, 182, 0.25); color: #d2b4de; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Ligas</span>
+                <span class="admin-main-arrow" style="color: #af7ac5; font-size: 0.75rem;">▼</span>
+              </div>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(155, 89, 182, 0.2);">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+                Modifica a qué ligas tiene acceso cualquier usuario de Fantasy VCV. Al guardar, sus permisos de equipos y clasificaciones se sincronizan automáticamente.
+              </p>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seleccionar Usuario:</label>
+                <select id="selAdminGestionLigasUsuario" onchange="window.adminOnSelectUsuarioLigas()" style="width: 100%; padding: 9px 12px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
+                  <option value="">-- Elige un usuario para ver sus ligas --</option>
+                </select>
+              </div>
+              <div id="adminGestionLigasCheckboxesContainer" style="display: none; margin-bottom: 14px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <label style="font-size: 0.75rem; color: var(--text-main); font-weight: 800; display: block; margin-bottom: 8px;">Ligas activas para este usuario:</label>
+                <div id="adminGestionLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              </div>
+              <button type="button" id="btnAdminGuardarLigasUsuario" onclick="window.adminGuardarLigasUsuario()" class="btn" style="display: none; width: 100%; padding: 10px; font-size: 0.85rem; background: #8e44ad; color: #fff; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);">
+                💾 Guardar Ligas del Usuario
               </button>
             </div>
           </details>
@@ -4021,6 +4082,67 @@
     </div>
 </div>
 
+<!-- MODAL SOLICITAR REGISTRO DE CUENTA -->
+<div id="modalSolicitarCuenta" onclick="if(event.target === this) window.cerrarModalSolicitarCuenta()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10002; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); overscroll-behavior:contain;">
+    <div style="background:var(--bg-card); width:100%; max-width:440px; max-height:min(90vh, 90dvh); overflow-y:auto; border-radius:20px; padding:24px 20px; box-shadow:0 14px 48px rgba(0,0,0,0.7); position:relative; border:1.5px solid rgba(243, 156, 18, 0.4); box-sizing:border-box; text-align:left;">
+        <button type="button" onclick="window.cerrarModalSolicitarCuenta()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.4); border:none; color:var(--text-main); font-size:1.6rem; cursor:pointer; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; line-height:1; z-index:5;">&times;</button>
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <div style="width:38px; height:38px; border-radius:10px; background:rgba(243, 156, 18, 0.15); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">📝</div>
+            <div>
+                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-main);">Solicitar Cuenta</h3>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Únete a Fantasy VCV 2026-27</span>
+            </div>
+        </div>
+
+        <p style="font-size:0.76rem; color:var(--text-muted); margin:8px 0 16px 0; line-height:1.4;">
+            Completa tus datos para enviar tu solicitud. El administrador recibirá una notificación instantánea para revisar y activar tu acceso.
+        </p>
+
+        <form id="formSolicitarCuenta" onsubmit="window.enviarSolicitudRegistro(event)">
+            <div class="form-group" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nombre y Apellidos / Apodo <span style="color:#e74c3c;">*</span></label>
+                <input type="text" id="solicitarNombreReal" class="form-control" placeholder="Ej. Carlos García" required style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+            </div>
+
+            <div class="form-group" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nombre de Usuario deseado <span style="color:#e74c3c;">*</span></label>
+                <input type="text" id="solicitarUsuario" class="form-control" placeholder="Ej. carlos99" required autocomplete="username" autocapitalize="none" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+                <small style="font-size:0.68rem; color:var(--text-muted);">Sin espacios ni caracteres extraños (mínimo 3 letras).</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom:10px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Correo Electrónico <span style="color:#e74c3c;">*</span></label>
+                <input type="email" id="solicitarEmail" class="form-control" placeholder="tu_correo@ejemplo.com" required autocomplete="email" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Contraseña <span style="color:#e74c3c;">*</span></label>
+                    <input type="password" id="solicitarPassword" class="form-control" placeholder="••••••••" required autocomplete="new-password" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Repetir Contraseña <span style="color:#e74c3c;">*</span></label>
+                    <input type="password" id="solicitarPassword2" class="form-control" placeholder="••••••••" required autocomplete="new-password" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">¿En qué ligas deseas participar?</label>
+                <div id="solicitarLigasContainer" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+                    <span style="font-size:0.74rem; color:var(--text-muted);">Cargando ligas...</span>
+                </div>
+            </div>
+
+            <div id="solicitarMensaje" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.8rem; margin-bottom:12px; font-weight:700; line-height:1.4;"></div>
+
+            <button type="submit" id="btnEnviarSolicitud" class="btn-gold-v2" style="width:100%; padding:12px; font-weight:800; font-size:0.95rem; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span>🚀</span> <span>Enviar Solicitud de Registro</span>
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- MODAL COMPARTIR TARJETA CANVAS -->
 <div id="shareCardModal" onclick="if(event.target === this) closeShareCardModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10001; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);">
     <div style="background:var(--bg-card); width:100%; max-width:420px; max-height:92vh; overflow-y:auto; border-radius:18px; padding:20px; box-shadow:0 12px 48px rgba(0,0,0,0.7); position:relative; border:1px solid var(--border-color); text-align:center; box-sizing:border-box;">
@@ -4054,14 +4176,14 @@
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
-<script src="js/config.js?v=20261116_v3"></script>
-<script src="js/admin.js?v=20261116_v3"></script>
-<script src="js/cartelera.js?v=20261116_v3"></script>
-<script src="js/ranking.js?v=20261116_v3"></script>
-<script src="js/calendario.js?v=20261116_v3"></script>
-<script src="js/cartelera_interactive.js?v=20261116_v3"></script>
+<script src="js/config.js?v=20261116_v4"></script>
+<script src="js/admin.js?v=20261116_v4"></script>
+<script src="js/cartelera.js?v=20261116_v4"></script>
+<script src="js/ranking.js?v=20261116_v4"></script>
+<script src="js/calendario.js?v=20261116_v4"></script>
+<script src="js/cartelera_interactive.js?v=20261116_v4"></script>
 <script src="js/ui_gestures.js?v=20261031_v20"></script>
-<script src="js/auth.js?v=20261107_v28"></script>
+<script src="js/auth.js?v=20261116_v4"></script>
 <script src="js/push_notifications.js?v=20261106_v26"></script>
 
 
