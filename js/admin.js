@@ -3519,12 +3519,22 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                     camposEdicionHtml = `
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
                             <div>
+                                <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Nombre de Usuario (@usuario):</label>
+                                <input type="text" id="sol_usuario_${sol.id}" value="${sol.Usuario || ''}" placeholder="usuario" style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box; font-weight:700;">
+                            </div>
+                            <div>
                                 <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Nombre Completo / Apodo:</label>
                                 <input type="text" id="sol_nombre_${sol.id}" value="${sol.Nombre_Real || ''}" style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box;">
                             </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
                             <div>
                                 <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Equipo / Vinculación con el club:</label>
                                 <input type="text" id="sol_equipo_${sol.id}" value="${sol.Equipo_Club || ''}" placeholder="Ej. Superliga 2, Juvenil, Aficionado..." style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.72rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:3px;">Aviso al usuario en pantalla (opcional):</label>
+                                <input type="text" id="sol_aviso_${sol.id}" placeholder="Ej. Nombre modificado por no cumplir normas..." style="width:100%; padding:8px 10px; border-radius:6px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.8rem; box-sizing:border-box;">
                             </div>
                         </div>
                     `;
@@ -3559,11 +3569,13 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                             <div>
                                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                     <strong style="color:var(--text-main); font-size:0.95rem;">@${sol.Usuario}</strong>
+                                    ${sol.Usuario_Original ? `<span style="font-size:0.72rem; color:var(--text-muted);">(Original: @${sol.Usuario_Original})</span>` : ''}
                                     ${estadoBadge}
                                 </div>
                                 <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
                                     👤 <b>${sol.Nombre_Real}</b> &nbsp;|&nbsp; ✉️ <a href="mailto:${sol.Email}" style="color:var(--secondary-color); text-decoration:none;">${sol.Email}</a>
                                 </div>
+                                ${sol.Motivo_Rechazo ? `<div style="font-size:0.74rem; color:#e74c3c; margin-top:2px;">❌ <b>Motivo:</b> ${sol.Motivo_Rechazo}</div>` : ''}
                             </div>
                             <div style="font-size:0.7rem; color:var(--text-muted); text-align:right;">
                                 📅 ${fechaSol}
@@ -3617,6 +3629,9 @@ window.adminResolverSolicitud = async function(id, decision) {
     let ligasSel = [];
     let nombreReal = '';
     let equipoClub = '';
+    let nuevoUsuario = '';
+    let avisoModeracion = '';
+    let motivoRechazo = '';
 
     if (decision === 'APROBAR') {
         const cont = document.getElementById(`sol_ligas_${id}`);
@@ -3628,16 +3643,25 @@ window.adminResolverSolicitud = async function(id, decision) {
             ligasSel.unshift('Global');
         }
 
+        const inputUsr = document.getElementById(`sol_usuario_${id}`);
+        if (inputUsr) nuevoUsuario = inputUsr.value.trim().replace(/^@/, '');
+
         const inputNom = document.getElementById(`sol_nombre_${id}`);
         if (inputNom) nombreReal = inputNom.value.trim();
 
         const inputEq = document.getElementById(`sol_equipo_${id}`);
         if (inputEq) equipoClub = inputEq.value.trim();
 
-        const confirmMsg = `¿Confirmas la verificación y aprobación de esta cuenta con acceso a ${ligasSel.length} liga(s) (${ligasSel.join(', ')})?`;
+        const inputAv = document.getElementById(`sol_aviso_${id}`);
+        if (inputAv) avisoModeracion = inputAv.value.trim();
+
+        const usrText = nuevoUsuario ? `@${nuevoUsuario}` : 'este usuario';
+        const confirmMsg = `¿Confirmas la verificación y aprobación de ${usrText} con acceso a ${ligasSel.length} liga(s) (${ligasSel.join(', ')})?`;
         if (!confirm(confirmMsg)) return;
     } else {
-        if (!confirm('¿Estás seguro de que deseas rechazar esta solicitud de registro? Se revocará la cuenta provisional.')) return;
+        const mot = prompt('¿Estás seguro de que deseas rechazar esta solicitud de registro?\n\nIndica el motivo del rechazo (opcional, se le mostrará al usuario si intenta acceder):', 'No cumple los requisitos de registro del club');
+        if (mot === null) return;
+        motivoRechazo = mot.trim();
     }
 
     try {
@@ -3649,8 +3673,11 @@ window.adminResolverSolicitud = async function(id, decision) {
                 password: currentPassword,
                 id: id,
                 decision: decision,
+                nuevo_usuario: nuevoUsuario,
                 nombre_real: nombreReal,
                 equipo_club: equipoClub,
+                aviso_moderacion: avisoModeracion,
+                motivo_rechazo: motivoRechazo,
                 ligas_seleccionadas: ligasSel
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -3676,7 +3703,7 @@ window.adminResolverSolicitud = async function(id, decision) {
 };
 
 // ==============================================================================
-// 🏆 GESTIÓN Y MODIFICACIÓN DE LIGAS POR USUARIO (ADMIN)
+// 🏆 GESTIÓN INTEGRAL DE PERFIL Y LIGAS POR USUARIO (ADMIN)
 // ==============================================================================
 
 window.adminCargarUsuariosLigas = async function() {
@@ -3684,7 +3711,7 @@ window.adminCargarUsuariosLigas = async function() {
     if (!sel) return;
 
     const prevVal = sel.value;
-    sel.innerHTML = '<option value="">⏳ Cargando usuarios y ligas...</option>';
+    sel.innerHTML = '<option value="">⏳ Cargando usuarios...</option>';
 
     try {
         const res = await fetchSeguro(scriptURL, {
@@ -3700,24 +3727,7 @@ window.adminCargarUsuariosLigas = async function() {
 
         if (data && data.status === 'success') {
             window._adminUsuariosLigasCache = data;
-            const usuarios = data.usuarios || [];
-            
-            let opts = '<option value="">-- Elige un usuario (' + usuarios.length + ' usuarios) --</option>';
-            usuarios.forEach(u => {
-                const ligasCount = (u.ligas || []).length;
-                opts += `<option value="${u.usuario}">@${u.usuario} (${u.nombre_real}) [${ligasCount} ligas]</option>`;
-            });
-            sel.innerHTML = opts;
-
-            if (prevVal && usuarios.some(u => u.usuario === prevVal)) {
-                sel.value = prevVal;
-                window.adminOnSelectUsuarioLigas();
-            } else {
-                const cCont = document.getElementById('adminGestionLigasCheckboxesContainer');
-                const bBtn = document.getElementById('btnAdminGuardarLigasUsuario');
-                if (cCont) cCont.style.display = 'none';
-                if (bBtn) bBtn.style.display = 'none';
-            }
+            window.adminRenderizarOpcionesUsuariosLigas(data.usuarios || [], prevVal);
         } else {
             sel.innerHTML = '<option value="">❌ Error al cargar usuarios</option>';
         }
@@ -3726,64 +3736,199 @@ window.adminCargarUsuariosLigas = async function() {
     }
 };
 
-window.adminOnSelectUsuarioLigas = function() {
+window.adminRenderizarOpcionesUsuariosLigas = function(usuarios, selectVal) {
     const sel = document.getElementById('selAdminGestionLigasUsuario');
-    const boxCont = document.getElementById('adminGestionLigasCheckboxesContainer');
-    const chkCont = document.getElementById('adminGestionLigasCheckboxes');
-    const btn = document.getElementById('btnAdminGuardarLigasUsuario');
+    if (!sel) return;
 
-    if (!sel || !boxCont || !chkCont || !btn) return;
-    const targetUser = sel.value;
+    let opts = '<option value="">-- Elige un usuario (' + usuarios.length + ' usuarios) --</option>';
+    usuarios.forEach(u => {
+        const ligasCount = (u.ligas || []).length;
+        opts += `<option value="${u.usuario}">@${u.usuario} (${u.nombre_real}) [${ligasCount} ligas]</option>`;
+    });
+    sel.innerHTML = opts;
 
-    if (!targetUser || !window._adminUsuariosLigasCache) {
-        boxCont.style.display = 'none';
-        btn.style.display = 'none';
-        return;
+    if (selectVal && usuarios.some(u => u.usuario === selectVal)) {
+        sel.value = selectVal;
+        window.adminOnSelectUsuarioLigas();
+    } else {
+        const pCont = document.getElementById('adminGestionPerfilFormContainer');
+        if (pCont) pCont.style.display = 'none';
     }
-
-    const userObj = (window._adminUsuariosLigasCache.usuarios || []).find(u => u.usuario === targetUser);
-    const ligasDisponibles = window._adminUsuariosLigasCache.ligas_disponibles || [];
-    const activeLigas = (userObj && userObj.ligas) ? userObj.ligas : [];
-
-    chkCont.innerHTML = ligasDisponibles.map(liga => {
-        const isChecked = activeLigas.includes(liga) ? 'checked' : '';
-        return `
-            <label style="margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:7px 12px; border-radius:8px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:7px; user-select:none; transition:all 0.2s;">
-                <input type="checkbox" class="chk-admin-user-liga" value="${liga}" ${isChecked} style="accent-color:var(--secondary-color); cursor:pointer; width:16px; height:16px;">
-                <span style="font-weight:700;">${liga}</span>
-            </label>
-        `;
-    }).join('');
-
-    boxCont.style.display = 'block';
-    btn.style.display = 'block';
 };
 
-window.adminGuardarLigasUsuario = async function() {
+window.adminFiltrarUsuariosLigas = function(q) {
+    if (!window._adminUsuariosLigasCache || !window._adminUsuariosLigasCache.usuarios) return;
+    const term = (q || '').trim().toLowerCase();
     const sel = document.getElementById('selAdminGestionLigasUsuario');
-    const btn = document.getElementById('btnAdminGuardarLigasUsuario');
-    if (!sel || !btn) return;
+    const prev = sel ? sel.value : '';
+
+    const filtrados = window._adminUsuariosLigasCache.usuarios.filter(u => {
+        return (u.usuario || '').toLowerCase().includes(term) || (u.nombre_real || '').toLowerCase().includes(term);
+    });
+    window.adminRenderizarOpcionesUsuariosLigas(filtrados, prev);
+};
+
+window.adminOnSelectUsuarioLigas = async function() {
+    const sel = document.getElementById('selAdminGestionLigasUsuario');
+    const pCont = document.getElementById('adminGestionPerfilFormContainer');
+    if (!sel || !pCont) return;
 
     const targetUser = sel.value;
     if (!targetUser) {
-        alert('Por favor, selecciona un usuario primero.');
+        pCont.style.display = 'none';
         return;
     }
 
-    const cbs = document.querySelectorAll('.chk-admin-user-liga:checked');
-    const selectedLigas = Array.from(cbs).map(cb => cb.value);
-
-    btn.disabled = true;
-    btn.innerHTML = '<span>⏳</span> <span>Guardando ligas...</span>';
+    pCont.style.display = 'block';
+    pCont.style.opacity = '0.5';
+    pCont.style.pointerEvents = 'none';
 
     try {
         const res = await fetchSeguro(scriptURL, {
             method: 'POST',
             body: JSON.stringify({
-                action: 'save_usuario_ligas_admin',
+                action: 'admin_get_user_full_profile',
+                usuario: currentUser,
+                password: currentPassword,
+                target_usuario: targetUser
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success' && data.perfil) {
+            const p = data.perfil;
+            window._adminCurrentEditingUser = p.usuario;
+
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            const setChk = (id, chk) => { const el = document.getElementById(id); if (el) el.checked = Boolean(chk); };
+
+            setVal('adminEditUsuario', p.usuario);
+            setVal('adminEditNombreReal', p.nombre_real);
+            setVal('adminEditCorreo', p.correo);
+            setVal('adminEditPassword', '');
+            setVal('adminEditEquipoClub', p.equipo_club);
+            setVal('adminEditJugadorDe', p.jugador_de);
+            setVal('adminEditEntrenadorDe', p.entrenador_de);
+            setVal('adminEditExjugador', p.exjugador);
+            setVal('adminEditStaff', p.staff);
+            setVal('adminEditVerificado', p.verificado || 'APROBADO');
+            setVal('adminEditPermisoResultados', p.permiso_resultados);
+            setVal('adminEditAvatarUrl', p.avatar_url);
+            setVal('adminEditAvisoModeracion', p.aviso_moderacion);
+            setVal('adminEditBorrarAvatarFlag', '0');
+
+            setChk('adminEditAdminWeb', p.admin_web === 'X');
+            setChk('adminEditPermisoMvp', p.permiso_mvp === 'X');
+
+            // Render avatar preview
+            const avPrev = document.getElementById('adminEditAvatarPreview');
+            if (avPrev) {
+                if (p.avatar_url) {
+                    avPrev.innerHTML = `<img src="${p.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else if (p.avatar && p.avatar.startsWith('data:image')) {
+                    avPrev.innerHTML = `<img src="${p.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                    avPrev.innerHTML = `<span style="font-size:1.4rem;">👤</span>`;
+                }
+            }
+
+            // Render ligas checkboxes
+            const chkCont = document.getElementById('adminGestionLigasCheckboxes');
+            if (chkCont) {
+                const ligasDisp = data.ligas_disponibles || [];
+                const activeLigas = p.ligas || [];
+                chkCont.innerHTML = ligasDisp.map(liga => {
+                    const isChecked = activeLigas.includes(liga) ? 'checked' : '';
+                    return `
+                        <label style="margin:0; cursor:pointer; font-size:0.8rem; background:var(--bg-input); padding:7px 12px; border-radius:8px; border:1px solid var(--border-color); display:inline-flex; align-items:center; gap:7px; user-select:none; transition:all 0.2s;">
+                            <input type="checkbox" class="chk-admin-user-liga" value="${liga}" ${isChecked} style="accent-color:var(--secondary-color); cursor:pointer; width:16px; height:16px;">
+                            <span style="font-weight:700;">${liga}</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+        } else {
+            alert('Error al cargar perfil del usuario: ' + ((data && data.message) || 'Error desconocido'));
+        }
+    } catch(err) {
+        alert('Error de conexión al cargar datos del usuario.');
+    } finally {
+        pCont.style.opacity = '1';
+        pCont.style.pointerEvents = 'auto';
+    }
+};
+
+window.adminBorrarAvatarUsuario = function() {
+    const flag = document.getElementById('adminEditBorrarAvatarFlag');
+    const avPrev = document.getElementById('adminEditAvatarPreview');
+    const avUrl = document.getElementById('adminEditAvatarUrl');
+    if (flag) flag.value = '1';
+    if (avUrl) avUrl.value = '';
+    if (avPrev) avPrev.innerHTML = `<span style="font-size:1.4rem;">👤</span>`;
+    if (typeof mostrarToast === 'function') {
+        mostrarToast('Foto de perfil marcada para eliminar. Pulsa "Guardar Cambios" para confirmar.');
+    }
+};
+
+window.adminGuardarPerfilCompleto = async function() {
+    const targetUser = window._adminCurrentEditingUser;
+    if (!targetUser) {
+        alert('No hay ningún usuario seleccionado.');
+        return;
+    }
+
+    const nuevoUsuario = (document.getElementById('adminEditUsuario')?.value || '').trim().replace(/^@/, '');
+    const nombreReal = (document.getElementById('adminEditNombreReal')?.value || '').trim();
+    const correo = (document.getElementById('adminEditCorreo')?.value || '').trim();
+    const newPassword = (document.getElementById('adminEditPassword')?.value || '').trim();
+    const equipoClub = (document.getElementById('adminEditEquipoClub')?.value || '').trim();
+    const jugadorDe = (document.getElementById('adminEditJugadorDe')?.value || '').trim();
+    const entrenadorDe = (document.getElementById('adminEditEntrenadorDe')?.value || '').trim();
+    const exjugador = (document.getElementById('adminEditExjugador')?.value || '').trim();
+    const staff = (document.getElementById('adminEditStaff')?.value || '').trim();
+    const verificado = document.getElementById('adminEditVerificado')?.value || 'APROBADO';
+    const permisoResultados = (document.getElementById('adminEditPermisoResultados')?.value || '').trim();
+    const avatarUrl = (document.getElementById('adminEditAvatarUrl')?.value || '').trim();
+    const avisoModeracion = (document.getElementById('adminEditAvisoModeracion')?.value || '').trim();
+    const borrarAvatar = document.getElementById('adminEditBorrarAvatarFlag')?.value === '1';
+
+    const adminWeb = document.getElementById('adminEditAdminWeb')?.checked ? 'X' : '';
+    const permisoMvp = document.getElementById('adminEditPermisoMvp')?.checked ? 'X' : '';
+
+    const cbs = document.querySelectorAll('.chk-admin-user-liga:checked');
+    const selectedLigas = Array.from(cbs).map(cb => cb.value);
+
+    const btn = document.getElementById('btnAdminGuardarPerfilCompleto');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>Guardando todos los cambios...</span>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_save_user_full_profile',
                 usuario: currentUser,
                 password: currentPassword,
                 target_usuario: targetUser,
+                nuevo_usuario: nuevoUsuario,
+                nombre_real: nombreReal,
+                correo: correo,
+                new_password: newPassword,
+                equipo_club: equipoClub,
+                jugador_de: jugadorDe,
+                entrenador_de: entrenadorDe,
+                exjugador: exjugador,
+                staff: staff,
+                admin_web: adminWeb,
+                permiso_mvp: permisoMvp,
+                permiso_resultados: permisoResultados,
+                verificado: verificado,
+                borrar_avatar: borrarAvatar,
+                avatar_url: avatarUrl,
+                aviso_moderacion: avisoModeracion,
                 ligas_seleccionadas: selectedLigas
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -3791,28 +3936,34 @@ window.adminGuardarLigasUsuario = async function() {
         const data = await res.json();
 
         if (data && data.status === 'success') {
+            const canonicalUser = data.usuario || nuevoUsuario || targetUser;
+            window._adminCurrentEditingUser = canonicalUser;
             if (typeof mostrarToast === 'function') {
-                mostrarToast(data.message || 'Ligas actualizadas correctamente');
+                mostrarToast(data.message || `Perfil de @${canonicalUser} actualizado correctamente`);
             } else {
                 alert(data.message);
             }
-            if (window._adminUsuariosLigasCache && window._adminUsuariosLigasCache.usuarios) {
-                const uObj = window._adminUsuariosLigasCache.usuarios.find(u => u.usuario === targetUser);
-                if (uObj) {
-                    uObj.ligas = selectedLigas;
-                    const opt = sel.querySelector(`option[value="${targetUser}"]`);
-                    if (opt) opt.innerText = `@${uObj.usuario} (${uObj.nombre_real}) [${selectedLigas.length} ligas]`;
-                }
+            await window.adminCargarUsuariosLigas();
+            const sel = document.getElementById('selAdminGestionLigasUsuario');
+            if (sel) {
+                sel.value = canonicalUser;
+                window.adminOnSelectUsuarioLigas();
             }
         } else {
-            alert('Error: ' + ((data && data.message) || 'No se pudieron guardar las ligas'));
+            alert('Error: ' + ((data && data.message) || 'No se pudo guardar el perfil'));
         }
     } catch(err) {
-        alert('Error de conexión al guardar ligas.');
+        alert('Error de conexión al guardar el perfil.');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = '💾 Guardar Ligas del Usuario';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>💾</span> <span>Guardar Todos los Cambios del Perfil</span>';
+        }
     }
+};
+
+window.adminGuardarLigasUsuario = function() {
+    window.adminGuardarPerfilCompleto();
 };
 
 // ==========================================================================

@@ -2453,8 +2453,8 @@
 
         <div>
           <div class="form-group text-left" style="margin-bottom:10px;">
-            <label style="font-size:0.85rem; font-weight:600;">Usuario</label>
-            <input type="text" id="loginUsuario" class="form-control" placeholder="tu_usuario" required style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
+            <label style="font-size:0.85rem; font-weight:600;">Usuario o Correo</label>
+            <input type="text" id="loginUsuario" class="form-control" placeholder="tu_usuario o correo" required autocomplete="username email" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">
           </div>
           <div class="form-group text-left" style="margin-bottom:10px;">
             <label style="font-size:0.85rem; font-weight:600;">Contraseña</label>
@@ -2877,34 +2877,151 @@
           </details>
 
 
-          <!-- Gestión de Ligas por Usuario -->
+          <!-- Editor Integral de Perfil y Ligas de Usuario -->
           <details id="secAdminGestionLigas" class="admin-collapsible" ontoggle="if(this.open && window.adminCargarUsuariosLigas) window.adminCargarUsuariosLigas();" style="background: linear-gradient(to right, rgba(142, 68, 173, 0.18), var(--bg-card)); border: 1.5px solid rgba(155, 89, 182, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
             <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #af7ac5; display: flex; justify-content: space-between; align-items: center; user-select: none;">
               <span style="display:flex; align-items:center; gap:6px;">
-                <span>🏆</span> Gestión de Ligas por Usuario
+                <span>👤</span> Modificar Perfil y Ligas de Usuario
               </span>
               <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size: 0.7rem; background: rgba(155, 89, 182, 0.25); color: #d2b4de; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Ligas</span>
+                <span style="font-size: 0.7rem; background: rgba(155, 89, 182, 0.25); color: #d2b4de; font-weight: 800; padding: 2px 7px; border-radius: 6px;">Gestión Completa</span>
                 <span class="admin-main-arrow" style="color: #af7ac5; font-size: 0.75rem;">▼</span>
               </div>
             </summary>
             <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(155, 89, 182, 0.2);">
               <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-                Modifica a qué ligas tiene acceso cualquier usuario de Fantasy VCV. Al guardar, sus permisos de equipos y clasificaciones se sincronizan automáticamente.
+                Consulta y modifica cualquier aspecto del perfil de un usuario: nombre de usuario (@), nombre real, correo, contraseña, equipo, foto de perfil, insignias, estado de verificación, permisos y ligas asignadas.
               </p>
-              <div class="form-group" style="margin-bottom: 12px;">
-                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 4px;">Seleccionar Usuario:</label>
-                <select id="selAdminGestionLigasUsuario" onchange="window.adminOnSelectUsuarioLigas()" style="width: 100%; padding: 9px 12px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem;">
-                  <option value="">-- Elige un usuario para ver sus ligas --</option>
+
+              <!-- Buscador y selector de usuario -->
+              <div class="form-group" style="margin-bottom: 8px;">
+                <input type="text" id="filtroAdminGestionLigasUsuario" oninput="window.adminFiltrarUsuariosLigas(this.value)" placeholder="🔍 Filtrar por @usuario o nombre real..." style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); box-sizing: border-box; margin-bottom: 6px;">
+                <select id="selAdminGestionLigasUsuario" onchange="window.adminOnSelectUsuarioLigas()" style="width: 100%; padding: 9px 12px; border-radius: 8px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.85rem; box-sizing: border-box;">
+                  <option value="">-- Elige un usuario para ver y editar su perfil --</option>
                 </select>
               </div>
-              <div id="adminGestionLigasCheckboxesContainer" style="display: none; margin-bottom: 14px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
-                <label style="font-size: 0.75rem; color: var(--text-main); font-weight: 800; display: block; margin-bottom: 8px;">Ligas activas para este usuario:</label>
-                <div id="adminGestionLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+
+              <!-- Formulario completo de edición de usuario -->
+              <div id="adminGestionPerfilFormContainer" style="display: none; margin-top: 14px; background: rgba(0,0,0,0.22); padding: 14px; border-radius: 12px; border: 1px solid var(--border-color);">
+                
+                <!-- Sección 1: Identidad y Acceso -->
+                <div style="font-size: 0.78rem; font-weight: 800; color: #af7ac5; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span>🆔</span> Datos de Cuenta e Inicio de Sesión
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Nombre de Usuario (@):</label>
+                    <input type="text" id="adminEditUsuario" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box; font-weight: 700;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Nombre Real / Apodo:</label>
+                    <input type="text" id="adminEditNombreReal" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Correo Electrónico:</label>
+                    <input type="email" id="adminEditCorreo" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Cambiar Contraseña (opcional):</label>
+                    <input type="password" id="adminEditPassword" placeholder="Dejar vacío para no cambiar" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+
+                <!-- Sección 2: Foto de Perfil / Avatar -->
+                <div style="font-size: 0.78rem; font-weight: 800; color: #af7ac5; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span>🖼️</span> Foto de Perfil / Avatar
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; background: rgba(0,0,0,0.18); padding: 10px 12px; border-radius: 8px;">
+                  <div id="adminEditAvatarPreview" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid var(--border-color); flex-shrink: 0;"></div>
+                  <div style="flex: 1;">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                      <input type="text" id="adminEditAvatarUrl" placeholder="URL de avatar (opcional)..." style="flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.78rem; box-sizing: border-box;">
+                      <button type="button" onclick="window.adminBorrarAvatarUsuario()" style="padding: 7px 12px; font-size: 0.74rem; background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                        🗑️ Quitar Foto
+                      </button>
+                    </div>
+                    <input type="hidden" id="adminEditBorrarAvatarFlag" value="0">
+                  </div>
+                </div>
+
+                <!-- Sección 3: Equipo del Club y Roles Deportivos -->
+                <div style="font-size: 0.78rem; font-weight: 800; color: #af7ac5; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span>🏐</span> Equipo y Vinculación en el Club
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Equipo / Vinculación Principal:</label>
+                  <input type="text" id="adminEditEquipoClub" placeholder="Ej. Superliga 2 Masculina, 1ª Nacional, Aficionado..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Jugador de:</label>
+                    <input type="text" id="adminEditJugadorDe" placeholder="Ej. Senior Masc" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Entrenador de:</label>
+                    <input type="text" id="adminEditEntrenadorDe" placeholder="Ej. Cadete Fem" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Exjugador:</label>
+                    <input type="text" id="adminEditExjugador" placeholder="Ej. Sí / Temporadas..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Directiva / Staff:</label>
+                    <input type="text" id="adminEditStaff" placeholder="Ej. Junta directiva, Prensa..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+
+                <!-- Sección 4: Permisos y Estado de Verificación -->
+                <div style="font-size: 0.78rem; font-weight: 800; color: #af7ac5; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                  <span>🛡️</span> Permisos y Estado de Cuenta
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Estado de Verificación:</label>
+                    <select id="adminEditVerificado" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                      <option value="APROBADO">✅ Aprobado / Verificado</option>
+                      <option value="PENDIENTE">⏳ Provisional / Pendiente</option>
+                      <option value="BLOQUEADO">🚫 Bloqueado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Equipos para Subir Resultados:</label>
+                    <input type="text" id="adminEditPermisoResultados" placeholder="Ej. Superliga 2, Primera Masc" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap;">
+                  <label style="margin: 0; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                    <input type="checkbox" id="adminEditAdminWeb" style="accent-color: #af7ac5; cursor: pointer; width: 16px; height: 16px;">
+                    <span style="font-weight: 700; color: #f39c12;">👑 Administrador Web</span>
+                  </label>
+                  <label style="margin: 0; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                    <input type="checkbox" id="adminEditPermisoMvp" style="accent-color: #af7ac5; cursor: pointer; width: 16px; height: 16px;">
+                    <span style="font-weight: 700; color: #3498db;">⭐ Gestor de MVP</span>
+                  </label>
+                </div>
+
+                <!-- Sección 5: Aviso / Mensaje en Pantalla al Usuario -->
+                <div style="margin-bottom: 14px;">
+                  <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">
+                    ⚠️ Aviso de Moderación en Pantalla (visible al iniciar sesión):
+                  </label>
+                  <input type="text" id="adminEditAvisoModeracion" placeholder="Ej. Tu nombre de usuario ha sido modificado por no cumplir normas..." style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: #f39c12; font-size: 0.82rem; box-sizing: border-box;">
+                </div>
+
+                <!-- Sección 6: Ligas Asignadas -->
+                <div style="margin-bottom: 14px; background: rgba(0,0,0,0.18); padding: 12px; border-radius: 8px;">
+                  <label style="font-size: 0.75rem; color: var(--text-main); font-weight: 800; display: block; margin-bottom: 8px;">🏆 Ligas activas para este usuario:</label>
+                  <div id="adminGestionLigasCheckboxes" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+                </div>
+
+                <button type="button" id="btnAdminGuardarPerfilCompleto" onclick="window.adminGuardarPerfilCompleto()" class="btn" style="width: 100%; padding: 12px; font-size: 0.9rem; background: #8e44ad; color: #fff; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 14px rgba(142, 68, 173, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <span>💾</span> <span>Guardar Todos los Cambios del Perfil</span>
+                </button>
               </div>
-              <button type="button" id="btnAdminGuardarLigasUsuario" onclick="window.adminGuardarLigasUsuario()" class="btn" style="display: none; width: 100%; padding: 10px; font-size: 0.85rem; background: #8e44ad; color: #fff; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);">
-                💾 Guardar Ligas del Usuario
-              </button>
             </div>
           </details>
 
@@ -4435,13 +4552,13 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted y diferidos para acelerar carga) -->
 <script defer src="js/config.js?v=20261116_v4"></script>
-<script defer src="js/admin.js?v=20261116_v5"></script>
+<script defer src="js/admin.js?v=20261116_v6"></script>
 <script defer src="js/cartelera.js?v=20261116_v4"></script>
 <script defer src="js/ranking.js?v=20261116_v4"></script>
 <script defer src="js/calendario.js?v=20261116_v4"></script>
 <script defer src="js/cartelera_interactive.js?v=20261116_v4"></script>
 <script defer src="js/ui_gestures.js?v=20261110_v12"></script>
-<script defer src="js/auth.js?v=20261116_v7"></script>
+<script defer src="js/auth.js?v=20261116_v8"></script>
 <script defer src="js/push_notifications.js?v=20261111_v13"></script>
 
 

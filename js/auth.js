@@ -689,11 +689,12 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            currentUser = usr; currentPassword = pwd;
+            const canonicalUser = data.usuario || usr;
+            currentUser = canonicalUser; currentPassword = pwd;
             currentJornadaGlobal = data.jornada;
             window.appData = data;
-            window.appData.usuario = usr;
-            window.currentUser = usr;
+            window.appData.usuario = canonicalUser;
+            window.currentUser = canonicalUser;
             if (typeof window.aplicarHorasMvpLocales === 'function') window.aplicarHorasMvpLocales(data);
 
             if (data.modo_mantenimiento !== undefined) {
@@ -701,13 +702,18 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     window.adminActualizarUiMantenimiento(data.modo_mantenimiento);
                 }
             }
+
+            // Si hay un aviso de moderación sobre su cuenta, mostrárselo
+            if (data.aviso_moderacion && typeof window.mostrarAvisoModeracion === 'function') {
+                window.mostrarAvisoModeracion(data.aviso_moderacion, canonicalUser);
+            }
             
             // Guardar sesión persistente si el checkbox está marcado
             const chkRec = document.getElementById('chkRecordarSesion');
             if (!chkRec || chkRec.checked) {
                 try {
                     localStorage.setItem('vcv_saved_session', JSON.stringify({
-                        usuario: usr,
+                        usuario: canonicalUser,
                         password: pwd,
                         ts: Date.now()
                     }));
@@ -1192,6 +1198,18 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             }, 400);
             return;
         } else {
+            // Si la solicitud de registro fue rechazada por el administrador
+            if (data.code === 'REGISTRO_RECHAZADO') {
+                localStorage.removeItem('vcv_saved_session');
+                if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
+                else document.documentElement.classList.remove('vcv-auto-logging-in');
+                msgBox.className = "alert-box alert-danger";
+                msgBox.innerHTML = `<b>Solicitud no aprobada</b><br><span style="font-size:0.8rem;">${data.message}</span>`;
+                msgBox.style.display = "block";
+                if (typeof updateProgressBar === 'function') updateProgressBar();
+                return;
+            }
+
             // Si el servidor rechaza por Modo Mantenimiento
             if (data.code === 'MODO_MANTENIMIENTO') {
                 if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
@@ -1614,5 +1632,59 @@ window.enviarSolicitudRegistro = async function(e) {
             btn.disabled = false;
             btn.innerHTML = '<span>🚀</span> <span>Reintentar Registro</span>';
         }
+    }
+};
+
+// -------------------------------------------------------------
+// MODAL DE AVISO DE MODERACIÓN / CAMBIO DE NOMBRE POR ADMIN
+// -------------------------------------------------------------
+window.mostrarAvisoModeracion = function(msg, user) {
+    if (!msg) return;
+    let modal = document.getElementById('modalAvisoModeracion');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalAvisoModeracion';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);';
+        modal.innerHTML = `
+            <div style="background:var(--bg-card); border:1.5px solid #f39c12; border-radius:18px; max-width:440px; width:100%; padding:22px 20px; box-shadow:0 14px 48px rgba(0,0,0,0.7); text-align:left;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:rgba(243, 156, 18, 0.18); display:flex; align-items:center; justify-content:center; font-size:1.4rem;">⚠️</div>
+                    <div>
+                        <h3 style="margin:0; font-size:1.1rem; font-weight:800; color:#f39c12;">Aviso de la Administración</h3>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Mensaje sobre tu cuenta</span>
+                    </div>
+                </div>
+                <div style="font-size:0.85rem; color:var(--text-main); line-height:1.5; margin-bottom:14px; background:rgba(0,0,0,0.25); padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
+                    <p style="margin:0 0 6px 0;">Hola <b>@${user || ''}</b>:</p>
+                    <div id="modalAvisoModeracionTexto" style="color:#f1c40f; font-weight:600;"></div>
+                </div>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin:0 0 16px 0; line-height:1.4;">
+                    Puedes continuar utilizando VCV Play normalmente con tus datos asignados o consultar tu información desde tu <b>Perfil</b>.
+                </p>
+                <button type="button" class="btn-gold-v2" onclick="window.cerrarAvisoModeracion()" style="width:100%; padding:11px; font-weight:800; font-size:0.9rem; border-radius:10px; cursor:pointer;">
+                    Entendido
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    const txtEl = document.getElementById('modalAvisoModeracionTexto');
+    if (txtEl) txtEl.innerText = msg;
+    modal.style.display = 'flex';
+};
+
+window.cerrarAvisoModeracion = function() {
+    const modal = document.getElementById('modalAvisoModeracion');
+    if (modal) modal.style.display = 'none';
+    if (typeof fetchSeguro === 'function' && typeof scriptURL !== 'undefined' && currentUser && currentPassword) {
+        fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'dismiss_aviso_moderacion',
+                usuario: currentUser,
+                password: currentPassword
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        }).catch(() => {});
     }
 };
