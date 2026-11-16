@@ -1495,11 +1495,14 @@ window.abrirModalSolicitarCuenta = function() {
     if (p2) p2.value = '';
     if (selEq) selEq.value = 'NINGUNO';
     if (otroEq) otroEq.value = '';
+    const hp = document.getElementById('solicitarSecurityCheck');
+    if (hp) hp.value = '';
+    window._solicitudModalOpenedAt = Date.now();
     if (typeof window.toggleSolicitarEquipoOtro === 'function') {
         window.toggleSolicitarEquipoOtro(selEq ? selEq.value : 'NINGUNO');
     }
     if (msg) { msg.style.display = 'none'; msg.innerHTML = ''; }
-    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta Provisional</span>'; btn.style.background = ''; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta</span>'; btn.style.background = ''; }
     
     modal.style.display = 'flex';
 
@@ -1621,9 +1624,12 @@ window.enviarSolicitudRegistro = async function(e) {
 
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⏳</span> <span>Creando cuenta provisional...</span>';
+        btn.innerHTML = '<span>⏳</span> <span>Creando cuenta...</span>';
     }
     if (msg) msg.style.display = 'none';
+
+    const honeypotVal = (document.getElementById('solicitarSecurityCheck') ? document.getElementById('solicitarSecurityCheck').value : '').trim();
+    const elapsedVal = Date.now() - (window._solicitudModalOpenedAt || 0);
 
     try {
         const res = await fetchSeguro(scriptURL, {
@@ -1634,7 +1640,9 @@ window.enviarSolicitudRegistro = async function(e) {
                 new_p: p1,
                 new_n: nr || u,
                 new_email: em,
-                equipo_club: equipoFinal
+                equipo_club: equipoFinal,
+                honeypot: honeypotVal,
+                client_elapsed: elapsedVal
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         });
@@ -1655,21 +1663,21 @@ window.enviarSolicitudRegistro = async function(e) {
             setTimeout(() => {
                 window.cerrarModalSolicitarCuenta();
                 if (typeof mostrarToast === 'function') {
-                    mostrarToast('✨ Ya puedes pulsar en Iniciar Sesión para entrar con tu cuenta provisional.');
+                    mostrarToast('✨ Ya puedes pulsar en Iniciar Sesión para entrar con tu cuenta.');
                 }
             }, 2500);
         } else {
             showError((data && data.message) || 'Error al procesar el registro.');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<span>🚀</span> <span>Reintentar Registro</span>';
+                btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta</span>';
             }
         }
     } catch(err) {
         showError('Error de conexión con el servidor. Por favor, inténtalo de nuevo.');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<span>🚀</span> <span>Reintentar Registro</span>';
+            btn.innerHTML = '<span>🚀</span> <span>Crear Cuenta</span>';
         }
     }
 };

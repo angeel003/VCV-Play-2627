@@ -2511,7 +2511,7 @@
                         ✉️ <b>Correo de contacto:</b> <a href="mailto:adminfantasyvcv@gmail.com" style="color: var(--vcv-dorado); font-weight: bold; text-decoration: underline;">adminfantasyvcv@gmail.com</a>
                     </p>
                     <ul style="padding-left: 20px; margin-bottom: 8px; font-size: 0.84rem; color: var(--text-muted); line-height: 1.45;">
-                        <li><b>Crear una cuenta:</b> Pulsa en el botón <i>"¿No tienes cuenta? Solicitar registro"</i> de la pantalla de inicio para crear tu cuenta provisional al instante.</li>
+                        <li><b>Crear una cuenta:</b> Pulsa en el botón <i>"¿No tienes cuenta? Solicitar registro"</i> de la pantalla de inicio para crear tu cuenta al instante.</li>
                         <li><b>Olvidaste tu contraseña o usuario:</b> Escríbenos indicando tu nombre o correo y te ayudaremos a restablecer tus credenciales.</li>
                         <li><b>Incidencias o sugerencias:</b> Si detectas cualquier fallo técnico o tienes alguna propuesta para la plataforma, ¡escríbela y te responderemos enseguida!</li>
                     </ul>
@@ -2633,8 +2633,8 @@
                   <div style="display:flex; align-items:flex-start; gap:10px;">
                     <span style="font-size:1.4rem; line-height:1; flex-shrink:0;">⏳</span>
                     <div>
-                      <b style="color:#f39c12; font-size:0.88rem; display:block; margin-bottom:3px;">Cuenta pendiente de verificación</b>
-                      <span>Tu acceso es <b>provisional</b> mientras el administrador revisa tu solicitud de vinculación y ligas. Ya puedes realizar tus <b>pronósticos</b> de los partidos disponibles en la clasificación <b>Global</b> y votar en el <b>MVP</b>. Una vez verificada tu cuenta, tus puntos serán visibles en las clasificaciones para el resto de usuarios y se activarán tus ligas definitivas.</span>
+                      <b style="color:#f39c12; font-size:0.88rem; display:block; margin-bottom:3px;">Cuenta pendiente de validación</b>
+                      <span>Tu cuenta está <b>en proceso de validación</b> por el administrador. Ya puedes realizar tus <b>pronósticos</b> de los partidos disponibles en la clasificación <b>Global</b> y votar en el <b>MVP</b>. En cuanto el administrador valide tu cuenta, tus puntos serán visibles en las clasificaciones para el resto de usuarios y se activarán todas tus ligas y permisos.</span>
                     </div>
                   </div>
                 </div>
@@ -4493,6 +4493,10 @@
         </div>
 
         <form id="formSolicitarCuenta" onsubmit="window.enviarSolicitudRegistro(event)">
+            <!-- Campo señuelo antispam invisible para bots (Honeypot) -->
+            <div style="opacity:0; position:absolute; top:0; left:0; height:0; width:0; z-index:-1; overflow:hidden;" aria-hidden="true">
+                <input type="text" name="vcv_security_check" id="solicitarSecurityCheck" tabindex="-1" autocomplete="off" value="">
+            </div>
             <div class="form-group" style="margin-bottom:10px;">
                 <label style="font-size:0.75rem; font-weight:700; color:var(--text-main); display:block; margin-bottom:4px;">Nombre y Apellidos / Apodo <span style="color:#e74c3c;">*</span></label>
                 <input type="text" id="solicitarNombreReal" class="form-control" placeholder="Ej. Carlos García" required style="width:100%; min-height:42px; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem; box-sizing:border-box;">
@@ -4539,14 +4543,14 @@
                     <input type="text" id="solicitarEquipoOtroTexto" style="width:100%; min-height:42px; padding:10px 12px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.84rem; box-sizing:border-box;" placeholder="Especifica tu relación (ej. Aficionado, Familiar, Entrenador...)">
                 </div>
                 <small style="font-size:0.68rem; color:var(--text-muted); display:block; margin-top:5px; line-height:1.35;">
-                    Accederás inmediatamente con cuenta provisional en la liga <b>Global</b>. El administrador revisará tu equipo y te asignará tus ligas definitivas.
+                    Accederás al instante a la app y a la clasificación <b>Global</b>. El administrador validará tu cuenta y te asignará tus ligas y permisos correspondientes.
                 </small>
             </div>
 
             <div id="solicitarMensaje" style="display:none; padding:10px 14px; border-radius:8px; font-size:0.8rem; margin-bottom:12px; font-weight:700; line-height:1.4;"></div>
 
             <button type="submit" id="btnEnviarSolicitud" class="btn-gold-v2" style="width:100%; padding:12px; font-weight:800; font-size:0.95rem; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                <span>🚀</span> <span>Crear Cuenta Provisional</span>
+                <span>🚀</span> <span>Crear Cuenta</span>
             </button>
             <button type="button" onclick="window.cerrarModalSolicitarCuenta()" style="width:100%; margin-top:8px; padding:10px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:var(--text-muted); font-size:0.82rem; border-radius:8px; cursor:pointer; font-weight:700; transition:all 0.2s;">
                 Cancelar

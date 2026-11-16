@@ -3522,7 +3522,7 @@ window.cargarSolicitudesRegistroAdmin = async function(silent = false) {
                 let bgCard = 'rgba(0,0,0,0.2)';
 
                 if (isPendiente) {
-                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);">⏳ Pendiente (Cuenta Provisional)</span>';
+                    estadoBadge = '<span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; background:rgba(243, 156, 18, 0.2); color:#f39c12; border:1px solid rgba(243, 156, 18, 0.4);">⏳ Pendiente de Aprobación</span>';
                     borderColor = 'rgba(243, 156, 18, 0.45)';
                     bgCard = 'rgba(243, 156, 18, 0.05)';
                 } else if (isAprobada) {

@@ -2220,7 +2220,7 @@ window.renderRankingV2 = function() {
             const provNotice = `
                 <div style="background:rgba(243, 156, 18, 0.12); border:1.5px solid rgba(243, 156, 18, 0.4); border-radius:10px; padding:10px 14px; margin-bottom:12px; font-size:0.78rem; color:var(--text-main); display:flex; align-items:center; gap:8px;">
                     <span style="font-size:1.1rem; flex-shrink:0;">⏳</span>
-                    <span><b>Modo Provisional:</b> Solo tú puedes ver tus puntos en esta clasificación. Serás visible para el resto de participantes en cuanto el administrador verifique tu cuenta.</span>
+                    <span><b>Cuenta en validación:</b> Solo tú puedes ver tus puntos en esta clasificación por el momento. Serás visible para el resto de participantes en cuanto el administrador valide tu cuenta.</span>
                 </div>
             `;
             html = provNotice + html;

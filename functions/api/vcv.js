@@ -511,6 +511,8 @@ async function ensureSolicitudesRegistroSchema(db) {
     try { await db.prepare('ALTER TABLE "Solicitudes_Registro" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Solicitudes_Registro" ADD COLUMN "Usuario_Original" TEXT').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Solicitudes_Registro" ADD COLUMN "Motivo_Rechazo" TEXT').run(); } catch(e) {}
+    try { await db.prepare('ALTER TABLE "Solicitudes_Registro" ADD COLUMN "IP" TEXT').run(); } catch(e) {}
+    try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_solicitudes_ip_fecha ON "Solicitudes_Registro" ("IP", "Fecha_Solicitud")').run(); } catch(e) {}
     try { await db.prepare('CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON "Solicitudes_Registro" ("Estado")').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Verificado" TEXT DEFAULT \'APROBADO\'').run(); } catch(e) {}
     try { await db.prepare('ALTER TABLE "Insignias" ADD COLUMN "Equipo_Club" TEXT').run(); } catch(e) {}
@@ -3409,9 +3411,62 @@ export async function onRequestPost(context) {
     // 📝 SOLICITUDES DE REGISTRO Y GESTIÓN DE ACCESO A LIGAS
     // ==============================================================================
 
-    // PUBLIC: SOLICITAR REGISTRO DE CUENTA (CREA CUENTA PROVISIONAL EN LIGA GLOBAL)
+    // PUBLIC: SOLICITAR REGISTRO DE CUENTA (CREA CUENTA Y SOLICITUD DE VALIDACIÓN)
     if (action === 'request_registration') {
         await ensureSolicitudesRegistroSchema(db);
+
+        // 1. TRAMPA ANTIBOTS (HONEYPOT): Los bots rellenan todos los campos ocultos
+        const honeypot = (body.honeypot || body.vcv_security_check || '').trim();
+        if (honeypot) {
+            return jsonResponse({
+                status: 'success',
+                message: '¡Cuenta creada! Ya puedes iniciar sesión con tu usuario y contraseña.',
+                usuario: (body.new_u || 'usuario')
+            });
+        }
+
+        // 2. DETECCIÓN DE VELOCIDAD ANÓMALA (SUB-SECOND SUBMISSION)
+        const clientElapsed = Number(body.client_elapsed);
+        if (!isNaN(clientElapsed) && clientElapsed > 0 && clientElapsed < 1800) {
+            return jsonResponse({
+                status: 'error',
+                message: 'Envío de formulario demasiado rápido. Por favor, tómate unos segundos para verificar tus datos.'
+            }, 429);
+        }
+
+        // 3. OBTENCIÓN Y SANITIZACIÓN DE IP DEL CLIENTE (CLOUDFLARE HEADERS)
+        const clientIp = (context && context.request ? (
+            context.request.headers.get('cf-connecting-ip') ||
+            context.request.headers.get('x-real-ip') ||
+            context.request.headers.get('x-forwarded-for') ||
+            '127.0.0.1'
+        ) : '127.0.0.1').split(',')[0].trim();
+
+        const nowTs = Date.now();
+
+        // 4. RATE LIMITING POR IP: Máximo 3 registros por IP por hora
+        try {
+            const oneHourAgo = nowTs - (3600 * 1000);
+            const ipCount = await db.prepare('SELECT COUNT(*) as c FROM "Solicitudes_Registro" WHERE "IP" = ? AND "Fecha_Solicitud" > ?').bind(clientIp, oneHourAgo).first();
+            if (ipCount && ipCount.c >= 3) {
+                return jsonResponse({
+                    status: 'error',
+                    message: 'Has alcanzado el límite de 3 cuentas por hora desde tu conexión. Por favor, inténtalo más tarde.'
+                }, 429);
+            }
+        } catch(e) {}
+
+        // 5. PROTECCIÓN GLOBAL CONTRA BOTNETS / DESGASTE DE CUOTA D1 (MÁX 20 REGISTROS EN 5 MINUTOS)
+        try {
+            const fiveMinAgo = nowTs - (300 * 1000);
+            const globalCount = await db.prepare('SELECT COUNT(*) as c FROM "Solicitudes_Registro" WHERE "Fecha_Solicitud" > ?').bind(fiveMinAgo).first();
+            if (globalCount && globalCount.c >= 20) {
+                return jsonResponse({
+                    status: 'error',
+                    message: 'El servidor está recibiendo un volumen inusual de peticiones. Por favor, espera unos minutos e inténtalo de nuevo.'
+                }, 429);
+            }
+        } catch(e) {}
 
         const new_u = (body.new_u || '').trim();
         const new_p = (body.new_p || '').trim();
@@ -3428,8 +3483,16 @@ export async function onRequestPost(context) {
         if (!new_p || new_p.length < 4) {
             return jsonResponse({ status: 'error', message: 'La contraseña debe tener al menos 4 caracteres.' }, 400);
         }
-        if (!new_email || !new_email.includes('@') || !new_email.includes('.')) {
+
+        // 6. VALIDACIÓN ESTRICTA DE CORREO Y BLOQUEO DE DOMINIOS TEMPORALES
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!new_email || !emailRegex.test(new_email) || new_email.length > 100) {
             return jsonResponse({ status: 'error', message: 'Por favor, introduce un correo electrónico válido.' }, 400);
+        }
+        const disposableDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com', 'mailinator.com', 'throwawaymail.com', 'yopmail.com', 'dispostable.com', 'sharklasers.com', 'trashmail.com'];
+        const emailDomain = new_email.split('@')[1];
+        if (disposableDomains.includes(emailDomain)) {
+            return jsonResponse({ status: 'error', message: 'No se permiten correos electrónicos temporales o desechables.' }, 400);
         }
 
         const checkU = await isUsernameTakenOrReserved(db, new_u);
@@ -3450,7 +3513,6 @@ export async function onRequestPost(context) {
         }
 
         const hashedPwd = await hashPassword(new_p);
-        const nowTs = Date.now();
 
         // Obtener equipos pertenecientes a la liga Global desde Ligas_Equipos
         let globalTeams = [];
@@ -3468,7 +3530,7 @@ export async function onRequestPost(context) {
             globalTeams = ["Universidad de Valladolid VCV", "VALCYL VCV", "Valladolid CV Vacceas", "VCV Maria Molina", "VCV Meseta"];
         }
 
-        // Insertar usuario directamente con estado PENDIENTE (cuenta provisional)
+        // Insertar usuario directamente con estado PENDIENTE de validación
         const stmts = [
             db.prepare('INSERT INTO "Usuarios" ("Usuario", "Password", "Nombre Real", "Correo") VALUES (?, ?, ?, ?)').bind(cleanUser, hashedPwd, new_n || cleanUser, new_email),
             db.prepare('INSERT INTO "Insignias" ("Usuario", "Verificado", "Equipo_Club") VALUES (?, \'PENDIENTE\', ?)').bind(cleanUser, equipo_club),
@@ -3477,9 +3539,9 @@ export async function onRequestPost(context) {
             db.prepare('INSERT INTO "Permisos_Secreta" ("Usuario") VALUES (?)').bind(cleanUser),
             db.prepare(`
                 INSERT INTO "Solicitudes_Registro" 
-                ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Equipo_Club", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud")
-                VALUES (?, ?, ?, ?, ?, '["Global"]', 'PENDIENTE', ?)
-            `).bind(cleanUser, hashedPwd, new_n || cleanUser, new_email, equipo_club, nowTs)
+                ("Usuario", "Password_Hash", "Nombre_Real", "Email", "Equipo_Club", "Ligas_Solicitadas", "Estado", "Fecha_Solicitud", "IP")
+                VALUES (?, ?, ?, ?, ?, '["Global"]', 'PENDIENTE', ?, ?)
+            `).bind(cleanUser, hashedPwd, new_n || cleanUser, new_email, equipo_club, nowTs, clientIp)
         ];
 
         for (const team of globalTeams) {
@@ -3503,7 +3565,7 @@ export async function onRequestPost(context) {
 
         return jsonResponse({
             status: 'success',
-            message: '¡Cuenta creada! Ya puedes iniciar sesión con tu usuario y contraseña. Tu cuenta está en modo provisional mientras el administrador revisa tu vinculación y asigna tus ligas.',
+            message: '¡Cuenta creada! Ya puedes iniciar sesión con tu usuario y contraseña. Tu cuenta está en proceso de validación por el administrador.',
             usuario: new_u
         });
     }
@@ -3536,7 +3598,7 @@ export async function onRequestPost(context) {
         if (!adminCheck || adminCheck["Admin Web"] !== "X") return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
 
         const { results: solicitudes } = await db.prepare(`
-            SELECT id, Usuario, Usuario_Original, Nombre_Real, Email, Equipo_Club, Ligas_Solicitadas, Estado, Fecha_Solicitud, Fecha_Resolucion, Revisado_Por, Motivo_Rechazo
+            SELECT id, Usuario, Usuario_Original, Nombre_Real, Email, Equipo_Club, Ligas_Solicitadas, Estado, Fecha_Solicitud, Fecha_Resolucion, Revisado_Por, Motivo_Rechazo, IP
             FROM "Solicitudes_Registro"
             ORDER BY CASE WHEN Estado = 'PENDIENTE' THEN 0 ELSE 1 END, Fecha_Solicitud DESC
             LIMIT 50
