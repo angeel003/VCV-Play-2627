@@ -2628,7 +2628,7 @@
             <form id="prediccionForm">
                 
                 <div id="perfilUsuarioTop"></div>
-                <!-- BANNER CUENTA PROVISIONAL (VISIBLE SOLO CUANDO EL USUARIO ESTÁ PENDIENTE DE VERIFICACIÓN) -->
+                <!-- BANNER CUENTA EN VALIDACIÓN (VISIBLE SOLO CUANDO EL USUARIO ESTÁ PENDIENTE DE VALIDACIÓN) -->
                 <div id="bannerCuentaProvisional" style="display:none; background: linear-gradient(135deg, rgba(243, 156, 18, 0.18), rgba(230, 126, 34, 0.12)); border: 1.5px solid #f39c12; border-radius: 12px; padding: 12px 14px; margin: 10px auto 14px; max-width: 600px; box-shadow: 0 4px 16px rgba(243, 156, 18, 0.15); font-size: 0.82rem; color: var(--text-main); line-height: 1.45;">
                   <div style="display:flex; align-items:flex-start; gap:10px;">
                     <span style="font-size:1.4rem; line-height:1; flex-shrink:0;">⏳</span>
@@ -3039,7 +3039,7 @@
                     <label style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; display: block; margin-bottom: 3px;">Estado de Verificación:</label>
                     <select id="adminEditVerificado" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-size: 0.82rem; box-sizing: border-box;">
                       <option value="APROBADO">✅ Aprobado / Verificado</option>
-                      <option value="PENDIENTE">⏳ Provisional / Pendiente</option>
+                      <option value="PENDIENTE">⏳ Pendiente de Aprobación</option>
                       <option value="BLOQUEADO">🚫 Bloqueado</option>
                     </select>
                   </div>
@@ -3121,14 +3121,14 @@
             </summary>
             <div style="padding: 14px 16px 16px 16px; border-top: 1px solid rgba(231, 76, 60, 0.2);">
               <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-                Si un usuario ha olvidado su contraseña, introduce su nombre de usuario y defínele una nueva clave provisional (por defecto <code>123</code>). Se actualizará al instante con cifrado seguro (PBKDF2 SHA-256) en la base de datos.
+                Si un usuario ha olvidado su contraseña, introduce su nombre de usuario y defínele una nueva contraseña temporal (por defecto <code>123</code>). Se actualizará al instante con cifrado seguro (PBKDF2 SHA-256) en la base de datos.
               </p>
               <div class="form-group" style="margin-bottom:8px;">
                 <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Nombre de Usuario:</label>
                 <input type="text" id="adminResetTargetUser" placeholder="@usuario (ej. juan99)" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem;">
               </div>
               <div class="form-group" style="margin-bottom:12px;">
-                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Nueva Contraseña Provisional:</label>
+                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Nueva Contraseña Temporal:</label>
                 <input type="text" id="adminResetNewPass" placeholder="Nueva clave" value="123" style="width:100%; padding:10px; border-radius:8px; background:var(--bg-input); border:1px solid var(--border-color); color:var(--text-main); font-size:0.85rem;">
               </div>
               <button type="button" class="btn" onclick="window.adminEjecutarResetPasswordRapido()" style="width:100%; padding: 11px; font-size: 0.85rem; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-weight:800; cursor:pointer; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
@@ -4633,15 +4633,15 @@
 </div>
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted y diferidos para acelerar carga) -->
-<script defer src="js/config.js?v=20261116_v5"></script>
-<script defer src="js/admin.js?v=20261116_v9"></script>
-<script defer src="js/cartelera.js?v=20261116_v4"></script>
-<script defer src="js/ranking.js?v=20261116_v4"></script>
-<script defer src="js/calendario.js?v=20261116_v4"></script>
-<script defer src="js/cartelera_interactive.js?v=20261116_v5"></script>
-<script defer src="js/ui_gestures.js?v=20261110_v12"></script>
-<script defer src="js/auth.js?v=20261116_v10"></script>
-<script defer src="js/push_notifications.js?v=20261111_v13"></script>
+<script defer src="js/config.js?v=20261116_v6"></script>
+<script defer src="js/admin.js?v=20261116_v10"></script>
+<script defer src="js/cartelera.js?v=20261116_v5"></script>
+<script defer src="js/ranking.js?v=20261116_v5"></script>
+<script defer src="js/calendario.js?v=20261116_v5"></script>
+<script defer src="js/cartelera_interactive.js?v=20261116_v6"></script>
+<script defer src="js/ui_gestures.js?v=20261110_v13"></script>
+<script defer src="js/auth.js?v=20261116_v11"></script>
+<script defer src="js/push_notifications.js?v=20261111_v14"></script>
 
 
 

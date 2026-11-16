@@ -3678,7 +3678,7 @@ export async function onRequestPost(context) {
                 await purgeUserFromAllTablesExceptSolicitud(db, t);
             }
 
-            return jsonResponse({ status: 'success', message: `Solicitud de @${uTarget} rechazada correctamente. Cuenta provisional revocada y todos sus pronósticos y votos eliminados.` });
+            return jsonResponse({ status: 'success', message: `Solicitud de @${uTarget} rechazada correctamente. Cuenta revocada y todos sus pronósticos y votos eliminados.` });
         }
 
         if (decision === 'APROBAR') {
