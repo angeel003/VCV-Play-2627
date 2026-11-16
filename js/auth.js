@@ -1473,7 +1473,12 @@ window.enviarSolicitudRegistro = async function(e) {
     let equipoFinal = selEq;
     if (selEq === 'OTRO') {
         const txtOtro = (document.getElementById('solicitarEquipoOtroTexto')?.value || '').trim();
-        equipoFinal = txtOtro || 'Otro';
+        if (!txtOtro) {
+            showError('Por favor, indica tu equipo o categoría en el campo de texto.');
+            document.getElementById('solicitarEquipoOtroTexto')?.focus();
+            return;
+        }
+        equipoFinal = txtOtro;
     }
     const msg = document.getElementById('solicitarMensaje');
     const btn = document.getElementById('btnEnviarSolicitud');
