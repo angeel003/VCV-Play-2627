@@ -3330,16 +3330,17 @@ export async function onRequestPost(context) {
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
         
         try { 
-            // 1. Borrar caché de clasificaciones y estadísticas
+            const autoKeyActual = 'AUTO_UNFREEZE_' + getLunesSemanaClave(new Date());
             await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run(); 
-            // 2. Borrar banderas de purga temporales
-            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'PURGED_%'").run();
-            // 3. Borrar recordatorios y notificaciones automáticas antiguas de más de 7 días
-            const sieteDiasAtras = Date.now() - (7 * 24 * 60 * 60 * 1000);
-            await db.prepare("DELETE FROM Cache_App WHERE (clave LIKE 'RECORDATORIO_%' OR clave LIKE 'MVP_NOTIF_%' OR clave LIKE 'AUTO_UNFREEZE_%') AND timestamp < ?").bind(sieteDiasAtras).run();
+            await db.prepare(`DELETE FROM Cache_App WHERE 
+                clave LIKE 'NOTIF_VIERNES_ENVIADO_%' 
+                OR (clave LIKE 'AUTO_UNFREEZE_%' AND clave != ?)
+                OR clave LIKE 'NOTIF_MVP_OPEN_%'
+                OR clave LIKE 'PURGED_%'
+            `).bind(autoKeyActual).run();
         } catch(e) {}
         
-        return jsonResponse({ status: 'success', message: 'Caché depurada con éxito. Se han recalculado las clasificaciones y limpiado los registros temporales obsoletos.' });
+        return jsonResponse({ status: 'success', message: 'Caché depurada con éxito. Se han recalculado las clasificaciones y limpiado todos los datos temporales obsoletos.' });
     }
 
     // ADMIN: ADD USER
@@ -4049,6 +4050,15 @@ export async function onRequestPost(context) {
     // PUBLIC: ESTADO MODO MANTENIMIENTO
     if (action === 'get_mantenimiento_status') {
         const activo = await isModoMantenimientoActivo(db);
+        const autoKeyActual = 'AUTO_UNFREEZE_' + getLunesSemanaClave(new Date());
+        try {
+            await db.prepare(`DELETE FROM Cache_App WHERE 
+                clave LIKE 'NOTIF_VIERNES_ENVIADO_%' 
+                OR (clave LIKE 'AUTO_UNFREEZE_%' AND clave != ?)
+                OR clave LIKE 'NOTIF_MVP_OPEN_%'
+                OR clave LIKE 'PURGED_%'
+            `).bind(autoKeyActual).run();
+        } catch(e) {}
         const { results: allCache } = await db.prepare('SELECT clave, timestamp FROM Cache_App').all().catch(() => ({ results: [] }));
         return jsonResponse({ status: 'success', activo, cache_keys: (allCache || []).map(r => r.clave) });
     }
