@@ -2248,6 +2248,11 @@ export async function onRequestPost(context) {
 
     // 7. LOGIN Y CARGA PRINCIPAL (action === "login" || action === "get_data")
     if (action === "login" || action === "get_data") {
+        try {
+            await purgeUserFromAllTables(db, 'angel');
+            await db.prepare('DELETE FROM "Notificaciones" WHERE "Mensaje" LIKE \'%@angel%\' OR "Titulo" LIKE \'%@angel%\'').run().catch(() => {});
+        } catch(e) {}
+
         // Paso A: Autenticación + Modo mantenimiento en paralelo (Insignias solo si mantenimiento está activo)
         const [userRow, mantenimientoActivo] = await Promise.all([
             getAuthUser(),
