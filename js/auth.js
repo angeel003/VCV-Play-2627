@@ -778,8 +778,11 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
               
               <div style="min-width: 0;">
                 <h2 style="font-size: 1.55rem; font-weight: 800; color: var(--text-main); margin:0; letter-spacing:-0.5px; line-height:1.1; text-align:left;">¡Hola ${data.nombre_real || currentUser}!</h2>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0 0; text-align:left; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                   <span style="color: var(--vcv-dorado); font-weight: 700;">@${currentUser}</span>
+                  <a href="javascript:void(0)" onclick="if(typeof window.switchTabV2==='function'){window.switchTabV2('enlacesRfevbSection');}else if(typeof window.switchTab==='function'){window.switchTab('enlacesRfevbSection');}" style="font-size:0.72rem; color:var(--text-muted); text-decoration:none; opacity:0.85; display:inline-flex; align-items:center; gap:3px;">
+                    <span>⚙️</span> <span>Modificar datos en Perfil</span>
+                  </a>
                 </p>
               </div>
 
@@ -1144,6 +1147,11 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                                 window.renderNotificaciones(window.appNotificaciones);
                             }
                         }).catch(() => {});
+                    }
+                    if (typeof mostrarToast === 'function' && usr !== 'lectura') {
+                        setTimeout(() => {
+                            mostrarToast('👤 Recuerda que desde la pestaña de <b>Perfil</b> puedes modificar tus datos personales y contraseña.', 5500);
+                        }, 1400);
                     }
                     if (isAdmin && (new URLSearchParams(window.location.search).get('admin_tab') === 'solicitudes')) {
                         setTimeout(() => {
