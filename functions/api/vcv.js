@@ -1634,6 +1634,19 @@ export async function onRequestPost(context) {
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Visitante" TEXT').run(); } catch(e) {}
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Ubicacion_Club" TEXT').run(); } catch(e) {}
+
+            // Limpieza de usuarios de pruebas automatizadas
+            try {
+                const testUsers = ['botuser123', 'speeduser123', 'tempuser123'];
+                for (const tu of testUsers) {
+                    await db.prepare('DELETE FROM "Usuarios" WHERE "Usuario" = ?').bind(tu).run();
+                    await db.prepare('DELETE FROM "Insignias" WHERE "Usuario" = ?').bind(tu).run();
+                    await db.prepare('DELETE FROM "Ligas" WHERE "Jugador" = ?').bind(tu).run();
+                    await db.prepare('DELETE FROM "Permisos_Equipos" WHERE "Jugador" = ?').bind(tu).run();
+                    await db.prepare('DELETE FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(tu).run();
+                    await db.prepare('DELETE FROM "Solicitudes_Registro" WHERE "Usuario" = ?').bind(tu).run();
+                }
+            } catch(e) {}
             try {
                 await db.prepare(`
                     UPDATE "Porras"
