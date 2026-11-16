@@ -490,11 +490,10 @@
             headerText = '✨ Tu Voto para el MVP VALCYL';
         }
 
-        const shareBtnIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`;
+        const shareBtnIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`;
         const makePanelShareBtn = (label) => `
-            <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="${label}" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 5px 9px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: all 0.2s ease;">
+            <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="${label}" aria-label="${label}" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; width: 34px; height: 34px; min-width: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s ease;">
                 ${shareBtnIconSvg}
-                <span>${label}</span>
             </button>`;
 
         let bottomPanelHtml = '';
@@ -557,9 +556,8 @@
                 <button type="button" onclick="window.mostrarInfoBonusMvp(event)" title="Información sobre la bonificación de puntos por MVP y elección" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 900; cursor: pointer; padding: 0; line-height: 1;">
                     ?
                 </button>
-                <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="Compartir MVP VALCYL" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 999px; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.66rem; font-weight: 800; cursor: pointer; margin-left: 2px; transition: all 0.2s ease; text-transform: none; letter-spacing: 0;">
-                    ${shareBtnIconSvg}
-                    <span>Compartir</span>
+                <button type="button" onclick="window.abrirModalCompartirMVP('${idPart}')" title="Compartir MVP VALCYL" aria-label="Compartir MVP VALCYL" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 50%; width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 2px; transition: all 0.2s ease;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                 </button>
             </div>
             <div class="mvp-candidates-grid" id="mvp-grid-${idPart}" style="${cands.length === 2 ? 'justify-content: center; gap: 16px;' : ''}">

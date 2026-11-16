@@ -201,9 +201,8 @@ window.renderCarteleraHTML = function(data) {
                                     <div style="font-size: 1.5rem; line-height: 1; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">
                                         🏆
                                     </div>
-                                    <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; padding: 4px 6px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.68rem; font-weight: 800; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
-                                        Compartir
+                                    <button type="button" onclick="window.abrirModalCompartirMVP('${eq.id_partido}')" title="Compartir MVP" aria-label="Compartir MVP" style="background: rgba(212,175,55,0.18); border: 1px solid var(--secondary-color); color: var(--secondary-color); border-radius: 8px; width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; flex-shrink: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
                                     </button>
                                 </div>
                             </div>
