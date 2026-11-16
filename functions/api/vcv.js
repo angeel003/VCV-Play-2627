@@ -531,10 +531,6 @@ async function ensureSolicitudesRegistroSchema(db) {
             await purgeUserFromAllTables(db, '123asdas');
             await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('PURGED_123asdas_v1', '1', ?)").bind(Date.now()).run().catch(() => {});
         }
-        try {
-            await purgeUserFromAllTables(db, 'angel');
-            await db.prepare('DELETE FROM "Notificaciones" WHERE "Mensaje" LIKE \'%@angel%\' OR "Titulo" LIKE \'%@angel%\'').run().catch(() => {});
-        } catch(e) {}
     } catch(e) {}
 }
 
@@ -2248,11 +2244,6 @@ export async function onRequestPost(context) {
 
     // 7. LOGIN Y CARGA PRINCIPAL (action === "login" || action === "get_data")
     if (action === "login" || action === "get_data") {
-        try {
-            await purgeUserFromAllTables(db, 'angel');
-            await db.prepare('DELETE FROM "Notificaciones" WHERE "Mensaje" LIKE \'%@angel%\' OR "Titulo" LIKE \'%@angel%\'').run().catch(() => {});
-        } catch(e) {}
-
         // Paso A: Autenticación + Modo mantenimiento en paralelo (Insignias solo si mantenimiento está activo)
         const [userRow, mantenimientoActivo] = await Promise.all([
             getAuthUser(),
