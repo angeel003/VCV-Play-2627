@@ -1424,11 +1424,11 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
 
-        // Columnas de equipos y localía en Porras
+        // Columnas de equipos en Porras (y limpieza de columnas redundantes Rival / Ubicacion_Club)
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Visitante" TEXT').run(); } catch(e) {}
-        try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Ubicacion_Club" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Porras" DROP COLUMN "Rival"').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Porras" DROP COLUMN "Ubicacion_Club"').run(); } catch(e) {}
         try {
             await db.prepare(`
                 UPDATE "Porras"
@@ -1438,14 +1438,6 @@ export async function onRequestPost(context) {
                     ),
                     "Equipo_Visitante" = (
                         SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Equipo_Local" ELSE "Ajustes"."Rival" END
-                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
-                    ),
-                    "Ubicacion_Club" = (
-                        SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN 'FUERA' ELSE 'CASA' END
-                        FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
-                    ),
-                    "Rival" = (
-                        SELECT "Ajustes"."Rival"
                         FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
                     )
                 WHERE EXISTS (SELECT 1 FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
@@ -1629,11 +1621,11 @@ export async function onRequestPost(context) {
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '19/12/2026 19:30', "timestamp" = 1797705000000 WHERE "ID_Partido" = 'RFEVB_2753'`)
             ]);
 
-            // Sincronizar columnas de equipos y localía en Porras
+            // Sincronizar columnas de equipos en Porras y eliminar columnas redundantes
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
-            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Rival" TEXT').run(); } catch(e) {}
             try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Visitante" TEXT').run(); } catch(e) {}
-            try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Ubicacion_Club" TEXT').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Porras" DROP COLUMN "Rival"').run(); } catch(e) {}
+            try { await db.prepare('ALTER TABLE "Porras" DROP COLUMN "Ubicacion_Club"').run(); } catch(e) {}
 
             // Limpieza de usuarios de pruebas automatizadas
             try {
@@ -1656,14 +1648,6 @@ export async function onRequestPost(context) {
                         ),
                         "Equipo_Visitante" = (
                             SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN "Ajustes"."Equipo_Local" ELSE "Ajustes"."Rival" END
-                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
-                        ),
-                        "Ubicacion_Club" = (
-                            SELECT CASE WHEN "Ajustes"."Ubicacion" = 'VISITANTE' THEN 'FUERA' ELSE 'CASA' END
-                            FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
-                        ),
-                        "Rival" = (
-                            SELECT "Ajustes"."Rival"
                             FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido"
                         )
                     WHERE EXISTS (SELECT 1 FROM "Ajustes" WHERE "Ajustes"."ID_Partido" = "Porras"."ID Partido")
@@ -2169,10 +2153,8 @@ export async function onRequestPost(context) {
                 const isVis = (m.Ubicacion || '').toUpperCase() === 'VISITANTE';
                 const eqCasa = isVis ? (m.Rival || '') : (m.Equipo_Local || '');
                 const eqFuera = isVis ? (m.Equipo_Local || '') : (m.Rival || '');
-                const ubiClub = isVis ? 'FUERA' : 'CASA';
-                const eqRiv = m.Rival || '';
-                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local", "Equipo_Local", "Rival", "Equipo_Visitante", "Ubicacion_Club") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo, eqCasa, eqRiv, eqFuera, ubiClub));
+                batchStmts.push(db.prepare('INSERT INTO "Porras" ("Timestamp", "Usuario", "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local", "Equipo_Local", "Equipo_Visitante") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(nowStr, usuario, idPart, p.sets, p.puntos, p.signo, eqCasa, eqFuera));
             }
         }
         await flushBatch(db, batchStmts);
@@ -4219,9 +4201,7 @@ export async function onRequestPost(context) {
                     p."Puntos Dif" as puntos_dif,
                     p."a favor o en contra del local" as signo,
                     p."Equipo_Local" as equipo_local,
-                    p."Equipo_Visitante" as equipo_visitante,
-                    p."Ubicacion_Club" as ubicacion_club,
-                    p."Rival" as rival
+                    p."Equipo_Visitante" as equipo_visitante
                 FROM "Porras" p
                 LEFT JOIN "Usuarios" u ON p."Usuario" = u."Usuario"
                 WHERE p."ID Partido" = ?
@@ -4241,8 +4221,8 @@ export async function onRequestPost(context) {
                 timestamp: pr.timestamp || '',
                 equipo_local: pr.equipo_local || defaultEqLocal,
                 equipo_visitante: pr.equipo_visitante || defaultEqVisitante,
-                ubicacion_club: pr.ubicacion_club || defaultUbiClub,
-                rival: pr.rival || (partido ? partido.Rival : '')
+                ubicacion_club: defaultUbiClub,
+                rival: partido ? partido.Rival : ''
             }));
 
             // Ordenar por usuario
