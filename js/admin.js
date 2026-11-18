@@ -4259,7 +4259,8 @@ function _escHorarioHtml(str) {
 }
 
 function _actualizarBadgeYBotonHorarios() {
-    const pendientes = (window._adminHorariosCache || []).filter(c => !c._applied && (c.cambio_fecha_hora || c.cambio_pabellon));
+    const pendientes = (window._adminHorariosCache || []).filter(c => !c._applied && (c.cambio_fecha_hora || c.cambio_pabellon || c.campo_invertido));
+    const aplicablesAuto = pendientes.filter(c => !c.fed_finalizado);
     const badge = document.getElementById('badgeCambiosHorariosAdmin');
     const btnAll = document.getElementById('btnAplicarTodosHorariosFed');
 
@@ -4278,7 +4279,7 @@ function _actualizarBadgeYBotonHorarios() {
         }
     }
     if (btnAll) {
-        btnAll.style.display = pendientes.length > 0 ? 'flex' : 'none';
+        btnAll.style.display = aplicablesAuto.length > 0 ? 'flex' : 'none';
     }
 }
 
@@ -4301,21 +4302,44 @@ window._renderListaCambiosHorarios = function() {
         const safeId = _escHorarioHtml(c.id_partido);
         const fedColor = c.federacion === 'RFEVB' ? '#9b59b6' : '#3498db';
         const isApplied = Boolean(c._applied);
-        const borderCol = isApplied ? 'rgba(46, 204, 113, 0.5)' : 'rgba(243, 156, 18, 0.45)';
-        const bgCol = isApplied ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0, 0, 0, 0.28)';
+        const isFedFinished = Boolean(c.fed_finalizado);
+        const isSwapped = Boolean(c.campo_invertido);
+        const borderCol = isApplied
+            ? 'rgba(46, 204, 113, 0.5)'
+            : (isFedFinished ? 'rgba(231, 76, 60, 0.65)' : (isSwapped ? 'rgba(155, 89, 182, 0.65)' : 'rgba(243, 156, 18, 0.45)'));
+        const bgCol = isApplied ? 'rgba(46, 204, 113, 0.08)' : (isFedFinished ? 'rgba(231, 76, 60, 0.08)' : 'rgba(0, 0, 0, 0.28)');
 
         const tags = [];
         tags.push(`<span style="background:${fedColor}22; color:${fedColor}; border:1px solid ${fedColor}66; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">${_escHorarioHtml(c.federacion)}</span>`);
         if (c.categoria) tags.push(`<span style="background:rgba(255,255,255,0.08); color:var(--text-main); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">${_escHorarioHtml(c.categoria)}</span>`);
         if (c.jornada) tags.push(`<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">J.${_escHorarioHtml(c.jornada)}</span>`);
         if (c.es_canarias) tags.push(`<span style="background:rgba(241,196,15,0.18); color:#f1c40f; border:1px solid rgba(241,196,15,0.4); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">Canarias (+1h peninsular)</span>`);
+        if (isSwapped) tags.push(`<span style="background:rgba(155,89,182,0.22); color:#d2a8ff; border:1px solid #9b59b6; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CAMPO INVERTIDO</span>`);
+        if (isFedFinished) tags.push(`<span style="background:rgba(231,76,60,0.24); color:#ff7675; border:1px solid #e74c3c; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">FINALIZADO EN FEDERACIÓN</span>`);
         if (c.postponed) tags.push(`<span style="background:rgba(231,76,60,0.2); color:#ff6b6b; border:1px solid #e74c3c; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">APLAZADO</span>`);
         if (c.canceled) tags.push(`<span style="background:rgba(231,76,60,0.25); color:#ff6b6b; border:1px solid #e74c3c; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CANCELADO</span>`);
+
+        const warnFinishedHtml = isFedFinished ? `
+            <div style="margin-top:6px; padding:7px 9px; border-radius:6px; background:rgba(231,76,60,0.14); border:1px solid rgba(231,76,60,0.4); color:#ffb3b3; font-size:0.72rem; line-height:1.35;">
+                ⚠️ <b>Atención:</b> Este partido ya figura como <b>finalizado</b> en la federación. Las casillas están desmarcadas por seguridad; revisa si ya se jugó o si se invirtió el orden de campo antes de aplicar.
+            </div>` : '';
+
+        const ubiRow = isSwapped ? `
+            <div style="background:rgba(155,89,182,0.14); border:1px solid rgba(155,89,182,0.4); border-radius:6px; padding:7px 9px; margin-top:6px; font-size:0.75rem;">
+                <label style="display:flex; align-items:flex-start; gap:7px; cursor:${isApplied ? 'default' : 'pointer'}; margin:0;">
+                    <input type="checkbox" id="chkHorarioUbi_${idx}" ${!isFedFinished ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:800; color:#d2a8ff; margin-bottom:2px;">Cambio de campo (Local / Visitante)</div>
+                        <div style="color:var(--text-muted);">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(c.db_ubicacion || '')}</span></div>
+                        <div style="color:var(--text-main);">Federación: <b style="color:#2ecc71;">${_escHorarioHtml(c.fed_ubicacion || '')}</b></div>
+                    </div>
+                </label>
+            </div>` : '';
 
         const fechaRow = c.cambio_fecha_hora ? `
             <div style="background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); border-radius:6px; padding:7px 9px; margin-top:6px; font-size:0.75rem;">
                 <label style="display:flex; align-items:flex-start; gap:7px; cursor:${isApplied ? 'default' : 'pointer'}; margin:0;">
-                    <input type="checkbox" id="chkHorarioFecha_${idx}" ${c.cambio_fecha_hora ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
+                    <input type="checkbox" id="chkHorarioFecha_${idx}" ${c.cambio_fecha_hora && !isFedFinished ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
                     <div style="flex:1; min-width:0;">
                         <div style="font-weight:800; color:#f5c542; margin-bottom:2px;">Cambio de fecha / hora</div>
                         <div style="color:var(--text-muted);">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(c.db_fecha)}</span></div>
@@ -4330,7 +4354,7 @@ window._renderListaCambiosHorarios = function() {
         const pabRow = c.cambio_pabellon ? `
             <div style="background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:6px; padding:7px 9px; margin-top:6px; font-size:0.75rem;">
                 <label style="display:flex; align-items:flex-start; gap:7px; cursor:${isApplied ? 'default' : 'pointer'}; margin:0;">
-                    <input type="checkbox" id="chkHorarioPab_${idx}" ${c.cambio_pabellon ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
+                    <input type="checkbox" id="chkHorarioPab_${idx}" ${c.cambio_pabellon && !isFedFinished ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
                     <div style="flex:1; min-width:0;">
                         <div style="font-weight:800; color:#5dade2; margin-bottom:2px;">Cambio de pabellón</div>
                         <div style="color:var(--text-muted);">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(c.db_pabellon)}</span></div>
@@ -4342,7 +4366,7 @@ window._renderListaCambiosHorarios = function() {
                 Pabellón sin cambios: <b>${_escHorarioHtml(c.db_pabellon)}</b>
             </div>`;
 
-        const hasApplicable = c.cambio_fecha_hora || c.cambio_pabellon;
+        const hasApplicable = c.cambio_fecha_hora || c.cambio_pabellon || isSwapped;
         const actionBtnHtml = isApplied
             ? `<div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(46,204,113,0.18); color:#2ecc71; font-size:0.75rem; font-weight:800; text-align:center;">✅ Actualizado en la base de datos</div>`
             : (hasApplicable ? `
@@ -4359,6 +4383,8 @@ window._renderListaCambiosHorarios = function() {
                     <code style="font-size:0.68rem; color:var(--text-muted);">${safeId}</code>
                 </div>
                 <div style="font-size:0.86rem; font-weight:800; color:var(--text-main);">${_escHorarioHtml(c.partido)}</div>
+                ${warnFinishedHtml}
+                ${ubiRow}
                 ${fechaRow}
                 ${pabRow}
                 ${c.updated_at ? `<div style="font-size:0.66rem; color:var(--text-muted); margin-top:5px;">Última modificación en federación: ${_escHorarioHtml(c.updated_at)}</div>` : ''}
@@ -4434,11 +4460,13 @@ window.adminAplicarCambioHorario = async function(idx) {
 
     const chkF = document.getElementById(`chkHorarioFecha_${idx}`);
     const chkP = document.getElementById(`chkHorarioPab_${idx}`);
-    const aplicarFecha = Boolean(chkF ? chkF.checked : item.cambio_fecha_hora);
-    const aplicarPab = Boolean(chkP ? chkP.checked : item.cambio_pabellon);
+    const chkU = document.getElementById(`chkHorarioUbi_${idx}`);
+    const aplicarFecha = Boolean(chkF ? chkF.checked : (item.cambio_fecha_hora && !item.fed_finalizado));
+    const aplicarPab = Boolean(chkP ? chkP.checked : (item.cambio_pabellon && !item.fed_finalizado));
+    const aplicarUbi = Boolean(chkU ? chkU.checked : (item.campo_invertido && !item.fed_finalizado));
 
-    if (!aplicarFecha && !aplicarPab) {
-        alert('Marca al menos Fecha/Hora o Pabellón para aplicar el cambio.');
+    if (!aplicarFecha && !aplicarPab && !aplicarUbi) {
+        alert('Marca al menos Fecha/Hora, Pabellón o Campo para aplicar el cambio.');
         return;
     }
 
@@ -4460,8 +4488,10 @@ window.adminAplicarCambioHorario = async function(idx) {
                     fecha: item.fed_fecha,
                     timestamp: item.fed_timestamp,
                     pabellon: item.fed_pabellon,
+                    ubicacion: item.fed_ubicacion,
                     aplicar_fecha: aplicarFecha,
-                    aplicar_pabellon: aplicarPab
+                    aplicar_pabellon: aplicarPab,
+                    aplicar_ubicacion: aplicarUbi
                 }]
             }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
@@ -4480,6 +4510,7 @@ window.adminAplicarCambioHorario = async function(idx) {
                     if (p.id_partido === item.id_partido) {
                         if (aplicarFecha && item.fed_timestamp > 0) p.timestamp = item.fed_timestamp;
                         if (aplicarPab && item.fed_pabellon) p.pabellon = item.fed_pabellon;
+                        if (aplicarUbi && item.fed_ubicacion) p.ubicacion = item.fed_ubicacion;
                     }
                 });
             };
@@ -4506,17 +4537,21 @@ window.adminAplicarTodosCambiosHorarios = async function() {
         if (item._applied) return;
         const chkF = document.getElementById(`chkHorarioFecha_${idx}`);
         const chkP = document.getElementById(`chkHorarioPab_${idx}`);
-        const aplicarFecha = Boolean(chkF ? chkF.checked : item.cambio_fecha_hora);
-        const aplicarPab = Boolean(chkP ? chkP.checked : item.cambio_pabellon);
-        if (aplicarFecha || aplicarPab) {
-            idxs.push({ idx, aplicarFecha, aplicarPab });
+        const chkU = document.getElementById(`chkHorarioUbi_${idx}`);
+        const aplicarFecha = Boolean(chkF ? chkF.checked : (item.cambio_fecha_hora && !item.fed_finalizado));
+        const aplicarPab = Boolean(chkP ? chkP.checked : (item.cambio_pabellon && !item.fed_finalizado));
+        const aplicarUbi = Boolean(chkU ? chkU.checked : (item.campo_invertido && !item.fed_finalizado));
+        if (aplicarFecha || aplicarPab || aplicarUbi) {
+            idxs.push({ idx, aplicarFecha, aplicarPab, aplicarUbi });
             payload.push({
                 id_partido: item.id_partido,
                 fecha: item.fed_fecha,
                 timestamp: item.fed_timestamp,
                 pabellon: item.fed_pabellon,
+                ubicacion: item.fed_ubicacion,
                 aplicar_fecha: aplicarFecha,
-                aplicar_pabellon: aplicarPab
+                aplicar_pabellon: aplicarPab,
+                aplicar_ubicacion: aplicarUbi
             });
         }
     });
@@ -4545,7 +4580,7 @@ window.adminAplicarTodosCambiosHorarios = async function() {
             throw new Error((data && data.message) || 'Error aplicando cambios.');
         }
 
-        idxs.forEach(({ idx, aplicarFecha, aplicarPab }) => {
+        idxs.forEach(({ idx, aplicarFecha, aplicarPab, aplicarUbi }) => {
             const item = cache[idx];
             item._applied = true;
             if (window.appData) {
@@ -4555,6 +4590,7 @@ window.adminAplicarTodosCambiosHorarios = async function() {
                         if (p.id_partido === item.id_partido) {
                             if (aplicarFecha && item.fed_timestamp > 0) p.timestamp = item.fed_timestamp;
                             if (aplicarPab && item.fed_pabellon) p.pabellon = item.fed_pabellon;
+                            if (aplicarUbi && item.fed_ubicacion) p.ubicacion = item.fed_ubicacion;
                         }
                     });
                 };

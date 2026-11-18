@@ -1476,7 +1476,8 @@ export async function onRequestPost(context) {
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '19/12/2026 19:30', "timestamp" = 1797705000000 WHERE "ID_Partido" = 'RFEVB_2753'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`),
-                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`),
+                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '23/01/2027 13:30', "timestamp" = 1800707400000, "Pabellon" = 'Campo de la Juventud, Palencia' WHERE "ID_Partido" = 'FVCL_2F008'`),
+                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '30/01/2027 20:00', "timestamp" = 1801335600000, "Ubicacion" = 'VISITANTE', "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2M009'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '22/11/2026 19:30', "timestamp" = 1795372200000, "Pabellon" = 'Colegio Marista La Inmaculada, Valladolid' WHERE "ID_Partido" = 'FVCL_2F003'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 15:30', "timestamp" = 1797172200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`),
@@ -1602,7 +1603,8 @@ export async function onRequestPost(context) {
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '06/02/2027 16:00', "timestamp" = 1801926000000, "Pabellon" = 'PABELLÓN FUENTE DE LA MORA' WHERE "ID_Partido" = 'RFEVB_2755'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 10:30', "timestamp" = 1797154200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2F005'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '04/04/2027 13:00', "timestamp" = 1806836400000, "Pabellon" = 'POLIDEPORTIVO CRISTO REY, VALLADOLID' WHERE "ID_Partido" = 'FVCL_2F007'`),
-                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '24/01/2027 13:30', "timestamp" = 1800793800000, "Pabellon" = 'Pabellón Escuela Juvenil Castilla' WHERE "ID_Partido" = 'FVCL_2F008'`),
+                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '23/01/2027 13:30', "timestamp" = 1800707400000, "Pabellon" = 'Campo de la Juventud, Palencia' WHERE "ID_Partido" = 'FVCL_2F008'`),
+                db.prepare(`UPDATE "Ajustes" SET "Fecha" = '30/01/2027 20:00', "timestamp" = 1801335600000, "Ubicacion" = 'VISITANTE', "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2M009'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '16/01/2027 20:00', "timestamp" = 1800126000000, "Pabellon" = 'FCAFD, León' WHERE "ID_Partido" = 'FVCL_2F014'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '22/11/2026 19:30', "timestamp" = 1795372200000, "Pabellon" = 'Colegio Marista La Inmaculada, Valladolid' WHERE "ID_Partido" = 'FVCL_2F003'`),
                 db.prepare(`UPDATE "Ajustes" SET "Fecha" = '13/12/2026 15:30', "timestamp" = 1797172200000, "Pabellon" = 'P. San Antonio, Ávila' WHERE "ID_Partido" = 'FVCL_2M005_MES'`),
@@ -5740,8 +5742,10 @@ export async function onRequestPost(context) {
                             pabellon: String(p.pabellon || '').trim(),
                             es_canarias: esCanarias,
                             raw_hora: rawHora,
-                            local: p.nombre_equipo_local || '',
-                            visitante: p.nombre_equipo_visitante || ''
+                            local: p.equipo_local || p.nombre_equipo_local || '',
+                            visitante: p.equipo_visitante || p.nombre_equipo_visitante || '',
+                            postponed: Boolean(p.esAplazado || p.fechaAplazada),
+                            canceled: Boolean(p.esSuspendido)
                         });
                     }
                 }
@@ -5852,10 +5856,11 @@ export async function onRequestPost(context) {
                 const cat = m.categoria || '';
                 const dbFechaStr = dbTs > 0 ? formatTsToMadridStr(dbTs) : (rawRow.Fecha || 'Sin fecha');
                 const dbPabellon = String(m.pabellon || '').trim();
-                const isLocalDb = String(m.ubicacion || '').toUpperCase() === 'LOCAL';
-                const partidoLabel = isLocalDb
-                    ? `${m.equipo_local || ''} vs ${m.rival || ''}`
-                    : `${m.rival || ''} vs ${m.equipo_local || ''}`;
+                const dbUbicacion = String(m.ubicacion || '').toUpperCase() === 'LOCAL' ? 'LOCAL' : 'VISITANTE';
+                const isLocalDb = dbUbicacion === 'LOCAL';
+                const dbHomeName = isLocalDb ? (m.equipo_local || '') : (m.rival || '');
+                const dbAwayName = isLocalDb ? (m.rival || '') : (m.equipo_local || '');
+                const partidoLabel = `${dbHomeName} vs ${dbAwayName}`;
 
                 if (id.startsWith('RFEVB_')) {
                     const fed = rfevbMap.get(id);
@@ -5867,23 +5872,40 @@ export async function onRequestPost(context) {
                         : false;
                     const cambioPabellon = isVenueDifferent(dbPabellon, fed.pabellon);
 
-                    if (cambioFechaHora || cambioPabellon) {
+                    // Detectar inversión de campo en RFEVB
+                    const nDbHome = normText(dbHomeName);
+                    const nDbAway = normText(dbAwayName);
+                    const nFedHome = normText(fed.local);
+                    const nFedAway = normText(fed.visitante);
+                    const sameSide = (nDbHome && nFedHome && (nDbHome.includes(nFedHome) || nFedHome.includes(nDbHome))) ||
+                                     (nDbAway && nFedAway && (nDbAway.includes(nFedAway) || nFedAway.includes(nDbAway)));
+                    const swappedSide = (nDbHome && nFedAway && (nDbHome.includes(nFedAway) || nFedAway.includes(nDbHome))) &&
+                                        (nDbAway && nFedHome && (nDbAway.includes(nFedHome) || nFedHome.includes(nDbAway)));
+                    const campoInvertido = !sameSide && swappedSide;
+                    const fedUbicacion = campoInvertido ? (isLocalDb ? 'VISITANTE' : 'LOCAL') : dbUbicacion;
+                    const fedFinalizado = Boolean(fed.fed_ts > 0 && fed.fed_ts < nowMs - 4 * 3600 * 1000);
+
+                    if (cambioFechaHora || cambioPabellon || campoInvertido || fed.postponed || fed.canceled || (fedFinalizado && !isPast)) {
                         changes.push({
                             id_partido: id,
                             federacion: 'RFEVB',
                             categoria: cat,
                             jornada: m.jornada_eq || fed.jornada || '',
-                            partido: partidoLabel,
+                            partido: (fed.local && fed.visitante) ? `${fed.local} vs ${fed.visitante}` : partidoLabel,
                             db_fecha: dbFechaStr,
                             fed_fecha: fed.fed_fecha,
                             fed_timestamp: fed.fed_ts,
                             db_pabellon: dbPabellon || 'Por definir',
                             fed_pabellon: fed.pabellon || dbPabellon,
+                            db_ubicacion: dbUbicacion,
+                            fed_ubicacion: fedUbicacion,
                             cambio_fecha_hora: cambioFechaHora,
                             cambio_pabellon: cambioPabellon,
+                            campo_invertido: campoInvertido,
+                            fed_finalizado: fedFinalizado,
                             es_canarias: fed.es_canarias,
-                            postponed: false,
-                            canceled: false,
+                            postponed: Boolean(fed.postponed),
+                            canceled: Boolean(fed.canceled),
                             updated_at: ''
                         });
                     }
@@ -5892,15 +5914,39 @@ export async function onRequestPost(context) {
                     const candidates = fvclMatches[code] || [];
                     if (candidates.length === 0) continue;
 
-                    const dbHomeName = isLocalDb ? (m.equipo_local || '') : (m.rival || '');
-                    const dbAwayName = isLocalDb ? (m.rival || '') : (m.equipo_local || '');
                     const dbHomeKey = getFvclTeamKey(dbHomeName);
                     const dbAwayKey = getFvclTeamKey(dbAwayName);
 
-                    const fMatch = candidates.find(f =>
+                    const sameOrderMatch = candidates.find(f =>
                         getFvclTeamKey(f.homeTeam) === dbHomeKey &&
                         getFvclTeamKey(f.awayTeam) === dbAwayKey
                     );
+                    const swappedOrderMatch = candidates.find(f =>
+                        getFvclTeamKey(f.homeTeam) === dbAwayKey &&
+                        getFvclTeamKey(f.awayTeam) === dbHomeKey
+                    );
+
+                    // Detección inteligente de intercambio de campo (ida <-> vuelta):
+                    // Si el partido con el mismo orden ya figura finalizado (o está a >45 días de distancia)
+                    // y el partido con el campo invertido NO está finalizado y encaja con la fecha actual de la BD (<30 días),
+                    // entonces el club/federación invirtió localía.
+                    let fMatch = sameOrderMatch;
+                    let campoInvertido = false;
+                    if (swappedOrderMatch) {
+                        const sameDiffDays = (sameOrderMatch && sameOrderMatch.fed_ts > 0 && dbTs > 0)
+                            ? Math.abs(sameOrderMatch.fed_ts - dbTs) / 86400000
+                            : Infinity;
+                        const swapDiffDays = (swappedOrderMatch.fed_ts > 0 && dbTs > 0)
+                            ? Math.abs(swappedOrderMatch.fed_ts - dbTs) / 86400000
+                            : Infinity;
+                        const sameAlreadyDone = !sameOrderMatch || sameOrderMatch.finished || (sameOrderMatch.fed_ts > 0 && sameOrderMatch.fed_ts < nowMs - 4 * 3600 * 1000);
+                        const swapIsOpen = !swappedOrderMatch.finished && (swappedOrderMatch.fed_ts <= 0 || swappedOrderMatch.fed_ts >= nowMs - 4 * 3600 * 1000);
+
+                        if (!isPast && swapIsOpen && ((sameAlreadyDone && swapDiffDays <= 35) || (sameDiffDays > 45 && swapDiffDays <= 14))) {
+                            fMatch = swappedOrderMatch;
+                            campoInvertido = true;
+                        }
+                    }
 
                     if (!fMatch) continue;
                     fvclChecked++;
@@ -5909,8 +5955,10 @@ export async function onRequestPost(context) {
                         ? (dbTs <= 0 || Math.abs(fMatch.fed_ts - dbTs) >= 60000 || dbFechaStr !== fMatch.fed_fecha)
                         : false;
                     const cambioPabellon = isVenueDifferent(dbPabellon, fMatch.pabellon);
+                    const fedUbicacion = campoInvertido ? (isLocalDb ? 'VISITANTE' : 'LOCAL') : dbUbicacion;
+                    const fedFinalizado = Boolean(fMatch.finished || (fMatch.fed_ts > 0 && fMatch.fed_ts < nowMs - 4 * 3600 * 1000));
 
-                    if (cambioFechaHora || cambioPabellon || fMatch.postponed || fMatch.canceled) {
+                    if (cambioFechaHora || cambioPabellon || campoInvertido || fMatch.postponed || fMatch.canceled || (fedFinalizado && !isPast)) {
                         changes.push({
                             id_partido: id,
                             federacion: 'FVCyL',
@@ -5922,8 +5970,12 @@ export async function onRequestPost(context) {
                             fed_timestamp: fMatch.fed_ts,
                             db_pabellon: dbPabellon || 'Por definir',
                             fed_pabellon: fMatch.pabellon || dbPabellon,
+                            db_ubicacion: dbUbicacion,
+                            fed_ubicacion: fedUbicacion,
                             cambio_fecha_hora: cambioFechaHora,
                             cambio_pabellon: cambioPabellon,
+                            campo_invertido: campoInvertido,
+                            fed_finalizado: fedFinalizado,
                             es_canarias: false,
                             postponed: fMatch.postponed,
                             canceled: fMatch.canceled,
@@ -5982,6 +6034,10 @@ export async function onRequestPost(context) {
                 if (c.aplicar_pabellon && c.pabellon && String(c.pabellon).trim()) {
                     setCols.push('"Pabellon" = ?');
                     bindVals.push(String(c.pabellon).trim());
+                }
+                if (c.aplicar_ubicacion && (c.ubicacion === 'LOCAL' || c.ubicacion === 'VISITANTE')) {
+                    setCols.push('"Ubicacion" = ?');
+                    bindVals.push(c.ubicacion);
                 }
 
                 if (setCols.length > 0) {
