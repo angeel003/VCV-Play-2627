@@ -5885,7 +5885,7 @@ export async function onRequestPost(context) {
                     const fedUbicacion = campoInvertido ? (isLocalDb ? 'VISITANTE' : 'LOCAL') : dbUbicacion;
                     const fedFinalizado = Boolean(fed.fed_ts > 0 && fed.fed_ts < nowMs - 4 * 3600 * 1000);
 
-                    if (cambioFechaHora || cambioPabellon || campoInvertido || fed.postponed || fed.canceled || (fedFinalizado && !isPast)) {
+                    if (cambioFechaHora || cambioPabellon || campoInvertido || fed.canceled || (fedFinalizado && !isPast)) {
                         changes.push({
                             id_partido: id,
                             federacion: 'RFEVB',
@@ -5958,7 +5958,7 @@ export async function onRequestPost(context) {
                     const fedUbicacion = campoInvertido ? (isLocalDb ? 'VISITANTE' : 'LOCAL') : dbUbicacion;
                     const fedFinalizado = Boolean(fMatch.finished || (fMatch.fed_ts > 0 && fMatch.fed_ts < nowMs - 4 * 3600 * 1000));
 
-                    if (cambioFechaHora || cambioPabellon || campoInvertido || fMatch.postponed || fMatch.canceled || (fedFinalizado && !isPast)) {
+                    if (cambioFechaHora || cambioPabellon || campoInvertido || fMatch.canceled || (fedFinalizado && !isPast)) {
                         changes.push({
                             id_partido: id,
                             federacion: 'FVCyL',
