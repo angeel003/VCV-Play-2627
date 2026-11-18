@@ -1,6 +1,10 @@
 # Plan Técnico: Correo Propio, Recuperación de Contraseña y Registro Seguro en VCV Play 2627
 
-Documento de diseño para integrar un correo profesional del dominio, recuperación automática de contraseña/usuario, verificación de email y registro público protegido contra bots, spam en D1 y ataques DDoS/fuerza bruta.
+Documento de diseño para integrar un correo profesional del dominio, recuperación automática de contraseña/usuario, verificación de email y capa adicional de protección contra bots.
+
+> **Estado actual (noviembre 2026):**
+> - **Ya implementado en producción:** Formulario público **"Crear cuenta"** (`request_registration`), tabla `Solicitudes_Registro`, aprobación en intranet (cuentas ocultas al resto hasta validación), protección anti-bots con honeypot, validación de tiempo mínimo de envío, límite de frecuencia por IP (3 registros/IP/hora) y regla Cloudflare WAF Rate Limiting.
+> - **Pendiente (hoja de ruta futura):** Envío de correos transaccionales OTP mediante Resend/Brevo, Cloudflare Email Routing para correo del dominio, recuperación automática de contraseña por código y widget Cloudflare Turnstile.
 
 ---
 
@@ -230,10 +234,10 @@ Evita multicuentas en el ranking y gente ajena con acceso indebido, mientras te 
    - Sustituir las referencias visibles a `adminfantasyvcv@gmail.com` en FAQ y `#unete` (`index.html:2502, 2534, 2550, 3814, 3821`) por el nuevo correo del dominio (ej. `soporte@tudominio.com`).
 
 2. **Tarjeta de Correo en Perfil ([index.html](file:///c:/Users/angel/Desktop/fantasy%20vcv%202627/Fantasy-VCV-2627/index.html#L3346-L3357) + [js/admin.js](file:///c:/Users/angel/Desktop/fantasy%20vcv%202627/Fantasy-VCV-2627/js/admin.js#L2202)):**
-   - Mostrar insignia de estado junto a `#currentEmailDisplay`: `✅ Verificado` o `⚠️ Sin verificar` con botón para pedir código de confirmación.
+   - Mostrar insignia de estado junto a `#currentEmailDisplay`: `Verificado` o `Sin verificar` con botón para pedir código de confirmación.
 
 3. **Intranet Administrador ([index.html](file:///c:/Users/angel/Desktop/fantasy%20vcv%202627/Fantasy-VCV-2627/index.html) + [js/admin.js](file:///c:/Users/angel/Desktop/fantasy%20vcv%202627/Fantasy-VCV-2627/js/admin.js)) *(si se usa Variante A)*:**
-   - Añadir sección colapsable **«Solicitudes de nuevas cuentas»** con lista de pendientes (`@usuario`, nombre, email verificado, vinculación), checkboxes de ligas iniciales (`General` marcado por defecto) y botones **✅ Aprobar y crear** / **❌ Rechazar**.
+   - Añadir sección colapsable **«Solicitudes de nuevas cuentas»** con lista de pendientes (`@usuario`, nombre, email verificado, vinculación), checkboxes de ligas iniciales (`General` marcado por defecto) y botones **Aprobar y crear** / **Rechazar**.
 
 ---
 

@@ -1,91 +1,111 @@
-# 🏐💥 VCV Play 26/27 — La Guía Definitiva
+# VCV Play 26/27 — Guía de Usuario
 
-¡Llega una nueva forma de vivir y seguir el vóley del club! **VCV Play** es una aplicación/web interactiva creada para que jugadores, familias, entrenadores y aficionados estén al día de nuestros equipos y, sobre todo, para competir entre vosotros en nuestro propio **Fantasy de voleibol**.
+**VCV Play** es la aplicación web interactiva del **Valladolid Club Voleibol** creada para que jugadores, familias, entrenadores y aficionados sigan al día la temporada de nuestros equipos y compitan en el Fantasy de voleibol del club.
 
-La mecánica es sencilla: si crees que sabes de vóley, demuéstralo. Antes de cada jornada podrás pronosticar el resultado y la diferencia de puntos de los partidos. Por cada acierto consigues puntos, escalas en la clasificación general y, al finalizar las ligas, **¡los mejores clasificados podrán conseguir premios!** 🏆
+Antes de cada partido podrás pronosticar el resultado en sets y la diferencia total de puntos, votar al **MVP VALCYL**, comparar tus números con el resto de participantes y escalar posiciones en la clasificación general y en tus ligas privadas.
 
-*La aplicación se puede añadir directamente a la pantalla de inicio del móvil, funcionando como una app para un acceso rápido y sencillo.*
-
----
-
-## 🏟️ ¿A qué equipos seguimos?
-
-Podrás consultar y predecir los partidos de nuestros 5 equipos en sus respectivas categorías:
-
-* 🔥 **Superliga 2 Masculina (SM2):** Universidad de Valladolid VCV
-* 💪 **1ª Nacional Masculina:** VALCYL VCV
-* 👑 **1ª Nacional Femenina:** Valladolid CV Vacceas
-* 🐺 **2ª División Masculina:** VCV Meseta
-* 🌸 **2ª División Femenina:** VCV Maria Molina
-
-*(Próximamente se implementarán clasificaciones privadas para competir en grupos más pequeños o filtrando solo por ciertos equipos).*
+*La aplicación puede añadirse directamente a la pantalla de inicio del móvil (Android e iOS) o instalarse en ordenador, funcionando como una aplicación nativa con notificaciones push.*
 
 ---
 
-## 📱 El Tour por la App
+## Equipos incluidos en la temporada 26/27
 
-### 🏠 Partidos — Tu campo de batalla
-Aquí es donde ocurre la magia. Aparecen las tarjetas de los partidos de los **próximos 7 días** (si un equipo no juega en esa ventana, no aparecerá aún). Cada tarjeta incluye la jornada, fecha, pabellón, enlace al streaming (si lo hay) y una cuenta atrás en tiempo real que te mete presión.
+Puedes consultar el calendario y pronosticar los encuentros de nuestros cinco equipos en competiciones nacionales (RFEVB) y autonómicas (FVCyL):
 
-**¿Cómo predigo?**
-1. 🎯 **Resultado en sets** (3-0, 3-1, 3-2, 2-3, 1-3, 0-3).
-2. 📏 **Diferencia de puntos total** del partido (sumando las diferencias de todos y cada uno de los sets jugados).
-3. ➡️⬅️ Si esos puntos van **a favor o en contra del local**.
-
-Puedes cambiar tu predicción las veces que quieras **hasta que empiece el partido**, momento en el que se cierra automáticamente. La barra de progreso superior te indicará qué porcentaje de partidos semanales has completado.
-
-### 📅 Calendario — El mapa del tesoro
-Muestra **absolutamente todos los partidos pendientes** de la temporada. Puedes filtrar por equipo mediante un desplegable o buscar un rival concreto. Perfecto para planificar tus fines de semana.
-
-### 🏆 Clasificación — El momento de la verdad
-La tabla de posiciones donde se separan los profetas de los charlatanes. Se ordena por puntos de mayor a menor y puedes alternar entre las distintas ligas. Recuerda: ¡los que acaben en lo más alto al final de la temporada optarán a premios!
-
-### 👤 Perfil — Tu cuartel general
-Tu rincón personal para ver tus insignias desbloqueadas 🎖️ y acceder a la **Predicción a Final de Temporada**, donde puedes intentar adivinar los puntos totales que hará cada equipo. Piénsatelo bien, porque esta opción se bloquea en cuanto arranca la competición.
+- **Superliga 2 Masculina (SM2):** Universidad de Valladolid VCV
+- **1ª Nacional Masculina:** VALCYL VCV
+- **1ª Nacional Femenina:** Valladolid CV Vacceas
+- **2ª División Masculina (FVCyL):** VCV Meseta
+- **2ª División Femenina Oro (FVCyL):** VCV Maria Molina
 
 ---
 
-## 📊 Sistema de Puntuación
+## Acceso y Creación de Cuenta
 
-Cada partido puede darte puntos por **tres conceptos** que se suman entre sí (con un máximo teórico de 160 puntos por partido). 
-
-* 1️⃣ **Acertar el Ganador (50 puntos):** Dijiste que ganaba el local y ganó. Lo básico.
-* 2️⃣ **Acertar los Sets Exactos (30 puntos):** Además del ganador, clavaste el marcador (ej: predijiste 3-1 y fue 3-1).
-* 3️⃣ **Acertar la Diferencia de Puntos (hasta 80 puntos):** La joya de la corona. Predices cuántos puntos de diferencia habrá en total sumando todos los sets del partido:
-    * Clavas la diferencia exacta (0 error): **80 puntos**.
-    * Te quedas cerca (error de 1 a 8 puntos): Puntos proporcionales (cuanto más cerca, más sumas).
-    * Te desvías por 9 puntos o más: 0 puntos.
-
-> 📝 **Ejemplo práctico:**
-> * **Tu predicción:** 3-1 con 15 puntos a favor del local.
-> * **Resultado real:** 3-1 con 17 puntos a favor del local.
-> * **Cálculo:** Ganador acertado (+50) + Sets clavados (+30) + Diferencia con error de 2 puntos (+62) = **🎉 TOTAL: 142 puntos**.
-
-*Nota: Estas puntuaciones pueden sufrir cambios durante la temporada para ajustar y equilibrar el juego si vemos que algo puntúa más o menos de lo que debería. Si esto ocurre, siempre veréis la información actualizada en la web.*
-
-*(💡 Además, si en cualquier momento hay alguna duda sobre las normas o el funcionamiento de alguna mecánica, intentaré dejarlo siempre bien aclarado en los botones informativos `(?)` dentro de la propia web).*
+- **Iniciar sesión:** Entra con tu usuario y contraseña. La sesión queda guardada automáticamente en tu dispositivo para que no tengas que escribir tus datos cada vez.
+- **Crear cuenta:** Desde la pantalla de acceso puedes crear tu propia cuenta eligiendo tu usuario, contraseña y los equipos/ligas en los que quieres participar. Podrás empezar a usar la app al instante, mientras tu perfil permanece oculto para el resto de usuarios hasta que el administrador valide la solicitud.
+- **Modo Invitado:** Permite consultar la cartelera y el calendario en modo de solo lectura sin necesidad de registrarse.
 
 ---
 
-## 🏅 Ligas y Jornadas
+## Recorrido por la Aplicación
 
-Los puntos se acumulan en varias ligas paralelas. Un solo pronóstico suma para todas las ligas en las que participes:
-* 🌍 **Global:** La liga madre con todos los equipos y todos los jugadores.
-* 🧑‍🏫 **Entrenadores:** Exclusiva para los técnicos del club. A ver si predicen mejor que sus jugadores.
-* ⭐ Y muchas otras clasificaciones que ya veréis si pertenecéis a ellas, o que en un futuro cercano podréis pedir crear para competir contra vuestros amigos (computando solo algunos equipos, por ejemplo).
+### Partidos (Cartelera)
+Muestra las tarjetas de los partidos de los **próximos 7 días** (si un equipo descansa o no juega en esa ventana, aparecerá más adelante). Cada tarjeta muestra la jornada, fecha, hora peninsular (incluidos los partidos en Canarias, ajustados a hora peninsular para que el cierre coincida con el inicio real), pabellón oficial, enlace al streaming (si está disponible), cuotas comunitarias y cuenta atrás en tiempo real. Cuando el partido comienza, aparece marcado como **En juego**.
 
-**¿Cómo funcionan las jornadas?** Los puntos se computan agrupando todos los partidos etiquetados bajo la misma jornada (por ejemplo, "Jornada 1"), **independientemente de cuándo se jueguen físicamente** por aplazamientos o cambios de horario. La clasificación se actualiza en tiempo real conforme se introducen los resultados oficiales.
+**Cómo guardar un pronóstico:**
+1. Selecciona el **resultado en sets** (`3-0`, `3-1`, `3-2`, `2-3`, `1-3` o `0-3`).
+2. Indica la **diferencia total de puntos** del partido (la suma de diferencias de todos los sets jugados).
+3. Señala si esa diferencia es **a favor o en contra del equipo local**.
+
+Puedes editar tu pronóstico tantas veces como quieras **hasta la hora de inicio del partido**, momento en el que se bloquea automáticamente.
+
+### Votación MVP VALCYL y Tarjetas para Compartir
+En los partidos habilitados de Superliga 2 se abre la votación comunitaria tras el encuentro para elegir al jugador más destacado del partido:
+- La votación permanece abierta hasta la hora límite configurada (por defecto lunes a las 12:00), momento en el que se cierra de forma estricta.
+- El ganador oficial y el desglose de votos se proclaman posteriormente según el horario fijado por administración.
+- Desde las tarjetas de partido, resultados y MVP puedes generar imágenes listas para compartir en WhatsApp o Instagram (formato cuadrado y Story).
+
+### Calendario
+Muestra todos los partidos de la temporada (pasados y futuros), con filtros por equipo y buscador por rival, para planificar los fines de semana y consultar resultados anteriores.
+
+### Clasificación y Ligas Privadas
+Incluye la tabla general, el podio, las tendencias respecto a jornadas previas y el acceso a las ligas privadas en las que participes:
+- **Congelación de fin de semana:** Las clasificaciones pueden congelarse mientras se disputan los partidos del fin de semana para mantener la emoción, descongelándose al cierre de la jornada.
+- **Comparador y Wrapped:** Puedes comparar tus estadísticas frente a otros participantes y consultar el resumen de rendimiento de la temporada.
+
+### Historial y Perfil
+- **Historial:** Consulta todos los partidos pasados y pendientes con tu pronóstico frente al acta oficial, desglose de puntos sumados, aciertos de ganador, sets exactos y plenos.
+- **Perfil y Ajustes:** Visualiza tus insignias de rol, accede a la **Predicción de Puntos Totales de Temporada** (bloqueada una vez iniciada la liga), actualiza tu contraseña o correo de contacto, configura tus **notificaciones Web Push** y envía sugerencias o reportes de incidencias al equipo administrador.
 
 ---
 
-## 🚧 Próximamente y Contacto
+## Sistema de Puntuación
 
-El desarrollo continúa y, cuando el tiempo lo permita, se añadirán **estadísticas personales** (porcentaje de acierto, mejor predicción, rachas) y un **historial completo** de tus predicciones pasadas.
+Cada partido suma puntos por **tres conceptos** acumulables (hasta 160 puntos base por encuentro, configurables desde el panel de reglas de la aplicación):
 
-En la pantalla de inicio (login) encontrarás las **instrucciones de instalación** y el **contacto** para cualquier duda. 
+1. **Acertar el ganador (50 puntos):** Acertar qué equipo gana el encuentro.
+2. **Acertar los sets exactos (30 puntos):** Clavar el marcador de sets (por ejemplo, pronosticar `3-1` y que termine `3-1`).
+3. **Acertar la diferencia de puntos (hasta 80 puntos):** Pronosticar el margen total de puntos sumando todos los sets:
+   - Diferencia exacta (0 de error): **80 puntos**.
+   - Margen cercano (dentro de la distancia máxima permitida, por defecto hasta 10 puntos de desviación): puntuación proporcional decreciente cuanto menor sea el error.
+   - Desviación superior al margen máximo: **0 puntos** en este apartado.
 
-**🙏 Una nota personal del creador:**
-Esta plataforma no está hecha por un profesional del desarrollo web, sino en el tiempo libre y con todo el cariño del mundo para nuestra comunidad. Si encontráis algún fallo, mis más sinceras disculpas. Agradecería que me dierais un toque para poder mirarlo cuando pueda. ¡Cualquier sugerencia es bienvenida!
+**Extras y multiplicadores:**
+- **Derby x2:** En partidos donde participas siguiendo a ambos equipos enfrentados, la puntuación del partido se multiplica por dos.
+- **Bonificación MVP:** Participar en la votación MVP aporta el porcentaje bonus configurado en las reglas vigentes (por defecto 10%).
 
-¿Te atreves a demostrar cuánto sabes de nuestros equipos? 🏐🔥
-[vcvplay.com](https://vcvplay.com)
+> **Ejemplo práctico:**
+> - **Tu predicción:** `3-1` con 15 puntos a favor del local.
+> - **Resultado real:** `3-1` con 17 puntos a favor del local (error de 2 puntos).
+> - **Cálculo:** Ganador acertado (+50) + Sets exactos (+30) + Aproximación en diferencia de puntos (+64) = **144 puntos**.
+
+*Las puntuaciones exactas y vigentes en cada momento siempre pueden consultarse dentro de los paneles informativos `(?)` de la propia web.*
+
+---
+
+## Ligas y Jornadas
+
+Un mismo pronóstico suma automáticamente en todas las ligas a las que pertenezcas (Liga Global, ligas de entrenadores, grupos privados o ligas por equipos).
+
+Los puntos se agrupan bajo el número de jornada asignado a cada partido, independientemente de que un encuentro se adelante o aplace por cambios de calendario.
+
+---
+
+## Notificaciones Web Push
+
+Desde tu perfil puedes activar los avisos push en tu móvil u ordenador para recibir:
+- Recordatorios antes del inicio de partidos si aún no has guardado tu pronóstico.
+- Resumen semanal de cartelera.
+- Aviso de apertura y recordatorio de última hora de votación MVP VALCYL.
+- Publicación de resultados oficiales y descongelación de clasificaciones.
+
+En iPhone/iPad (iOS 16.4 o superior), es necesario añadir primero `vcvplay.com` a la pantalla de inicio desde Safari para poder activar los avisos.
+
+---
+
+## Nota del creador
+
+Esta plataforma se desarrolla en el tiempo libre y con todo el cariño para nuestra comunidad del Valladolid Club Voleibol. Si encuentras cualquier fallo o tienes alguna sugerencia de mejora, puedes comunicarlo directamente desde el buzón de sugerencias integrado en la aplicación.
+
+Accede en [vcvplay.com](https://vcvplay.com).

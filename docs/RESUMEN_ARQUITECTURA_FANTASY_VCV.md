@@ -1,104 +1,69 @@
-# Documentación Técnica y Arquitectura: Fantasy VCV 26/27
+# Documentación Técnica y Arquitectura — VCV Play 26/27
 
-Este documento es una especificación técnica completa (PRD/Technical Summary) de la aplicación **Fantasy VCV 26/27**. Está diseñado para proporcionar todo el contexto necesario a un agente de IA (como Google Stitch) para migrar o reconstruir la aplicación en su Versión 2.
+Este documento resume la arquitectura actual de **VCV Play 26/27 (Fantasy VCV)** en producción sobre Cloudflare Pages y Cloudflare D1, tras la migración completa desde la primera versión en Google Apps Script / Google Sheets.
 
 ---
 
 ## 1. Stack Tecnológico Actual
-- **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6). Sin frameworks pesados. Implementado como una **PWA** (Progressive Web App) con `manifest.json` y `sw.js` (Service Worker).
-- **Backend / API**: **Google Apps Script (GAS)**, expuesto como una Web App (Endpoint único que procesa peticiones `POST`).
-- **Base de Datos**: **Google Sheets** (100% serverless, usado como base de datos relacional básica).
-- **Despliegue**: Frontend distribuido como PWA y/o archivo `.apk` (Android) generado mediante *Bubblewrap / PWA Builder*.
+
+- **Frontend:** Vanilla HTML5, CSS3 y JavaScript ES6+ sin frameworks externos. Implementado como **PWA** (Progressive Web App) mediante `manifest.json` y `sw.js`.
+  - Tanto `dev.html` (desarrollo/staging) como `index.html` (producción en `vcvplay.com`) cargan los 9 módulos JS situados en `js/` mediante `<script defer src="js/...?v=...">`.
+- **Backend / API:** **Cloudflare Pages Functions** (`functions/api/vcv.js`), expuesto en el endpoint `/api/vcv` para peticiones `POST` en formato JSON (y rutas auxiliares de comprobación).
+- **Base de Datos:** **Cloudflare D1 (`vcv_database`)**, base de datos relacional SQLite distribuida en el borde con consultas parametrizadas (`db.prepare(...).bind(...)`) e índices dedicados.
+- **Notificaciones:** **Web Push API** con claves VAPID gestionadas desde el backend y Service Worker (`sw.js`).
+- **Seguridad perimetral:** Cloudflare Proxy, Cloudflare WAF Rate Limiting, hash seguro de contraseñas, honeypot, detección de envíos sub-segundo y límite de frecuencia por IP en registros públicos.
 
 ---
 
-## 2. Estructura de la Base de Datos (Google Sheets)
-El backend lee y escribe en pestañas (sheets) específicas:
+## 2. Estructura de la Base de Datos (Cloudflare D1)
 
-1. **`Usuarios`**:
-   - Columnas: `Usuario` (@nombre), `Password`, `NombreReal`, `Estado` (Activo/Baja), `Insignias` (Jugador, Staff, Socio, etc.), `Admin` (TRUE/FALSE).
-2. **`Partidos`**:
-   - Columnas: `ID_Partido`, `Jornada`, `Categoria` (Ej: SM2, 1ª Masc), `Equipo_VCV`, `Rival`, `Es_Local` (TRUE/FALSE), `Fecha_Hora` (Timestamp), `Estado` (PROGRAMADO, EN JUEGO, FINALIZADO), `Res_Sets`, `Res_Puntos`, `Res_Signo`, `Bloqueado` (Booleano de seguridad).
-3. **`Predicciones`**:
-   - Almacena las apuestas. Filas por usuario, columnas por `ID_Partido`. El cruce guarda un JSON stringificado: `{"sets":"3-1", "puntos":"14", "signo":"+"}`.
-4. **`Ligas`**:
-   - Gestiona las Ligas Privadas. La columna A tiene los `@usuarios`. La fila 1 tiene los nombres de las ligas (Ej: `General`, `Amigos`, `Veteranos`). Si hay una "X" en la celda, el usuario pertenece a esa liga.
-5. **`Configuracion`**:
-   - Parámetros del sistema: `Jornada_Activa`, URLs oficiales de la RFEVB, textos del sistema.
+La base de datos `vcv_database` contiene las siguientes tablas principales:
 
----
+### Núcleo de usuarios, permisos y ligas
+- **`Usuarios`**: Credenciales (`Usuario`, `Password` hasheada), `Nombre_Real`, `Correo`, `Admin_Web`, `Avatar`, `Ultimo_Acceso`, estado de visibilidad/aprobación y metadatos de perfil.
+- **`Solicitudes_Registro`**: Registro de altas solicitadas desde "Crear cuenta", control de IP/timestamp y estado de aprobación administrativa.
+- **`Ligas` / `Ligas_Config` / `Ligas_Equipos`**: Relación de usuarios con ligas privadas/globales, configuración de cada liga y mapeo de equipos que puntúan en cada una.
+- **`Permisos_Equipos` / `Permisos_Secreta`**: Equipos visibles y pronosticables para cada usuario (incluyendo el perfil `Invitado`) y acceso a la predicción de puntos totales de temporada.
+- **`Insignias` / `Peticiones_Insignias` / `Peticiones_Nombre` / `Usuario_Alias`**: Roles visuales del club, solicitudes pendientes y alias.
 
-## 3. Contrato de la API (Backend Apps Script)
-El frontend se comunica con el servidor haciendo `fetch` POST al `SCRIPT_URL`. Todo viaja en el `body` como un JSON stringificado y el servidor responde con JSON.
+### Partidos, pronósticos y resultados
+- **`Ajustes`**: Catálogo completo de los partidos de la temporada (`ID_Partido`, `Ronda_Global`, `Equipo_Local`, `Rival`, `Jornada_Eq`, `Fecha`, `timestamp`, `Ubicacion`, `Estado`, `Visibilidad`, `Categoria`, `Pabellon`, `Streaming`, abreviaturas y parámetros de MVP).
+- **`Resultados_Oficiales`**: Actas oficiales introducidas por administración (`ID Partido`, `Sets`, `Parciales`, declaraciones/MVP oficial y marcas de actualización).
+- **`Porras`**: Pronósticos guardados por los usuarios (`Usuario`, `ID Partido`, `Sets`, `Puntos Dif`, `a favor o en contra del local`, `Equipo_Local`, `Equipo_Visitante` y marca temporal). Las antiguas columnas redundantes `Rival` y `Ubicacion_Club` fueron eliminadas del esquema.
+- **`Predicciones_Secretas`**: Pronósticos de puntos totales de final de temporada por equipo.
+- **`Reglas_Puntuacion`**: Parámetros dinámicos de puntuación (`ganador`, `sets`, `diff_exacta`, `max_dist`, `pct_mvp`).
 
-### Endpoints (Acciones del Payload)
-
-#### `action: "login"`
-- **Input**: `{ "action": "login", "usuario": "@...", "password": "..." }`
-- **Output**: JSON con TODO el estado inicial de la app:
-  - `status`: "success" | "error"
-  - `jornada`: Jornada actual activa.
-  - `equipos`: Array de partidos de la jornada actual (solo los de esta jornada).
-  - `todos_partidos`: Historial completo de partidos de jornadas anteriores para el historial.
-  - `clasificaciones`: Objeto con las tablas de clasificación calculadas *on-the-fly* por el servidor para cada Liga Privada.
-  - `ligas`: Array de ligas a las que pertenece el usuario.
-  - `insignias`: Objeto que asocia usuarios con sus roles visuales.
-  - `is_admin`: Booleano para inyectar panel de control.
-
-#### `action: "save"`
-- **Input**: `{ "action": "save", "usuario": "...", "password": "...", "predicciones": { "PARTIDO_1": {"sets":"3-1", "puntos":"15", "signo":"+"} } }`
-- **Comportamiento**: Escribe en la hoja `Predicciones`. El servidor valida primero que el partido NO esté "bloqueado" por tiempo.
-
-#### `action: "load"`
-- Devuelve las predicciones ya guardadas por el usuario para la jornada activa, para poblar los inputs de la interfaz.
-
-#### `action: "add_user"` (Admin)
-- Permite a los administradores crear cuentas nuevas directamente desde el frontend e inscribirlas en ligas privadas enviando el array `ligas_seleccionadas`.
+### MVP VALCYL, Push, Auditoría y Caché
+- **`Plantilla_Superliga_2_Masc`**: Dorsales, nombres, apodos, posiciones y referencias visuales de la plantilla para votaciones MVP.
+- **`MVP_Votos`**: Votos emitidos por los usuarios por partido y jugador.
+- **`Suscripciones_Push_Dispositivos` / `Notificaciones` / `Log_Notificaciones`**: Endpoints Web Push (VAPID), avisos en la app, preferencias por usuario y registro de envíos.
+- **`Cache_App`**: Caché clave-valor en D1 (estado de congelación `FREEZE_OVERRIDE`, `AUTO_UNFREEZE_*`, modo mantenimiento, modo pruebas push y clasificaciones cacheadas).
+- **`Log_Accesos` / `Monitor_Usuarios` / `Sugerencias_Errores`**: Auditoría de accesos, seguimiento administrativo y buzón de sugerencias/reportes de usuarios.
 
 ---
 
-## 4. Funcionalidades y Pantallas del Frontend
+## 3. Contrato de la API (`/api/vcv`)
 
-### 4.1. Pantalla de Inicio y Login
-- Login con validación servidor.
-- Botón "Entrar como Invitado" (vista de solo lectura ocultando partes de la app).
-- Sección de FAQs y Gestión (acordeones HTML nativos `<details>`):
-  - Qué es la app, reglas de puntuación.
-  - Instrucciones de instalación (APK para Android, Safari PWA para iOS).
-  - Formularios para: Cambiar Contraseña y Solicitar Cambio de Nombre.
+Todas las operaciones pasan por `POST /api/vcv` enviando un cuerpo JSON con el campo `action`. Las acciones actuales se agrupan por dominio:
 
-### 4.2. Intranet de Administrador (Oculto por defecto)
-Si `is_admin == true`, se renderiza una caja azul especial en el inicio:
-- Crear nuevos usuarios e inscribirlos en ligas mediante checkboxes generados dinámicamente.
-- Subir resultados rápidos: Permite al admin insertar el resultado oficial de un partido en vivo para que recalcule las clasificaciones al instante.
-
-### 4.3. Cartelera de Partidos (Pronósticos)
-- Lista de partidos activos (filtrados del array `equipos`).
-- **Seguridad**: Si faltan menos de 15 minutos para la `Fecha_Hora` oficial, el backend manda `bloqueado: true` y el frontend deshabilita los inputs mostrando un candado.
-- **Inputs Clave por Partido**:
-  - **Sets**: Resultado exacto en sets (Ej: 3-0, 3-2, etc.).
-  - **Diferencia de Puntos**: Valor absoluto numérico (Ej: 14 pts).
-  - **Signo**: A favor (+) o En contra (-). Esto es crucial para la regla de negocio del VCV.
-- Botón global (Floating Action Button o Bottom Navbar en V2) para enviar `action: "save"`.
-
-### 4.4. Ranking (Clasificaciones)
-- Tablas de clasificación generadas automáticamente por el backend.
-- Separadas por pestañas/botones según las **Ligas Privadas** a las que pertenezca el usuario (Ej: "Liga General", "1ª Masculina").
-
-### 4.5. Mis Predicciones (Historial)
-- Lista de todos los partidos anteriores del usuario.
-- Muestra el Pronóstico del usuario vs Resultado Oficial de la Federación.
-- Muestra los puntos ganados (o perdidos) y medallas en base a si hizo pleno (sets y puntos exactos).
-
-### 4.6. Enlaces Oficiales & Top Secret
-- Links directos a la web oficial RFEVB/EsVoley para ver actas reales.
-- **Top Secret**: Pestaña lúdica que muestra los puntos estimados de temporada de cada equipo del club mediante un algoritmo.
+- **Sesión, registro y perfil:**
+  `ping`, `login`, `login_guest`, `get_data`, `get_history`, `request_registration`, `get_registro_ligas`, `change_password`, `save_email`, `delete_avatar`, `request_name_change`, `request_badge_update`, `delete_custom_badge`, `dismiss_aviso_moderacion`, `enviar_sugerencia`, `submit_feedback`.
+- **Pronósticos y MVP:**
+  `save`, `save_totales`, `get_pronosticos_partido_data`, `vote_mvp`, `get_mvp_votos_summary`.
+- **Notificaciones Web Push y tareas programadas (crons):**
+  `get_vapid_public_key`, `guardar_suscripcion_push`, `eliminar_suscripcion_push`, `obtener_config_push`, `cron_recordatorio_2horas`, `cron_recordatorio_mvp_1hora`, `cron_resumen_viernes`.
+- **Intranet de administración (requiere rol admin):**
+  - *Partidos y actas:* `save_resultado_admin`, `sync_official_matches_now`, `fix_timestamps`, `set_mvp_oficial`, `set_mvp_publicacion_ts`, `save_plantilla_superliga`.
+  - *Usuarios, registros y ligas:* `add_user`, `admin_get_user_full_profile`, `admin_save_user_full_profile`, `admin_reset_password`, `admin_delete_user`, `get_solicitudes_registro`, `resolver_solicitud_registro`, `get_usuarios_ligas_admin`, `save_usuario_ligas_admin`, `get_usuarios_permisos`, `save_usuario_permisos`, `save_ligas_config`, `sync_permisos`.
+  - *Moderación y sistema:* `get_name_change_requests`, `resolve_name_change`, `get_peticiones_insignias`, `resolve_peticion_insignia`, `get_sugerencias`, `marcar_sugerencia_estado`, `update_sugerencia_estado`, `set_freeze_override`, `toggle_modo_mantenimiento`, `get_mantenimiento_status`, `clear_cache`, `apply_indexes`, `migrate_db`, `get_monitor_data`, `toggle_monitor_user`, `enviar_push_prueba_admin`, `obtener_log_notificaciones`, `get_modo_pruebas_notif`, `set_modo_pruebas_notif`.
 
 ---
 
-## 5. Reglas de Negocio Clave a Respetar en la Migración
+## 4. Reglas de Negocio Clave
 
-1. **El Signo en los Puntos**: El usuario *debe* especificar el signo de la diferencia de puntos (+ si gana el VCV, - si pierde). Sin esto, la validación de aciertos en Google Apps Script fallará o dará puntos incorrectos.
-2. **PWA Constraints**: Las llamadas a API deben usar una función envolvente de seguridad (ej: `fetchSeguro()`) con intentos automáticos (retry), porque a veces las conexiones de Apps Script desde móviles en 4G/5G fallan a la primera.
-3. **Arrays de Google Sheets**: El backend asume que las peticiones se hacen a una URL `https://script.google.com/macros/s/.../exec`. El frontend debe gestionar siempre el estado de "Cargando..." para el usuario, ya que Apps Script tarda de 1 a 3 segundos en responder.
-4. **Notch de iOS**: El diseño debe incluir espaciado seguro arriba (`env(safe-area-inset-top)`) y abajo (`env(safe-area-inset-bottom)`) para PWA en modo fullscreen.
+1. **Cierre por hora oficial peninsular:** El servidor valida `timestamp` antes de aceptar un guardado en `Porras`. Los desplazamientos a las Islas Canarias se almacenan en hora peninsular (+1h respecto a la hora local canaria) para que la cuenta atrás y el cierre coincidan con el inicio real del partido en Valladolid.
+2. **Signo obligatorio en diferencia de puntos:** El pronóstico requiere especificar si la diferencia de puntos es a favor o en contra del equipo local para evaluar el margen correctamente.
+3. **MVP con cierre y proclamación desacoplados:** El cierre de votación impide nuevos votos o cambios a partir de la hora límite, mientras que la proclamación controla cuándo se revelan el ganador y los porcentajes.
+4. **Congelación de clasificaciones:** Permite congelar los rankings durante los partidos del fin de semana (de forma automática o manual mediante `FREEZE_OVERRIDE`) y descongelarlos al finalizar la jornada.
+5. **Protección de registro público:** `request_registration` aplica honeypot, validación de tiempo mínimo en cliente y rate limiting por IP (3 registros/hora por IP) antes de crear cuentas pendientes de aprobación visible en `Solicitudes_Registro`.
+6. **PWA y resiliencia en red móvil:** El frontend emplea `fetchSeguro()` con reintentos controlados, respeta las áreas seguras de pantalla (`env(safe-area-inset-top)` / `env(safe-area-inset-bottom)`) y gestiona el requisito de modo standalone en iOS Safari para Web Push.

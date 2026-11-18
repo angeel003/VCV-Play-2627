@@ -1,77 +1,70 @@
-# Registro de Cambios (Changelog) - Fantasy VCV 26/27
+# Registro de Cambios (Changelog) ‚Äî VCV Play 26/27 (Fantasy VCV)
+
+## Fase inicial (v1 ‚Äî Google Apps Script / Google Sheets)
 
 2026-09-23 02:17:00
-- Creaci√≥n del archivo `enlaces_guardados.txt` para respaldar las URLs de Google Apps Script y otras referencias externas de los archivos `dev.html` e `index.html`.
+- Creaci√≥n del archivo `enlaces_guardados.txt` para respaldar las URLs de Google Apps Script y referencias externas de `dev.html` e `index.html`.
 
 2026-09-23 02:20:00
-- Actualizaci√≥n de `enlaces_guardados.txt` para mantener exclusivamente las URLs de los Google Apps Script (backend) de desarrollo y producci√≥n, evitando confusiones.
+- Actualizaci√≥n de `enlaces_guardados.txt` para mantener exclusivamente las URLs del backend de desarrollo y producci√≥n.
 
 2026-09-23 02:21:00
 - Eliminaci√≥n del enlace a la "Superliga Masculina 2 (Grupo A)" en la secci√≥n de Clasificaciones Oficiales tanto en `dev.html` como en `index.html`.
 
 2026-09-23 02:24:00
-- Creaci√≥n de una copia de seguridad (`backups/backup_2026-09-23_02-24`) conteniendo el entorno de producci√≥n (`index.html` y `script-prod`).
-- Establecimiento de la regla de trabajar exclusivamente en el entorno de desarrollo (`dev.html` y `script-dev`) a menos que se indique lo contrario.
+- Creaci√≥n de una copia de seguridad (`backups/backup_2026-09-23_02-24`) conteniendo el entorno de producci√≥n.
+- Establecimiento de la regla de trabajar primero en el entorno de desarrollo (`dev.html`) antes de promocionar cambios a producci√≥n (`index.html`).
 
 2026-09-23 02:32:00
-- Restauraci√≥n del archivo `dev.html` y los scripts de `script-dev` a partir de sus versiones de producci√≥n (`index.html` y `script-prod`), manteniendo la URL del backend de desarrollo. Esto con el fin de reiniciar la implementaci√≥n del MVP desde un estado limpio y funcional.
+- Restauraci√≥n de `dev.html` a partir de producci√≥n para reiniciar la implementaci√≥n del sistema MVP desde un estado limpio.
 
 2026-09-23 02:40:00
-- Creaci√≥n de este registro de cambios (`changelog.txt`) para documentar paso a paso las modificaciones realizadas.
-
+- Creaci√≥n de este registro de cambios (`changelog.txt`).
 
 2026-09-23 02:50:00
-- CreaciÛn del archivo instrucciones_excel.md con los pasos a seguir en Google Sheets.
-- Inicio de implementaciÛn de carga en 2 fases (AsÌncrona) y funcionalidad de Jugador Destacado.
+- Creaci√≥n del documento `instrucciones_excel.md` y pruebas iniciales de carga as√≠ncrona en dos fases.
 
 2026-09-23 03:19:00
-- OptimizaciÛn de login a peticiÛn ˙nica unificada (eliminando doble peticiÛn HTTP).
-- IntegraciÛn completa y limpia de la funcionalidad Jugador Destacado (lectura de Plantillas, Votos_Destacado y Resultados Oficiales).
-- VerificaciÛn de sintaxis de dev.html y script-dev/CÛdigo.js.
-
-2026-09-23 03:26:00
-- CorrecciÛn en dev.html para renderizar el bloque de Jugador Destacado tanto en partidos ABIERTOS como CERRADOS (votaciÛn activa de 1h a 24h tras inicio).
-- VerificaciÛn de ejecuciÛn exitosa en Live Server.
+- Optimizaci√≥n de login a petici√≥n √∫nica unificada.
 
 2026-09-23 03:36:00
-- AÒadido botÛn 'Salir / Volver atr·s' en dev.html para desconectarse sin recargar la p·gina.
-- Modificado script-dev/CÛdigo.js para registrar autom·ticamente la fecha y hora de ˙ltimo acceso en la columna D de la pestaÒa 'Usuarios'.
+- A√±adido bot√≥n de cierre de sesi√≥n y registro autom√°tico de √∫ltimo acceso.
 
 2026-09-23 03:52:00
-- Modificado botÛn de cerrar sesiÛn a un icono discreto en la esquina superior izquierda.
-- Arreglado bug visual del login (restaurado a display flex).
-- AÒadida lÛgica para mostrar un botÛn de Streaming Oficial en cada partido si est· disponible.
-- Ampliada la pestaÒa de Administrador para editar un partido hasta 48 horas despuÈs de su inicio.
-- AÒadidos campos en Intranet para que el Admin pueda introducir/editar el enlace de streaming y la frase del Jugador Destacado.
+- A√±adido soporte para enlaces de streaming oficial por partido y edici√≥n administrativa ampliada hasta 48 horas tras el inicio.
 
-2026-09-23 04:00:00
-- Arreglado bug en guardarResultadoAdmin que dejaba el botÛn pillado en 'Subiendo...'.
-- Modificado renderAdminPanel para inyectar correctamente los campos Streaming y Frase con lÌmite de 48h.
+2026-09-23 18:42:00
+- Correcci√≥n de navegaci√≥n SPA y estabilizaci√≥n de llamadas `fetch()`.
 
-2026-09-23 04:10:00
-- (Corregido) El botÛn de salir ahora sÌ es una pequeÒa flecha en la esquina superior izquierda de la cabecera.
-- Modificada la lÛgica de visibilidad en el backend: los partidos ahora aguantan en estado MOSTRAR (visibles en cartelera y panel admin) hasta 48 horas despuÈs del inicio del partido, y luego pasan a OCULTAR autom·ticamente.
+2026-09-23 19:43:00
+- Mejoras UX/UI con transiciones CSS, implementaci√≥n de PWA (`manifest.json`) y generaci√≥n de iconos para navegadores, Android e iOS.
 
-2026-09-23 04:24:00
-- Implementado sistema de CachÈ 'Stale-While-Revalidate' para cargar la p·gina al instante mientras se actualiza de fondo.
-- Ocultada la flecha de volver atr·s en usuarios normales (solo visible para modo Invitado).
-- RediseÒada la flecha de volver atr·s a una silueta m·s sutil (color tenue).
-- AÒadido un discreto enlace 'Cerrar sesiÛn' debajo del nombre de usuario para que los usuarios puedan salir de la cuenta cacheada si lo desean.
+---
 
-2026-09-23 04:41:00
-- (Revertido) Se ha eliminado el sistema de cachÈ localStorage debido a conflictos asÌncronos y errores en la carga de datos (Cannot read properties of null).
-- (Corregido) La flecha de volver atr·s ahora vuelve a aparecer para todos los usuarios (invitados y registrados) en el mismo lugar y formato sutil, permitiendo salir sin problemas.
+## Evoluci√≥n a v2 (Cloudflare Pages + Cloudflare D1 + Arquitectura Modular)
 
-2026-09-23 05:03:00
-- Sincronizados archivos de desarrollo (dev.html y script-dev) con producciÛn (index.html y script-prod).
-- Commit y push al repositorio de GitHub.
+2026-10-01 ‚Äî Migraci√≥n completa a Cloudflare Pages y Cloudflare D1
+- Migraci√≥n del backend a Cloudflare Pages Functions (`functions/api/vcv.js`) y base de datos SQLite distribuida Cloudflare D1 (`vcv_database`).
+- Creaci√≥n de √≠ndices SQL dedicados para acelerar consultas de porras, permisos, ligas y cach√© (`Cache_App`).
+- Implementaci√≥n del buz√≥n de sugerencias y reportes (`Sugerencias_Errores`).
 
-[2026-09-23 13:36] - Implementado CacheService en backend para mejorar rendimiento de lectura. Se elimina el guardado de la fecha de ˙ltima conexiÛn para evitar bloqueos del spreadsheet. Modificado el parseo de Sets para evitar crashes con objetos Date de Google Sheets. Ocultada completamente la interfaz del MVP.
+2026-10-15 ‚Äî Modularizaci√≥n del Frontend y Mejoras UX
+- Separaci√≥n de toda la l√≥gica JavaScript en 9 m√≥dulos especializados bajo `js/` (`config.js`, `admin.js`, `cartelera.js`, `ranking.js`, `calendario.js`, `cartelera_interactive.js`, `ui_gestures.js`, `auth.js`, `push_notifications.js`) cargados con `defer` y cache-busting tanto en `dev.html` como en `index.html`.
+- Navegaci√≥n inferior m√≥vil, gestos t√°ctiles (swipe), micro-vibraci√≥n h√°ptica (`window.vcvHaptic`), indicador "En juego", tendencias de clasificaci√≥n, comparador de usuarios y resumen Wrapped.
+- Congelaci√≥n autom√°tica y manual de clasificaciones durante los fines de semana.
 
-[2026-09-23 13:57] - Fix definitivo en el parseo de fechas desde el CacheService. Eliminada por completo toda la lÛgica de MVP (Jugador Destacado) en frontend y backend para aligerar la carga y mejorar la velocidad de lectura inicial.
+2026-11-01 ‚Äî Sistema MVP VALCYL, Tarjetas Canvas y Notificaciones Web Push
+- Implementaci√≥n completa de votaci√≥n MVP VALCYL para Superliga 2 con cierre estricto e independiente de la proclamaci√≥n oficial.
+- Generador de tarjetas sociales HTML5 Canvas (formato cuadrado 1080x1080 y Stories 9:16) para partidos, resultados, clasificaciones y ganadores MVP.
+- Integraci√≥n de notificaciones Web Push nativas (VAPID) v√≠a `sw.js` con preferencias por usuario, soporte PWA en iOS y tareas programadas (`cron_recordatorio_2horas`, `cron_resumen_viernes`, `cron_recordatorio_mvp_1hora`).
+- Actualizaci√≥n de escudos normalizados y fotograf√≠as de plantilla.
 
-[2026-09-23 18:42] - Solucionado el error de estado corrupto de SPA al volver atros en la app (el botn flecha ahora hace un window.location.reload). Restaurada la configuracin limpia original de fetch() para evitar bloqueos CORS y colisiones de cookies con Apps Script.
+2026-11-16 ‚Äî Registro P√∫blico "Crear cuenta" y Seguridad Anti-bots
+- Incorporaci√≥n del flujo p√∫blico **"Crear cuenta"** (`request_registration` + `Solicitudes_Registro`): el usuario puede acceder de inmediato mientras su perfil permanece oculto al resto hasta aprobaci√≥n administrativa.
+- Protecci√≥n anti-bots en backend con campo honeypot, detecci√≥n de env√≠os sub-segundo, l√≠mite de 3 registros por IP/hora (`cf-connecting-ip`) y regla activa de Cloudflare WAF Rate Limiting.
+- Fijaci√≥n de horarios peninsulares (+1h) en desplazamientos a las Islas Canarias para alinear el cierre de pron√≥sticos con el inicio real en Valladolid.
 
-[2026-09-23 19:09] - Arreglado el bug de inicio de sesin provocado por la inyeccin de invalidacin de cach. Implementado con xito el TTL de cach de 6 horas con limpieza inteligente solo en escrituras. Arreglados los colores feos de Bootstrap (azul/verde) al dejar de enfocar botones deshabilitados/cargando en dev.html e index.html.
-
-[2026-09-23 19:43] - Actualizacin UX/UI: Se aadieron transiciones CSS fade-in entre pantallas. Implementacin de PWA con manifest.json para instalacin nativa en mviles. Generacin de mltiples iconos (favicons redondos y cuadrados) adaptados para navegadores, Android e iOS.
+2026-11-18 ‚Äî Limpieza de Esquema D1, Sincronizaci√≥n de Calendarios y Documentaci√≥n
+- Eliminaci√≥n de columnas redundantes (`Rival` y `Ubicacion_Club`) de la tabla `Porras` en c√≥digo y producci√≥n D1, manteniendo `Equipo_Local` y `Equipo_Visitante`.
+- Auditor√≠a y sincronizaci√≥n completa de los 94 partidos oficiales de la temporada frente a RFEVB (EsVoley: SM2, 1¬™ Masc., 1¬™ Fem.) y FVCyL (2¬™ Fem. Oro y 2¬™ Masc.), incluyendo los ajustes de `FVCL_2F003`, `FVCL_2M004_MES` (18:30) y `FVCL_2M005_MES` (15:30).
+- Actualizaci√≥n integral de `README.md`, `ARQUITECTURA_FRONTEND.md`, `docs/GUIA_VCV_PLAY.md`, `docs/RESUMEN_ARQUITECTURA_FANTASY_VCV.md`, `docs/instrucciones_excel.md`, `docs/PLAN_CORREO_RECUPERACION_Y_REGISTRO.md` y `docs/changelog.txt`, eliminando todos los emojis.
