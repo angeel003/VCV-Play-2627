@@ -5610,6 +5610,14 @@ export async function onRequestPost(context) {
 
         const normVenueCore = (s) => {
             let n = normText(s);
+            // Expandir abreviaturas españolas habituales
+            n = n.replace(/\bfdez\b/g, 'fernandez')
+                 .replace(/\bavda\b/g, 'avenida')
+                 .replace(/\bsta\b/g, 'santa')
+                 .replace(/\bsto\b/g, 'santo')
+                 .replace(/\bntra\b/g, 'nuestra')
+                 .replace(/\bsra\b/g, 'senora')
+                 .replace(/\buniv\b/g, 'universitario');
             // Quitar prefijos comunes de instalaciones para comparar el nombre real
             n = n.replace(/\b(polideportivo|pabellon|pab|p|municipal|campus|deportivo|colegio|pista|cdm|cp)\b/g, ' ')
                  .replace(/\s+/g, ' ')
@@ -5775,7 +5783,7 @@ export async function onRequestPost(context) {
                     const awayId = inc.meta && inc.meta.away_team;
                     const homeName = teamsMap[homeId] || '';
                     const awayName = teamsMap[awayId] || '';
-                    if (!homeName.toUpperCase().includes('VCV') && !awayName.toUpperCase().includes('VCV')) continue;
+                    if (!homeName || !awayName) continue;
 
                     const facId = inc.relationships && inc.relationships.facility && inc.relationships.facility.data && inc.relationships.facility.data.id;
                     const roundId = inc.relationships && inc.relationships.round && inc.relationships.round.data && inc.relationships.round.data.id;
@@ -5798,7 +5806,6 @@ export async function onRequestPost(context) {
                         roundName: roundInfo.name || '',
                         homeTeam: homeName,
                         awayTeam: awayName,
-                        isVcvHome: homeName.toUpperCase().includes('VCV'),
                         fed_ts: fedTs,
                         fed_fecha: fedFechaStr,
                         pabellon: facilitiesMap[facId] || '',
@@ -5811,7 +5818,23 @@ export async function onRequestPost(context) {
             }
 
             // 3. Cotejar todos los partidos de la tabla Ajustes
-            const fvclKeywords = ['palencia', 'maristas', 'inmaculada', 'avila', 'muralla', 'soria', 'duero', 'burgos', 'santodomingo', 'canada', 'aule', 'segovoley', 'salamanca', 'abanto'];
+            const getFvclTeamKey = (name) => {
+                const n = normText(name);
+                if (!n) return '';
+                if (n.includes('molina') || (n.includes('vcv') && n.includes('maria'))) return 'vcv_maria_molina';
+                if (n.includes('meseta')) return 'vcv_meseta';
+                if (n.includes('abanto') || n.includes('pegamo')) return 'pegamo_abanto';
+                if (n.includes('santo domingo') || n.includes('canada') || n.includes('sporting')) return 'sporting_soria';
+                if (n.includes('duero') || n.includes('soria')) return 'rio_duero';
+                if (n.includes('palencia')) return 'palencia';
+                if (n.includes('maristas') || n.includes('inmaculada')) return 'maristas';
+                if (n.includes('avila') || n.includes('muralla')) return 'avila';
+                if (n.includes('burgos') || n.includes('ubu')) return 'burgos';
+                if (n.includes('aule')) return 'aule';
+                if (n.includes('segovoley') || n.includes('segovia')) return 'segovoley';
+                if (n.includes('salamanca')) return 'salamanca';
+                return n.replace(/\s+/g, '');
+            };
             const nowMs = Date.now();
             const changes = [];
             let rfevbChecked = 0;
@@ -5869,27 +5892,15 @@ export async function onRequestPost(context) {
                     const candidates = fvclMatches[code] || [];
                     if (candidates.length === 0) continue;
 
-                    const dbRivalNorm = normText(m.rival).replace(/\s+/g, '');
-                    const key = fvclKeywords.find(k => dbRivalNorm.includes(k));
+                    const dbHomeName = isLocalDb ? (m.equipo_local || '') : (m.rival || '');
+                    const dbAwayName = isLocalDb ? (m.rival || '') : (m.equipo_local || '');
+                    const dbHomeKey = getFvclTeamKey(dbHomeName);
+                    const dbAwayKey = getFvclTeamKey(dbAwayName);
 
-                    let fMatch = candidates.find(f => {
-                        if (id === 'FVCL_2M001') return f.roundOrder === 1;
-                        if (id === 'FVCL_2M008') return f.roundOrder === 10;
-                        const otherName = normText(f.isVcvHome ? f.awayTeam : f.homeTeam).replace(/\s+/g, '');
-                        if (key && otherName.includes(key)) {
-                            return isLocalDb === f.isVcvHome;
-                        }
-                        return false;
-                    });
-
-                    // Fallback por coincidencia general si surgiera un rival nuevo
-                    if (!fMatch) {
-                        fMatch = candidates.find(f => {
-                            const otherName = normText(f.isVcvHome ? f.awayTeam : f.homeTeam);
-                            const rNorm = normText(m.rival);
-                            return isLocalDb === f.isVcvHome && rNorm && (otherName.includes(rNorm) || rNorm.includes(otherName));
-                        });
-                    }
+                    const fMatch = candidates.find(f =>
+                        getFvclTeamKey(f.homeTeam) === dbHomeKey &&
+                        getFvclTeamKey(f.awayTeam) === dbAwayKey
+                    );
 
                     if (!fMatch) continue;
                     fvclChecked++;
