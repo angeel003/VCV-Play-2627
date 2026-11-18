@@ -5647,9 +5647,15 @@ export async function onRequestPost(context) {
         };
 
         try {
-            const { results: dbRows } = await db.prepare(
-                'SELECT "ID_Partido", "Jornada_Eq", "Categoria", "Equipo_Local", "Rival", "Ubicacion", "Fecha", "timestamp", "Pabellon", "Estado" FROM "Ajustes" ORDER BY "timestamp" ASC'
-            ).all();
+            const [dbRowsRes, resOfRes] = await Promise.all([
+                db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
+                db.prepare('SELECT "ID Partido", "Sets Oficial" FROM "Resultados_Oficiales"').all()
+            ]);
+            const dbRows = (dbRowsRes && dbRowsRes.results) || [];
+            const resOfMap = {};
+            for (const ro of ((resOfRes && resOfRes.results) || [])) {
+                resOfMap[ro["ID Partido"]] = ro;
+            }
 
             // 7 peticiones en paralelo: 3 RFEVB (EsVoley) + 4 FVCyL (Leverade JSON API)
             const fetchJson = async (url) => {
@@ -5811,20 +5817,22 @@ export async function onRequestPost(context) {
             let rfevbChecked = 0;
             let fvclChecked = 0;
 
-            for (const row of (dbRows || [])) {
-                const id = row.ID_Partido || '';
-                const estado = String(row.Estado || '').toUpperCase();
-                const dbTs = Number(row.timestamp || 0);
-                const isPast = estado === 'CERRADO' || estado === 'FINALIZADO' || (dbTs > 0 && dbTs < nowMs - 12 * 3600 * 1000);
+            for (const rawRow of dbRows) {
+                const m = formatMatch(rawRow, resOfMap, null, false);
+                const id = m.id_partido || '';
+                const estado = String(m.estado || '').toUpperCase();
+                const hasOfficialResult = Boolean(m.oficial_sets && String(m.oficial_sets).trim() !== '');
+                const dbTs = Number(m.timestamp || 0);
+                const isPast = hasOfficialResult || estado === 'CERRADO' || estado === 'FINALIZADO' || (dbTs > 0 && dbTs < nowMs - 12 * 3600 * 1000);
                 if (!incluirPasados && isPast) continue;
 
-                const cat = row.Categoria || '';
-                const dbFechaStr = dbTs > 0 ? formatTsToMadridStr(dbTs) : (row.Fecha || 'Sin fecha');
-                const dbPabellon = String(row.Pabellon || '').trim();
-                const isLocalDb = String(row.Ubicacion || '').toUpperCase() === 'LOCAL';
+                const cat = m.categoria || '';
+                const dbFechaStr = dbTs > 0 ? formatTsToMadridStr(dbTs) : (rawRow.Fecha || 'Sin fecha');
+                const dbPabellon = String(m.pabellon || '').trim();
+                const isLocalDb = String(m.ubicacion || '').toUpperCase() === 'LOCAL';
                 const partidoLabel = isLocalDb
-                    ? `${row.Equipo_Local || ''} vs ${row.Rival || ''}`
-                    : `${row.Rival || ''} vs ${row.Equipo_Local || ''}`;
+                    ? `${m.equipo_local || ''} vs ${m.rival || ''}`
+                    : `${m.rival || ''} vs ${m.equipo_local || ''}`;
 
                 if (id.startsWith('RFEVB_')) {
                     const fed = rfevbMap.get(id);
@@ -5841,7 +5849,7 @@ export async function onRequestPost(context) {
                             id_partido: id,
                             federacion: 'RFEVB',
                             categoria: cat,
-                            jornada: row.Jornada_Eq || fed.jornada || '',
+                            jornada: m.jornada_eq || fed.jornada || '',
                             partido: partidoLabel,
                             db_fecha: dbFechaStr,
                             fed_fecha: fed.fed_fecha,
@@ -5861,7 +5869,7 @@ export async function onRequestPost(context) {
                     const candidates = fvclMatches[code] || [];
                     if (candidates.length === 0) continue;
 
-                    const dbRivalNorm = normText(row.Rival).replace(/\s+/g, '');
+                    const dbRivalNorm = normText(m.rival).replace(/\s+/g, '');
                     const key = fvclKeywords.find(k => dbRivalNorm.includes(k));
 
                     let fMatch = candidates.find(f => {
@@ -5878,7 +5886,7 @@ export async function onRequestPost(context) {
                     if (!fMatch) {
                         fMatch = candidates.find(f => {
                             const otherName = normText(f.isVcvHome ? f.awayTeam : f.homeTeam);
-                            const rNorm = normText(row.Rival);
+                            const rNorm = normText(m.rival);
                             return isLocalDb === f.isVcvHome && rNorm && (otherName.includes(rNorm) || rNorm.includes(otherName));
                         });
                     }
@@ -5896,7 +5904,7 @@ export async function onRequestPost(context) {
                             id_partido: id,
                             federacion: 'FVCyL',
                             categoria: cat,
-                            jornada: row.Jornada_Eq || String(fMatch.roundOrder || ''),
+                            jornada: m.jornada_eq || String(fMatch.roundOrder || ''),
                             partido: `${fMatch.homeTeam} vs ${fMatch.awayTeam}`,
                             db_fecha: dbFechaStr,
                             fed_fecha: fMatch.fed_fecha,
