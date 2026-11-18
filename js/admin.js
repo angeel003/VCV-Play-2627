@@ -4162,7 +4162,7 @@ window.cambiarAdminCategoria = function(catName, keepSearch = false) {
     if (infoText) {
         const descMap = {
             'usuarios': '👥 <b>Usuarios y Accesos:</b> Registro de cuentas, ligas asignadas, creación manual, contraseñas, permisos especiales y buzón de sugerencias.',
-            'partidos': '🏐 <b>Partidos y Competición:</b> Subir resultados de jornadas, gestión de plantilla y MVP de Superliga 2, y porras de aficionados.',
+            'partidos': '🏐 <b>Partidos y Competición:</b> Subir resultados de jornadas, gestión de plantilla y MVP de Superliga 2, porras de aficionados y comprobación de horarios oficiales (RFEVB y FVCyL).',
             'rankings': '❄️ <b>Rankings y Clasificaciones:</b> Control de congelación de fin de semana, descongelado inmediato y configuración de ligas activas.',
             'sistema': '⚙️ <b>Servidor y Sistema:</b> Modo mantenimiento web, monitor silencioso de accesos, sincronizaciones de servidor, pruebas push y optimización D1.',
             'todas': '📋 <b>Todas las herramientas:</b> Vista completa desplegada y agrupada por categorías temáticas.'
@@ -4243,3 +4243,333 @@ if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
         }
     });
 }
+
+// ============================================================================
+// VERIFICADOR DE HORARIOS OFICIALES (RFEVB EsVoley + FVCyL Leverade)
+// ============================================================================
+window._adminHorariosCache = [];
+
+function _escHorarioHtml(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function _actualizarBadgeYBotonHorarios() {
+    const pendientes = (window._adminHorariosCache || []).filter(c => !c._applied && (c.cambio_fecha_hora || c.cambio_pabellon));
+    const badge = document.getElementById('badgeCambiosHorariosAdmin');
+    const btnAll = document.getElementById('btnAplicarTodosHorariosFed');
+
+    if (badge) {
+        badge.style.display = 'inline-block';
+        if (pendientes.length > 0) {
+            badge.textContent = pendientes.length === 1 ? '1 cambio' : `${pendientes.length} cambios`;
+            badge.style.background = 'rgba(243, 156, 18, 0.25)';
+            badge.style.color = '#f5c542';
+            badge.style.border = '1px solid #f39c12';
+        } else {
+            badge.textContent = 'Al día';
+            badge.style.background = 'rgba(46, 204, 113, 0.2)';
+            badge.style.color = '#2ecc71';
+            badge.style.border = '1px solid #2ecc71';
+        }
+    }
+    if (btnAll) {
+        btnAll.style.display = pendientes.length > 0 ? 'flex' : 'none';
+    }
+}
+
+window._renderListaCambiosHorarios = function() {
+    const lista = document.getElementById('adminHorariosLista');
+    if (!lista) return;
+
+    const cambios = window._adminHorariosCache || [];
+    _actualizarBadgeYBotonHorarios();
+
+    if (cambios.length === 0) {
+        lista.innerHTML = `
+            <div style="background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 10px; padding: 14px; text-align: center; color: #2ecc71; font-size: 0.82rem; font-weight: 700;">
+                ✅ Todo al día: los horarios y pabellones coinciden con RFEVB y FVCyL.
+            </div>`;
+        return;
+    }
+
+    lista.innerHTML = cambios.map((c, idx) => {
+        const safeId = _escHorarioHtml(c.id_partido);
+        const fedColor = c.federacion === 'RFEVB' ? '#9b59b6' : '#3498db';
+        const isApplied = Boolean(c._applied);
+        const borderCol = isApplied ? 'rgba(46, 204, 113, 0.5)' : 'rgba(243, 156, 18, 0.45)';
+        const bgCol = isApplied ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0, 0, 0, 0.28)';
+
+        const tags = [];
+        tags.push(`<span style="background:${fedColor}22; color:${fedColor}; border:1px solid ${fedColor}66; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">${_escHorarioHtml(c.federacion)}</span>`);
+        if (c.categoria) tags.push(`<span style="background:rgba(255,255,255,0.08); color:var(--text-main); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">${_escHorarioHtml(c.categoria)}</span>`);
+        if (c.jornada) tags.push(`<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">J.${_escHorarioHtml(c.jornada)}</span>`);
+        if (c.es_canarias) tags.push(`<span style="background:rgba(241,196,15,0.18); color:#f1c40f; border:1px solid rgba(241,196,15,0.4); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">Canarias (+1h peninsular)</span>`);
+        if (c.postponed) tags.push(`<span style="background:rgba(231,76,60,0.2); color:#ff6b6b; border:1px solid #e74c3c; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">APLAZADO</span>`);
+        if (c.canceled) tags.push(`<span style="background:rgba(231,76,60,0.25); color:#ff6b6b; border:1px solid #e74c3c; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CANCELADO</span>`);
+
+        const fechaRow = c.cambio_fecha_hora ? `
+            <div style="background:rgba(243,156,18,0.1); border:1px solid rgba(243,156,18,0.3); border-radius:6px; padding:7px 9px; margin-top:6px; font-size:0.75rem;">
+                <label style="display:flex; align-items:flex-start; gap:7px; cursor:${isApplied ? 'default' : 'pointer'}; margin:0;">
+                    <input type="checkbox" id="chkHorarioFecha_${idx}" ${c.cambio_fecha_hora ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:800; color:#f5c542; margin-bottom:2px;">Cambio de fecha / hora</div>
+                        <div style="color:var(--text-muted);">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(c.db_fecha)}</span></div>
+                        <div style="color:var(--text-main);">Federación: <b style="color:#2ecc71;">${_escHorarioHtml(c.fed_fecha)}</b></div>
+                    </div>
+                </label>
+            </div>` : `
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px;">
+                Fecha y hora sin cambios: <b>${_escHorarioHtml(c.db_fecha)}</b>
+            </div>`;
+
+        const pabRow = c.cambio_pabellon ? `
+            <div style="background:rgba(52,152,219,0.1); border:1px solid rgba(52,152,219,0.3); border-radius:6px; padding:7px 9px; margin-top:6px; font-size:0.75rem;">
+                <label style="display:flex; align-items:flex-start; gap:7px; cursor:${isApplied ? 'default' : 'pointer'}; margin:0;">
+                    <input type="checkbox" id="chkHorarioPab_${idx}" ${c.cambio_pabellon ? 'checked' : ''} ${isApplied ? 'disabled' : ''} style="margin-top:2px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:800; color:#5dade2; margin-bottom:2px;">Cambio de pabellón</div>
+                        <div style="color:var(--text-muted);">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(c.db_pabellon)}</span></div>
+                        <div style="color:var(--text-main);">Federación: <b style="color:#2ecc71;">${_escHorarioHtml(c.fed_pabellon)}</b></div>
+                    </div>
+                </label>
+            </div>` : `
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
+                Pabellón sin cambios: <b>${_escHorarioHtml(c.db_pabellon)}</b>
+            </div>`;
+
+        const hasApplicable = c.cambio_fecha_hora || c.cambio_pabellon;
+        const actionBtnHtml = isApplied
+            ? `<div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(46,204,113,0.18); color:#2ecc71; font-size:0.75rem; font-weight:800; text-align:center;">✅ Actualizado en la base de datos</div>`
+            : (hasApplicable ? `
+                <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+                    <button type="button" id="btnApplyHorario_${idx}" onclick="window.adminAplicarCambioHorario(${idx})" style="padding:7px 13px; border-radius:7px; border:none; background:linear-gradient(135deg, #27ae60, #2ecc71); color:#000; font-size:0.76rem; font-weight:800; cursor:pointer;">
+                        Aplicar cambio
+                    </button>
+                </div>` : '');
+
+        return `
+            <div style="background:${bgCol}; border:1px solid ${borderCol}; border-radius:10px; padding:11px 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:5px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${tags.join('')}</div>
+                    <code style="font-size:0.68rem; color:var(--text-muted);">${safeId}</code>
+                </div>
+                <div style="font-size:0.86rem; font-weight:800; color:var(--text-main);">${_escHorarioHtml(c.partido)}</div>
+                ${fechaRow}
+                ${pabRow}
+                ${c.updated_at ? `<div style="font-size:0.66rem; color:var(--text-muted); margin-top:5px;">Última modificación en federación: ${_escHorarioHtml(c.updated_at)}</div>` : ''}
+                ${actionBtnHtml}
+            </div>`;
+    }).join('');
+};
+
+window.adminComprobarHorariosOficiales = async function() {
+    const btn = document.getElementById('btnComprobarHorariosFed');
+    const lista = document.getElementById('adminHorariosLista');
+    const resumen = document.getElementById('adminHorariosResumen');
+    const chkPasados = document.getElementById('chkHorariosIncluirPasados');
+    const incluirPasados = Boolean(chkPasados && chkPasados.checked);
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Consultando RFEVB y FVCyL...';
+    }
+    if (lista) {
+        lista.innerHTML = '<div style="text-align:center; padding:16px; font-size:0.78rem; color:var(--text-muted);">Consultando APIs oficiales de EsVoley (RFEVB) y Leverade (FVCyL)...</div>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_check_official_schedules',
+                usuario: currentUser,
+                password: currentPassword,
+                incluir_pasados: incluirPasados
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'No se pudieron consultar las federaciones.');
+        }
+
+        window._adminHorariosCache = Array.isArray(data.changes) ? data.changes : [];
+        const s = data.summary || {};
+
+        if (resumen) {
+            resumen.style.display = 'block';
+            const errHtml = (s.errors && s.errors.length > 0)
+                ? `<div style="margin-top:6px; color:#f39c12; font-size:0.72rem;">⚠️ Avisos de fuente: ${_escHorarioHtml(s.errors.join(' | '))}</div>`
+                : '';
+            resumen.innerHTML = `
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; align-items:center;">
+                    <span>Revisados <b>${s.total_checked || 0}</b> partidos (RFEVB: <b>${s.rfevb_checked || 0}</b> · FVCyL: <b>${s.fvcl_checked || 0}</b>)</span>
+                    <span style="color:var(--text-muted); font-size:0.7rem;">${_escHorarioHtml(data.checked_at || '')}</span>
+                </div>
+                ${errHtml}`;
+        }
+
+        window._renderListaCambiosHorarios();
+    } catch (err) {
+        if (lista) {
+            lista.innerHTML = `<div style="background:rgba(231,76,60,0.14); border:1px solid #e74c3c; border-radius:8px; padding:12px; color:#ff6b6b; font-size:0.78rem;">Error al comprobar horarios: ${_escHorarioHtml(err.message)}</div>`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '🔍 Comprobar RFEVB + FVCyL ahora';
+        }
+    }
+};
+
+window.adminAplicarCambioHorario = async function(idx) {
+    const item = (window._adminHorariosCache || [])[idx];
+    if (!item || item._applied) return;
+
+    const chkF = document.getElementById(`chkHorarioFecha_${idx}`);
+    const chkP = document.getElementById(`chkHorarioPab_${idx}`);
+    const aplicarFecha = Boolean(chkF ? chkF.checked : item.cambio_fecha_hora);
+    const aplicarPab = Boolean(chkP ? chkP.checked : item.cambio_pabellon);
+
+    if (!aplicarFecha && !aplicarPab) {
+        alert('Marca al menos Fecha/Hora o Pabellón para aplicar el cambio.');
+        return;
+    }
+
+    const btn = document.getElementById(`btnApplyHorario_${idx}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_apply_official_schedule_changes',
+                usuario: currentUser,
+                password: currentPassword,
+                cambios: [{
+                    id_partido: item.id_partido,
+                    fecha: item.fed_fecha,
+                    timestamp: item.fed_timestamp,
+                    pabellon: item.fed_pabellon,
+                    aplicar_fecha: aplicarFecha,
+                    aplicar_pabellon: aplicarPab
+                }]
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'Error guardando el cambio.');
+        }
+
+        item._applied = true;
+        // Sincronizar también en memoria local si los partidos están cargados
+        if (window.appData) {
+            const syncArr = (arr) => {
+                if (!Array.isArray(arr)) return;
+                arr.forEach(p => {
+                    if (p.id_partido === item.id_partido) {
+                        if (aplicarFecha && item.fed_timestamp > 0) p.timestamp = item.fed_timestamp;
+                        if (aplicarPab && item.fed_pabellon) p.pabellon = item.fed_pabellon;
+                    }
+                });
+            };
+            syncArr(window.appData.todos_partidos);
+            syncArr(window.appData.equipos);
+        }
+
+        window._renderListaCambiosHorarios();
+    } catch (err) {
+        alert('Error aplicando cambio: ' + err.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Aplicar cambio';
+        }
+    }
+};
+
+window.adminAplicarTodosCambiosHorarios = async function() {
+    const cache = window._adminHorariosCache || [];
+    const payload = [];
+    const idxs = [];
+
+    cache.forEach((item, idx) => {
+        if (item._applied) return;
+        const chkF = document.getElementById(`chkHorarioFecha_${idx}`);
+        const chkP = document.getElementById(`chkHorarioPab_${idx}`);
+        const aplicarFecha = Boolean(chkF ? chkF.checked : item.cambio_fecha_hora);
+        const aplicarPab = Boolean(chkP ? chkP.checked : item.cambio_pabellon);
+        if (aplicarFecha || aplicarPab) {
+            idxs.push({ idx, aplicarFecha, aplicarPab });
+            payload.push({
+                id_partido: item.id_partido,
+                fecha: item.fed_fecha,
+                timestamp: item.fed_timestamp,
+                pabellon: item.fed_pabellon,
+                aplicar_fecha: aplicarFecha,
+                aplicar_pabellon: aplicarPab
+            });
+        }
+    });
+
+    if (payload.length === 0) return;
+
+    const btnAll = document.getElementById('btnAplicarTodosHorariosFed');
+    if (btnAll) {
+        btnAll.disabled = true;
+        btnAll.textContent = `⏳ Aplicando (${payload.length})...`;
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_apply_official_schedule_changes',
+                usuario: currentUser,
+                password: currentPassword,
+                cambios: payload
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'Error aplicando cambios.');
+        }
+
+        idxs.forEach(({ idx, aplicarFecha, aplicarPab }) => {
+            const item = cache[idx];
+            item._applied = true;
+            if (window.appData) {
+                const syncArr = (arr) => {
+                    if (!Array.isArray(arr)) return;
+                    arr.forEach(p => {
+                        if (p.id_partido === item.id_partido) {
+                            if (aplicarFecha && item.fed_timestamp > 0) p.timestamp = item.fed_timestamp;
+                            if (aplicarPab && item.fed_pabellon) p.pabellon = item.fed_pabellon;
+                        }
+                    });
+                };
+                syncArr(window.appData.todos_partidos);
+                syncArr(window.appData.equipos);
+            }
+        });
+
+        window._renderListaCambiosHorarios();
+    } catch (err) {
+        alert('Error aplicando cambios: ' + err.message);
+    } finally {
+        if (btnAll) {
+            btnAll.disabled = false;
+            btnAll.innerHTML = '✅ Aplicar todos los cambios';
+        }
+    }
+};

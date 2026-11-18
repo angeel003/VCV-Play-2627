@@ -5575,5 +5575,426 @@ export async function onRequestPost(context) {
         }
     }
 
+    // ========================================================================
+    // VERIFICADOR DE HORARIOS OFICIALES (RFEVB EsVoley + FVCyL Leverade)
+    // ========================================================================
+    if (action === 'admin_check_official_schedules') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") {
+            return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        }
+
+        const incluirPasados = Boolean(body.incluir_pasados);
+
+        const formatTsToMadridStr = (ts) => {
+            if (!ts || isNaN(ts)) return 'Sin fecha';
+            const d = new Date(Number(ts));
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/Madrid',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).formatToParts(d);
+            const get = (t) => (parts.find(p => p.type === t) || {}).value || '';
+            const hh = get('hour') === '24' ? '00' : get('hour');
+            return `${get('day')}/${get('month')}/${get('year')} ${hh}:${get('minute')}`;
+        };
+
+        const normText = (s) => String(s || '')
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const normVenueCore = (s) => {
+            let n = normText(s);
+            // Quitar prefijos comunes de instalaciones para comparar el nombre real
+            n = n.replace(/\b(polideportivo|pabellon|pab|p|municipal|campus|deportivo|colegio|pista|cdm|cp)\b/g, ' ')
+                 .replace(/\s+/g, ' ')
+                 .trim();
+            return n;
+        };
+
+        const isVenueDifferent = (dbPab, fedPab) => {
+            const fedClean = String(fedPab || '').replace(/,\s*$/, '').trim();
+            if (!fedClean) return false;
+            const dbClean = String(dbPab || '').replace(/,\s*$/, '').trim();
+            if (!dbClean || normText(dbClean) === 'por definir' || normText(dbClean) === 'sin definir') return true;
+            const nDb = normText(dbClean);
+            const nFed = normText(fedClean);
+            if (nDb === nFed || nDb.includes(nFed) || nFed.includes(nDb)) return false;
+            const cDb = normVenueCore(dbClean);
+            const cFed = normVenueCore(fedClean);
+            if (!cDb || !cFed) return false;
+            if (cDb === cFed || cDb.includes(cFed) || cFed.includes(cDb)) return false;
+            // Comparación por tokens clave (al menos el 70% de tokens significativos del más corto coinciden)
+            const tDb = cDb.split(' ').filter(w => w.length >= 3);
+            const tFed = cFed.split(' ').filter(w => w.length >= 3);
+            if (tDb.length > 0 && tFed.length > 0) {
+                const shorter = tDb.length <= tFed.length ? tDb : tFed;
+                const longer = tDb.length <= tFed.length ? tFed : tDb;
+                let hits = 0;
+                for (const w of shorter) {
+                    if (longer.some(lw => lw === w || (w.length >= 5 && lw.length >= 5 && (lw.includes(w.slice(0, 5)) || w.includes(lw.slice(0, 5)))))) {
+                        hits++;
+                    }
+                }
+                if (hits / shorter.length >= 0.7) return false;
+            }
+            return true;
+        };
+
+        try {
+            const { results: dbRows } = await db.prepare(
+                'SELECT "ID_Partido", "Jornada_Eq", "Categoria", "Equipo_Local", "Rival", "Ubicacion", "Fecha", "timestamp", "Pabellon", "Estado" FROM "Ajustes" ORDER BY "timestamp" ASC'
+            ).all();
+
+            // 7 peticiones en paralelo: 3 RFEVB (EsVoley) + 4 FVCyL (Leverade JSON API)
+            const fetchJson = async (url) => {
+                const r = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'VCVPlay-ScheduleCheck/1.0' } });
+                if (!r.ok) throw new Error(`HTTP ${r.status} en ${url}`);
+                return await r.json();
+            };
+
+            const [
+                rSm2, r1M, r1F,
+                rF2Teams, rF2Group,
+                rM2Teams, rM2Group
+            ] = await Promise.allSettled([
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=87'),
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=100'),
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=237'),
+                fetchJson('https://api.leverade.com/tournaments/1340439?include=teams'),
+                fetchJson('https://api.leverade.com/groups/3714977?include=rounds.matches.facility'),
+                fetchJson('https://api.leverade.com/tournaments/1340440?include=teams'),
+                fetchJson('https://api.leverade.com/groups/3706780?include=rounds.matches.facility')
+            ]);
+
+            const sourceErrors = [];
+
+            // 1. Indexar partidos RFEVB por ID ('RFEVB_' + id)
+            const rfevbMap = new Map();
+            const rfevbSources = [
+                { label: 'RFEVB SM2', res: rSm2 },
+                { label: 'RFEVB 1ª Masc.', res: r1M },
+                { label: 'RFEVB 1ª Fem.', res: r1F }
+            ];
+            for (const src of rfevbSources) {
+                if (src.res.status !== 'fulfilled') {
+                    sourceErrors.push(`${src.label}: ${src.res.reason ? src.res.reason.message : 'Error de red'}`);
+                    continue;
+                }
+                const jornadas = (src.res.value && src.res.value.content) || [];
+                for (const j of jornadas) {
+                    for (const p of (j.partidos || [])) {
+                        const rawFecha = String(p.fecha || '').trim(); // DD/MM/YYYY
+                        const rawHora = String(p.hora || '').trim();   // HH:mm o "12:00 (13:00 en la Península)"
+                        const penMatch = rawHora.match(/\((\d{1,2}:\d{2})\s*en\s*la\s*pen[ií]nsula\)/i);
+                        const baseMatch = rawHora.match(/(\d{1,2}:\d{2})/);
+                        const esCanarias = Boolean(penMatch);
+                        const horaFinal = penMatch ? penMatch[1].padStart(5, '0') : (baseMatch ? baseMatch[1].padStart(5, '0') : '');
+
+                        let fedTs = 0;
+                        let fedFechaStr = 'Sin fecha';
+                        if (rawFecha && horaFinal) {
+                            const fParts = rawFecha.split('/').map(Number);
+                            const hParts = horaFinal.split(':').map(Number);
+                            if (fParts.length === 3 && hParts.length === 2 && !fParts.some(isNaN) && !hParts.some(isNaN)) {
+                                let [d, mo, y] = fParts;
+                                let [hh, mm] = hParts;
+                                // Por seguridad si un partido en Canarias empezara a las 23:xx local (00:xx peninsular del día siguiente)
+                                if (esCanarias && baseMatch) {
+                                    const localH = parseInt(baseMatch[1].split(':')[0], 10);
+                                    if (localH >= 23 && hh === 0) {
+                                        const nextDay = new Date(Date.UTC(y, mo - 1, d + 1));
+                                        y = nextDay.getUTCFullYear();
+                                        mo = nextDay.getUTCMonth() + 1;
+                                        d = nextDay.getUTCDate();
+                                    }
+                                }
+                                fedTs = getMadridTimestamp(y, mo - 1, d, hh, mm);
+                                fedFechaStr = formatTsToMadridStr(fedTs);
+                            }
+                        }
+                        rfevbMap.set('RFEVB_' + p.id, {
+                            id: 'RFEVB_' + p.id,
+                            jornada: j.numero,
+                            fed_fecha: fedFechaStr,
+                            fed_ts: fedTs,
+                            pabellon: String(p.pabellon || '').trim(),
+                            es_canarias: esCanarias,
+                            raw_hora: rawHora,
+                            local: p.nombre_equipo_local || '',
+                            visitante: p.nombre_equipo_visitante || ''
+                        });
+                    }
+                }
+            }
+
+            // 2. Parsear partidos FVCyL (2ª Fem. Oro y 2ª Masc.)
+            const fvclMatches = { '2F': [], '2M': [] };
+            const fvclSources = [
+                { code: '2F', label: 'FVCyL 2ª Fem. Oro', tRes: rF2Teams, gRes: rF2Group },
+                { code: '2M', label: 'FVCyL 2ª Masc.', tRes: rM2Teams, gRes: rM2Group }
+            ];
+            for (const src of fvclSources) {
+                if (src.tRes.status !== 'fulfilled' || src.gRes.status !== 'fulfilled') {
+                    const errMsg = src.tRes.status !== 'fulfilled'
+                        ? (src.tRes.reason && src.tRes.reason.message)
+                        : (src.gRes.reason && src.gRes.reason.message);
+                    sourceErrors.push(`${src.label}: ${errMsg || 'Error de red'}`);
+                    continue;
+                }
+                const teamsMap = {};
+                for (const inc of ((src.tRes.value && src.tRes.value.included) || [])) {
+                    if (inc.type === 'team') teamsMap[inc.id] = (inc.attributes && inc.attributes.name) || '';
+                }
+                const facilitiesMap = {};
+                const roundsMap = {};
+                const gIncluded = (src.gRes.value && src.gRes.value.included) || [];
+                for (const inc of gIncluded) {
+                    if (inc.type === 'facility' && inc.attributes) {
+                        const fn = String(inc.attributes.name || '').replace(/,\s*$/, '').trim();
+                        const fc = String(inc.attributes.city || '').trim();
+                        facilitiesMap[inc.id] = fc && !normText(fn).includes(normText(fc)) ? `${fn}, ${fc}` : fn;
+                    } else if (inc.type === 'round' && inc.attributes) {
+                        roundsMap[inc.id] = { order: inc.attributes.order, name: inc.attributes.name };
+                    }
+                }
+                for (const inc of gIncluded) {
+                    if (inc.type !== 'match' || !inc.attributes) continue;
+                    const homeId = inc.meta && inc.meta.home_team;
+                    const awayId = inc.meta && inc.meta.away_team;
+                    const homeName = teamsMap[homeId] || '';
+                    const awayName = teamsMap[awayId] || '';
+                    if (!homeName.toUpperCase().includes('VCV') && !awayName.toUpperCase().includes('VCV')) continue;
+
+                    const facId = inc.relationships && inc.relationships.facility && inc.relationships.facility.data && inc.relationships.facility.data.id;
+                    const roundId = inc.relationships && inc.relationships.round && inc.relationships.round.data && inc.relationships.round.data.id;
+                    const roundInfo = roundsMap[roundId] || {};
+
+                    const rawDt = inc.attributes.datetime || inc.attributes.date || '';
+                    let fedTs = 0;
+                    let fedFechaStr = 'Sin fecha';
+                    if (rawDt) {
+                        const parsed = Date.parse(String(rawDt).replace(' ', 'T') + 'Z');
+                        if (!isNaN(parsed)) {
+                            fedTs = parsed;
+                            fedFechaStr = formatTsToMadridStr(parsed);
+                        }
+                    }
+
+                    fvclMatches[src.code].push({
+                        matchId: inc.id,
+                        roundOrder: roundInfo.order || 0,
+                        roundName: roundInfo.name || '',
+                        homeTeam: homeName,
+                        awayTeam: awayName,
+                        isVcvHome: homeName.toUpperCase().includes('VCV'),
+                        fed_ts: fedTs,
+                        fed_fecha: fedFechaStr,
+                        pabellon: facilitiesMap[facId] || '',
+                        finished: Boolean(inc.attributes.finished),
+                        postponed: Boolean(inc.attributes.postponed),
+                        canceled: Boolean(inc.attributes.canceled),
+                        updated_at: inc.attributes.updated_at || ''
+                    });
+                }
+            }
+
+            // 3. Cotejar todos los partidos de la tabla Ajustes
+            const fvclKeywords = ['palencia', 'maristas', 'inmaculada', 'avila', 'muralla', 'soria', 'duero', 'burgos', 'santodomingo', 'canada', 'aule', 'segovoley', 'salamanca', 'abanto'];
+            const nowMs = Date.now();
+            const changes = [];
+            let rfevbChecked = 0;
+            let fvclChecked = 0;
+
+            for (const row of (dbRows || [])) {
+                const id = row.ID_Partido || '';
+                const estado = String(row.Estado || '').toUpperCase();
+                const dbTs = Number(row.timestamp || 0);
+                const isPast = estado === 'CERRADO' || estado === 'FINALIZADO' || (dbTs > 0 && dbTs < nowMs - 12 * 3600 * 1000);
+                if (!incluirPasados && isPast) continue;
+
+                const cat = row.Categoria || '';
+                const dbFechaStr = dbTs > 0 ? formatTsToMadridStr(dbTs) : (row.Fecha || 'Sin fecha');
+                const dbPabellon = String(row.Pabellon || '').trim();
+                const isLocalDb = String(row.Ubicacion || '').toUpperCase() === 'LOCAL';
+                const partidoLabel = isLocalDb
+                    ? `${row.Equipo_Local || ''} vs ${row.Rival || ''}`
+                    : `${row.Rival || ''} vs ${row.Equipo_Local || ''}`;
+
+                if (id.startsWith('RFEVB_')) {
+                    const fed = rfevbMap.get(id);
+                    if (!fed) continue;
+                    rfevbChecked++;
+
+                    const cambioFechaHora = fed.fed_ts > 0
+                        ? (dbTs <= 0 || Math.abs(fed.fed_ts - dbTs) >= 60000 || dbFechaStr !== fed.fed_fecha)
+                        : false;
+                    const cambioPabellon = isVenueDifferent(dbPabellon, fed.pabellon);
+
+                    if (cambioFechaHora || cambioPabellon) {
+                        changes.push({
+                            id_partido: id,
+                            federacion: 'RFEVB',
+                            categoria: cat,
+                            jornada: row.Jornada_Eq || fed.jornada || '',
+                            partido: partidoLabel,
+                            db_fecha: dbFechaStr,
+                            fed_fecha: fed.fed_fecha,
+                            fed_timestamp: fed.fed_ts,
+                            db_pabellon: dbPabellon || 'Por definir',
+                            fed_pabellon: fed.pabellon || dbPabellon,
+                            cambio_fecha_hora: cambioFechaHora,
+                            cambio_pabellon: cambioPabellon,
+                            es_canarias: fed.es_canarias,
+                            postponed: false,
+                            canceled: false,
+                            updated_at: ''
+                        });
+                    }
+                } else if (id.startsWith('FVCL_')) {
+                    const code = cat.toLowerCase().includes('fem') ? '2F' : '2M';
+                    const candidates = fvclMatches[code] || [];
+                    if (candidates.length === 0) continue;
+
+                    const dbRivalNorm = normText(row.Rival).replace(/\s+/g, '');
+                    const key = fvclKeywords.find(k => dbRivalNorm.includes(k));
+
+                    let fMatch = candidates.find(f => {
+                        if (id === 'FVCL_2M001') return f.roundOrder === 1;
+                        if (id === 'FVCL_2M008') return f.roundOrder === 10;
+                        const otherName = normText(f.isVcvHome ? f.awayTeam : f.homeTeam).replace(/\s+/g, '');
+                        if (key && otherName.includes(key)) {
+                            return isLocalDb === f.isVcvHome;
+                        }
+                        return false;
+                    });
+
+                    // Fallback por coincidencia general si surgiera un rival nuevo
+                    if (!fMatch) {
+                        fMatch = candidates.find(f => {
+                            const otherName = normText(f.isVcvHome ? f.awayTeam : f.homeTeam);
+                            const rNorm = normText(row.Rival);
+                            return isLocalDb === f.isVcvHome && rNorm && (otherName.includes(rNorm) || rNorm.includes(otherName));
+                        });
+                    }
+
+                    if (!fMatch) continue;
+                    fvclChecked++;
+
+                    const cambioFechaHora = fMatch.fed_ts > 0
+                        ? (dbTs <= 0 || Math.abs(fMatch.fed_ts - dbTs) >= 60000 || dbFechaStr !== fMatch.fed_fecha)
+                        : false;
+                    const cambioPabellon = isVenueDifferent(dbPabellon, fMatch.pabellon);
+
+                    if (cambioFechaHora || cambioPabellon || fMatch.postponed || fMatch.canceled) {
+                        changes.push({
+                            id_partido: id,
+                            federacion: 'FVCyL',
+                            categoria: cat,
+                            jornada: row.Jornada_Eq || String(fMatch.roundOrder || ''),
+                            partido: `${fMatch.homeTeam} vs ${fMatch.awayTeam}`,
+                            db_fecha: dbFechaStr,
+                            fed_fecha: fMatch.fed_fecha,
+                            fed_timestamp: fMatch.fed_ts,
+                            db_pabellon: dbPabellon || 'Por definir',
+                            fed_pabellon: fMatch.pabellon || dbPabellon,
+                            cambio_fecha_hora: cambioFechaHora,
+                            cambio_pabellon: cambioPabellon,
+                            es_canarias: false,
+                            postponed: fMatch.postponed,
+                            canceled: fMatch.canceled,
+                            updated_at: fMatch.updated_at || ''
+                        });
+                    }
+                }
+            }
+
+            return jsonResponse({
+                status: 'success',
+                checked_at: formatTsToMadridStr(Date.now()),
+                incluir_pasados: incluirPasados,
+                summary: {
+                    total_checked: rfevbChecked + fvclChecked,
+                    rfevb_checked: rfevbChecked,
+                    fvcl_checked: fvclChecked,
+                    changes_count: changes.length,
+                    errors: sourceErrors
+                },
+                changes
+            });
+        } catch (e) {
+            return jsonResponse({ status: 'error', message: 'Error al consultar federaciones: ' + e.message }, 500);
+        }
+    }
+
+    if (action === 'admin_apply_official_schedule_changes') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") {
+            return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        }
+
+        const cambios = Array.isArray(body.cambios) ? body.cambios : [];
+        if (cambios.length === 0) {
+            return jsonResponse({ status: 'error', message: 'No se han enviado cambios para aplicar.' }, 400);
+        }
+
+        try {
+            const stmts = [];
+            const appliedIds = [];
+
+            for (const c of cambios) {
+                const idPartido = String(c.id_partido || '').trim();
+                if (!idPartido) continue;
+
+                const setCols = [];
+                const bindVals = [];
+
+                if (c.aplicar_fecha && c.fecha && Number(c.timestamp) > 0) {
+                    setCols.push('"Fecha" = ?', '"timestamp" = ?');
+                    bindVals.push(String(c.fecha).trim(), Number(c.timestamp));
+                }
+                if (c.aplicar_pabellon && c.pabellon && String(c.pabellon).trim()) {
+                    setCols.push('"Pabellon" = ?');
+                    bindVals.push(String(c.pabellon).trim());
+                }
+
+                if (setCols.length > 0) {
+                    bindVals.push(idPartido);
+                    stmts.push(db.prepare(`UPDATE "Ajustes" SET ${setCols.join(', ')} WHERE "ID_Partido" = ?`).bind(...bindVals));
+                    appliedIds.push(idPartido);
+                }
+            }
+
+            if (stmts.length === 0) {
+                return jsonResponse({ status: 'error', message: 'Ningún cambio válido para actualizar.' }, 400);
+            }
+
+            await flushBatch(db, stmts);
+
+            // Invalidar caché relacionada para que los usuarios vean los nuevos horarios de inmediato
+            try {
+                await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
+            } catch (ce) {}
+
+            return jsonResponse({
+                status: 'success',
+                updated: appliedIds.length,
+                applied_ids: appliedIds,
+                message: appliedIds.length === 1
+                    ? `Partido ${appliedIds[0]} actualizado con los datos oficiales de la federación.`
+                    : `Se han actualizado ${appliedIds.length} partidos con los datos oficiales de la federación.`
+            });
+        } catch (e) {
+            return jsonResponse({ status: 'error', message: 'Error aplicando cambios en BD: ' + e.message }, 500);
+        }
+    }
+
     return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
 }
