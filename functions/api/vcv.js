@@ -5744,7 +5744,7 @@ export async function onRequestPost(context) {
                             raw_hora: rawHora,
                             local: p.equipo_local || p.nombre_equipo_local || '',
                             visitante: p.equipo_visitante || p.nombre_equipo_visitante || '',
-                            postponed: Boolean(p.esAplazado || p.fechaAplazada),
+                            postponed: Boolean(p.esAplazado),
                             canceled: Boolean(p.esSuspendido)
                         });
                     }
