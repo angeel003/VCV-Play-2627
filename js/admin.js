@@ -4609,3 +4609,317 @@ window.adminAplicarTodosCambiosHorarios = async function() {
         }
     }
 };
+
+// ========================================================================
+// VERIFICADOR DE RESULTADOS OFICIALES (RFEVB EsVoley + FVCyL Leverade)
+// ========================================================================
+window._adminResultadosCache = [];
+
+function _actualizarBadgeYBotonResultados() {
+    const pendientes = (window._adminResultadosCache || []).filter(r => !r._applied);
+    const badge = document.getElementById('badgeResultadosAdmin');
+    const btnAll = document.getElementById('btnAplicarTodosResultadosFed');
+
+    if (badge) {
+        badge.style.display = 'inline-block';
+        if (pendientes.length > 0) {
+            badge.textContent = pendientes.length === 1 ? '1 pendiente' : `${pendientes.length} pendientes`;
+            badge.style.background = 'rgba(46, 204, 113, 0.25)';
+            badge.style.color = '#2ecc71';
+            badge.style.border = '1px solid #2ecc71';
+        } else {
+            badge.textContent = 'Al día';
+            badge.style.background = 'rgba(255, 255, 255, 0.08)';
+            badge.style.color = 'var(--text-muted)';
+            badge.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+        }
+    }
+    if (btnAll) {
+        btnAll.style.display = pendientes.length > 0 ? 'flex' : 'none';
+        if (pendientes.length > 0) {
+            btnAll.innerHTML = `⚡ Aplicar todos los resultados (${pendientes.length})`;
+        }
+    }
+}
+
+window._renderListaResultadosOficiales = function() {
+    const lista = document.getElementById('adminResultadosLista');
+    if (!lista) return;
+
+    const items = window._adminResultadosCache || [];
+    _actualizarBadgeYBotonResultados();
+
+    if (items.length === 0) {
+        lista.innerHTML = `
+            <div style="background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.4); border-radius: 10px; padding: 14px; text-align: center; color: #2ecc71; font-size: 0.82rem; font-weight: 700;">
+                ✅ Todos los resultados coinciden o no hay partidos finalizados pendientes de anotar.
+            </div>`;
+        return;
+    }
+
+    lista.innerHTML = items.map((r, idx) => {
+        const safeId = _escHorarioHtml(r.id_partido);
+        const fedColor = r.federacion === 'RFEVB' ? '#9b59b6' : '#3498db';
+        const isApplied = Boolean(r._applied);
+        const isNuevo = r.tipo_diferencia === 'NUEVO';
+        const isCorrec = r.tipo_diferencia === 'CORRECCION';
+        const isSwapped = Boolean(r.campo_invertido);
+
+        const borderCol = isApplied
+            ? 'rgba(46, 204, 113, 0.5)'
+            : (isNuevo ? 'rgba(46, 204, 113, 0.45)' : 'rgba(243, 156, 18, 0.45)');
+        const bgCol = isApplied ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0, 0, 0, 0.28)';
+
+        const tags = [];
+        tags.push(`<span style="background:${fedColor}22; color:${fedColor}; border:1px solid ${fedColor}66; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">${_escHorarioHtml(r.federacion)}</span>`);
+        if (r.categoria) tags.push(`<span style="background:rgba(255,255,255,0.08); color:var(--text-main); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">${_escHorarioHtml(r.categoria)}</span>`);
+        if (r.jornada) tags.push(`<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">J.${_escHorarioHtml(r.jornada)}</span>`);
+        if (isNuevo) tags.push(`<span style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">NUEVO RESULTADO</span>`);
+        if (isCorrec) tags.push(`<span style="background:rgba(243,156,18,0.22); color:#f5c542; border:1px solid #f39c12; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CORRECCIÓN</span>`);
+        if (isSwapped) tags.push(`<span style="background:rgba(155,89,182,0.22); color:#d2a8ff; border:1px solid #9b59b6; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CAMPO INVERTIDO</span>`);
+
+        const setsComparisonHtml = `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:8px 10px; margin-top:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Resultado (Sets):</span>
+                    <span style="font-size:0.88rem; font-weight:900; color:#2ecc71; background:rgba(46,204,113,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(46,204,113,0.3);">${_escHorarioHtml(r.fed_sets)}</span>
+                </div>
+                ${r.db_sets ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(r.db_sets)}</span></div>` : '<div style="font-size:0.7rem; color:#f39c12; margin-bottom:4px;">BD actual: Sin resultado registrado</div>'}
+                
+                <div style="margin-top:6px;">
+                    <div style="font-size:0.73rem; color:var(--text-muted); font-weight:600; margin-bottom:2px;">Parciales:</div>
+                    <div style="font-size:0.78rem; color:var(--text-main); font-weight:700; word-break:break-word;">${_escHorarioHtml(r.fed_parciales)}</div>
+                    ${r.db_parciales && r.parciales_diferentes ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(r.db_parciales)}</span></div>` : ''}
+                </div>
+            </div>`;
+
+        const linksHtml = [];
+        if (r.acta_url) {
+            linksHtml.push(`<a href="${_escHorarioHtml(r.acta_url)}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; color:#5dade2; text-decoration:none; padding:3px 7px; border-radius:4px; background:rgba(52,152,219,0.15); border:1px solid rgba(52,152,219,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Ver Acta Oficial</a>`);
+        }
+        if (r.streaming) {
+            linksHtml.push(`<a href="${_escHorarioHtml(r.streaming)}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; color:#e67e22; text-decoration:none; padding:3px 7px; border-radius:4px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> Streaming</a>`);
+        }
+
+        const actionBtnHtml = isApplied
+            ? `<div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(46,204,113,0.18); color:#2ecc71; font-size:0.75rem; font-weight:800; text-align:center;">✅ Resultado aplicado y partido cerrado</div>`
+            : `
+                <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">${linksHtml.join('')}</div>
+                    <button type="button" id="btnApplyRes_${idx}" onclick="window.adminAplicarResultadoOficial(${idx})" style="padding:7px 13px; border-radius:7px; border:none; background:linear-gradient(135deg, #1abc9c, #2ecc71); color:#000; font-size:0.76rem; font-weight:800; cursor:pointer; box-shadow: 0 2px 6px rgba(46,204,113,0.3);">
+                        Aplicar resultado
+                    </button>
+                </div>`;
+
+        return `
+            <div style="background:${bgCol}; border:1px solid ${borderCol}; border-radius:10px; padding:11px 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:5px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${tags.join('')}</div>
+                    <code style="font-size:0.68rem; color:var(--text-muted);">${safeId}</code>
+                </div>
+                <div style="font-size:0.86rem; font-weight:800; color:var(--text-main);">${_escHorarioHtml(r.partido)}</div>
+                ${setsComparisonHtml}
+                ${actionBtnHtml}
+            </div>`;
+    }).join('');
+};
+
+window.adminComprobarResultadosOficiales = async function() {
+    const btn = document.getElementById('btnComprobarResultadosFed');
+    const lista = document.getElementById('adminResultadosLista');
+    const resumen = document.getElementById('adminResultadosResumen');
+    const chkSoloPend = document.getElementById('chkResultadosSoloPendientes');
+    const soloPendientes = Boolean(chkSoloPend ? chkSoloPend.checked : true);
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Comprobando actas y marcadores...';
+    }
+    if (lista) {
+        lista.innerHTML = '<div style="text-align:center; padding:16px; font-size:0.78rem; color:var(--text-muted);">Consultando marcadores y actas oficiales de EsVoley (RFEVB) y Leverade (FVCyL)...</div>';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_check_official_results',
+                usuario: currentUser,
+                password: currentPassword,
+                solo_pendientes: soloPendientes
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'No se pudieron consultar los resultados oficiales.');
+        }
+
+        window._adminResultadosCache = Array.isArray(data.results) ? data.results : [];
+        const s = data.summary || {};
+
+        if (resumen) {
+            resumen.style.display = 'block';
+            const errHtml = (s.errors && s.errors.length > 0)
+                ? `<div style="margin-top:6px; color:#f39c12; font-size:0.72rem;">⚠️ Avisos de fuente: ${_escHorarioHtml(s.errors.join(' | '))}</div>`
+                : '';
+            resumen.innerHTML = `
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; align-items:center;">
+                    <span>Revisados <b>${s.total_checked || 0}</b> partidos · Encontrados <b>${s.results_found || 0}</b> resultados (${s.new_count || 0} nuevos · ${s.correction_count || 0} correcciones)</span>
+                    <span style="color:var(--text-muted); font-size:0.7rem;">${_escHorarioHtml(data.checked_at || '')}</span>
+                </div>
+                ${errHtml}`;
+        }
+
+        window._renderListaResultadosOficiales();
+    } catch (err) {
+        if (lista) {
+            lista.innerHTML = `<div style="background:rgba(231,76,60,0.14); border:1px solid #e74c3c; border-radius:8px; padding:12px; color:#ff6b6b; font-size:0.78rem;">Error al comprobar resultados oficiales: ${_escHorarioHtml(err.message)}</div>`;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '🔍 Comprobar Resultados Oficiales ahora';
+        }
+    }
+};
+
+window.adminAplicarResultadoOficial = async function(idx) {
+    const item = (window._adminResultadosCache || [])[idx];
+    if (!item || item._applied) return;
+
+    const btn = document.getElementById(`btnApplyRes_${idx}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+    }
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_apply_official_results',
+                usuario: currentUser,
+                password: currentPassword,
+                resultados: [{
+                    id_partido: item.id_partido,
+                    sets: item.fed_sets,
+                    parciales: item.fed_parciales,
+                    streaming: item.streaming || '',
+                    cerrar_partido: true
+                }]
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'Error guardando el resultado oficial.');
+        }
+
+        item._applied = true;
+
+        // Actualizar en memoria local para sincronizar cartelera y panel sin recargar
+        if (window.appData) {
+            ['equipos', 'todos_partidos'].forEach(arrKey => {
+                if (Array.isArray(window.appData[arrKey])) {
+                    let eq = window.appData[arrKey].find(p => p.id_partido === item.id_partido);
+                    if (eq) {
+                        eq.oficial_sets = item.fed_sets;
+                        eq.oficial_parciales = item.fed_parciales;
+                        eq.estado = 'CERRADO';
+                        if (item.streaming && !eq.streaming) eq.streaming = item.streaming;
+                        eq.actualizado_por = currentUser;
+                        eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
+                    }
+                }
+            });
+            if (typeof window.renderCarteleraHTML === 'function') {
+                window.renderCarteleraHTML(window.appData);
+            }
+        }
+
+        mostrarToast(`✅ Resultado oficial guardado para ${item.id_partido}`);
+        window._renderListaResultadosOficiales();
+    } catch (err) {
+        alert('Error aplicando resultado: ' + err.message);
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Aplicar resultado';
+        }
+    }
+};
+
+window.adminAplicarTodosResultadosOficiales = async function() {
+    const cache = window._adminResultadosCache || [];
+    const pendientes = cache.filter(r => !r._applied);
+    if (pendientes.length === 0) return;
+
+    if (!confirm(`¿Quieres aplicar los ${pendientes.length} resultados oficiales a la vez? Se cerrarán los partidos y se actualizarán automáticamente las clasificaciones.`)) {
+        return;
+    }
+
+    const btnAll = document.getElementById('btnAplicarTodosResultadosFed');
+    if (btnAll) {
+        btnAll.disabled = true;
+        btnAll.innerHTML = `⏳ Aplicando (${pendientes.length})...`;
+    }
+
+    const payload = pendientes.map(item => ({
+        id_partido: item.id_partido,
+        sets: item.fed_sets,
+        parciales: item.fed_parciales,
+        streaming: item.streaming || '',
+        cerrar_partido: true
+    }));
+
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_apply_official_results',
+                usuario: currentUser,
+                password: currentPassword,
+                resultados: payload
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'Error aplicando los resultados oficiales.');
+        }
+
+        pendientes.forEach(item => {
+            item._applied = true;
+            if (window.appData) {
+                ['equipos', 'todos_partidos'].forEach(arrKey => {
+                    if (Array.isArray(window.appData[arrKey])) {
+                        let eq = window.appData[arrKey].find(p => p.id_partido === item.id_partido);
+                        if (eq) {
+                            eq.oficial_sets = item.fed_sets;
+                            eq.oficial_parciales = item.fed_parciales;
+                            eq.estado = 'CERRADO';
+                            if (item.streaming && !eq.streaming) eq.streaming = item.streaming;
+                            eq.actualizado_por = currentUser;
+                            eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
+                        }
+                    }
+                });
+            }
+        });
+
+        if (window.appData && typeof window.renderCarteleraHTML === 'function') {
+            window.renderCarteleraHTML(window.appData);
+        }
+
+        mostrarToast(data.message || `✅ Se han aplicado ${pendientes.length} resultados oficiales.`);
+        window._renderListaResultadosOficiales();
+    } catch (err) {
+        alert('Error aplicando resultados: ' + err.message);
+    } finally {
+        if (btnAll) {
+            btnAll.disabled = false;
+            btnAll.innerHTML = '⚡ Aplicar todos los resultados';
+        }
+    }
+};

@@ -68,3 +68,9 @@
 - Eliminación de columnas redundantes (`Rival` y `Ubicacion_Club`) de la tabla `Porras` en código y producción D1, manteniendo `Equipo_Local` y `Equipo_Visitante`.
 - Auditoría y sincronización completa de los 94 partidos oficiales de la temporada frente a RFEVB (EsVoley: SM2, 1ª Masc., 1ª Fem.) y FVCyL (2ª Fem. Oro y 2ª Masc.), incluyendo los ajustes de `FVCL_2F003`, `FVCL_2M004_MES` (18:30) y `FVCL_2M005_MES` (15:30).
 - Actualización integral de `README.md`, `ARQUITECTURA_FRONTEND.md`, `docs/GUIA_VCV_PLAY.md`, `docs/RESUMEN_ARQUITECTURA_FANTASY_VCV.md`, `docs/instrucciones_excel.md`, `docs/PLAN_CORREO_RECUPERACION_Y_REGISTRO.md` y `docs/changelog.txt`, eliminando todos los emojis.
+
+2026-11-20 — Verificadores Directos de Horarios y Resultados Oficiales (RFEVB + FVCyL)
+- Implementacion del comprobador y sincronizador de horarios y pabellones oficiales (`admin_check_official_schedules` y `admin_apply_official_schedule_changes`).
+- Implementacion del comprobador y actualizador automatico de resultados oficiales (`admin_check_official_results` y `admin_apply_official_results`) para RFEVB (EsVoley) y FVCyL (Leverade).
+- Extraccion automatica de sets y parciales oficiales por periodos, deteccion de actas oficiales y enlaces de streaming.
+- Cierre automatico de partidos e invalidacion de cache de puntuaciones al aplicar resultados de forma individual o en lote.

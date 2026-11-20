@@ -6071,5 +6071,440 @@ export async function onRequestPost(context) {
         }
     }
 
+    // ========================================================================
+    // VERIFICADOR DE RESULTADOS OFICIALES (RFEVB EsVoley + FVCyL Leverade)
+    // ========================================================================
+    if (action === 'admin_check_official_results') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") {
+            return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        }
+
+        const soloPendientes = body.solo_pendientes !== false;
+
+        const formatTsToMadridStr = (ts) => {
+            if (!ts || isNaN(ts)) return 'Sin fecha';
+            const d = new Date(Number(ts));
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/Madrid',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', hour12: false
+            }).formatToParts(d);
+            const get = (t) => (parts.find(p => p.type === t) || {}).value || '';
+            const hh = get('hour') === '24' ? '00' : get('hour');
+            return `${get('day')}/${get('month')}/${get('year')} ${hh}:${get('minute')}`;
+        };
+
+        const normText = (s) => String(s || '')
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const normParciales = (s) => String(s || '').replace(/\s+/g, '').replace(/;/g, ',');
+
+        const getFvclTeamKey = (name) => {
+            const n = normText(name);
+            if (!n) return '';
+            if (n.includes('molina') || (n.includes('vcv') && n.includes('maria'))) return 'vcv_maria_molina';
+            if (n.includes('meseta')) return 'vcv_meseta';
+            if (n.includes('abanto') || n.includes('pegamo')) return 'pegamo_abanto';
+            if (n.includes('santo domingo') || n.includes('canada') || n.includes('sporting')) return 'sporting_soria';
+            if (n.includes('duero') || n.includes('soria')) return 'rio_duero';
+            if (n.includes('palencia')) return 'palencia';
+            if (n.includes('maristas') || n.includes('inmaculada')) return 'maristas';
+            if (n.includes('avila') || n.includes('muralla')) return 'avila';
+            if (n.includes('burgos') || n.includes('ubu')) return 'burgos';
+            if (n.includes('aule')) return 'aule';
+            if (n.includes('segovoley') || n.includes('segovia')) return 'segovoley';
+            if (n.includes('salamanca')) return 'salamanca';
+            return n.replace(/\s+/g, '');
+        };
+
+        try {
+            const [dbRowsRes, resOfRes] = await Promise.all([
+                db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
+                db.prepare('SELECT "ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming" FROM "Resultados_Oficiales"').all()
+            ]);
+            const dbRows = (dbRowsRes && dbRowsRes.results) || [];
+            const resOfMap = {};
+            for (const ro of ((resOfRes && resOfRes.results) || [])) {
+                resOfMap[ro["ID Partido"]] = ro;
+            }
+
+            const fetchJson = async (url) => {
+                const r = await fetch(url, { headers: { 'Accept': 'application/json', 'User-Agent': 'VCVPlay-ResultsCheck/1.0' } });
+                if (!r.ok) throw new Error(`HTTP ${r.status} en ${url}`);
+                return await r.json();
+            };
+
+            const sourceErrors = [];
+
+            // 1. Peticiones en paralelo para Leverade y calendarios RFEVB
+            const [
+                rSm2, r1M, r1F,
+                rF2Teams, rF2Group,
+                rM2Teams, rM2Group
+            ] = await Promise.allSettled([
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=87'),
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=100'),
+                fetchJson('https://intranet.esvoley.es/api/competiciones/getJornadasCalendario?grupoId=237'),
+                fetchJson('https://api.leverade.com/tournaments/1340439?include=teams'),
+                fetchJson('https://api.leverade.com/groups/3714977?include=rounds.matches.results,rounds.matches.periods.results'),
+                fetchJson('https://api.leverade.com/tournaments/1340440?include=teams'),
+                fetchJson('https://api.leverade.com/groups/3706780?include=rounds.matches.results,rounds.matches.periods.results')
+            ]);
+
+            // 2. Parsear Leverade (2F y 2M)
+            const parseLeveradeGroup = (tRes, gRes, label) => {
+                if (tRes.status !== 'fulfilled' || gRes.status !== 'fulfilled') {
+                    const err = tRes.status !== 'fulfilled' ? tRes.reason?.message : gRes.reason?.message;
+                    sourceErrors.push(`${label}: ${err || 'Error de red'}`);
+                    return [];
+                }
+                const teamsMap = {};
+                for (const inc of ((tRes.value && tRes.value.included) || [])) {
+                    if (inc.type === 'team') teamsMap[inc.id] = (inc.attributes && inc.attributes.name) || '';
+                }
+                const gInc = (gRes.value && gRes.value.included) || [];
+                const matches = gInc.filter(x => x.type === 'match' && x.attributes && x.attributes.finished);
+                const results = gInc.filter(x => x.type === 'result');
+                const periods = gInc.filter(x => x.type === 'period');
+
+                return matches.map(m => {
+                    const homeId = m.meta && m.meta.home_team;
+                    const awayId = m.meta && m.meta.away_team;
+                    const mRes = results.filter(r => r.relationships?.match?.data?.id === m.id && !r.relationships?.period?.data);
+                    const hRes = mRes.find(r => r.relationships?.team?.data?.id === homeId);
+                    const aRes = mRes.find(r => r.relationships?.team?.data?.id === awayId);
+                    const mPeriods = periods.filter(p => p.relationships?.periodable?.data?.id === m.id)
+                        .sort((a, b) => (a.attributes?.order || 0) - (b.attributes?.order || 0));
+                    const parcs = [];
+                    for (const p of mPeriods) {
+                        const pRes = results.filter(r => r.relationships?.parent?.data?.id === p.id);
+                        const pH = pRes.find(r => r.relationships?.team?.data?.id === homeId);
+                        const pA = pRes.find(r => r.relationships?.team?.data?.id === awayId);
+                        const valH = Number(pH?.attributes?.value || 0);
+                        const valA = Number(pA?.attributes?.value || 0);
+                        if (valH > 0 || valA > 0) {
+                            parcs.push(`${valH}-${valA}`);
+                        }
+                    }
+                    const valSetsH = hRes?.attributes?.value;
+                    const valSetsA = aRes?.attributes?.value;
+                    const hasValidSets = valSetsH != null && valSetsA != null && (Number(valSetsH) + Number(valSetsA) >= 3);
+                    return {
+                        id: m.id,
+                        homeTeam: teamsMap[homeId] || '',
+                        awayTeam: teamsMap[awayId] || '',
+                        homeKey: getFvclTeamKey(teamsMap[homeId]),
+                        awayKey: getFvclTeamKey(teamsMap[awayId]),
+                        sets: hasValidSets ? `${valSetsH}-${valSetsA}` : '',
+                        parciales: parcs.join(', '),
+                        updated_at: m.attributes.updated_at || ''
+                    };
+                }).filter(x => Boolean(x.sets));
+            };
+
+            const fvcl2F = parseLeveradeGroup(rF2Teams, rF2Group, 'FVCyL 2ª Fem.');
+            const fvcl2M = parseLeveradeGroup(rM2Teams, rM2Group, 'FVCyL 2ª Masc.');
+
+            // 3. Obtener detalle de partidos RFEVB candidatos
+            const nowMs = Date.now();
+            const rfevbCandidates = [];
+            const rfevbSources = [
+                { label: 'RFEVB SM2', res: rSm2 },
+                { label: 'RFEVB 1ª Masc.', res: r1M },
+                { label: 'RFEVB 1ª Fem.', res: r1F }
+            ];
+            for (const src of rfevbSources) {
+                if (src.res.status !== 'fulfilled') {
+                    sourceErrors.push(`${src.label}: ${src.res.reason?.message || 'Error de red'}`);
+                    continue;
+                }
+                const jornadas = (src.res.value && src.res.value.content) || [];
+                for (const j of jornadas) {
+                    for (const p of (j.partidos || [])) {
+                        const mId = 'RFEVB_' + p.id;
+                        const dbMatchRow = dbRows.find(r => (r.ID_Partido || '') === mId);
+                        if (!dbMatchRow) continue;
+
+                        const ro = resOfMap[mId] || {};
+                        const dbSets = String(ro["Sets Oficial"] || '').trim();
+                        if (soloPendientes && dbSets !== '') continue;
+
+                        let tsEst = Number(dbMatchRow.timestamp || 0);
+                        if (tsEst > nowMs + 72 * 3600 * 1000) continue;
+
+                        rfevbCandidates.push({ pId: p.id, mId: mId, jornada: j.numero });
+                    }
+                }
+            }
+
+            // Consultar getPartido en paralelo para candidatos RFEVB
+            const rfevbDetails = await Promise.all(rfevbCandidates.map(async (c) => {
+                try {
+                    const data = await fetchJson(`https://intranet.esvoley.es/api/competiciones/getPartido?partidoId=${c.pId}`);
+                    return { ...c, data: data?.content || null };
+                } catch (e) {
+                    return { ...c, data: null };
+                }
+            }));
+
+            const rfevbResultsMap = new Map();
+            for (const item of rfevbDetails) {
+                if (!item.data) continue;
+                const d = item.data;
+                const sL = Number(d.sets_local || 0);
+                const sV = Number(d.sets_visitante || 0);
+                const p1L = Number(d.puntos_local_juego_1 || 0);
+                const p1V = Number(d.puntos_visitante_juego_1 || 0);
+                if (sL + sV >= 3 && (p1L > 0 || p1V > 0)) {
+                    const parcs = [];
+                    for (let k = 1; k <= 5; k++) {
+                        const l = Number(d['puntos_local_juego_' + k] || 0);
+                        const v = Number(d['puntos_visitante_juego_' + k] || 0);
+                        if (l > 0 || v > 0) parcs.push(`${l}-${v}`);
+                    }
+                    const actaMatch = String(d.imagenActa || '').match(/href=['"]([^'"]+)['"]/i);
+                    rfevbResultsMap.set(item.mId, {
+                        mId: item.mId,
+                        sets: `${sL}-${sV}`,
+                        parciales: parcs.join(', '),
+                        acta_url: actaMatch ? actaMatch[1] : null,
+                        streaming: d.linkStreaming || null,
+                        local: d.equipo_local || '',
+                        visitante: d.equipo_visitante || ''
+                    });
+                }
+            }
+
+            // 4. Comparar resultados con la BD
+            const resultsDiff = [];
+            let rfevbChecked = 0;
+            let fvclChecked = 0;
+
+            for (const rawRow of dbRows) {
+                const m = formatMatch(rawRow, resOfMap, null, false);
+                const id = m.id_partido || '';
+                const dbSets = String(m.oficial_sets || '').trim();
+                const dbParc = String(m.oficial_parciales || '').trim();
+
+                if (soloPendientes && dbSets !== '') continue;
+
+                const cat = m.categoria || '';
+                const dbUbicacion = String(m.ubicacion || '').toUpperCase() === 'LOCAL' ? 'LOCAL' : 'VISITANTE';
+                const isLocalDb = dbUbicacion === 'LOCAL';
+                const dbHomeName = isLocalDb ? (m.equipo_local || '') : (m.rival || '');
+                const dbAwayName = isLocalDb ? (m.rival || '') : (m.equipo_local || '');
+                const partidoLabel = `${dbHomeName} vs ${dbAwayName}`;
+
+                if (id.startsWith('RFEVB_')) {
+                    rfevbChecked++;
+                    const fed = rfevbResultsMap.get(id);
+                    if (!fed) continue;
+
+                    let fedSets = fed.sets;
+                    let fedParc = fed.parciales;
+                    let campoInvertido = false;
+
+                    const nDbHome = normText(dbHomeName);
+                    const nFedHome = normText(fed.local);
+                    const nDbAway = normText(dbAwayName);
+                    const nFedAway = normText(fed.visitante);
+                    const sameSide = (nDbHome && nFedHome && (nDbHome.includes(nFedHome) || nFedHome.includes(nDbHome))) ||
+                                     (nDbAway && nFedAway && (nDbAway.includes(nFedAway) || nFedAway.includes(nDbAway)));
+                    const swappedSide = (nDbHome && nFedAway && (nDbHome.includes(nFedAway) || nFedAway.includes(nDbHome))) &&
+                                        (nDbAway && nFedHome && (nDbAway.includes(nFedHome) || nFedHome.includes(nDbAway)));
+                    if (!sameSide && swappedSide) {
+                        campoInvertido = true;
+                    }
+
+                    const setsDiff = dbSets !== fedSets;
+                    const parcDiff = normParciales(dbParc) !== normParciales(fedParc);
+
+                    if (dbSets === '' || setsDiff || parcDiff) {
+                        resultsDiff.push({
+                            id_partido: id,
+                            federacion: 'RFEVB',
+                            categoria: cat,
+                            jornada: m.jornada_eq || '',
+                            partido: partidoLabel,
+                            db_home: dbHomeName,
+                            db_away: dbAwayName,
+                            db_sets: dbSets,
+                            fed_sets: fedSets,
+                            db_parciales: dbParc,
+                            fed_parciales: fedParc,
+                            db_estado: m.estado || 'ABIERTO',
+                            tipo_diferencia: dbSets === '' ? 'NUEVO' : 'CORRECCION',
+                            sets_diferentes: setsDiff,
+                            parciales_diferentes: parcDiff,
+                            acta_url: fed.acta_url || null,
+                            streaming: fed.streaming || null,
+                            campo_invertido: campoInvertido
+                        });
+                    }
+                } else if (id.startsWith('FVCL_')) {
+                    fvclChecked++;
+                    const code = cat.toLowerCase().includes('fem') ? '2F' : '2M';
+                    const candidates = code === '2F' ? fvcl2F : fvcl2M;
+                    if (candidates.length === 0) continue;
+
+                    const dbHomeKey = getFvclTeamKey(dbHomeName);
+                    const dbAwayKey = getFvclTeamKey(dbAwayName);
+
+                    const sameOrder = candidates.find(f => f.homeKey === dbHomeKey && f.awayKey === dbAwayKey);
+                    const swappedOrder = candidates.find(f => f.homeKey === dbAwayKey && f.awayKey === dbHomeKey);
+
+                    let fMatch = sameOrder;
+                    let campoInvertido = false;
+                    if (!sameOrder && swappedOrder) {
+                        fMatch = swappedOrder;
+                        campoInvertido = true;
+                    }
+
+                    if (!fMatch) continue;
+
+                    let fedSets = fMatch.sets;
+                    let fedParc = fMatch.parciales;
+
+                    if (campoInvertido) {
+                        const [sH, sA] = fedSets.split('-').map(Number);
+                        fedSets = `${sA}-${sH}`;
+                        fedParc = fedParc.split(',').map(chip => {
+                            const [pH, pA] = chip.trim().split('-').map(Number);
+                            return `${pA}-${pH}`;
+                        }).join(', ');
+                    }
+
+                    const setsDiff = dbSets !== fedSets;
+                    const parcDiff = normParciales(dbParc) !== normParciales(fedParc);
+
+                    if (dbSets === '' || setsDiff || parcDiff) {
+                        resultsDiff.push({
+                            id_partido: id,
+                            federacion: 'FVCyL',
+                            categoria: cat,
+                            jornada: m.jornada_eq || '',
+                            partido: partidoLabel,
+                            db_home: dbHomeName,
+                            db_away: dbAwayName,
+                            db_sets: dbSets,
+                            fed_sets: fedSets,
+                            db_parciales: dbParc,
+                            fed_parciales: fedParc,
+                            db_estado: m.estado || 'ABIERTO',
+                            tipo_diferencia: dbSets === '' ? 'NUEVO' : 'CORRECCION',
+                            sets_diferentes: setsDiff,
+                            parciales_diferentes: parcDiff,
+                            acta_url: null,
+                            streaming: null,
+                            campo_invertido: campoInvertido
+                        });
+                    }
+                }
+            }
+
+            return jsonResponse({
+                status: 'success',
+                checked_at: formatTsToMadridStr(Date.now()),
+                solo_pendientes: soloPendientes,
+                summary: {
+                    total_checked: rfevbChecked + fvclChecked,
+                    rfevb_checked: rfevbChecked,
+                    fvcl_checked: fvclChecked,
+                    results_found: resultsDiff.length,
+                    new_count: resultsDiff.filter(r => r.tipo_diferencia === 'NUEVO').length,
+                    correction_count: resultsDiff.filter(r => r.tipo_diferencia === 'CORRECCION').length,
+                    errors: sourceErrors
+                },
+                results: resultsDiff
+            });
+        } catch (e) {
+            return jsonResponse({ status: 'error', message: 'Error al comprobar resultados oficiales: ' + e.message }, 500);
+        }
+    }
+
+    // ========================================================================
+    // APLICAR RESULTADOS OFICIALES EN BD (RFEVB + FVCyL)
+    // ========================================================================
+    if (action === 'admin_apply_official_results') {
+        const user = await getAuthUser();
+        if (!user) return jsonResponse({ status: 'error', message: 'Credenciales inválidas' }, 401);
+        const adminCheck = await db.prepare('SELECT "Admin Web" FROM "Insignias" WHERE "Usuario" = ?').bind(usuario).first();
+        if (!adminCheck || adminCheck["Admin Web"] !== "X") {
+            return jsonResponse({ status: 'error', message: 'No tienes permisos de administrador.' }, 403);
+        }
+
+        const items = Array.isArray(body.resultados) ? body.resultados : [];
+        if (items.length === 0) {
+            return jsonResponse({ status: 'error', message: 'No se han enviado resultados para aplicar.' }, 400);
+        }
+
+        const nowTs = Date.now();
+        const nowFechaHora = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+        const appliedIds = [];
+        const stmts = [];
+
+        for (const item of items) {
+            const idPart = String(item.id_partido || '').trim();
+            const sets = String(item.sets || '').trim();
+            const parciales = String(item.parciales || '').trim();
+            const stream = String(item.streaming || '').trim();
+            const cerrar = item.cerrar_partido !== false;
+
+            if (!idPart || !sets) continue;
+
+            const exist = await db.prepare('SELECT "ID Partido", "Streaming" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first();
+            if (exist) {
+                let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ?';
+                const params = [sets, parciales, usuario, nowTs, nowFechaHora];
+                if (stream && (!exist["Streaming"] || String(exist["Streaming"]).trim() === '')) {
+                    sql += ', "Streaming" = ?';
+                    params.push(stream);
+                }
+                sql += ' WHERE "ID Partido" = ?';
+                params.push(idPart);
+                stmts.push(db.prepare(sql).bind(...params));
+            } else {
+                stmts.push(db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?)')
+                    .bind(idPart, sets, parciales, stream, usuario, nowTs, nowFechaHora));
+            }
+
+            if (cerrar) {
+                stmts.push(db.prepare('UPDATE "Ajustes" SET "Estado" = \'CERRADO\' WHERE "ID_Partido" = ?').bind(idPart));
+            }
+            appliedIds.push(idPart);
+        }
+
+        if (stmts.length === 0) {
+            return jsonResponse({ status: 'error', message: 'Ningún resultado válido para guardar.' }, 400);
+        }
+
+        try {
+            await flushBatch(db, stmts);
+
+            // Limpiar caché de puntuaciones para recalcular clasificaciones de inmediato
+            try {
+                await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
+            } catch (ce) {}
+
+            return jsonResponse({
+                status: 'success',
+                updated: appliedIds.length,
+                applied_ids: appliedIds,
+                message: appliedIds.length === 1
+                    ? `Resultado oficial del partido ${appliedIds[0]} aplicado correctamente y partido cerrado.`
+                    : `Se han aplicado los resultados oficiales de ${appliedIds.length} partidos y actualizado las clasificaciones.`
+            });
+        } catch (e) {
+            return jsonResponse({ status: 'error', message: 'Error aplicando resultados en BD: ' + e.message }, 500);
+        }
+    }
+
     return jsonResponse({ status: "error", message: `Acción desconocida: ${action}` }, 400);
 }

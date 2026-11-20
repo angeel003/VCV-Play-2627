@@ -3204,12 +3204,12 @@
 
           </div>
           <!-- ============================================== -->
-          <!-- CATEGORÍA 2: PARTIDOS Y MVP (4 HERRAMIENTAS)   -->
+          <!-- CATEGORÍA 2: PARTIDOS Y MVP (5 HERRAMIENTAS)   -->
           <!-- ============================================== -->
           <div class="admin-category-panel" data-admin-cat="partidos" style="display: none;">
             <div class="admin-category-header">
               <span>🏐 Partidos y Competición</span>
-              <span style="font-size: 0.68rem; opacity: 0.8;">4 herramientas</span>
+              <span style="font-size: 0.68rem; opacity: 0.8;">5 herramientas</span>
             </div>
           <!-- 6. Subida Rápida de Resultados y Links -->
           <details id="secAdminResultados" class="admin-collapsible" style="background: linear-gradient(to right, rgba(93, 23, 137, 0.25), var(--bg-card)); border: 1px solid rgba(230, 126, 34, 0.35); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
@@ -3599,6 +3599,40 @@
             </div>
           </details>
 
+          <!-- 6.E Verificador de Resultados Oficiales (RFEVB + FVCyL) -->
+          <details id="secAdminResultadosOficiales" class="admin-collapsible" style="background: linear-gradient(to right, rgba(46, 204, 113, 0.14), var(--bg-card)); border: 1px solid rgba(46, 204, 113, 0.45); border-radius: 12px; margin-bottom: 10px; overflow: hidden;">
+            <summary style="padding: 12px 16px; cursor: pointer; font-size: 0.88rem; font-weight: 800; color: #2ecc71; display: flex; justify-content: space-between; align-items: center; gap: 8px; user-select: none;">
+              <span style="display:flex; align-items:center; gap:6px;">🏆 Comprobar Resultados Oficiales (RFEVB y FVCyL)</span>
+              <span id="badgeResultadosAdmin" style="display:none; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 800;"></span>
+            </summary>
+            <div style="padding: 12px 16px 16px 16px; border-top: 1px solid rgba(46, 204, 113, 0.2);">
+              <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.4;">
+                Coteja en directo los marcadores oficiales (sets y parciales) frente a las actas de <b>RFEVB (EsVoley)</b> y <b>FVCyL (Leverade)</b>. Detecta partidos finalizados cuyos resultados aún no han sido introducidos o que tienen correcciones, permitiéndote aplicarlos con un solo clic para cerrar el partido y recalcular las clasificaciones.
+              </p>
+
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <button type="button" id="btnComprobarResultadosFed" onclick="window.adminComprobarResultadosOficiales()" class="btn" style="flex: 1 1 200px; padding: 10px 14px; font-size: 0.82rem; font-weight: 800; border-radius: 8px; border: none; background: linear-gradient(135deg, #1abc9c, #2ecc71); color: #000; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(46,204,113,0.3);">
+                  🔍 Comprobar Resultados Oficiales ahora
+                </button>
+                <button type="button" id="btnAplicarTodosResultadosFed" onclick="window.adminAplicarTodosResultadosOficiales()" class="btn" style="display: none; flex: 1 1 170px; padding: 10px 14px; font-size: 0.82rem; font-weight: 800; border-radius: 8px; border: none; background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; cursor: pointer; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(230,126,34,0.3);">
+                  ⚡ Aplicar todos los resultados
+                </button>
+              </div>
+
+              <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; color: var(--text-muted); cursor: pointer; user-select: none; margin-bottom: 12px;">
+                <input type="checkbox" id="chkResultadosSoloPendientes" checked style="cursor: pointer;">
+                Solo partidos pendientes de resultado en BD
+              </label>
+
+              <div id="adminResultadosResumen" style="display: none; font-size: 0.75rem; padding: 8px 10px; border-radius: 8px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 10px; color: var(--text-main);"></div>
+
+              <div id="adminResultadosLista" style="display: flex; flex-direction: column; gap: 8px; max-height: 480px; overflow-y: auto; padding-right: 2px;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.08);">
+                  Pulsa «Comprobar Resultados Oficiales ahora» para buscar resultados finalizados en RFEVB y FVCyL.
+                </div>
+              </div>
+            </div>
+          </details>
 
           </div>
           <!-- ============================================== -->
@@ -4628,7 +4662,7 @@
 
 <!-- Modulos JavaScript cargados en orden de dependencia (cache-busted) -->
 <script src="js/config.js?v=20261116_v6"></script>
-<script src="js/admin.js?v=20261118_v12"></script>
+<script src="js/admin.js?v=20261120_v1"></script>
 <script src="js/cartelera.js?v=20261116_v5"></script>
 <script src="js/ranking.js?v=20261116_v5"></script>
 <script src="js/calendario.js?v=20261116_v5"></script>
