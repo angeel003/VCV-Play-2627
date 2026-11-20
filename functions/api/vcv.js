@@ -2613,14 +2613,16 @@ export async function onRequestPost(context) {
 
             if (b.Exjugador === "X") addBadge('exjugador', lblExj);
             if (b.Lesionado === "X") addBadge('lesionado', b.Lesion_Desc || 'Lesionado');
-            if (b.Custom_Badge === "X") {
-                if (!insigniasMap[u].some(badge => badge.type === 'custom' && badge.text === (b.Custom_Desc || 'Insignia'))) {
-                    insigniasMap[u].push({ type: 'custom', text: (b.Custom_Desc || 'Insignia'), emoji: (b.Custom_Emoji || '✨') });
+            if (b.Custom_Badge === "X" || (b.Custom_Emoji && String(b.Custom_Emoji).trim() !== "")) {
+                const cDesc = b.Custom_Desc || 'Insignia';
+                const cEmo = (b.Custom_Emoji && String(b.Custom_Emoji).trim()) || '✨';
+                if (!insigniasMap[u].some(badge => badge.type === 'custom' && badge.text === cDesc)) {
+                    insigniasMap[u].push({ type: 'custom', text: cDesc, emoji: cEmo });
                 }
             }
-            if (b.Avatar === "X" && b.Avatar_Url) {
+            if ((b.Avatar === "X" || b.Avatar_Url) && b.Avatar_Url && String(b.Avatar_Url).trim() !== "") {
                 if (!insigniasMap[u].some(badge => badge.type === 'avatar')) {
-                    insigniasMap[u].push({ type: 'avatar', emoji: b.Avatar_Url });
+                    insigniasMap[u].push({ type: 'avatar', emoji: String(b.Avatar_Url).trim() });
                 }
             }
             if (b["Permiso_MVP"] === "X") addBadge('permiso_mvp', 'Gestor MVP');
@@ -4023,6 +4025,7 @@ export async function onRequestPost(context) {
             avtrUrl = '';
         } else if (body.avatar_url !== undefined) {
             avtrUrl = String(body.avatar_url).trim();
+            avtr = avtrUrl ? 'X' : '';
         }
 
         const genVal = (body.genero === 'F' || body.genero === 'f') ? 'F' : 'M';
@@ -4030,6 +4033,7 @@ export async function onRequestPost(context) {
         const lesDesc = (body.lesion_desc !== undefined) ? String(body.lesion_desc).trim() : (existIns?.Lesion_Desc || '');
         const cEmoji = (body.custom_emoji !== undefined) ? String(body.custom_emoji).trim() : (existIns?.Custom_Emoji || '');
         const cDesc = (body.custom_desc !== undefined) ? String(body.custom_desc).trim() : (existIns?.Custom_Desc || '');
+        const cBadge = cEmoji ? 'X' : '';
         const banVal = (body.baneado === true || body.baneado === 1 || body.baneado === '1' || body.baneado === 'X') ? 1 : 0;
         const motBan = (body.motivo_baneo !== undefined) ? String(body.motivo_baneo).trim() : (existIns?.Motivo_Baneo || '');
         const fechBan = banVal ? (existIns?.Fecha_Baneo || new Date().toISOString()) : '';
@@ -4048,9 +4052,9 @@ export async function onRequestPost(context) {
         await db.prepare(`UPDATE "Insignias" 
             SET "Equipo_Club" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ?, 
                 "Admin Web" = ?, "Permiso_MVP" = ?, "Permiso_Resultados" = ?, "Verificado" = ?, "Avatar" = ?, "Avatar_Url" = ?, "Aviso_Moderacion" = ?,
-                "Genero" = ?, "Lesionado" = ?, "Lesion_Desc" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ?, "Baneado" = ?, "Motivo_Baneo" = ?, "Fecha_Baneo" = ?
+                "Genero" = ?, "Lesionado" = ?, "Lesion_Desc" = ?, "Custom_Badge" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ?, "Baneado" = ?, "Motivo_Baneo" = ?, "Fecha_Baneo" = ?
             WHERE "Usuario" = ?`
-        ).bind(eqClub, jugDe, entDe, exj, stf, admW, pMvp, pRes, verifFinal, avtr, avtrUrl, avMod, genVal, lesVal, lesDesc, cEmoji, cDesc, banVal, motBan, fechBan, canonicalU).run();
+        ).bind(eqClub, jugDe, entDe, exj, stf, admW, pMvp, pRes, verifFinal, avtr, avtrUrl, avMod, genVal, lesVal, lesDesc, cBadge, cEmoji, cDesc, banVal, motBan, fechBan, canonicalU).run();
 
         // 5. Modificar Ligas y Sincronizar Permisos de Equipos
         if (Array.isArray(body.ligas_seleccionadas)) {
@@ -4954,8 +4958,13 @@ export async function onRequestPost(context) {
                 if (!existingIns) {
                     await db.prepare('INSERT INTO "Insignias" ("Usuario") VALUES (?)').bind(userToUpdate).run();
                 }
+                const cEmojiReq = payloadObj.custom_emoji || '';
+                const cBadgeReq = (payloadObj.custom === 'X' || cEmojiReq) ? 'X' : '';
+                const avtrUrlReq = payloadObj.avatar_url || '';
+                const avtrReq = (payloadObj.avatar === 'X' || avtrUrlReq) ? 'X' : '';
+
                 await db.prepare('UPDATE "Insignias" SET "Genero" = ?, "Jugador de" = ?, "Entrenador de" = ?, "Exjugador" = ?, "Directiva / Staff" = ?, "Lesionado" = ?, "Lesion_Desc" = ?, "Custom_Badge" = ?, "Custom_Emoji" = ?, "Custom_Desc" = ?, "Avatar" = ?, "Avatar_Url" = ? WHERE "Usuario" = ?')
-                    .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', payloadObj.lesionado || '', payloadObj.lesionado_desc || '', payloadObj.custom || '', payloadObj.custom_emoji || '', payloadObj.custom_desc || '', payloadObj.avatar || '', payloadObj.avatar_url || '', userToUpdate).run();
+                    .bind(payloadObj.genero || 'M', payloadObj.jugador_de || '', payloadObj.entrenador_de || '', payloadObj.exjugador || '', payloadObj.staff || '', payloadObj.lesionado || '', payloadObj.lesionado_desc || '', cBadgeReq, cEmojiReq, payloadObj.custom_desc || '', avtrReq, avtrUrlReq, userToUpdate).run();
             } else {
                 const userToUpdate = peticion.Usuario;
                 const tipo = peticion.Tipo; 

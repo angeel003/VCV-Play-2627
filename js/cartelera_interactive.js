@@ -2754,7 +2754,7 @@ window.cambiarLigaCompartir = function(nuevaLiga) {
     window.dibujarTarjetaCompartir();
 };
 
-const SHARE_ASSET_VER = '20261116_v3';
+const SHARE_ASSET_VER = '20261120_v7';
 let canvasFontsReadyPromise = null;
 
 function waitForCanvasFonts() {
@@ -3363,20 +3363,81 @@ function drawTextWrappedCentered(ctx, text, cx, startY, maxW, lineH, baseFontSiz
 async function loadUserAvatarEntry(data, targetUser) {
     const cleanUser = String(targetUser || 'J').trim();
     const initials = (cleanUser.substring(0, 2) || 'VC').toUpperCase();
-    const badges = (data && data.insignias && data.insignias[cleanUser]) ? data.insignias[cleanUser] : [];
-    const avatarBadge = badges.find(b => b && b.type === 'avatar' && b.emoji);
-    const customBadge = badges.find(b => b && b.type === 'custom' && b.emoji);
-    const picked = avatarBadge || customBadge;
-    if (!picked || !picked.emoji) return { img: null, emoji: null, initials };
+    const lowerUser = cleanUser.toLowerCase();
 
-    let raw = String(picked.emoji).trim();
+    // 1. Obtener badges del usuario (tolerante a mayúsculas/minúsculas y buscando en todas las fuentes disponibles)
+    let badges = [];
+    const searchInsigniasSources = [
+        data && data.insignias,
+        window.appData && window.appData.insignias,
+        window.historialDataCache && window.historialDataCache.insignias
+    ];
+
+    for (const insObj of searchInsigniasSources) {
+        if (!insObj || typeof insObj !== 'object') continue;
+        if (Array.isArray(insObj[cleanUser])) {
+            badges = insObj[cleanUser];
+            break;
+        }
+        const foundKey = Object.keys(insObj).find(k => k.toLowerCase() === lowerUser);
+        if (foundKey && Array.isArray(insObj[foundKey])) {
+            badges = insObj[foundKey];
+            break;
+        }
+    }
+
+    // 2. Extraer avatar o custom badge
+    let pickedBadge = badges.find(b => b && b.type === 'avatar' && (b.emoji || b.url || b.icon));
+    if (!pickedBadge) {
+        pickedBadge = badges.find(b => b && (b.type === 'custom' || b.type === 'insignia_personalizada') && (b.emoji || b.icon || b.url));
+    }
+
+    let raw = pickedBadge ? (pickedBadge.emoji || pickedBadge.icon || pickedBadge.url) : null;
+
+    // 3. Fallback directo si es el usuario logueado o si coincide con la sesión
+    if (!raw) {
+        const isCurrent = (typeof currentUser !== 'undefined' && currentUser && currentUser.toLowerCase() === lowerUser) ||
+                          (data && data.usuario && data.usuario.toLowerCase() === lowerUser) ||
+                          (window.appData && window.appData.usuario && window.appData.usuario.toLowerCase() === lowerUser);
+        if (isCurrent) {
+            const rawIns = (data && data.mi_insignia_raw) || (window.appData && window.appData.mi_insignia_raw) || null;
+            if (rawIns) {
+                if (rawIns.Avatar_Url && String(rawIns.Avatar_Url).trim() !== '') {
+                    raw = String(rawIns.Avatar_Url).trim();
+                } else if (rawIns.Custom_Emoji && String(rawIns.Custom_Emoji).trim() !== '') {
+                    raw = String(rawIns.Custom_Emoji).trim();
+                }
+            }
+            if (!raw) {
+                const checkDirectFields = [
+                    data && data.avatar_url,
+                    data && data.custom_emoji,
+                    window.appData && window.appData.avatar_url,
+                    window.appData && window.appData.custom_emoji
+                ];
+                for (const f of checkDirectFields) {
+                    if (f && String(f).trim() !== '') {
+                        raw = String(f).trim();
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!raw || String(raw).trim() === '') {
+        return { img: null, emoji: null, initials };
+    }
+
+    raw = String(raw).trim();
     if (typeof sanitizeImgUrl === 'function') raw = sanitizeImgUrl(raw);
     const lower = raw.toLowerCase();
     const isImageRef = lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp') || lower.endsWith('.svg') || lower.endsWith('.gif') || lower.startsWith('http') || lower.startsWith('data:image/');
     if (isImageRef) {
         const src = (raw.includes('/') || raw.startsWith('http') || raw.startsWith('data:image/')) ? raw : ('files/images/' + raw);
         const img = await cargarImagenCanvas(src);
-        return { img, emoji: null, initials };
+        if (img) return { img, emoji: null, initials };
+        return { img: null, emoji: null, initials };
     }
     return { img: null, emoji: raw, initials };
 }
@@ -3400,16 +3461,29 @@ function drawShareUserMedallion(ctx, cx, cy, r, avEntry, ringColor = '#d4af37', 
         drawImageStepped(ctx, avEntry.img, cx - nw / 2, cy - nh / 2, nw, nh);
         ctx.restore();
     } else if (avEntry && avEntry.emoji) {
-        ctx.font = `${Math.round(r * 1.05)}px sans-serif`;
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        let emFontSz = Math.round(r * 1.15);
+        ctx.font = `${emFontSz}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(avEntry.emoji, cx, cy + 2);
-        ctx.textBaseline = 'alphabetic';
+        const emStr = String(avEntry.emoji).trim();
+        const emW = ctx.measureText(emStr).width;
+        const maxW = r * 1.7;
+        if (emW > maxW && emW > 0) {
+            emFontSz = Math.max(12, Math.round(emFontSz * (maxW / emW)));
+            ctx.font = `${emFontSz}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", sans-serif`;
+        }
+        ctx.fillText(emStr, cx, cy + Math.round(r * 0.04));
+        ctx.restore();
     } else {
+        ctx.save();
         ctx.fillStyle = '#ffffff';
         ctx.font = `900 ${Math.round(r * 0.78)}px "Space Grotesk", sans-serif`;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillText((avEntry && avEntry.initials) || 'VC', cx, cy + Math.round(r * 0.27));
+        ctx.restore();
     }
 
     ctx.strokeStyle = ringColor;
@@ -5751,9 +5825,10 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
     let pos = '-';
     let realRankNum = 0;
     let pts = 0;
-    const userIndex = ranking.findIndex(r => r.jugador === uName);
+    const userIndex = ranking.findIndex(r => String(r.jugador || '').toLowerCase() === String(uName || '').toLowerCase());
     if (userIndex !== -1) {
         const entry = ranking[userIndex];
+        uName = entry.jugador || uName;
         realRankNum = ranking.findIndex(x => x.puntos === entry.puntos) + 1;
         pos = '#' + realRankNum;
         pts = entry.puntos || 0;
@@ -5770,11 +5845,11 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
         cargarImagenCanvas(`files/images/escudos/valcyl_vcv.png?v=${SHARE_ASSET_VER}`),
         cargarImagenCanvas(`files/images/logo_vcv_circle.png?v=${SHARE_ASSET_VER}`),
         loadUserAvatarEntry(data, uName),
-        ...top3Entries.map(t => (t.jugador === uName ? Promise.resolve(null) : loadUserAvatarEntry(data, t.jugador)))
+        ...top3Entries.map(t => (String(t.jugador || '').toLowerCase() === String(uName || '').toLowerCase() ? Promise.resolve(null) : loadUserAvatarEntry(data, t.jugador)))
     ]);
     const vcvCrest = vcvCrestPrimary || vcvCrestFallback;
     top3Entries.forEach((t, idx) => {
-        t.avatar = (t.jugador === uName) ? myAvatar : (topAvatars[idx] || { img: null, emoji: null, initials: String(t.jugador || 'VC').substring(0, 2).toUpperCase() });
+        t.avatar = (String(t.jugador || '').toLowerCase() === String(uName || '').toLowerCase()) ? myAvatar : (topAvatars[idx] || { img: null, emoji: null, initials: String(t.jugador || 'VC').substring(0, 2).toUpperCase() });
     });
 
     const drawUserMedallion = (cx, cy, r, avEntry, ringColor = '#d4af37', lineWidth = 3, isLeader = false) =>
@@ -5938,7 +6013,7 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
             top3Entries.forEach((tp, idx) => {
                 const slotCx = marginX + podSlotW * idx + podSlotW / 2;
                 const rankCol = tp.realRank === 1 ? '#ffd700' : (tp.realRank === 2 ? '#e2e8f0' : '#f59e0b');
-                const isMe = tp.jugador === uName;
+                const isMe = String(tp.jugador || '').toLowerCase() === String(uName || '').toLowerCase();
                 const avR2 = 24;
                 const unitW = avR2 * 2 + 12 + 195;
                 const cx = Math.round(slotCx - Math.min(podSlotW - 16, unitW) / 2 + avR2);
@@ -6089,7 +6164,7 @@ async function dibujarTarjetaJornadaCanvas(ctx, W, H, uName, nReal, data) {
             top3Entries.forEach((tp, idx) => {
                 const ry = rowStartY + idx * rowH;
                 const cy = ry + rowH / 2;
-                const isMe = tp.jugador === uName;
+                const isMe = String(tp.jugador || '').toLowerCase() === String(uName || '').toLowerCase();
                 const rankCol = tp.realRank === 1 ? '#ffd700' : (tp.realRank === 2 ? '#e2e8f0' : '#f59e0b');
 
                 if (isMe) {
