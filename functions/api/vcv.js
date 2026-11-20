@@ -6170,6 +6170,12 @@ export async function onRequestPost(context) {
                     if (inc.type === 'team') teamsMap[inc.id] = (inc.attributes && inc.attributes.name) || '';
                 }
                 const gInc = (gRes.value && gRes.value.included) || [];
+                const roundsMap = {};
+                for (const inc of gInc) {
+                    if (inc.type === 'round' && inc.attributes) {
+                        roundsMap[inc.id] = { order: inc.attributes.order, name: inc.attributes.name };
+                    }
+                }
                 const matches = gInc.filter(x => x.type === 'match' && x.attributes && x.attributes.finished);
                 const results = gInc.filter(x => x.type === 'result');
                 const periods = gInc.filter(x => x.type === 'period');
@@ -6177,6 +6183,14 @@ export async function onRequestPost(context) {
                 return matches.map(m => {
                     const homeId = m.meta && m.meta.home_team;
                     const awayId = m.meta && m.meta.away_team;
+                    const roundId = m.relationships && m.relationships.round && m.relationships.round.data && m.relationships.round.data.id;
+                    const roundInfo = roundsMap[roundId] || {};
+                    const rawDt = m.attributes.datetime || m.attributes.date || '';
+                    let fedTs = 0;
+                    if (rawDt) {
+                        const parsed = Date.parse(String(rawDt).replace(' ', 'T') + 'Z');
+                        if (!isNaN(parsed)) fedTs = parsed;
+                    }
                     const mRes = results.filter(r => r.relationships?.match?.data?.id === m.id && !r.relationships?.period?.data);
                     const hRes = mRes.find(r => r.relationships?.team?.data?.id === homeId);
                     const aRes = mRes.find(r => r.relationships?.team?.data?.id === awayId);
@@ -6202,6 +6216,8 @@ export async function onRequestPost(context) {
                         awayTeam: teamsMap[awayId] || '',
                         homeKey: getFvclTeamKey(teamsMap[homeId]),
                         awayKey: getFvclTeamKey(teamsMap[awayId]),
+                        roundOrder: roundInfo.order || 0,
+                        fed_ts: fedTs,
                         sets: hasValidSets ? `${valSetsH}-${valSetsA}` : '',
                         parciales: parcs.join(', '),
                         updated_at: m.attributes.updated_at || ''
@@ -6292,6 +6308,10 @@ export async function onRequestPost(context) {
                 const id = m.id_partido || '';
                 const dbSets = String(m.oficial_sets || '').trim();
                 const dbParc = String(m.oficial_parciales || '').trim();
+                const dbTs = Number(m.timestamp || 0);
+
+                // Un partido en el futuro (más de 2 horas tras el inicio esperado) aún no se ha jugado
+                if (dbTs > nowMs + 2 * 3600 * 1000) continue;
 
                 if (soloPendientes && dbSets !== '') continue;
 
@@ -6356,15 +6376,29 @@ export async function onRequestPost(context) {
 
                     const dbHomeKey = getFvclTeamKey(dbHomeName);
                     const dbAwayKey = getFvclTeamKey(dbAwayName);
+                    const dbJornada = parseInt(m.jornada_eq || m.ronda_global, 10) || 0;
 
-                    const sameOrder = candidates.find(f => f.homeKey === dbHomeKey && f.awayKey === dbAwayKey);
-                    const swappedOrder = candidates.find(f => f.homeKey === dbAwayKey && f.awayKey === dbHomeKey);
+                    const sameOrderCandidates = candidates.filter(f => f.homeKey === dbHomeKey && f.awayKey === dbAwayKey);
+                    const swappedOrderCandidates = candidates.filter(f => f.homeKey === dbAwayKey && f.awayKey === dbHomeKey);
 
-                    let fMatch = sameOrder;
+                    // Buscar coincidencia en el mismo orden que encaje en jornada o fecha cercana (máx 15 días)
+                    let fMatch = sameOrderCandidates.find(f =>
+                        (dbJornada > 0 && f.roundOrder === dbJornada) ||
+                        (dbTs > 0 && f.fed_ts > 0 && Math.abs(f.fed_ts - dbTs) <= 15 * 86400000)
+                    ) || (sameOrderCandidates.length === 1 && !sameOrderCandidates[0].roundOrder ? sameOrderCandidates[0] : null);
+
                     let campoInvertido = false;
-                    if (!sameOrder && swappedOrder) {
-                        fMatch = swappedOrder;
-                        campoInvertido = true;
+
+                    // Solo considerar campo invertido si NO hubo coincidencia en el mismo orden y la fecha o jornada encaja
+                    if (!fMatch && swappedOrderCandidates.length > 0) {
+                        const swapClose = swappedOrderCandidates.find(f =>
+                            (dbJornada > 0 && f.roundOrder === dbJornada) ||
+                            (dbTs > 0 && f.fed_ts > 0 && Math.abs(f.fed_ts - dbTs) <= 15 * 86400000)
+                        );
+                        if (swapClose) {
+                            fMatch = swapClose;
+                            campoInvertido = true;
+                        }
                     }
 
                     if (!fMatch) continue;
