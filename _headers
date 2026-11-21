@@ -4,6 +4,13 @@
 /files/images/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Hojas de estilo CSS y scripts JS modulares
+/css/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/js/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
 # Aplicación PWA y fuentes
 /manifest.json
   Cache-Control: public, max-age=86400
