@@ -1,0 +1,43 @@
+/* ==========================================================================
+   VCV PLAY 26/27 — DESIGN TOKENS & VARIABLES (:root)
+   Archivo: css/tokens.css
+   Proposito: Paleta oficial VCV, tokens de diseno, fuentes y sombras.
+   ========================================================================== */
+
+:root {
+  /* --- PALETA CORPORATIVA OFICIAL VCV --- */
+  --primary-color: #7b2cbf;
+  --primary-hover: #9333ea;
+  --secondary-color: #f5c542;
+  --secondary-hover: #ffd766;
+  --vcv-dorado: #d4af37;
+  --vcv-dorado-hover: #e5bf43;
+  --vcv-morado: #7b3382;
+
+  /* --- FONDOS Y SUPERFICIES (DARK GLASSMORPHISM) --- */
+  --bg-general: #0d0314;
+  --bg-surface: #12051b;
+  --bg-card: #1c0829;
+  --bg-card-alt: #260c38;
+  --bg-input: #160621;
+
+  /* --- BORDES Y RESPLANDORES --- */
+  --border-color: rgba(192, 132, 252, 0.18);
+  --border-glow: rgba(245, 197, 66, 0.4);
+
+  /* --- TEXTO Y TIPOGRAFIA --- */
+  --text-main: #fcfaff;
+  --text-muted: #c4b3cf;
+  --text-gold: #f3ce5e;
+  --vcv-negro: #120517;
+
+  /* --- ESTADOS SEMANTICOS --- */
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --info: #3498db;
+
+  /* --- FUENTES DEL SISTEMA --- */
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+  --font-display: 'Space Grotesk', -apple-system, sans-serif;
+}

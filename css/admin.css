@@ -1,0 +1,95 @@
+/* ==========================================================================
+   VCV PLAY 26/27 — INTRANET ADMIN
+   Archivo: css/admin.css
+   Proposito: Acordeones, navegacion por pestañas y tablas de gestion.
+   ========================================================================== */
+
+details#adminMainDetails summary::-webkit-details-marker { display: none; }
+details#adminMainDetails[open] summary .admin-main-arrow { transform: rotate(180deg); }
+
+details.admin-collapsible summary {
+  list-style: none;
+}
+details.admin-collapsible summary::-webkit-details-marker {
+  display: none;
+}
+details.admin-collapsible summary::after {
+  content: '▼';
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+details.admin-collapsible[open] summary::after {
+  transform: rotate(180deg);
+}
+
+#adminPanelWrapper, #adminPanelWrapper * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+#adminPanelWrapper {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+#adminPanelWrapper input,
+#adminPanelWrapper select,
+#adminPanelWrapper button,
+#adminPanelWrapper textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-match-box {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-tab-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px 10px 2px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+.admin-tab-btn:hover {
+  background: rgba(230, 126, 34, 0.15);
+  color: var(--text-main);
+  border-color: rgba(230, 126, 34, 0.4);
+}
+.admin-tab-btn.active {
+  background: linear-gradient(135deg, rgba(230, 126, 34, 0.35) 0%, rgba(230, 126, 34, 0.18) 100%);
+  color: #f39c12;
+  border-color: #f39c12;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.25);
+}
+.admin-category-panel {
+  display: none;
+}
+.admin-category-panel.active-cat {
+  display: block;
+}

@@ -1,0 +1,81 @@
+/* ==========================================================================
+   VCV PLAY 26/27 — ESTRUCTURA DE PANTALLA Y LAYOUT
+   Archivo: css/layout.css
+   Proposito: Header de la app, barra de navegacion inferior (bottomNavV2), tabs y grids.
+   ========================================================================== */
+
+/* Barra de navegacion inferior fija para movil */
+.bottom-nav-v2 {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(18, 5, 27, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.nav-item-v2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.nav-item-v2 i, .nav-item-v2 svg {
+  width: 20px;
+  height: 20px;
+}
+
+.nav-item-v2.active {
+  color: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.nav-item-v2.active i, .nav-item-v2.active svg {
+  filter: drop-shadow(0 2px 8px rgba(245, 197, 66, 0.5));
+}
+
+/* Grids universales */
+.perfil-dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.perfil-col-left, .perfil-col-right {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.guest-benefits-grid, .enlaces-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .perfil-dashboard-grid {
+    flex-direction: row;
+    gap: 20px;
+  }
+  .perfil-col-left {
+    flex: 1 1 45%;
+  }
+  .perfil-col-right {
+    flex: 1 1 55%;
+  }
+}

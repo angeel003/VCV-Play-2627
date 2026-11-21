@@ -29,7 +29,8 @@ Los módulos JavaScript de `js/` se cargan como **scripts clásicos ordenados** 
 | **Navegación inferior móvil, gestos táctiles (swipe) y registro del Service Worker** | `js/ui_gestures.js` | ~263 |
 | **Autenticación, auto-login (`localStorage`), registro público ("Crear cuenta"), modo invitado y perfil** | `js/auth.js` | ~1.786 |
 | **Motor Web Push (VAPID), suscripciones Push API, soporte iOS PWA y centro de preferencias** | `js/push_notifications.js` | ~1.398 |
-| **Estructura HTML base, modales fijos, estilos Glassmorphism y control háptico (`dev` / `prod`)** | `dev.html` / `index.html` | ~4.640 |
+| **Hojas de estilo modulares: tokens, base, layout, componentes, cartelera y admin** | `css/app.css`, `css/*.css` | ~2.450 |
+| **Estructura HTML base, modales fijos y control háptico (modular vs clásico)** | `index_modular.html` / `dev.html` / `index.html` | ~2.295 / ~4.640 |
 | **Service Worker (caché PWA y gestión de notificaciones Push en segundo plano)** | `sw.js` | ~70 |
 | **Backend Edge Serverless (Cloudflare Pages Functions + Cloudflare D1)** | `functions/api/vcv.js` | ~5.580 |
 

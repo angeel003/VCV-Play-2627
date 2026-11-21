@@ -1,0 +1,92 @@
+/* ==========================================================================
+   VCV PLAY 26/27 — ESTILOS BASE Y NORMALIZACION
+   Archivo: css/base.css
+   Proposito: Reset, fondo global de aplicacion, overlay de auto-login y animaciones.
+   ========================================================================== */
+
+html {
+  background-color: #120517 !important;
+  min-height: 100% !important;
+  min-height: -webkit-fill-available !important;
+  scroll-behavior: smooth;
+  scrollbar-color: rgba(192, 132, 252, 0.25) #140718;
+  scrollbar-width: thin;
+}
+
+body {
+  background-color: #120517 !important;
+  background: var(--bg-general);
+  font-family: var(--font-main, 'Plus Jakarta Sans', sans-serif);
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--text-main, #fcfaff);
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+a, button, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* --- OVERLAY DE AUTO-LOGIN ELEGANTE --- */
+html.vcv-auto-logging-in #loginSection {
+  display: none !important;
+}
+
+html.vcv-auto-logging-in #vcvAutoLoginOverlay {
+  display: flex !important;
+}
+
+#vcvAutoLoginOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: -100px;
+  width: 100vw;
+  height: calc(100% + 100px);
+  height: calc(100vh + 100px);
+  height: calc(100dvh + 100px);
+  min-height: -webkit-fill-available;
+  background: #120517 !important;
+  z-index: 99999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+/* --- ANIMACIONES GLOBALES --- */
+@keyframes fadeScaleIn {
+  0% { opacity: 0; transform: scale(0.98) translateY(15px); }
+  100% { opacity: 1; transform: none; }
+}
+
+#loginSection, #appSection, #adminPanelWrapper {
+  animation: fadeScaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes vcvBounceDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* --- SCROLLBARS PERSONALIZADOS --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(192, 132, 252, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
