@@ -1757,6 +1757,31 @@ html {
         cursor: not-allowed;
     }
 
+    /* ACTA OFICIAL V2 */
+    .btn-acta-v2 {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        border-radius: 6px;
+        padding: 3px 8px;
+        text-decoration: none;
+        background: rgba(52, 152, 219, 0.14);
+        border: 1px solid rgba(52, 152, 219, 0.38);
+        color: #5dade2;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        line-height: 1.2;
+    }
+    .btn-acta-v2:hover {
+        background: rgba(52, 152, 219, 0.28);
+        border-color: #5dade2;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+
   
     /* MOBILE RESPONSIVENESS */
     @media (max-width: 600px) {

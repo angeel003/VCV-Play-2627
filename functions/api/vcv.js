@@ -634,6 +634,7 @@ async function ensureResultadosMvpSchema(db) {
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT',
+        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Acta" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_candidatos" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_oficial" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_stats" TEXT',
@@ -1423,6 +1424,7 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_por" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Acta" TEXT').run(); } catch(e) {}
 
         // Columnas de equipos en Porras (y limpieza de columnas redundantes Rival / Ubicacion_Club)
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}
@@ -1927,6 +1929,7 @@ export async function onRequestPost(context) {
             oficial_sets: oRes["Sets Oficial"] || "",
             oficial_parciales: oRes["Parciales Oficial"] || "",
             streaming: oRes.Streaming || "",
+            acta: oRes.Acta || r.Acta || "",
             actualizado_por: oRes.actualizado_por || "",
             actualizado_ts: oRes.actualizado_ts ? parseInt(oRes.actualizado_ts) : 0,
             actualizado_fecha: oRes.actualizado_fecha || "",
@@ -4282,7 +4285,8 @@ export async function onRequestPost(context) {
 
     // ADMIN: SAVE RESULTADO OFICIAL
     if (action === 'save_resultado_admin') {
-        const { id_partido, sets, parciales, streaming, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
+        const { id_partido, sets, parciales, streaming, acta, acta_url, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
+        const finalActa = (acta !== undefined) ? (acta || '') : ((acta_url !== undefined) ? (acta_url || '') : undefined);
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
@@ -4335,11 +4339,12 @@ export async function onRequestPost(context) {
                         const finalSets = (sets !== undefined) ? (sets || '') : (exist["Sets Oficial"] || '');
                         const finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
                         const finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
-                        return db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
-                            .bind(finalSets, finalParc, finalStream, usuario, nowTs, nowFechaHora, id_partido);
+                        const finalActaStr = (finalActa !== undefined) ? finalActa : (exist["Acta"] || '');
+                        return db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "Acta" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
+                            .bind(finalSets, finalParc, finalStream, finalActaStr, usuario, nowTs, nowFechaHora, id_partido);
                     }
-                    return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?)')
-                        .bind(id_partido, sets || '', parciales || '', streaming || '', usuario, nowTs, nowFechaHora);
+                    return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                        .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', usuario, nowTs, nowFechaHora);
                 }
 
                 if (exist) {
@@ -4350,6 +4355,10 @@ export async function onRequestPost(context) {
 
                     let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "mvp_candidatos" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ?';
                     const params = [finalSets, finalParc, finalStream, finalCand, usuario, nowTs, nowFechaHora];
+                    if (finalActa !== undefined) {
+                        sql += ', "Acta" = ?';
+                        params.push(finalActa);
+                    }
                     if (mvp_oficial !== undefined) {
                         sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
                         params.push(mvp_oficial || '');
@@ -4379,8 +4388,8 @@ export async function onRequestPost(context) {
                 const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
                 const pubTs = (mvp_publicacion_ts !== undefined) ? (parseInt(mvp_publicacion_ts) || 0) : 0;
                 const cierreTs = (mvp_cierre_votacion_ts !== undefined) ? (parseInt(mvp_cierre_votacion_ts) || 0) : 0;
-                return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id_partido, sets || '', parciales || '', streaming || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, cierreTs, pubTs, usuario, nowTs, nowFechaHora);
+                return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, cierreTs, pubTs, usuario, nowTs, nowFechaHora);
             };
 
             const postStmts = [buildSaveStmt()];
@@ -6136,7 +6145,7 @@ export async function onRequestPost(context) {
         try {
             const [dbRowsRes, resOfRes] = await Promise.all([
                 db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
-                db.prepare('SELECT "ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming" FROM "Resultados_Oficiales"').all()
+                db.prepare('SELECT "ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta" FROM "Resultados_Oficiales"').all()
             ]);
             const dbRows = (dbRowsRes && dbRowsRes.results) || [];
             const resOfMap = {};
@@ -6294,12 +6303,21 @@ export async function onRequestPost(context) {
                         const v = Number(d['puntos_visitante_juego_' + k] || 0);
                         if (l > 0 || v > 0) parcs.push(`${l}-${v}`);
                     }
-                    const actaMatch = String(d.imagenActa || '').match(/href=['"]([^'"]+)['"]/i);
+                    let actaUrl = null;
+                    if (d.imagenActa) {
+                        const rawActa = String(d.imagenActa).trim();
+                        const hrefMatch = rawActa.match(/href=['"]([^'"]+)['"]/i);
+                        if (hrefMatch && hrefMatch[1]) {
+                            actaUrl = hrefMatch[1];
+                        } else if (rawActa.startsWith('http://') || rawActa.startsWith('https://')) {
+                            actaUrl = rawActa;
+                        }
+                    }
                     rfevbResultsMap.set(item.mId, {
                         mId: item.mId,
                         sets: `${sL}-${sV}`,
                         parciales: parcs.join(', '),
-                        acta_url: actaMatch ? actaMatch[1] : null,
+                        acta_url: actaUrl,
                         streaming: d.linkStreaming || null,
                         local: d.equipo_local || '',
                         visitante: d.equipo_visitante || ''
@@ -6352,10 +6370,14 @@ export async function onRequestPost(context) {
                         campoInvertido = true;
                     }
 
+                    const dbActa = String(m.acta || '').trim();
+                    const fedActa = String(fed.acta_url || '').trim();
+                    const actaDiff = fedActa !== '' && dbActa === '';
+
                     const setsDiff = dbSets !== fedSets;
                     const parcDiff = normParciales(dbParc) !== normParciales(fedParc);
 
-                    if (dbSets === '' || setsDiff || parcDiff) {
+                    if (dbSets === '' || setsDiff || parcDiff || actaDiff) {
                         resultsDiff.push({
                             id_partido: id,
                             federacion: 'RFEVB',
@@ -6369,10 +6391,11 @@ export async function onRequestPost(context) {
                             db_parciales: dbParc,
                             fed_parciales: fedParc,
                             db_estado: m.estado || 'ABIERTO',
-                            tipo_diferencia: dbSets === '' ? 'NUEVO' : 'CORRECCION',
+                            tipo_diferencia: dbSets === '' ? 'NUEVO' : (actaDiff && !setsDiff && !parcDiff ? 'ACTA' : 'CORRECCION'),
                             sets_diferentes: setsDiff,
                             parciales_diferentes: parcDiff,
                             acta_url: fed.acta_url || null,
+                            db_acta: dbActa || null,
                             streaming: fed.streaming || null,
                             campo_invertido: campoInvertido
                         });
@@ -6463,6 +6486,7 @@ export async function onRequestPost(context) {
                     results_found: resultsDiff.length,
                     new_count: resultsDiff.filter(r => r.tipo_diferencia === 'NUEVO').length,
                     correction_count: resultsDiff.filter(r => r.tipo_diferencia === 'CORRECCION').length,
+                    acta_count: resultsDiff.filter(r => r.tipo_diferencia === 'ACTA').length,
                     errors: sourceErrors
                 },
                 results: resultsDiff
@@ -6498,11 +6522,12 @@ export async function onRequestPost(context) {
             const sets = String(item.sets || '').trim();
             const parciales = String(item.parciales || '').trim();
             const stream = String(item.streaming || '').trim();
+            const acta = String(item.acta_url || item.acta || '').trim();
             const cerrar = item.cerrar_partido !== false;
 
             if (!idPart || !sets) continue;
 
-            const exist = await db.prepare('SELECT "ID Partido", "Streaming" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first();
+            const exist = await db.prepare('SELECT "ID Partido", "Streaming", "Acta" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first();
             if (exist) {
                 let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ?';
                 const params = [sets, parciales, usuario, nowTs, nowFechaHora];
@@ -6510,12 +6535,16 @@ export async function onRequestPost(context) {
                     sql += ', "Streaming" = ?';
                     params.push(stream);
                 }
+                if (acta && (!exist["Acta"] || String(exist["Acta"]).trim() === '' || acta !== exist["Acta"])) {
+                    sql += ', "Acta" = ?';
+                    params.push(acta);
+                }
                 sql += ' WHERE "ID Partido" = ?';
                 params.push(idPart);
                 stmts.push(db.prepare(sql).bind(...params));
             } else {
-                stmts.push(db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?)')
-                    .bind(idPart, sets, parciales, stream, usuario, nowTs, nowFechaHora));
+                stmts.push(db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(idPart, sets, parciales, stream, acta, usuario, nowTs, nowFechaHora));
             }
 
             if (cerrar) {

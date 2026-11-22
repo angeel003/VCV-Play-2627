@@ -192,6 +192,12 @@ function renderAdminPanel(equiposParam) {
                     <input type="text" id="adm_stream_${eq.id_partido}" class="form-control" placeholder="URL de YouTube/Twitch/etc." value="${eq.streaming || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
+                <!-- SECCIÓN ACTA OFICIAL -->
+                <div style="margin-bottom: 8px; border-left: 2px solid #3498db; padding-left: 8px;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Link Acta Oficial (RFEVB / Federación)</label>
+                    <input type="text" id="adm_acta_${eq.id_partido}" class="form-control" placeholder="https://... (enlace al acta oficial)" value="${eq.acta || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                </div>
+
 ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px; display:flex; align-items:center; gap:4px;">
                     <i class="fas fa-user-edit" style="color:#e67e22;"></i>
                     <span>Resultado anotado por <strong style="color:var(--text-main);">@${eq.actualizado_por}</strong>${eq.actualizado_fecha ? ` (${eq.actualizado_fecha})` : ''}</span>
@@ -1559,6 +1565,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     const elSetsVis = document.getElementById(`adm_sets_vis_${idPart}`);
     const elParc = document.getElementById(`adm_parc_${idPart}`);
     const elStream = document.getElementById(`adm_stream_${idPart}`);
+    const elActa = document.getElementById(`adm_acta_${idPart}`);
     
     let sets = "";
     if (elSetsLoc && elSetsVis && elSetsLoc.value.trim() !== "" && elSetsVis.value.trim() !== "") {
@@ -1566,6 +1573,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     }
     const parc = elParc ? elParc.value.trim() : "";
     const stream = elStream ? elStream.value.trim() : "";
+    const acta = elActa ? elActa.value.trim() : "";
 
     btn.disabled = true; btn.innerText = "Subiendo...";
     
@@ -1578,7 +1586,8 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             id_partido: idPart, 
             sets: sets, 
             parciales: parc, 
-            streaming: stream
+            streaming: stream,
+            acta: acta
         }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
@@ -1596,6 +1605,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                         }
                         if (parc) eq.oficial_parciales = parc;
                         if (stream) eq.streaming = stream;
+                        if (acta !== undefined) eq.acta = acta;
                         eq.actualizado_por = currentUser;
                         eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
                     }
@@ -4663,11 +4673,12 @@ window._renderListaResultadosOficiales = function() {
         const isApplied = Boolean(r._applied);
         const isNuevo = r.tipo_diferencia === 'NUEVO';
         const isCorrec = r.tipo_diferencia === 'CORRECCION';
+        const isActa = r.tipo_diferencia === 'ACTA';
         const isSwapped = Boolean(r.campo_invertido);
 
         const borderCol = isApplied
             ? 'rgba(46, 204, 113, 0.5)'
-            : (isNuevo ? 'rgba(46, 204, 113, 0.45)' : 'rgba(243, 156, 18, 0.45)');
+            : (isNuevo ? 'rgba(46, 204, 113, 0.45)' : (isActa ? 'rgba(52, 152, 219, 0.45)' : 'rgba(243, 156, 18, 0.45)'));
         const bgCol = isApplied ? 'rgba(46, 204, 113, 0.08)' : 'rgba(0, 0, 0, 0.28)';
 
         const tags = [];
@@ -4676,6 +4687,7 @@ window._renderListaResultadosOficiales = function() {
         if (r.jornada) tags.push(`<span style="background:rgba(255,255,255,0.06); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:700;">J.${_escHorarioHtml(r.jornada)}</span>`);
         if (isNuevo) tags.push(`<span style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">NUEVO RESULTADO</span>`);
         if (isCorrec) tags.push(`<span style="background:rgba(243,156,18,0.22); color:#f5c542; border:1px solid #f39c12; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CORRECCIÓN</span>`);
+        if (isActa) tags.push(`<span style="background:rgba(52,152,219,0.22); color:#5dade2; border:1px solid #3498db; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">ACTA DISPONIBLE</span>`);
         if (isSwapped) tags.push(`<span style="background:rgba(155,89,182,0.22); color:#d2a8ff; border:1px solid #9b59b6; padding:2px 6px; border-radius:4px; font-size:0.68rem; font-weight:800;">CAMPO INVERTIDO</span>`);
 
         const setsComparisonHtml = `
@@ -4764,9 +4776,10 @@ window.adminComprobarResultadosOficiales = async function() {
             const errHtml = (s.errors && s.errors.length > 0)
                 ? `<div style="margin-top:6px; color:#f39c12; font-size:0.72rem;">⚠️ Avisos de fuente: ${_escHorarioHtml(s.errors.join(' | '))}</div>`
                 : '';
+            const actaText = s.acta_count ? ` · ${s.acta_count} actas` : '';
             resumen.innerHTML = `
                 <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; align-items:center;">
-                    <span>Revisados <b>${s.total_checked || 0}</b> partidos · Encontrados <b>${s.results_found || 0}</b> resultados (${s.new_count || 0} nuevos · ${s.correction_count || 0} correcciones)</span>
+                    <span>Revisados <b>${s.total_checked || 0}</b> partidos · Encontrados <b>${s.results_found || 0}</b> resultados (${s.new_count || 0} nuevos · ${s.correction_count || 0} correcciones${actaText})</span>
                     <span style="color:var(--text-muted); font-size:0.7rem;">${_escHorarioHtml(data.checked_at || '')}</span>
                 </div>
                 ${errHtml}`;
@@ -4807,6 +4820,7 @@ window.adminAplicarResultadoOficial = async function(idx) {
                     sets: item.fed_sets,
                     parciales: item.fed_parciales,
                     streaming: item.streaming || '',
+                    acta_url: item.acta_url || '',
                     cerrar_partido: true
                 }]
             }),
@@ -4829,6 +4843,7 @@ window.adminAplicarResultadoOficial = async function(idx) {
                         eq.oficial_parciales = item.fed_parciales;
                         eq.estado = 'CERRADO';
                         if (item.streaming && !eq.streaming) eq.streaming = item.streaming;
+                        if (item.acta_url) eq.acta = item.acta_url;
                         eq.actualizado_por = currentUser;
                         eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
                     }
@@ -4870,6 +4885,7 @@ window.adminAplicarTodosResultadosOficiales = async function() {
         sets: item.fed_sets,
         parciales: item.fed_parciales,
         streaming: item.streaming || '',
+        acta_url: item.acta_url || '',
         cerrar_partido: true
     }));
 
@@ -4900,6 +4916,7 @@ window.adminAplicarTodosResultadosOficiales = async function() {
                             eq.oficial_parciales = item.fed_parciales;
                             eq.estado = 'CERRADO';
                             if (item.streaming && !eq.streaming) eq.streaming = item.streaming;
+                            if (item.acta_url) eq.acta = item.acta_url;
                             eq.actualizado_por = currentUser;
                             eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
                         }
