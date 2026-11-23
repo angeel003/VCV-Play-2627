@@ -4696,13 +4696,20 @@ window._renderListaResultadosOficiales = function() {
                     <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">Resultado (Sets):</span>
                     <span style="font-size:0.88rem; font-weight:900; color:#2ecc71; background:rgba(46,204,113,0.15); padding:2px 8px; border-radius:6px; border:1px solid rgba(46,204,113,0.3);">${_escHorarioHtml(r.fed_sets)}</span>
                 </div>
-                ${r.db_sets ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(r.db_sets)}</span></div>` : '<div style="font-size:0.7rem; color:#f39c12; margin-bottom:4px;">BD actual: Sin resultado registrado</div>'}
+                ${r.db_sets ? (r.sets_diferentes
+                    ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c; font-weight:700;">${_escHorarioHtml(r.db_sets)}</span> <span style="color:#e74c3c; font-weight:800;">(Difiere)</span></div>`
+                    : `<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">BD actual: <span style="color:#2ecc71; font-weight:800;">${_escHorarioHtml(r.db_sets)}</span> <span style="color:#2ecc71; font-weight:700;">(Coincide ✅)</span></div>`
+                ) : '<div style="font-size:0.7rem; color:#f39c12; margin-bottom:4px;">BD actual: Sin resultado registrado</div>'}
                 
                 <div style="margin-top:6px;">
                     <div style="font-size:0.73rem; color:var(--text-muted); font-weight:600; margin-bottom:2px;">Parciales:</div>
                     <div style="font-size:0.78rem; color:var(--text-main); font-weight:700; word-break:break-word;">${_escHorarioHtml(r.fed_parciales)}</div>
-                    ${r.db_parciales && r.parciales_diferentes ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c;">${_escHorarioHtml(r.db_parciales)}</span></div>` : ''}
+                    ${r.db_parciales && r.parciales_diferentes
+                        ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">BD actual: <span style="text-decoration:line-through; color:#e74c3c; font-weight:700;">${_escHorarioHtml(r.db_parciales)}</span> <span style="color:#e74c3c; font-weight:800;">(Difieren)</span></div>`
+                        : (r.db_parciales ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">BD actual: <span style="color:#2ecc71; font-weight:800;">${_escHorarioHtml(r.db_parciales)}</span> <span style="color:#2ecc71; font-weight:700;">(Coinciden ✅)</span></div>` : '')
+                    }
                 </div>
+                ${isActa ? `<div style="margin-top:6px; font-size:0.72rem; color:#5dade2; background:rgba(52,152,219,0.12); border:1px dashed rgba(52,152,219,0.35); padding:5px 8px; border-radius:6px;">ℹ️ Marcador correcto en BD. La federación ha publicado el acta oficial para vincular.</div>` : ''}
             </div>`;
 
         const linksHtml = [];
@@ -4713,13 +4720,16 @@ window._renderListaResultadosOficiales = function() {
             linksHtml.push(`<a href="${_escHorarioHtml(r.streaming)}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; color:#e67e22; text-decoration:none; padding:3px 7px; border-radius:4px; background:rgba(230,126,34,0.15); border:1px solid rgba(230,126,34,0.3);"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> Streaming</a>`);
         }
 
+        const btnLabel = isActa ? 'Guardar Acta Oficial' : (isCorrec ? 'Corregir resultado' : 'Aplicar resultado');
+        const appliedLabel = isActa ? '✅ Acta oficial guardada' : '✅ Resultado aplicado y partido cerrado';
+
         const actionBtnHtml = isApplied
-            ? `<div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(46,204,113,0.18); color:#2ecc71; font-size:0.75rem; font-weight:800; text-align:center;">✅ Resultado aplicado y partido cerrado</div>`
+            ? `<div style="margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(46,204,113,0.18); color:#2ecc71; font-size:0.75rem; font-weight:800; text-align:center;">${appliedLabel}</div>`
             : `
                 <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">${linksHtml.join('')}</div>
                     <button type="button" id="btnApplyRes_${idx}" onclick="window.adminAplicarResultadoOficial(${idx})" style="padding:7px 13px; border-radius:7px; border:none; background:linear-gradient(135deg, #1abc9c, #2ecc71); color:#000; font-size:0.76rem; font-weight:800; cursor:pointer; box-shadow: 0 2px 6px rgba(46,204,113,0.3);">
-                        Aplicar resultado
+                        ${btnLabel}
                     </button>
                 </div>`;
 
