@@ -10,6 +10,8 @@ datos_importacion/
 sql/
 *.log
 .wrangler/
+_worker.bundle
+_worker.js
 temp_*
 backups/
 archivos_desarrollo/
