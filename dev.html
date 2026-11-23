@@ -1684,20 +1684,27 @@
       <div id="historialContentV2"></div>
       
       <!-- Predicción de Puntos Totales al final de Mis Predicciones -->
-      <div id="prediccionesTotalesSection" style="padding-top: 25px; padding-bottom: 25px;">
-        <details class="vcv-faq-master" id="detailsPrediccionesTotales" style="margin-top: 0px; margin-bottom: 20px; max-width: 100%; border: 1px solid var(--secondary-color); box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);">
-            <summary style="padding:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.3rem;"></span>
-                    <span style="font-size:1.1rem; font-weight:900; color:var(--secondary-color); letter-spacing:0.5px;">👉 Predicción de Puntos Totales 26/27 👈</span>
+      <div id="prediccionesTotalesSection" style="padding-top: 15px; padding-bottom: 25px;">
+        <details class="vcv-faq-master" id="detailsPrediccionesTotales" style="margin-top: 0px; margin-bottom: 20px; max-width: 100%; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 16px; background: linear-gradient(135deg, rgba(34, 10, 48, 0.95) 0%, rgba(18, 5, 27, 0.98) 100%); box-shadow: 0 8px 24px rgba(0,0,0,0.4); overflow: hidden;">
+            <summary style="padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+                <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.35); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-lucide="target" style="width: 18px; height: 18px; color: var(--vcv-dorado);"></i>
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-size: 1.05rem; font-weight: 900; color: #fff; letter-spacing: -0.3px;">Predicción de Puntos Totales</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Pronóstico secreto de final de temporada 26/27</div>
+                    </div>
                 </div>
-                <div id="relojTotales" style="display:none;"></div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                    <span style="font-size: 0.68rem; font-weight: 800; background: rgba(212, 175, 55, 0.15); color: var(--vcv-dorado); border: 1px solid rgba(212, 175, 55, 0.35); padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Top Secret 🔒</span>
+                    <div id="relojTotales" style="display:none;"></div>
+                </div>
             </summary>
-            <div class="faq-content-v2" style="padding:0 15px 15px 15px; border-top:1px solid rgba(255,255,255,0.05);">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0 15px 0; text-align:left;">
-                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada. <strong>Cada voto será completamente secreto.</strong>
+            <div class="faq-content-v2" style="padding: 14px 18px 20px 18px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 16px 0; text-align: left; line-height: 1.45;">
+                  Predicción de los <span style="color: var(--vcv-dorado); font-weight: 700;">puntos totales</span> acumulados a final de temporada. Cada predicción es <strong>completamente secreta</strong> hasta el término de la competición.
                 </p>
-                
                 <div id="contenedorPrediccionesTotales"></div>
             </div>
         </details>
