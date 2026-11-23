@@ -2,15 +2,23 @@ node_modules/
 .scripts_temporales_ia/
 obsoleto/
 datos_prueba/
-*.log
-.wrangler/
+datos_importacion/
+*.xlsx
+*.xls
 *.csv
 *.sql
+sql/
+*.log
+.wrangler/
 temp_*
 backups/
 archivos_desarrollo/
 *.zip
+*.sqlite
+*.sqlite3
 package-lock.json
 files/images/**/old_backups/
 files/images/mvp_banner_ejemplo.jpg
+.DS_Store
+Thumbs.db
 

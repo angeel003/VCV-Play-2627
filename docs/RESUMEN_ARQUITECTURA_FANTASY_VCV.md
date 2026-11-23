@@ -7,8 +7,8 @@ Este documento resume la arquitectura actual de **VCV Play 26/27 (Fantasy VCV)**
 ## 1. Stack Tecnológico Actual
 
 - **Frontend:** Vanilla HTML5, CSS3 y JavaScript ES6+ sin frameworks externos. Implementado como **PWA** (Progressive Web App) mediante `manifest.json` y `sw.js`.
-  - Tanto `dev.html` (desarrollo/staging) como `index.html` (producción en `vcvplay.com`) cargan los 9 módulos JS situados en `js/` mediante `<script defer src="js/...?v=...">`.
-- **Backend / API:** **Cloudflare Pages Functions** (`functions/api/vcv.js`), expuesto en el endpoint `/api/vcv` para peticiones `POST` en formato JSON (y rutas auxiliares de comprobación).
+  - Tanto `dev.html` (desarrollo/staging) como `index.html` (producción en `vcvplay.com`) cargan los módulos base situados en `js/` mediante `<script defer src="js/...?v=...">`, mientras que la intranet de administración (`js/admin.js`, 248 KB) se carga de forma diferida bajo demanda solo para usuarios con privilegios.
+- **Backend / API:** **Cloudflare Pages Functions** modularizado en `functions/api/vcv.js` y subdirectorio `functions/api/_modules/` (`shared.js`, `matches.js`, `mvp.js`, `push.js`, `admin.js`), expuesto en el endpoint `/api/vcv` para peticiones `POST` en formato JSON con micro-caché en memoria en el borde.
 - **Base de Datos:** **Cloudflare D1 (`vcv_database`)**, base de datos relacional SQLite distribuida en el borde con consultas parametrizadas (`db.prepare(...).bind(...)`) e índices dedicados.
 - **Notificaciones:** **Web Push API** con claves VAPID gestionadas desde el backend y Service Worker (`sw.js`).
 - **Seguridad perimetral:** Cloudflare Proxy, Cloudflare WAF Rate Limiting, hash seguro de contraseñas, honeypot, detección de envíos sub-segundo y límite de frecuencia por IP en registros públicos.

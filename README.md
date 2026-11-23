@@ -117,9 +117,14 @@ Construida sobre una arquitectura Serverless Edge con **Cloudflare Pages**, **Cl
 | `index.html` | Entrada de producción (`vcvplay.com`) con estructura HTML, modales, estilos y carga modular de `js/`. |
 | `dev.html` | Entorno de pruebas y desarrollo antes de promocionar cambios a producción. |
 | `patros.html` | Página independiente de patrocinadores y colaboradores oficiales del club. |
-| `functions/api/vcv.js` | Backend serverless completo en Cloudflare Pages Functions (~5.580 líneas). |
+| `functions/api/vcv.js` | Enrutador principal HTTP, middleware de autenticación y micro-caché D1 (~1.650 líneas). |
+| `functions/api/_modules/shared.js` | Utilidades compartidas: hashing PBKDF2/SHA-256, CORS, sanitización y respuestas JSON. |
+| `functions/api/_modules/matches.js` | Lógica de partidos: consulta, formateo por ligas y recálculo automático de porras. |
+| `functions/api/_modules/mvp.js` | Módulo de MVP: estadísticas de jugadores, votos de jornada y rankings. |
+| `functions/api/_modules/push.js` | Notificaciones Web Push: cifrado RFC 8291 / ECDH P-256, firmas VAPID y cola de envíos. |
+| `functions/api/_modules/admin.js` | Endpoints de administración: gestión de usuarios, ligas, actas, ajustes de partidos y auditoría. |
 | `js/config.js` | Configuración global, endpoint `/api/vcv`, `fetchSeguro`, formato de fechas y utilidades. |
-| `js/admin.js` | Intranet de administración: actas, horarios, solicitudes de registro, usuarios, ligas, MVP y push. |
+| `js/admin.js` | Intranet de administración: actas, horarios, solicitudes, ligas, MVP y push (carga diferida bajo demanda). |
 | `js/cartelera.js` | Renderizado de tarjetas de partidos, relojes de cuenta atrás y pronósticos de temporada. |
 | `js/cartelera_interactive.js` | Interacción de porras, votación MVP, comparador, Wrapped y generador de tarjetas Canvas. |
 | `js/ranking.js` | Historial de partidos del usuario, estadísticas personales y filtros por jornada/equipo. |
@@ -174,6 +179,7 @@ VCV Play puede instalarse directamente en el dispositivo sin necesidad de tienda
 ## Documentación Adicional
 
 - [Guía de uso de VCV Play](docs/GUIA_VCV_PLAY.md)
+- [Mapa de Arquitectura del Sistema](MAPA_ARQUITECTURA.md)
 - [Arquitectura del Frontend](ARQUITECTURA_FRONTEND.md)
 - [Resumen de Arquitectura Técnica y API](docs/RESUMEN_ARQUITECTURA_FANTASY_VCV.md)
 - [Plan de Correo Propio, Recuperación y Turnstile](docs/PLAN_CORREO_RECUPERACION_Y_REGISTRO.md)
