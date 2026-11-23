@@ -972,29 +972,29 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     });
 
                     let safeEqName = (window.getEscudoSlug ? window.getEscudoSlug(eq) : eq.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
-                    let eqLogo = `<picture><source srcset="files/images/escudos/${safeEqName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeEqName}.png?v=20261115_v1" alt="${eq}" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size:0.85rem; color:#fff;\\'>${eq.substring(0,3).toUpperCase()}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                    let eqLogo = `<picture style="display:inline-flex; width:24px; height:24px; vertical-align:middle; flex-shrink:0;"><source srcset="files/images/escudos/${safeEqName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeEqName}.png?v=20261115_v1" alt="${eq}" onerror="this.style.display='none';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
 
                     let miCajonHTML = "";
                     if (isClosed) {
                         let txtPts = misPts !== "" ? `${misPts} pts` : "Sin predicción";
                         miCajonHTML = `
-                        <div style="background:rgba(0,0,0,0.32); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:space-between;">
-                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase; letter-spacing:0.4px;">Tu predicción final:</label>
-                            <div style="font-size:1.15rem; font-weight:900; color:var(--vcv-dorado); display:flex; align-items:center; gap:6px; font-family:'Space Grotesk', sans-serif;">
-                                <i data-lucide="lock" style="width:14px; height:14px;"></i>
+                        <div style="background:rgba(0,0,0,0.32); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between;">
+                            <span style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px;">Tu predicción final:</span>
+                            <div style="font-size:1.1rem; font-weight:900; color:var(--vcv-dorado); display:flex; align-items:center; gap:6px; font-family:'Space Grotesk', sans-serif;">
+                                <i data-lucide="lock" style="width:13px; height:13px; opacity:0.8;"></i>
                                 ${txtPts}
                             </div>
                         </div>`;
                     } else {
                         miCajonHTML = `
-                        <div style="background:rgba(0,0,0,0.32); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:space-between; gap:10px;">
-                            <label style="font-weight:700; color:var(--text-muted); font-size:0.75rem; margin:0; text-transform:uppercase; letter-spacing:0.4px;">Tu predicción:</label>
-                            <div class="stepper-container-v2" style="width: 140px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:2px; display:flex; align-items:center;">
-                                <button type="button" class="btn-step-v2" style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.06); color:#fff; border:none; font-weight:900; font-size:1.1rem; cursor:pointer;" onclick="document.getElementById('pt_${eq}').stepDown()">-</button>
+                        <div style="background:rgba(0,0,0,0.32); padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                            <span style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px;">Tu predicción:</span>
+                            <div class="stepper-container-v2" style="width: 130px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:2px; display:flex; align-items:center;">
+                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px; background:rgba(255,255,255,0.06); color:#fff; border:none; font-weight:900; font-size:1.05rem; cursor:pointer;" onclick="document.getElementById('pt_${eq}').stepDown()">-</button>
                                 <div class="stepper-value-v2" style="flex:1; min-width:auto;">
-                                    <input type="number" id="pt_${eq}" placeholder="0" value="${misPts}" style="background:transparent; border:none; text-align:center; font-size:1.2rem; font-weight:900; color:var(--vcv-dorado); width:100%; outline:none; -moz-appearance:textfield; margin:0; padding:0; height:32px; font-family:'Space Grotesk', sans-serif;">
+                                    <input type="number" id="pt_${eq}" placeholder="0" value="${misPts}" style="background:transparent; border:none; text-align:center; font-size:1.15rem; font-weight:900; color:var(--vcv-dorado); width:100%; outline:none; -moz-appearance:textfield; margin:0; padding:0; height:30px; font-family:'Space Grotesk', sans-serif;">
                                 </div>
-                                <button type="button" class="btn-step-v2" style="width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.06); color:#fff; border:none; font-weight:900; font-size:1.1rem; cursor:pointer;" onclick="document.getElementById('pt_${eq}').stepUp()">+</button>
+                                <button type="button" class="btn-step-v2" style="width:30px; height:30px; border-radius:6px; background:rgba(255,255,255,0.06); color:#fff; border:none; font-weight:900; font-size:1.05rem; cursor:pointer;" onclick="document.getElementById('pt_${eq}').stepUp()">+</button>
                             </div>
                         </div>`;
                     }
@@ -1005,18 +1005,18 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     }
 
                     htmlTot += `
-                    <div class="vcv-card-v2 pred-card" style="margin-bottom:12px; padding: 14px 16px; border-left:4px solid var(--vcv-dorado) !important; text-align: left;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
-                            <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
-                                <div style="width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); padding:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                    ${eqLogo}
-                                </div>
+                    <div class="vcv-card-v2" style="margin-bottom:10px; padding: 12px 14px; border-left:4px solid var(--vcv-dorado); background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); text-align: left;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
+                                ${eqLogo}
                                 <div style="min-width:0; flex:1; text-align:left;">
-                                    <h4 style="color:var(--text-main); margin:0; font-weight:800; font-size:0.98rem; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${eq}">${eq}</h4>
-                                    ${categoriaEq ? `<span style="color:var(--text-muted); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-top:2px;">${categoriaEq}</span>` : ''}
+                                    <h4 style="color:var(--text-main); margin:0; font-weight:800; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${eq}">${eq}</h4>
+                                    ${categoriaEq ? `<span style="color:var(--text-muted); font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; display:block;">${categoriaEq}</span>` : ''}
                                 </div>
                             </div>
-                            <span style="background:rgba(16, 185, 129, 0.15); color:#10b981; border:1px solid rgba(16, 185, 129, 0.35); padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.75rem; white-space:nowrap; flex-shrink:0;">Llevan: ${ptsActuales} pts</span>
+                            <span style="background:rgba(16, 185, 129, 0.12); color:#10b981; border:1px solid rgba(16, 185, 129, 0.28); padding:3px 8px; border-radius:6px; font-weight:800; font-size:0.75rem; white-space:nowrap; flex-shrink:0;">
+                              Llevan: ${ptsActuales} pts
+                            </span>
                         </div>
                         ${miCajonHTML}
                     </div>`;
@@ -1024,8 +1024,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
 
                 htmlTot += `<div id="msgPrediccionesTotales" class="alert-box mt-3" style="padding:10px;"></div>`;
                 if (!isClosed) {
-                    htmlTot += `<button type="button" id="btnSaveTotales" style="width:100%; padding: 14px; border-radius: 12px; font-weight: 900; border: none; background: var(--secondary-color); color: #000; cursor:pointer; font-size:1.05rem; transition: all 0.2s; margin-top:10px; margin-bottom:10px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35); display:inline-flex; align-items:center; justify-content:center; gap:8px;">
-                        <i data-lucide="save" style="width:18px;height:18px;"></i>
+                    htmlTot += `<button type="button" id="btnSaveTotales" style="width:100%; padding: 13px; border-radius: 10px; font-weight: 800; border: none; background: var(--secondary-color); color: #000; cursor:pointer; font-size:0.95rem; transition: all 0.2s; margin-top:10px; margin-bottom:10px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35); display:inline-flex; align-items:center; justify-content:center; gap:6px;">
                         <span>Guardar Predicciones</span>
                     </button>`;
                 }

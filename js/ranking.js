@@ -434,9 +434,9 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     
     let ptsTxt = totalPredicciones > 0 ? ptsTotales : "-";
     let setsPorcentaje = totalPredicciones > 0 ? Math.round((setsExactos / totalPredicciones) * 100) : 0;
-    let setsTxt = totalPredicciones > 0 ? `${setsExactos} <span style="font-size:0.85rem; font-weight:800; color:#55efc4; float:right; margin-top:6px;">${setsPorcentaje}%</span>` : "-";
-    let aciertosTxt = totalPredicciones > 0 ? `${aciertosGanador} <span style="font-size:0.8rem; font-weight:normal; color:#ccc;">/ ${totalPredicciones}</span> <span style="font-size:0.85rem; font-weight:800; color:#55efc4; float:right; margin-top:6px;">${eficacia}%</span>` : "-";
-    let promedioTxt = totalPredicciones > 0 ? `${promedio} <span style="font-size:0.8rem; font-weight:normal; color:#ccc;">/ part.</span>` : "-";
+    let setsTxt = totalPredicciones > 0 ? `${setsExactos}` : "-";
+    let aciertosTxt = totalPredicciones > 0 ? `${aciertosGanador}` : "-";
+    let promedioTxt = totalPredicciones > 0 ? `${promedio}` : "-";
 
     let derbyAvisoHtml = hasAnyDerbyAvailable ? `
         <span onclick="if(window.showMobileTooltip) showMobileTooltip(event, 'El promedio se calcula sobre los puntos base de cada partido, sin incluir la bonificación doble (x2) de los derbys.');" 
@@ -476,30 +476,50 @@ function drawHistorialUI(selectedJornada = 'todas', selectedEquipo = 'todos') {
     `;
 
     let statsHTML = `
-      <div style="background: linear-gradient(180deg, #180622 0%, #0d0314 100%); padding: 14px 12px; border-radius: 14px; margin-bottom: 20px; color: white; border: 1px solid rgba(212,175,55,0.35); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+      <div style="background: linear-gradient(135deg, rgba(28, 8, 38, 0.85) 0%, rgba(14, 4, 20, 0.95) 100%); padding: 14px 12px; border-radius: 14px; margin-bottom: 20px; color: white; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 4px 18px rgba(0,0,0,0.35); backdrop-filter: blur(8px);">
         <div class="historial-metrics-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35); text-align: center;">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight: 700; line-height: 1.2; letter-spacing: 0.4px;">Pts Ganados</div>
-            <div class="metric-val" style="font-size: 1.5rem; font-weight: 900; color: #f5c542; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${ptsTxt}</div>
-          </div>
-          
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35); text-align: center;">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; line-height: 1.2; letter-spacing: 0.4px;">
-                <span>Promedio</span>
-                ${derbyAvisoHtml}
+          <div style="background: rgba(0, 0, 0, 0.32); padding: 12px 10px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2); min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.25); text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.7rem; color: #c4b3cf; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <i data-lucide="trophy" style="width: 13px; height: 13px; color: var(--vcv-dorado);"></i>
+              <span>Pts Ganados</span>
             </div>
-            <div class="metric-val" style="font-size: 1.5rem; font-weight: 900; color: #fcfaff; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${promedioTxt}</div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: var(--vcv-dorado); font-family: 'Space Grotesk', sans-serif; margin: 4px 0 2px 0; line-height: 1;">${ptsTxt}</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">acumulados</div>
           </div>
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35); text-align: center;">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight: 700; line-height: 1.2; letter-spacing: 0.4px;">Aciertos (Part.)</div>
-            <div class="metric-val" style="font-size: 1.5rem; font-weight: 900; color: #38bdf8; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${aciertosTxt}</div>
+          <div style="background: rgba(0, 0, 0, 0.32); padding: 12px 10px; border-radius: 12px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.25); text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.7rem; color: #c4b3cf; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <i data-lucide="zap" style="width: 13px; height: 13px; color: #c084fc;"></i>
+              <span>Promedio Base</span>
+              ${derbyAvisoHtml}
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #fcfaff; font-family: 'Space Grotesk', sans-serif; margin: 4px 0 2px 0; line-height: 1;">${promedioTxt}</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">por partido</div>
           </div>
           
-          <div style="background: #1f0729; padding: 12px 10px; border-radius: 10px; border: 1px solid rgba(192, 132, 252, 0.16); min-width: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.35); text-align: center;">
-            <div class="metric-label" style="font-size: 0.72rem; color: #bfa9c9; text-transform: uppercase; font-weight: 700; line-height: 1.2; letter-spacing: 0.4px;">Sets Exactos</div>
-            <div class="metric-val" style="font-size: 1.5rem; font-weight: 900; color: #10b981; font-family: 'Space Grotesk', sans-serif; margin-top: 3px;">${setsTxt}</div>
+          <div style="background: rgba(0, 0, 0, 0.32); padding: 12px 10px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2); min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.25); text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.7rem; color: #c4b3cf; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <i data-lucide="target" style="width: 13px; height: 13px; color: #38bdf8;"></i>
+              <span>Aciertos Ganador</span>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #38bdf8; font-family: 'Space Grotesk', sans-serif; margin: 4px 0 2px 0; line-height: 1;">
+              ${aciertosTxt} ${totalPredicciones > 0 ? `<span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">/ ${totalPredicciones}</span>` : ''}
+            </div>
+            <div>
+              <span style="font-size: 0.65rem; font-weight: 800; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 7px; border-radius: 8px;">${totalPredicciones > 0 ? eficacia + '% éxito' : '-'}</span>
+            </div>
+          </div>
+          
+          <div style="background: rgba(0, 0, 0, 0.32); padding: 12px 10px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.25); text-align: center; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 0.7rem; color: #c4b3cf; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <i data-lucide="award" style="width: 13px; height: 13px; color: #10b981;"></i>
+              <span>Sets Exactos</span>
+            </div>
+            <div style="font-size: 1.6rem; font-weight: 900; color: #10b981; font-family: 'Space Grotesk', sans-serif; margin: 4px 0 2px 0; line-height: 1;">${setsTxt}</div>
+            <div>
+              <span style="font-size: 0.65rem; font-weight: 800; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 7px; border-radius: 8px;">${totalPredicciones > 0 ? setsPorcentaje + '% precisión' : '-'}</span>
+            </div>
           </div>
           
         </div>
