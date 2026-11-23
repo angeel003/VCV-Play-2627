@@ -1307,10 +1307,9 @@ html {
     }
     .match-header-strip-v2.opt4-header {
       display: flex !important;
-      flex-direction: row !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      gap: 10px !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 6px !important;
     }
     .match-footer-pabellon-opt1 {
       margin-top: 12px;

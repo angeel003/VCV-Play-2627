@@ -292,16 +292,16 @@ function renderMatchCardHtml(eq) {
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 26px; width: auto; object-fit: contain;" alt="FVCL" onerror="this.style.display='none'">
-                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.78rem; white-space:nowrap;">
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 24px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; white-space:nowrap;">
                   ${shortCat}
                 </span>
             </div>`;
     } else {
         catLogoHtml = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 42px; max-height: 44px; width: auto; object-fit: contain;" alt="EsVoley" onerror="this.style.display='none'">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 44px; max-height: 46px; width: auto; object-fit: contain;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 35px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 35px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
                 <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; display: none;">
                   ${shortCat}
                 </span>
@@ -314,23 +314,25 @@ function renderMatchCardHtml(eq) {
     let visitRoleHtml = `<span class="team-role-v2" style="color: var(--text-muted); font-weight:800; display:flex; align-items:center; gap:4px;">✈️ VISITANTE</span>`;
 
     let headerStripHtml = `
-    <div class="match-header-strip-v2 opt4-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color); gap:10px;">
-        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            ${catLogoHtml}
-        </div>
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-end; gap:5px; min-width:0; flex:1;">
-            <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap;">
+    <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+                ${catLogoHtml}
+            </div>
+            <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap; flex-shrink:0;">
                 <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
             </div>
-            ${(eq.es_derby || cleanPab) ? `
-            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; width:100%; font-size:0.73rem; min-width:0;">
-                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4); flex-shrink:0;">⚡ DERBY</div>` : ''}
-                ${cleanPab ? `
-                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;" title="${cleanPab}">
-                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
-                </div>` : ''}
-            </div>` : ''}
         </div>
+        ${(eq.es_derby || cleanPab) ? `
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
+            </div>
+            ${cleanPab ? `
+            <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+            </div>` : ''}
+        </div>` : ''}
     </div>`;
     
     return `
@@ -401,16 +403,16 @@ function renderMatchResultCardHtml(eq) {
     if (isFvcl) {
         catLogoHtml = `
             <div style="display: flex; align-items: center; gap: 6px;">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 26px; width: auto; object-fit: contain;" alt="FVCL" onerror="this.style.display='none'">
-                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.78rem; white-space:nowrap;">
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 24px; width: auto;" alt="FVCL" onerror="this.style.display='none'">
+                <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; white-space:nowrap;">
                   ${shortCat}
                 </span>
             </div>`;
     } else {
         catLogoHtml = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 42px; max-height: 44px; width: auto; object-fit: contain;" alt="EsVoley" onerror="this.style.display='none'">
-                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 44px; max-height: 46px; width: auto; object-fit: contain;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <img loading="lazy" src="files/images/logo_esvoley.svg" style="height: 35px; width: auto;" alt="EsVoley" onerror="this.style.display='none'">
+                <img loading="lazy" src="files/images/${catFilename}?v=20261108_v1" style="height: 35px; width: auto;" alt="${eq.categoria}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block'; this.previousElementSibling.style.display='none';">
                 <span style="color: var(--secondary-color); font-weight: 800; font-size:0.75rem; display: none;">
                   ${shortCat}
                 </span>
@@ -577,25 +579,27 @@ function renderMatchResultCardHtml(eq) {
     </button>` : '';
 
     let headerStripHtml = `
-    <div class="match-header-strip-v2 opt4-header" style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color); gap:10px;">
-        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            ${catLogoHtml}
-        </div>
-        <div style="display:flex; flex-direction:column; justify-content:center; align-items:flex-end; gap:5px; min-width:0; flex:1;">
-            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; width:100%;">
+    <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+                ${catLogoHtml}
+            </div>
+            <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; flex-shrink:0;">
                 ${btnCalShareHtml}
                 <div style="text-align: right; color:var(--text-muted); font-size:0.78rem; font-weight:600; white-space:nowrap;">
                     <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
                 </div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px; width:100%; font-size:0.73rem; min-width:0; flex-wrap:wrap;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                 ${outcomeBadge}
-                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4); flex-shrink:0;">⚡ DERBY</div>` : ''}
-                ${cleanPab ? `
-                <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;" title="${cleanPab}">
-                    <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
-                </div>` : ''}
+                ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
             </div>
+            ${cleanPab ? `
+            <div style="color:var(--text-muted); text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; margin-left:auto;" title="${cleanPab}">
+                <i data-lucide="map-pin" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-top:-2px; opacity:0.8;"></i> <span>${cleanPab}</span>
+            </div>` : ''}
         </div>
     </div>`;
 
