@@ -238,6 +238,7 @@ window.detectarModeloDispositivo = detectarModeloDispositivo;
 // ------------------------------------------------------------------
 window.cerrarSesionApp = function() {
     localStorage.removeItem('vcv_saved_session');
+    sessionStorage.removeItem('vcv_cached_app_data');
     sessionStorage.setItem('vcv_just_logged_out', 'true');
     sessionStorage.setItem('vcv_slide_left', 'true');
     
@@ -721,6 +722,15 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
             } else {
                 localStorage.removeItem('vcv_saved_session');
             }
+
+            // Guardar instant-cache de sesión para renderizado ultrarrápido (0ms) en reaperturas
+            try {
+                sessionStorage.setItem('vcv_cached_app_data', JSON.stringify({
+                    data: data,
+                    usuario: canonicalUser,
+                    ts: Date.now()
+                }));
+            } catch(e) {}
             window.appNotificaciones = data.notificaciones || [];
             if (data.ligas && data.ligas.length > 0) {
                 window.currentLiga = data.ligas[0];
@@ -874,6 +884,17 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                         }
                     }
                 });
+
+                // Cargar js/admin.js bajo demanda (Lazy Loading) únicamente para usuarios con permisos
+                if (typeof window.loadAdminScript === 'function') {
+                    window.loadAdminScript().then(function() {
+                        if (typeof window.cambiarAdminCategoria === 'function') {
+                            let savedTab = 'usuarios';
+                            try { savedTab = sessionStorage.getItem('vcv_admin_tab') || 'usuarios'; } catch(e) {}
+                            window.cambiarAdminCategoria(savedTab);
+                        }
+                    });
+                }
 
                 // Sincronizar categorías temáticas del panel admin
                 if (isAdmin) {
@@ -1354,6 +1375,20 @@ window.verificarAutoLogin = function() {
             inputUsr.value = ses.usuario;
             inputPwd.value = ses.password;
             if (chk) chk.checked = true;
+
+            // Renderizado instantáneo (0ms) desde caché de sesión mientras la red verifica en segundo plano
+            try {
+                const rawCache = sessionStorage.getItem('vcv_cached_app_data');
+                if (rawCache) {
+                    const cached = JSON.parse(rawCache);
+                    if (cached && cached.data && cached.usuario === ses.usuario && (Date.now() - cached.ts < 6 * 3600000)) {
+                        window.appData = cached.data;
+                        if (typeof window.renderCarteleraHTML === 'function') {
+                            window.renderCarteleraHTML(cached.data);
+                        }
+                    }
+                }
+            } catch(e) {}
 
             window._esAutoLogin = true;
             btn.disabled = false;

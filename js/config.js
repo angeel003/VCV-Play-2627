@@ -730,3 +730,29 @@ window.mergeMvpRecuentoWithCandidates = function(recuentoList, candsList) {
     return buckets;
 };
 
+// Carga bajo demanda (Lazy Loading) de admin.js para usuarios con permisos
+window._adminScriptPromise = null;
+window.loadAdminScript = function() {
+    if (window._adminScriptLoaded || document.getElementById('vcv-admin-script')) {
+        return Promise.resolve();
+    }
+    if (window._adminScriptPromise) return window._adminScriptPromise;
+    window._adminScriptPromise = new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.id = 'vcv-admin-script';
+        s.src = 'js/admin.js?v=20261122_v1';
+        s.async = true;
+        s.onload = function() {
+            window._adminScriptLoaded = true;
+            resolve();
+        };
+        s.onerror = function(err) {
+            console.error('Error cargando js/admin.js:', err);
+            reject(err);
+        };
+        document.body.appendChild(s);
+    });
+    return window._adminScriptPromise;
+};
+
+

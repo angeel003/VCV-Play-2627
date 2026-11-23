@@ -60,6 +60,29 @@ import {
     ensureMonitorSchema
 } from './_modules/admin.js';
 
+// Memoria compartida en el Worker isolate para datos de lectura frecuentes (TTL: 45 seg)
+let isolateSharedCache = {
+    timestamp: 0,
+    rawPartidosRes: null,
+    resOfRes: null,
+    plantillaRowsRes: null,
+    ligasEqRes: null,
+    regRowsRes: null,
+    ligasCfgRes: null
+};
+
+export function invalidateIsolateCache() {
+    isolateSharedCache = {
+        timestamp: 0,
+        rawPartidosRes: null,
+        resOfRes: null,
+        plantillaRowsRes: null,
+        ligasEqRes: null,
+        regRowsRes: null,
+        ligasCfgRes: null
+    };
+}
+
 async function verifyAndMigrateUser(db, usuario, password) {
     if (!usuario || !password) return null;
     let userRow = await db.prepare('SELECT * FROM "Usuarios" WHERE lower("Usuario") = lower(?) OR lower("Correo") = lower(?)').bind(usuario, usuario).first();
@@ -216,7 +239,8 @@ export async function onRequestPost(context) {
         context,
         waitUntil: (typeof context.waitUntil === 'function') ? context.waitUntil.bind(context) : undefined,
         crearNotificacion,
-        broadcastPushToAll
+        broadcastPushToAll,
+        invalidateIsolateCache
     };
 
     // Delegación modular a módulos independientes
@@ -823,7 +847,10 @@ export async function onRequestPost(context) {
         const defaultCacheKey = defaultIsFrozen ? 'userPointsInLiga_FROZEN_v2' : 'userPointsInLiga_v2';
         const defaultStatsCacheKey = defaultIsFrozen ? 'statsLigas_FROZEN_v2' : 'statsLigas_v2';
 
-        // Paso B: Ola única paralela con todas las lecturas principales
+        const nowMs = Date.now();
+        const isSharedCacheValid = Boolean(nowMs - isolateSharedCache.timestamp < 45000 && isolateSharedCache.rawPartidosRes);
+
+        // Paso B: Ola única paralela con lecturas optimizadas y micro-caché en memoria isolate
         const [
             rawPartidosRes,
             resOfRes,
@@ -844,22 +871,22 @@ export async function onRequestPost(context) {
             rawNotifRes,
             pushRow
         ] = await Promise.all([
-            db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
-            db.prepare('SELECT * FROM "Resultados_Oficiales"').all(),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.rawPartidosRes) : db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.resOfRes) : db.prepare('SELECT * FROM "Resultados_Oficiales"').all(),
             db.prepare('SELECT id_partido, usuario, jugador FROM MVP_Votos').all().catch(() => null),
             db.prepare('SELECT * FROM "Permisos_Equipos" WHERE "Jugador" = ?').bind(canonicalUsuario).first(),
             db.prepare('SELECT * FROM "Ligas"').all(),
-            db.prepare('SELECT * FROM "Ligas_Equipos"').all(),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.ligasEqRes) : db.prepare('SELECT * FROM "Ligas_Equipos"').all(),
             db.prepare('SELECT "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local" FROM "Porras" WHERE "Usuario" = ?').bind(canonicalUsuario).all(),
-            db.prepare('SELECT * FROM "Insignias"').all(),
-            db.prepare('SELECT id, dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC, id ASC').all()
+            db.prepare('SELECT "Usuario", "Admin Web", "Directiva / Staff", "Entrenador de", "Jugador de", "Exjugador", "Genero", "Avatar", "Avatar_Url", "Lesionado", "Lesion_Desc", "Custom_Badge", "Custom_Emoji", "Custom_Desc", "Permiso_MVP", "Permiso_Resultados", "Verificado" FROM "Insignias"').all(),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.plantillaRowsRes) : db.prepare('SELECT id, dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC, id ASC').all()
                 .catch(async () => db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all().catch(() => ({ results: [] }))),
             db.prepare('SELECT * FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(canonicalUsuario).first(),
             db.prepare('SELECT "Usuario", "Equipo", "Puntos Predichos" FROM "Predicciones_Secretas" WHERE "Usuario" = ?').bind(canonicalUsuario).all(),
-            db.prepare('SELECT "Regla", "Puntos" FROM "Reglas_Puntuacion"').all(),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.regRowsRes) : db.prepare('SELECT "Regla", "Puntos" FROM "Reglas_Puntuacion"').all(),
             db.prepare('SELECT "Usuario", "Nombre Real" FROM "Usuarios"').all(),
             db.prepare("SELECT clave, valor FROM Cache_App WHERE clave IN ('FREEZE_OVERRIDE', 'NOTIF_SOLO_ADMIN', ?, ?, ?)").bind(autoKeyLogin, defaultCacheKey, defaultStatsCacheKey).all().catch(() => null),
-            db.prepare('SELECT * FROM "Ligas_Config"').all().catch(() => null),
+            isSharedCacheValid ? Promise.resolve(isolateSharedCache.ligasCfgRes) : db.prepare('SELECT * FROM "Ligas_Config"').all().catch(() => null),
             db.prepare('SELECT activo FROM "Monitor_Usuarios" WHERE "usuario" = ?').bind(canonicalUsuario).first().catch(() => null),
             db.prepare('SELECT * FROM "Notificaciones" WHERE "Visibilidad" IS NULL OR ("Visibilidad" != \'OCULTAR\' AND "Visibilidad" != \'BORRADA\' AND "Visibilidad" != \'ELIMINADA\') ORDER BY "timestamp" DESC, "ID" DESC').all().catch(() => null),
             db.prepare('SELECT "Suscripcion_JSON", "Opciones_Viernes", "Opciones_2Horas", "Opciones_SoloOlvidos", "Opciones_Descongelacion", "Opciones_Mvp", "Equipos_Permitidos" FROM "Suscripciones_Push_Dispositivos" WHERE "Usuario" = ? ORDER BY "Ultima_Actualizacion" DESC LIMIT 1').bind(canonicalUsuario).first()
@@ -868,12 +895,24 @@ export async function onRequestPost(context) {
                     : null)
         ]);
 
-        // Escrituras no críticas en segundo plano (sin bloquear respuesta del login)
+        if (!isSharedCacheValid && rawPartidosRes && resOfRes) {
+            isolateSharedCache = {
+                timestamp: nowMs,
+                rawPartidosRes,
+                resOfRes,
+                plantillaRowsRes,
+                ligasEqRes,
+                regRowsRes,
+                ligasCfgRes
+            };
+        }
+
+        // Escrituras no críticas en segundo plano con throttling de 6 horas para ultimo_acceso
         if (action === "login") {
             let shouldUpdateLastAccess = true;
             if (userRow.ultimo_acceso) {
                 const lastAcc = new Date(userRow.ultimo_acceso + 'Z').getTime();
-                if (!isNaN(lastAcc) && (Date.now() - lastAcc < 3600000)) {
+                if (!isNaN(lastAcc) && (Date.now() - lastAcc < (6 * 3600000))) {
                     shouldUpdateLastAccess = false;
                 }
             }

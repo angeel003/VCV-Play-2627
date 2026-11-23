@@ -10,7 +10,7 @@ import {
     verifyPasswordHash,
     isModoMantenimientoActivo
 } from './shared.js';
-import { notifyAdminsPush } from './push.js';
+import { notifyAdminsPush, getLunesSemanaClave } from './push.js';
 
 async function ensureUsuarioAliasSchema(db) {
     try {
@@ -489,6 +489,10 @@ export async function handleAdmin(action, ctx) {
             `).bind(autoKeyActual).run();
         } catch(e) {}
         
+        if (typeof ctx.invalidateIsolateCache === 'function') {
+            ctx.invalidateIsolateCache();
+        }
+
         return jsonResponse({ status: 'success', message: 'Caché depurada con éxito. Se han recalculado las clasificaciones y limpiado todos los datos temporales obsoletos.' });
     }
 

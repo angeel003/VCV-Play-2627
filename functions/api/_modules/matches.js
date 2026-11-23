@@ -353,6 +353,10 @@ export async function handleMatches(action, ctx) {
                 }
             }
 
+            if (typeof ctx.invalidateIsolateCache === 'function') {
+                ctx.invalidateIsolateCache();
+            }
+
             return jsonResponse({ status: 'success', message: 'Resultados y datos guardados con éxito' });
         } catch(sqlErr) {
             console.error("Error SQL en save_resultado_admin:", sqlErr);
@@ -837,6 +841,10 @@ export async function handleMatches(action, ctx) {
             try {
                 await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
             } catch (ce) {}
+
+            if (typeof ctx.invalidateIsolateCache === 'function') {
+                ctx.invalidateIsolateCache();
+            }
 
             return jsonResponse({
                 status: 'success',
@@ -1326,6 +1334,10 @@ export async function handleMatches(action, ctx) {
             try {
                 await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
             } catch (ce) {}
+
+            if (typeof ctx.invalidateIsolateCache === 'function') {
+                ctx.invalidateIsolateCache();
+            }
 
             return jsonResponse({
                 status: 'success',
