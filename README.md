@@ -124,7 +124,7 @@ Construida sobre una arquitectura Serverless Edge con **Cloudflare Pages**, **Cl
 | `functions/api/_modules/push.js` | Notificaciones Web Push: cifrado RFC 8291 / ECDH P-256, firmas VAPID y cola de envíos. |
 | `functions/api/_modules/admin.js` | Endpoints de administración: gestión de usuarios, ligas, actas, ajustes de partidos y auditoría. |
 | `js/config.js` | Configuración global, endpoint `/api/vcv`, `fetchSeguro`, formato de fechas y utilidades. |
-| `js/admin.js` | Intranet de administración: actas, horarios, solicitudes, ligas, MVP y push (carga diferida bajo demanda). |
+| `js/admin.js` | Intranet de administración: actas, horarios, solicitudes de registro, usuarios, ligas, MVP y push. |
 | `js/cartelera.js` | Renderizado de tarjetas de partidos, relojes de cuenta atrás y pronósticos de temporada. |
 | `js/cartelera_interactive.js` | Interacción de porras, votación MVP, comparador, Wrapped y generador de tarjetas Canvas. |
 | `js/ranking.js` | Historial de partidos del usuario, estadísticas personales y filtros por jornada/equipo. |

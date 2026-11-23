@@ -730,29 +730,20 @@ window.mergeMvpRecuentoWithCandidates = function(recuentoList, candsList) {
     return buckets;
 };
 
-// Carga bajo demanda (Lazy Loading) de admin.js para usuarios con permisos
-window._adminScriptPromise = null;
+// Renderizado universal de insignias de categorías deportivas
+function getCategoryHTML(catName) {
+    if (!catName) return "";
+    let safeName = catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    let baseUrl = "files/categories/"; 
+    let imgUrl = baseUrl + safeName + ".png";
+    return `<img loading="lazy" src="${imgUrl}" class="cat-badge-img" alt="${catName}" title="${catName}" onerror="this.onerror=null; this.outerHTML='<div class=\\'cat-badge-text\\' title=\\'${catName}\\'>${catName}</div>';">`;
+}
+window.getCategoryHTML = getCategoryHTML;
+
+// Compatibilidad con llamadas a carga de administración
 window.loadAdminScript = function() {
-    if (window._adminScriptLoaded || document.getElementById('vcv-admin-script')) {
-        return Promise.resolve();
-    }
-    if (window._adminScriptPromise) return window._adminScriptPromise;
-    window._adminScriptPromise = new Promise(function(resolve, reject) {
-        var s = document.createElement('script');
-        s.id = 'vcv-admin-script';
-        s.src = 'js/admin.js?v=20261122_v1';
-        s.async = true;
-        s.onload = function() {
-            window._adminScriptLoaded = true;
-            resolve();
-        };
-        s.onerror = function(err) {
-            console.error('Error cargando js/admin.js:', err);
-            reject(err);
-        };
-        document.body.appendChild(s);
-    });
-    return window._adminScriptPromise;
+    return Promise.resolve();
 };
+
 
 
