@@ -1,20 +1,26 @@
 # Reglas de caché estático para Cloudflare Pages
 
-# Escudos e imágenes estáticas: caché inmutable de 1 año en navegador y CDN
+# Escudos e imágenes estáticas
 /files/images/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=3600
 
-# Hojas de estilo CSS y scripts JS modulares
+# Hojas de estilo CSS y scripts JS modulares: siempre revalidar con ETag para cambios instantáneos
 /css/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
 
 /js/*
-  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
 
 # Aplicación PWA y fuentes
 /manifest.json
   Cache-Control: public, max-age=86400
 
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 # Archivos HTML principales: siempre revalidar para tener la última versión
+/
+  Cache-Control: no-cache
+
 /*.html
   Cache-Control: no-cache
