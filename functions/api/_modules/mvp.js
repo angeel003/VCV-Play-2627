@@ -94,6 +94,7 @@ export async function ensureResultadosMvpSchema(db) {
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Acta" TEXT',
+        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Streaming" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_candidatos" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_oficial" TEXT',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_stats" TEXT',
@@ -102,7 +103,8 @@ export async function ensureResultadosMvpSchema(db) {
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_cierre_votacion_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_publicacion_ts" INTEGER',
         'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_votos_recuento" TEXT',
-        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_mostrar_porcentajes" INTEGER DEFAULT 0'
+        'ALTER TABLE "Resultados_Oficiales" ADD COLUMN "mvp_mostrar_porcentajes" INTEGER DEFAULT 0',
+        'ALTER TABLE "Ajustes" ADD COLUMN "Acta" TEXT'
     ];
     await Promise.allSettled(alters.map(sql => db.prepare(sql).run()));
 }

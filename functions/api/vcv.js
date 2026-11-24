@@ -285,6 +285,8 @@ export async function onRequestPost(context) {
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_ts" INTEGER').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "actualizado_fecha" TEXT').run(); } catch(e) {}
         try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Acta" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Resultados_Oficiales" ADD COLUMN "Streaming" TEXT').run(); } catch(e) {}
+        try { await db.prepare('ALTER TABLE "Ajustes" ADD COLUMN "Acta" TEXT').run(); } catch(e) {}
 
         // Columnas de equipos en Porras (y limpieza de columnas redundantes Rival / Ubicacion_Club)
         try { await db.prepare('ALTER TABLE "Porras" ADD COLUMN "Equipo_Local" TEXT').run(); } catch(e) {}

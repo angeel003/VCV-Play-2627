@@ -913,6 +913,10 @@ export async function handleMatches(action, ctx) {
         };
 
         try {
+            await ensureResultadosMvpSchema(db);
+        } catch (migErr) {}
+
+        try {
             const [dbRowsRes, resOfRes] = await Promise.all([
                 db.prepare('SELECT * FROM "Ajustes" ORDER BY "timestamp" ASC').all(),
                 db.prepare('SELECT "ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta" FROM "Resultados_Oficiales"').all()
@@ -1282,6 +1286,11 @@ export async function handleMatches(action, ctx) {
             return jsonResponse({ status: 'error', message: 'No se han enviado resultados para aplicar.' }, 400);
         }
 
+        // Auto-migración lazy previa para garantizar que las columnas como "Acta" existen en D1
+        try {
+            await ensureResultadosMvpSchema(db);
+        } catch (migErr) {}
+
         const nowTs = Date.now();
         const nowFechaHora = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
         const appliedIds = [];
@@ -1295,12 +1304,25 @@ export async function handleMatches(action, ctx) {
             const acta = String(item.acta_url || item.acta || '').trim();
             const cerrar = item.cerrar_partido !== false;
 
-            if (!idPart || !sets) continue;
+            if (!idPart || (!sets && !acta && !stream)) continue;
 
-            const exist = await db.prepare('SELECT "ID Partido", "Streaming", "Acta" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first();
+            let exist = null;
+            try {
+                exist = await db.prepare('SELECT "ID Partido", "Streaming", "Acta" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first();
+            } catch (selErr) {
+                if (isSchemaMissingErr(selErr)) {
+                    await ensureResultadosMvpSchema(db);
+                    exist = await db.prepare('SELECT "ID Partido", "Streaming", "Acta" FROM "Resultados_Oficiales" WHERE "ID Partido" = ?').bind(idPart).first().catch(() => null);
+                } else {
+                    throw selErr;
+                }
+            }
+
             if (exist) {
+                const finalSets = sets || exist["Sets Oficial"] || '';
+                const finalParc = parciales || exist["Parciales Oficial"] || '';
                 let sql = 'UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ?';
-                const params = [sets, parciales, usuario, nowTs, nowFechaHora];
+                const params = [finalSets, finalParc, usuario, nowTs, nowFechaHora];
                 if (stream && (!exist["Streaming"] || String(exist["Streaming"]).trim() === '')) {
                     sql += ', "Streaming" = ?';
                     params.push(stream);
@@ -1329,27 +1351,36 @@ export async function handleMatches(action, ctx) {
 
         try {
             await flushBatch(db, stmts);
-
-            // Limpiar caché de puntuaciones para recalcular clasificaciones de inmediato
-            try {
-                await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
-            } catch (ce) {}
-
-            if (typeof ctx.invalidateIsolateCache === 'function') {
-                ctx.invalidateIsolateCache();
-            }
-
-            return jsonResponse({
-                status: 'success',
-                updated: appliedIds.length,
-                applied_ids: appliedIds,
-                message: appliedIds.length === 1
-                    ? `Resultado oficial del partido ${appliedIds[0]} aplicado correctamente y partido cerrado.`
-                    : `Se han aplicado los resultados oficiales de ${appliedIds.length} partidos y actualizado las clasificaciones.`
-            });
         } catch (e) {
-            return jsonResponse({ status: 'error', message: 'Error aplicando resultados en BD: ' + e.message }, 500);
+            if (isSchemaMissingErr(e)) {
+                try {
+                    await ensureResultadosMvpSchema(db);
+                    await flushBatch(db, stmts);
+                } catch (retryErr) {
+                    return jsonResponse({ status: 'error', message: 'Error aplicando resultados en BD tras migración: ' + retryErr.message }, 500);
+                }
+            } else {
+                return jsonResponse({ status: 'error', message: 'Error aplicando resultados en BD: ' + e.message }, 500);
+            }
         }
+
+        // Limpiar caché de puntuaciones para recalcular clasificaciones de inmediato
+        try {
+            await db.prepare("DELETE FROM Cache_App WHERE clave LIKE 'userPointsInLiga%' OR clave LIKE 'statsLigas%'").run();
+        } catch (ce) {}
+
+        if (typeof ctx.invalidateIsolateCache === 'function') {
+            ctx.invalidateIsolateCache();
+        }
+
+        return jsonResponse({
+            status: 'success',
+            updated: appliedIds.length,
+            applied_ids: appliedIds,
+            message: appliedIds.length === 1
+                ? `Resultado oficial del partido ${appliedIds[0]} aplicado correctamente y partido cerrado.`
+                : `Se han aplicado los resultados oficiales de ${appliedIds.length} partidos y actualizado las clasificaciones.`
+        });
     }
 
     return null;
