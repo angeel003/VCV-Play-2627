@@ -2,7 +2,7 @@
 // PUSH MODULE: WEB PUSH (RFC 8291 / 8292), CRONS Y NOTIFICACIONES
 // ============================================================================
 import { jsonResponse, flushBatch, runInBg, runInChunks, isSchemaMissingErr } from './shared.js';
-import { formatMatch } from './matches.js';
+import { formatMatch, handleMatches } from './matches.js';
 
 export const DEFAULT_VAPID_PUBLIC = "BC2qOrSTAHeNqSis_RChG_ycGZ0SY1bTIgJbRr7etA9D6z0XgIZqNdR-1jwLn99sKtaJvuganWgIwUnFRUYd_1U";
 export const DEFAULT_VAPID_PRIVATE = "RdKwpMLygVN-810zd21qVNUx93NKqMGmqL8CQmuCLvE";
@@ -1355,6 +1355,19 @@ export async function handlePush(action, ctx) {
             detalleEnvios = detalleEnvios.concat(resumenViernesRes.detalleViernes);
         }
 
+        // Comprobación periódica automática de actas (máximo 1 vez por hora)
+        let actasRes = null;
+        try {
+            const lastSyncRow = await db.prepare("SELECT timestamp FROM Cache_App WHERE clave = 'LAST_ACTAS_SYNC_TS'").first().catch(() => null);
+            const lastSyncTs = lastSyncRow ? Number(lastSyncRow.timestamp || 0) : 0;
+            if (Date.now() - lastSyncTs > 50 * 60 * 1000) {
+                const actasResponse = await handleMatches('cron_sync_actas', ctx);
+                if (actasResponse) {
+                    actasRes = await actasResponse.json().catch(() => null);
+                }
+            }
+        } catch(actasErr) {}
+
         let finalMsg = totalEnviados > 0
             ? `¡Éxito! Se han enviado ${totalEnviados} notificaciones push (partidos y/o MVP 1h).`
             : (motivosOmision.length > 0
@@ -1368,6 +1381,7 @@ export async function handlePush(action, ctx) {
             enviados: totalEnviados,
             enviados_mvp: mvpRes.totalEnviadosMvp,
             enviados_viernes: resumenViernesRes.totalEnviadosViernes,
+            actas_sync: actasRes ? { checked: actasRes.checked, actas_added: actasRes.actas_added } : 'skipped_recently',
             solo_admin: soloAdmin,
             detalles: detalleEnvios
         });
