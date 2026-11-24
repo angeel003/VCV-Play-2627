@@ -90,8 +90,8 @@ window.renderCarteleraHTML = function(data) {
 
                 let safeLocalName = (window.getEscudoSlug ? window.getEscudoSlug(localTeamName) : localTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
                 let safeVisitName = (window.getEscudoSlug ? window.getEscudoSlug(visitTeamName) : visitTeamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
-                let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261115_v1" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
-                let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261115_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261115_v1" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                let localLogo = `<picture><source srcset="files/images/escudos/${safeLocalName}.webp?v=20261124_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeLocalName}.png?v=20261124_v1" alt="${localTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${localAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                let visitLogo = `<picture><source srcset="files/images/escudos/${safeVisitName}.webp?v=20261124_v1" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeVisitName}.png?v=20261124_v1" alt="${visitTeamName}" onload="this.parentNode.parentNode.style.border='none'; this.parentNode.parentNode.style.background='transparent';" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\\'font-weight:900; font-size: 1.2rem;\\'>${visitAbrev}</span>';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
                 
                 
                 let btnStreaming = eq.streaming 
@@ -278,8 +278,8 @@ window.renderCarteleraHTML = function(data) {
                             <div style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
                                 <span>+${pPts} pts</span>
                                 <picture style="display:inline-flex; vertical-align:middle;">
-                                    <source srcset="files/images/escudos/${winnerSafe}.webp?v=20261115_v1" type="image/webp">
-                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261115_v1" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:800; font-size:0.75rem;\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
+                                    <source srcset="files/images/escudos/${winnerSafe}.webp?v=20261124_v1" type="image/webp">
+                                    <img loading="lazy" src="files/images/escudos/${winnerSafe}.png?v=20261124_v1" alt="" onerror="this.onerror=null; this.parentNode.outerHTML='<span style=\'font-weight:800; font-size:0.75rem;\'>${winnerAbrev}</span>';" style="width:22px; height:22px; object-fit:contain;">
                                 </picture>
                             </div>`;
                         } else {
