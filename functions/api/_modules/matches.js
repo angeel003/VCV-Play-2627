@@ -1383,5 +1383,156 @@ export async function handleMatches(action, ctx) {
         });
     }
 
+    if (action === 'cron_sync_actas' || action === 'admin_sync_actas') {
+        try {
+            await ensureResultadosMvpSchema(db);
+        } catch (migErr) {}
+
+        const nowMs = Date.now();
+        const nowFechaHora = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+
+        // 1. Obtener partidos de RFEVB y las actas ya guardadas en BD
+        let rawMatches = [];
+        let resOficiales = [];
+        try {
+            const [mRes, rRes] = await Promise.all([
+                db.prepare('SELECT "ID_Partido", "Equipo_Local", "Rival", "Categoria", "Fecha", "timestamp", "Estado" FROM "Ajustes" WHERE "ID_Partido" LIKE \'RFEVB_%\' ORDER BY "timestamp" ASC').all(),
+                db.prepare('SELECT "ID Partido", "Acta", "Streaming" FROM "Resultados_Oficiales"').all()
+            ]);
+            rawMatches = (mRes && mRes.results) || [];
+            resOficiales = (rRes && rRes.results) || [];
+        } catch (e) {
+            return jsonResponse({ status: 'error', message: 'Error consultando BD para actas: ' + e.message }, 500);
+        }
+
+        const resOfMap = {};
+        for (const ro of resOficiales) {
+            resOfMap[ro["ID Partido"]] = ro;
+        }
+
+        // 2. Filtrar solo partidos de RFEVB ya jugados (o cerrados) que NO tienen acta todavía
+        const candidates = [];
+        for (const m of rawMatches) {
+            const id = m.ID_Partido || '';
+            const ts = Number(m.timestamp || 0);
+            const isPlayed = (ts > 0 && ts < nowMs) || (m.Estado === 'CERRADO');
+            if (!isPlayed) continue;
+
+            const ro = resOfMap[id] || {};
+            const dbActa = String(ro.Acta || '').trim();
+            if (dbActa.length > 5) continue; // Ya tiene acta oficial vinculada
+
+            const matchNum = id.replace('RFEVB_', '').trim();
+            if (!matchNum || isNaN(Number(matchNum))) continue;
+
+            candidates.push({
+                id_partido: id,
+                pId: matchNum,
+                partido: `${m.Equipo_Local || ''} vs ${m.Rival || ''}`,
+                categoria: m.Categoria || ''
+            });
+        }
+
+        if (candidates.length === 0) {
+            try {
+                await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('LAST_ACTAS_SYNC_TS', ?, ?)").bind(String(nowMs), nowMs).run();
+            } catch(e) {}
+            return jsonResponse({
+                status: 'success',
+                message: 'No hay partidos jugados de RFEVB pendientes de acta oficial.',
+                checked: 0,
+                actas_added: 0,
+                timestamp: nowMs,
+                fecha_hora: nowFechaHora
+            });
+        }
+
+        // 3. Consultar getPartido de RFEVB (EsVoley) en paralelo para los candidatos
+        const details = await Promise.all(candidates.map(async (c) => {
+            try {
+                const data = await fetchJson(`https://intranet.esvoley.es/api/competiciones/getPartido?partidoId=${c.pId}`, {
+                    headers: { 'Accept': 'application/json', 'User-Agent': 'VCVPlay-ActasSync/1.0' }
+                });
+                return { ...c, data: data?.content || null };
+            } catch (e) {
+                return { ...c, data: null };
+            }
+        }));
+
+        // 4. Guardar SOLO el acta oficial y streaming (SIN tocar sets ni resultados ni recalcular porras)
+        const updatedMatches = [];
+        const stmts = [];
+
+        for (const item of details) {
+            if (!item.data) continue;
+            const d = item.data;
+
+            let actaUrl = null;
+            if (d.imagenActa) {
+                const rawActa = String(d.imagenActa).trim();
+                const hrefMatch = rawActa.match(/href=['"]([^'"]+)['"]/i);
+                if (hrefMatch && hrefMatch[1]) {
+                    actaUrl = hrefMatch[1];
+                } else if (rawActa.startsWith('http://') || rawActa.startsWith('https://')) {
+                    actaUrl = rawActa;
+                }
+            }
+
+            if (!actaUrl) continue;
+
+            const streaming = (d.linkStreaming && typeof d.linkStreaming === 'string' && d.linkStreaming.startsWith('http'))
+                ? d.linkStreaming.trim()
+                : null;
+
+            const exist = resOfMap[item.id_partido];
+            if (exist) {
+                stmts.push(
+                    db.prepare('UPDATE "Resultados_Oficiales" SET "Acta" = ?, "Streaming" = COALESCE(NULLIF("Streaming", \'\'), ?), "actualizado_por" = \'Auto RFEVB (Cron Actas)\', "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
+                        .bind(actaUrl, streaming || '', nowMs, nowFechaHora, item.id_partido)
+                );
+            } else {
+                stmts.push(
+                    db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Acta", "Streaming", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, \'Auto RFEVB (Cron Actas)\', ?, ?)')
+                        .bind(item.id_partido, actaUrl, streaming || '', nowMs, nowFechaHora)
+                );
+            }
+
+            updatedMatches.push({
+                id_partido: item.id_partido,
+                partido: item.partido,
+                acta_url: actaUrl,
+                streaming: streaming
+            });
+        }
+
+        if (stmts.length > 0) {
+            try {
+                await flushBatch(db, stmts);
+            } catch (batchErr) {
+                return jsonResponse({ status: 'error', message: 'Error guardando actas en D1: ' + batchErr.message }, 500);
+            }
+            if (typeof ctx.invalidateIsolateCache === 'function') {
+                ctx.invalidateIsolateCache();
+            }
+        }
+
+        // Registrar timestamp de sincronización en Cache_App
+        try {
+            await db.prepare("INSERT OR REPLACE INTO Cache_App (clave, valor, timestamp) VALUES ('LAST_ACTAS_SYNC_TS', ?, ?)").bind(String(nowMs), nowMs).run();
+        } catch(e) {}
+
+        return jsonResponse({
+            status: 'success',
+            checked: candidates.length,
+            actas_added: updatedMatches.length,
+            matches: updatedMatches,
+            message: updatedMatches.length > 0
+                ? `Se han encontrado y vinculado automáticamente ${updatedMatches.length} actas oficiales de RFEVB.`
+                : `Se comprobaron ${candidates.length} partidos jugados sin acta, pero la federación aún no ha publicado actas nuevas.`,
+            timestamp: nowMs,
+            fecha_hora: nowFechaHora
+        });
+    }
+
     return null;
 }

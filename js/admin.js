@@ -4808,6 +4808,41 @@ window.adminComprobarResultadosOficiales = async function() {
     }
 };
 
+window.adminSincronizarActasOficiales = async function() {
+    const btn = document.getElementById('btnSyncActasFed');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Sincronizando actas...';
+    }
+    try {
+        const res = await fetchSeguro(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'admin_sync_actas',
+                usuario: currentUser,
+                password: currentPassword
+            }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const data = await res.json();
+        if (!data || data.status !== 'success') {
+            throw new Error((data && data.message) || 'Error al sincronizar actas');
+        }
+        if (data.actas_added > 0) {
+            alert(`✅ ${data.message}`);
+        } else {
+            alert(`ℹ️ ${data.message}`);
+        }
+    } catch(e) {
+        alert('Error al sincronizar actas oficiales: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '📄 Sincronizar Actas Oficiales';
+        }
+    }
+};
+
 window.adminAplicarResultadoOficial = async function(idx) {
     const item = (window._adminResultadosCache || [])[idx];
     if (!item || item._applied) return;

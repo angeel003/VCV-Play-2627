@@ -1,0 +1,18 @@
+name: Sincronizacion Automatica de Actas RFEVB
+
+on:
+  schedule:
+    # Se ejecuta cada 12 horas (a las 02:00 y a las 14:00 UTC)
+    - cron: '0 2,14 * * *'
+  workflow_dispatch: # Permite ejecutar la sincronización manualmente desde GitHub
+
+jobs:
+  sync-actas:
+    name: Sincronizar actas oficiales de partidos jugados
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar endpoint de sincronización en VCV Play
+        run: |
+          RESPONSE=$(curl -s -f -X GET "https://vcvplay.com/api/vcv?cron=actas")
+          echo "Respuesta del servidor:"
+          echo "$RESPONSE"

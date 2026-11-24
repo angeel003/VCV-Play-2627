@@ -165,10 +165,11 @@ export async function onRequestGet(context) {
     try {
         const url = new URL(request.url);
         const cronParam = url.searchParams.get("cron") || url.searchParams.get("action");
-        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas" || cronParam === "mvp" || cronParam === "mvp_1hora" || cronParam === "viernes" || cronParam === "cron_resumen_viernes") {
+        if (cronParam === "2horas" || cronParam === "cron_recordatorio_2horas" || cronParam === "mvp" || cronParam === "mvp_1hora" || cronParam === "viernes" || cronParam === "cron_resumen_viernes" || cronParam === "actas" || cronParam === "cron_sync_actas") {
             let targetAction = "cron_recordatorio_2horas";
             if (cronParam === "mvp" || cronParam === "mvp_1hora") targetAction = "cron_recordatorio_mvp_1hora";
             else if (cronParam === "viernes" || cronParam === "cron_resumen_viernes") targetAction = "cron_resumen_viernes";
+            else if (cronParam === "actas" || cronParam === "cron_sync_actas") targetAction = "cron_sync_actas";
             const fakeContext = {
                 request: new Request(request.url, {
                     method: "POST",
