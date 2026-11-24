@@ -1732,6 +1732,7 @@ window.enviarSolicitudRegistro = async function(e) {
 // -------------------------------------------------------------
 window.mostrarAvisoModeracion = function(msg, user) {
     if (!msg) return;
+    if (typeof window.ocultarOverlayAutoLogin === 'function') window.ocultarOverlayAutoLogin(true);
     let modal = document.getElementById('modalAvisoModeracion');
     if (!modal) {
         modal = document.createElement('div');
@@ -1748,7 +1749,7 @@ window.mostrarAvisoModeracion = function(msg, user) {
                 </div>
                 <div style="font-size:0.85rem; color:var(--text-main); line-height:1.5; margin-bottom:14px; background:rgba(0,0,0,0.25); padding:12px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08);">
                     <p style="margin:0 0 6px 0;">Hola <b>@${user || ''}</b>:</p>
-                    <div id="modalAvisoModeracionTexto" style="color:#f1c40f; font-weight:600;"></div>
+                    <div id="modalAvisoModeracionTexto" style="color:#f1c40f; font-weight:600; white-space:pre-wrap; word-break:break-word;"></div>
                 </div>
                 <p style="font-size:0.75rem; color:var(--text-muted); margin:0 0 16px 0; line-height:1.4;">
                     Puedes continuar utilizando VCV Play normalmente con tus datos asignados o consultar tu información desde tu <b>Perfil</b>.

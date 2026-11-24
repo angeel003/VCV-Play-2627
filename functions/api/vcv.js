@@ -266,6 +266,7 @@ export async function onRequestPost(context) {
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Permiso_Resultados TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Verificado TEXT DEFAULT 'APROBADO'").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Equipo_Club TEXT").run(); } catch(e) {}
+        try { await db.prepare("ALTER TABLE Insignias ADD COLUMN Aviso_Moderacion TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Usuarios ADD COLUMN Correo TEXT").run(); } catch(e) {}
         try { await db.prepare("ALTER TABLE Solicitudes_Registro ADD COLUMN Equipo_Club TEXT").run(); } catch(e) {}
         try { await db.prepare("CREATE TABLE IF NOT EXISTS Plantilla_Superliga (dorsal INTEGER PRIMARY KEY, nombre TEXT, apodo TEXT, posicion TEXT)").run(); } catch(e) {}
@@ -881,7 +882,7 @@ export async function onRequestPost(context) {
             db.prepare('SELECT * FROM "Ligas"').all(),
             isSharedCacheValid ? Promise.resolve(isolateSharedCache.ligasEqRes) : db.prepare('SELECT * FROM "Ligas_Equipos"').all(),
             db.prepare('SELECT "ID Partido", "Sets", "Puntos Dif", "a favor o en contra del local" FROM "Porras" WHERE "Usuario" = ?').bind(canonicalUsuario).all(),
-            db.prepare('SELECT "Usuario", "Admin Web", "Directiva / Staff", "Entrenador de", "Jugador de", "Exjugador", "Genero", "Avatar", "Avatar_Url", "Lesionado", "Lesion_Desc", "Custom_Badge", "Custom_Emoji", "Custom_Desc", "Permiso_MVP", "Permiso_Resultados", "Verificado" FROM "Insignias"').all(),
+            db.prepare('SELECT "Usuario", "Admin Web", "Directiva / Staff", "Entrenador de", "Jugador de", "Exjugador", "Genero", "Avatar", "Avatar_Url", "Lesionado", "Lesion_Desc", "Custom_Badge", "Custom_Emoji", "Custom_Desc", "Permiso_MVP", "Permiso_Resultados", "Verificado", "Equipo_Club", "Aviso_Moderacion" FROM "Insignias"').all(),
             isSharedCacheValid ? Promise.resolve(isolateSharedCache.plantillaRowsRes) : db.prepare('SELECT id, dorsal, nombre, apodo, posicion, usuario FROM Plantilla_Superliga_2_Masc ORDER BY dorsal ASC, id ASC').all()
                 .catch(async () => db.prepare('SELECT dorsal, nombre, apodo, posicion FROM Plantilla_Superliga ORDER BY dorsal ASC').all().catch(() => ({ results: [] }))),
             db.prepare('SELECT * FROM "Permisos_Secreta" WHERE "Usuario" = ?').bind(canonicalUsuario).first(),
