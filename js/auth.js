@@ -272,6 +272,22 @@ window.esNotificacionActiva = function(n) {
     if (est === 'INACTIVA' || est === 'PASADA' || est === 'HISTORICO' || est === 'HISTÓRICO' || est === 'NO' || est === '0') {
         return false;
     }
+
+    const tit = String(n.Titulo || '').toLowerCase();
+
+    // 1. Notificaciones de recordatorios automáticos: NUNCA se marcan como activa
+    if (tit.includes('recordatorio')) {
+        return false;
+    }
+
+    // 2. Rankings y clasificaciones descongeladas: Solo activa durante 10 horas tras descongelar
+    if (tit.includes('descongelad') || tit.includes('clasificaciones')) {
+        const ts = Number(n.timestamp || 0);
+        if (ts > 0 && (Date.now() - ts > 10 * 3600 * 1000)) {
+            return false;
+        }
+    }
+
     // Comprobar preferencias personalizadas del usuario (si ha desactivado clasificaciones o MVP en sus ajustes)
     try {
         let pCfg = null;
@@ -281,7 +297,6 @@ window.esNotificacionActiva = function(n) {
             if (raw) pCfg = JSON.parse(raw);
         }
         if (pCfg) {
-            const tit = String(n.Titulo || '').toLowerCase();
             if (pCfg.opciones_descongelacion === false && (tit.includes('descongelad') || tit.includes('clasificaciones'))) {
                 return false;
             }

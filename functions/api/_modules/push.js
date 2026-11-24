@@ -561,8 +561,11 @@ export async function getNotificacionesPublicas(db, env = null, context = null, 
         }
 
         const mvpExpireCutoff = Date.now() - 24 * 3600 * 1000;
+        const unfreezeExpireCutoff = Date.now() - 10 * 3600 * 1000;
         let needsNullFix = false;
         let needsMvpExpire = false;
+        let needsUnfreezeExpire = false;
+        let needsRecordatorioExpire = false;
         let needsDeleteDirty = false;
         const cleanRows = [];
 
@@ -577,20 +580,45 @@ export async function getNotificacionesPublicas(db, env = null, context = null, 
                 needsNullFix = true;
                 activaVal = 1;
             }
-            if (String(row.Titulo || '').includes('MVP VALCYL') && activaVal === 1 && Number(row.timestamp || 0) < mvpExpireCutoff) {
+            const rowTitLower = String(row.Titulo || '').toLowerCase();
+
+            // 1. Recordatorios automáticos: NUNCA se marcan como activa
+            if (rowTitLower.includes('recordatorio')) {
+                if (activaVal === 1) {
+                    needsRecordatorioExpire = true;
+                }
+                activaVal = 0;
+            }
+
+            // 2. Rankings y Clasificaciones descongeladas: Solo activa durante 10 horas tras descongelar
+            if (rowTitLower.includes('descongelad') || rowTitLower.includes('clasificaciones')) {
+                if (activaVal === 1 && Number(row.timestamp || 0) < unfreezeExpireCutoff) {
+                    needsUnfreezeExpire = true;
+                    activaVal = 0;
+                }
+            }
+
+            // 3. MVP VALCYL: Expira a las 24 horas
+            if (rowTitLower.includes('mvp valcyl') && activaVal === 1 && Number(row.timestamp || 0) < mvpExpireCutoff) {
                 needsMvpExpire = true;
                 activaVal = 0;
             }
             cleanRows.push(activaVal !== row.Activa ? { ...row, Activa: activaVal } : row);
         }
 
-        if (needsNullFix || needsMvpExpire || needsDeleteDirty) {
+        if (needsNullFix || needsMvpExpire || needsUnfreezeExpire || needsRecordatorioExpire || needsDeleteDirty) {
             const bgFixStmts = [];
             if (needsNullFix) {
                 bgFixStmts.push(db.prepare('UPDATE "Notificaciones" SET "Activa" = 1 WHERE "Activa" IS NULL'));
             }
+            if (needsRecordatorioExpire) {
+                bgFixStmts.push(db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE lower("Titulo") LIKE \'%recordatorio%\' AND "Activa" = 1'));
+            }
+            if (needsUnfreezeExpire) {
+                bgFixStmts.push(db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE (lower("Titulo") LIKE \'%descongelad%\' OR lower("Titulo") LIKE \'%clasificaciones%\') AND "Activa" = 1 AND "timestamp" < ?').bind(unfreezeExpireCutoff));
+            }
             if (needsMvpExpire) {
-                bgFixStmts.push(db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE "Titulo" LIKE \'%MVP VALCYL%\' AND "Activa" = 1 AND "timestamp" < ?').bind(mvpExpireCutoff));
+                bgFixStmts.push(db.prepare('UPDATE "Notificaciones" SET "Activa" = 0 WHERE lower("Titulo") LIKE \'%mvp valcyl%\' AND "Activa" = 1 AND "timestamp" < ?').bind(mvpExpireCutoff));
             }
             if (needsDeleteDirty) {
                 bgFixStmts.push(db.prepare('DELETE FROM "Notificaciones" WHERE "Titulo" = \'🔔 ¡Novedad! Recordatorios y Notificaciones\' OR "ID" = 8'));
