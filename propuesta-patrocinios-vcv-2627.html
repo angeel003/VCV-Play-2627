@@ -20,6 +20,26 @@
 <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
 <script>
+  // Interceptor exclusivo para la página de propuesta de patrocinios:
+  // El equipo VALCYL VCV carga el escudo oficial con el sello dorado de Valcyl en la esquina
+  (function() {
+    var _fn = null;
+    Object.defineProperty(window, 'getEscudoSlug', {
+      configurable: true,
+      enumerable: true,
+      get: function() {
+        return function(teamName) {
+          var res = _fn ? _fn(teamName) : String(teamName || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+          if (res === 'valcyl_vcv') return 'valcyl_vcv_patro';
+          return res;
+        };
+      },
+      set: function(v) {
+        _fn = v;
+      }
+    });
+  })();
+
   (function() {
     window._vcvHeadStartTs = Date.now();
     try {
@@ -2530,6 +2550,7 @@
   <button type="button" onclick="window.testSplashDemo()" style="background: rgba(212,175,55,0.25); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">👁️ Ver Pantalla de Carga</button>
   <button type="button" onclick="window.testLoginDemo()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🔑 Ver Login</button>
   <button type="button" onclick="window.testAppDemo()" style="background: rgba(212,175,55,0.25); border: 1px solid var(--secondary-color); color: #fff; padding: 3px 9px; border-radius: 12px; font-size: 0.67rem; font-weight: 700; cursor: pointer;">🏐 Ver Partidos</button>
+  <button type="button" onclick="window.scrollToValcylMatch()" style="background: rgba(212,175,55,0.35); border: 1px solid #d4af37; color: #ffd700; padding: 3px 10px; border-radius: 12px; font-size: 0.67rem; font-weight: 800; cursor: pointer;" title="Mostrar escudo de VALCYL VCV con el sello de patrocinio">🛡️ Ver Sello en Escudo</button>
   <button type="button" onclick="document.getElementById('vcvSponsorDemoBar').style.display='none'" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; padding: 0 4px; line-height: 1;" title="Cerrar barra">&times;</button>
 </div>
 
@@ -2571,6 +2592,29 @@
       var firstBtn = document.querySelector('.bottom-nav-v2 .nav-item-v2');
       switchTabV2('carteleraSection', firstBtn);
     }
+  };
+
+  window.scrollToValcylMatch = function() {
+    window.testAppDemo();
+    setTimeout(function() {
+      var teamNames = Array.from(document.querySelectorAll('.team-name-v2, .clasificacion-team-name, .team-name, span'));
+      var valcylEl = teamNames.find(function(el) { 
+        return el.textContent && el.textContent.trim().toUpperCase() === 'VALCYL VCV'; 
+      });
+      if (valcylEl) {
+        var card = valcylEl.closest('.cartelera-match-card-v2, .match-card, .calendario-card-v2, tr') || valcylEl;
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s ease';
+        card.style.borderColor = '#d4af37';
+        card.style.transform = 'scale(1.02)';
+        card.style.boxShadow = '0 0 32px rgba(212, 175, 55, 0.75)';
+        setTimeout(function() {
+          card.style.boxShadow = '';
+          card.style.borderColor = '';
+          card.style.transform = '';
+        }, 3200);
+      }
+    }, 400);
   };
 
   // Si el directivo abre la web y no tiene sesion, entrar automaticamente como invitado tras 1.2s de splash para mostrar la app
