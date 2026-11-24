@@ -322,6 +322,15 @@ function renderMatchCardHtml(eq) {
         <span>Acta</span>
     </a>` : '';
 
+    const safeStatsUrl = (eq.stats_url && /^https?:\/\//i.test(String(eq.stats_url).trim()))
+        ? String(eq.stats_url).trim().replace(/"/g, '&quot;')
+        : '';
+    let btnStatsHtml = safeStatsUrl ? `
+    <a href="${safeStatsUrl}" target="_blank" rel="noopener noreferrer" title="Ver Estadísticas Oficiales del partido (Federación)" class="btn-stats-v2" onclick="event.stopPropagation();">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Estadísticas</span>
+    </a>` : '';
+
     let headerStripHtml = `
     <div class="match-header-strip-v2 opt4-header" style="display:flex; flex-direction:column; gap:5px; width:100%; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
@@ -332,10 +341,9 @@ function renderMatchCardHtml(eq) {
                 <i data-lucide="calendar" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-top:-2px;"></i> ${fechaFormateada}
             </div>
         </div>
-        ${(eq.es_derby || cleanPab || btnActaHtml) ? `
+        ${(eq.es_derby || cleanPab) ? `
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:wrap;">
-                ${btnActaHtml}
                 ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
             </div>
             ${cleanPab ? `
@@ -366,7 +374,12 @@ function renderMatchCardHtml(eq) {
                 ${visitRoleHtml}
             </div>
         </div>
-            </div>`;
+        ${(btnActaHtml || btnStatsHtml) ? `
+        <div class="match-actions-footer" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;">
+            ${btnActaHtml}
+            ${btnStatsHtml}
+        </div>` : ''}
+    </div>`;
 }
 
 // ---------------------------------------------------
@@ -592,6 +605,15 @@ function renderMatchResultCardHtml(eq) {
         <span>Acta</span>
     </a>` : '';
 
+    const safeStatsUrl = (eq.stats_url && /^https?:\/\//i.test(String(eq.stats_url).trim()))
+        ? String(eq.stats_url).trim().replace(/"/g, '&quot;')
+        : '';
+    let btnStatsHtml = safeStatsUrl ? `
+    <a href="${safeStatsUrl}" target="_blank" rel="noopener noreferrer" title="Ver Estadísticas Oficiales del partido (Federación)" class="btn-stats-v2" onclick="event.stopPropagation();">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Estadísticas</span>
+    </a>` : '';
+
     let btnCalShareHtml = eq.id_partido ? `
     <button type="button" onclick="window.abrirModalCompartirPartido('${eq.id_partido}')" title="Compartir resultado de este partido" style="background:transparent; border:none; color:#c794ce; width:24px; height:24px; min-width:24px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0; opacity:0.85; transition:all 0.2s ease;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.15)';" onmouseout="this.style.opacity='0.85'; this.style.transform='none';">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
@@ -613,7 +635,6 @@ function renderMatchResultCardHtml(eq) {
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px; font-size:0.73rem;">
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:wrap;">
                 ${outcomeBadge}
-                ${btnActaHtml}
                 ${eq.es_derby ? `<div style="background:linear-gradient(90deg, #b06000, #d4af37); color:#fff; padding:2px 7px; border-radius:6px; font-size:0.68rem; font-weight:900; display:inline-flex; align-items:center; gap:4px; box-shadow: 0 2px 6px rgba(212, 175, 55, 0.4);">⚡ DERBY</div>` : ''}
             </div>
             ${cleanPab ? `
@@ -658,7 +679,12 @@ function renderMatchResultCardHtml(eq) {
 
         ${parcialesHtml}
         ${mvpHtml}
-            </div>`;
+        ${(btnActaHtml || btnStatsHtml) ? `
+        <div class="match-actions-footer" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.06); flex-wrap:wrap;">
+            ${btnActaHtml}
+            ${btnStatsHtml}
+        </div>` : ''}
+    </div>`;
 }
 
 // ---------------------------------------------------

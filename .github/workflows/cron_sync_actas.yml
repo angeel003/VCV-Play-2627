@@ -2,8 +2,8 @@ name: Sincronizacion Automatica de Actas RFEVB
 
 on:
   schedule:
-    # Se ejecuta cada 12 horas (a las 02:00 y a las 14:00 UTC)
-    - cron: '0 2,14 * * *'
+    # Se ejecuta cada hora (a minuto 0 UTC)
+    - cron: '0 * * * *'
   workflow_dispatch: # Permite ejecutar la sincronización manualmente desde GitHub
 
 jobs:

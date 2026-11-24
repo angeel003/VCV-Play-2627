@@ -38,6 +38,27 @@ export     function formatMatch(r, resOficialMap = {}, mvpVotesMap = null, inclu
                 : buildMvpVotesRecuento(mvpCandidatos, savedRecuento))
             : [];
 
+        // Mapeo oficial de actas / estadísticas de DataProject RFEVB para Superliga 2 (Grupo A)
+        const sm2DataProjectMap = {
+            'RFEVB_1344': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=13958&ID=167',
+            'RFEVB_1353': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14005&ID=167',
+            'RFEVB_1357': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14044&ID=167',
+            'RFEVB_1364': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14087&ID=167',
+            'RFEVB_1370': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14129&ID=167',
+            'RFEVB_1376': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14178&ID=167',
+            'RFEVB_1383': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14238&ID=167',
+            'RFEVB_1386': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14277&ID=167',
+            'RFEVB_1396': 'https://rfevb-web.dataproject.com/MatchStatistics.aspx?mID=14335&ID=167'
+        };
+        const catUpper = String(r.Categoria || '').toUpperCase();
+        const isSm2 = catUpper.includes('SM2') || catUpper.includes('SUPERLIGA 2') || catUpper.includes('SUPERLIGA MASCULINA 2');
+        let statsUrl = oRes.Stats || r.Stats || '';
+        if (!statsUrl && sm2DataProjectMap[idPart]) {
+            statsUrl = sm2DataProjectMap[idPart];
+        } else if (!statsUrl && isSm2) {
+            statsUrl = 'https://rfevb-web.dataproject.com/CompetitionMatches.aspx?ID=167&PID=203';
+        }
+
         return {
             id_partido: idPart,
             ronda_global: r.Ronda_Global || "1",
@@ -56,6 +77,7 @@ export     function formatMatch(r, resOficialMap = {}, mvpVotesMap = null, inclu
             oficial_parciales: oRes["Parciales Oficial"] || "",
             streaming: oRes.Streaming || "",
             acta: oRes.Acta || r.Acta || "",
+            stats_url: statsUrl,
             actualizado_por: oRes.actualizado_por || "",
             actualizado_ts: oRes.actualizado_ts ? parseInt(oRes.actualizado_ts) : 0,
             actualizado_fecha: oRes.actualizado_fecha || "",
@@ -159,8 +181,9 @@ export async function handleMatches(action, ctx) {
     }
 
     if (action === 'save_resultado_admin') {
-        const { id_partido, sets, parciales, streaming, acta, acta_url, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
+        const { id_partido, sets, parciales, streaming, acta, acta_url, stats, stats_url, mvp_candidatos, mvp_oficial, mvp_stats, mvp_publicacion_ts } = body;
         const finalActa = (acta !== undefined) ? (acta || '') : ((acta_url !== undefined) ? (acta_url || '') : undefined);
+        const finalStats = (stats !== undefined) ? (stats || '') : ((stats_url !== undefined) ? (stats_url || '') : undefined);
         const user = await getAuthUser();
         if (!user) return jsonResponse({ status: 'error', message: 'Credenciales incorrectas' }, 401);
 
@@ -214,11 +237,12 @@ export async function handleMatches(action, ctx) {
                         const finalParc = (parciales !== undefined) ? (parciales || '') : (exist["Parciales Oficial"] || '');
                         const finalStream = (streaming !== undefined) ? (streaming || '') : (exist["Streaming"] || '');
                         const finalActaStr = (finalActa !== undefined) ? finalActa : (exist["Acta"] || '');
-                        return db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "Acta" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
-                            .bind(finalSets, finalParc, finalStream, finalActaStr, usuario, nowTs, nowFechaHora, id_partido);
+                        const finalStatsStr = (finalStats !== undefined) ? finalStats : (exist["Stats"] || '');
+                        return db.prepare('UPDATE "Resultados_Oficiales" SET "Sets Oficial" = ?, "Parciales Oficial" = ?, "Streaming" = ?, "Acta" = ?, "Stats" = ?, "actualizado_por" = ?, "actualizado_ts" = ?, "actualizado_fecha" = ? WHERE "ID Partido" = ?')
+                            .bind(finalSets, finalParc, finalStream, finalActaStr, finalStatsStr, usuario, nowTs, nowFechaHora, id_partido);
                     }
-                    return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-                        .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', usuario, nowTs, nowFechaHora);
+                    return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "Stats", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                        .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', finalStats || '', usuario, nowTs, nowFechaHora);
                 }
 
                 if (exist) {
@@ -232,6 +256,10 @@ export async function handleMatches(action, ctx) {
                     if (finalActa !== undefined) {
                         sql += ', "Acta" = ?';
                         params.push(finalActa);
+                    }
+                    if (finalStats !== undefined) {
+                        sql += ', "Stats" = ?';
+                        params.push(finalStats);
                     }
                     if (mvp_oficial !== undefined) {
                         sql += ', "mvp_oficial" = ?, "mvp_proclamado_ts" = ?';
@@ -262,8 +290,8 @@ export async function handleMatches(action, ctx) {
                 const proclamadoTs = (mvp_oficial && String(mvp_oficial).trim() !== '') ? Date.now() : 0;
                 const pubTs = (mvp_publicacion_ts !== undefined) ? (parseInt(mvp_publicacion_ts) || 0) : 0;
                 const cierreTs = (mvp_cierre_votacion_ts !== undefined) ? (parseInt(mvp_cierre_votacion_ts) || 0) : 0;
-                return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-                    .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, cierreTs, pubTs, usuario, nowTs, nowFechaHora);
+                return db.prepare('INSERT INTO "Resultados_Oficiales" ("ID Partido", "Sets Oficial", "Parciales Oficial", "Streaming", "Acta", "Stats", "mvp_candidatos", "mvp_oficial", "mvp_stats", "mvp_visible", "mvp_proclamado_ts", "mvp_cierre_votacion_ts", "mvp_publicacion_ts", "actualizado_por", "actualizado_ts", "actualizado_fecha") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+                    .bind(id_partido, sets || '', parciales || '', streaming || '', finalActa || '', finalStats || '', candStr, mvp_oficial || '', statsStr, visibleVal, proclamadoTs, cierreTs, pubTs, usuario, nowTs, nowFechaHora);
             };
 
             const postStmts = [buildSaveStmt()];
@@ -1410,13 +1438,15 @@ export async function handleMatches(action, ctx) {
             resOfMap[ro["ID Partido"]] = ro;
         }
 
-        // 2. Filtrar solo partidos de RFEVB ya jugados (o cerrados) que NO tienen acta todavía
+        // 2. Filtrar solo partidos de RFEVB ya jugados (o cerrados) en los últimos 21 días que NO tienen acta todavía
         const candidates = [];
         for (const m of rawMatches) {
             const id = m.ID_Partido || '';
             const ts = Number(m.timestamp || 0);
             const isPlayed = (ts > 0 && ts < nowMs) || (m.Estado === 'CERRADO');
             if (!isPlayed) continue;
+            // Solo partidos jugados en los últimos 21 días para no buscar indefinidamente en partidos antiguos sin acta
+            if (ts > 0 && ts < nowMs - (21 * 86400 * 1000)) continue;
 
             const ro = resOfMap[id] || {};
             const dbActa = String(ro.Acta || '').trim();

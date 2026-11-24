@@ -198,6 +198,12 @@ function renderAdminPanel(equiposParam) {
                     <input type="text" id="adm_acta_${eq.id_partido}" class="form-control" placeholder="https://... (enlace al acta oficial)" value="${eq.acta || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
                 </div>
 
+                <!-- SECCIÓN ESTADÍSTICAS OFICIALES -->
+                <div style="margin-bottom: 8px; border-left: 2px solid #9b59b6; padding-left: 8px;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Link Estadísticas Oficiales (DataProject / RFEVB)</label>
+                    <input type="text" id="adm_stats_${eq.id_partido}" class="form-control" placeholder="https://... (enlace a estadísticas)" value="${eq.stats_url || ''}" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                </div>
+
 ${eq.actualizado_por ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px; display:flex; align-items:center; gap:4px;">
                     <i class="fas fa-user-edit" style="color:#e67e22;"></i>
                     <span>Resultado anotado por <strong style="color:var(--text-main);">@${eq.actualizado_por}</strong>${eq.actualizado_fecha ? ` (${eq.actualizado_fecha})` : ''}</span>
@@ -1566,6 +1572,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     const elParc = document.getElementById(`adm_parc_${idPart}`);
     const elStream = document.getElementById(`adm_stream_${idPart}`);
     const elActa = document.getElementById(`adm_acta_${idPart}`);
+    const elStats = document.getElementById(`adm_stats_${idPart}`);
     
     let sets = "";
     if (elSetsLoc && elSetsVis && elSetsLoc.value.trim() !== "" && elSetsVis.value.trim() !== "") {
@@ -1574,6 +1581,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
     const parc = elParc ? elParc.value.trim() : "";
     const stream = elStream ? elStream.value.trim() : "";
     const acta = elActa ? elActa.value.trim() : "";
+    const statsUrl = elStats ? elStats.value.trim() : "";
 
     btn.disabled = true; btn.innerText = "Subiendo...";
     
@@ -1587,7 +1595,8 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
             sets: sets, 
             parciales: parc, 
             streaming: stream,
-            acta: acta
+            acta: acta,
+            stats: statsUrl
         }), 
         headers: { 'Content-Type': 'text/plain;charset=utf-8' } 
     })
@@ -1606,6 +1615,7 @@ if(btnAdminSyncEl) btnAdminSyncEl.addEventListener('click', function(e) {
                         if (parc) eq.oficial_parciales = parc;
                         if (stream) eq.streaming = stream;
                         if (acta !== undefined) eq.acta = acta;
+                        if (statsUrl !== undefined) eq.stats_url = statsUrl;
                         eq.actualizado_por = currentUser;
                         eq.actualizado_fecha = new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' });
                     }

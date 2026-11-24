@@ -1757,15 +1757,15 @@ html {
         cursor: not-allowed;
     }
 
-    /* ACTA OFICIAL V2 */
+    /* ACTA OFICIAL Y ESTADÍSTICAS OFICIALES V2 */
     .btn-acta-v2 {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        font-size: 0.68rem;
+        gap: 5px;
+        font-size: 0.72rem;
         font-weight: 800;
         border-radius: 6px;
-        padding: 3px 8px;
+        padding: 4px 10px;
         text-decoration: none;
         background: rgba(52, 152, 219, 0.14);
         border: 1px solid rgba(52, 152, 219, 0.38);
@@ -1780,6 +1780,29 @@ html {
         color: #ffffff;
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+    .btn-stats-v2 {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        border-radius: 6px;
+        padding: 4px 10px;
+        text-decoration: none;
+        background: rgba(155, 89, 182, 0.14);
+        border: 1px solid rgba(155, 89, 182, 0.4);
+        color: #c794ce;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        line-height: 1.2;
+    }
+    .btn-stats-v2:hover {
+        background: rgba(155, 89, 182, 0.28);
+        border-color: #d2a4d8;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(155, 89, 182, 0.35);
     }
 
   
