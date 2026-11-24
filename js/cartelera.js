@@ -686,7 +686,11 @@ window.renderCarteleraHTML = function(data) {
 
         if (activeMvpMatch) {
             let myVote = (data.mvp_votos && data.mvp_votos[activeMvpMatch.id_partido]) ? data.mvp_votos[activeMvpMatch.id_partido] : null;
-            let rivalName = (activeMvpMatch.ubicacion === 'LOCAL') ? activeMvpMatch.rival : activeMvpMatch.equipo_local;
+            let rivalName = activeMvpMatch.rival || '';
+            const normR = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            if ((normR(activeMvpMatch.rival).includes('valladolid') || normR(activeMvpMatch.rival).includes('vcv')) && !normR(activeMvpMatch.equipo_local).includes('valladolid')) {
+                rivalName = activeMvpMatch.equipo_local;
+            }
             let matchLabel = rivalName ? ` vs ${rivalName}` : '';
             
             let cTs = activeMvpMatch.mvp_cierre_votacion_ts ? parseInt(activeMvpMatch.mvp_cierre_votacion_ts) : 0;

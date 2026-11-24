@@ -1160,7 +1160,19 @@ export async function onRequestPost(context) {
                         }
 
                         if (isMatch) {
-                            const rivalName = (p.ubicacion === 'LOCAL') ? p.rival : p.equipo_local;
+                            const normEq = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                            const isClubTeam = (name) => {
+                                const n = normEq(name);
+                                return n.includes('valladolid') || n.includes('vcv') || n.includes('universidad');
+                            };
+                            let rivalName = p.rival || '';
+                            if (isClubTeam(p.rival) && !isClubTeam(p.equipo_local)) {
+                                rivalName = p.equipo_local;
+                            } else if (p.rival) {
+                                rivalName = p.rival;
+                            } else {
+                                rivalName = p.equipo_local || '';
+                            }
                             const jNum = p.jornada_eq || p.ronda_global || '?';
                             sm2MvpMatches.push({
                                 jornada: jNum,

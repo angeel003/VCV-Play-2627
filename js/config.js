@@ -80,6 +80,16 @@ window.getEscudoSlug = function(teamName) {
     if (norm.includes('marista') || norm.includes('inmaculada')) {
         return 'maristas_inmaculada';
     }
+
+    // 11. Río Duero Soria (2ª Masc y 2ª Fem)
+    if (norm.includes('rio duero') || (norm.includes('duero') && norm.includes('soria'))) {
+        return 'rio_duero_soria';
+    }
+
+    // 12. Cisneros Alter / Cisneros La Laguna (Superliga 2)
+    if (norm.includes('cisnero')) {
+        return 'cisneros_la_laguna';
+    }
     
     // Por defecto: slug estándar sin tildes ni símbolos
     return norm.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
