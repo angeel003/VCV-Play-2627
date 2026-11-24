@@ -987,7 +987,7 @@ if (btnLoginEl) btnLoginEl.addEventListener('click', function() {
                     });
 
                     let safeEqName = (window.getEscudoSlug ? window.getEscudoSlug(eq) : eq.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''));
-                    let eqLogo = `<picture style="display:inline-flex; width:24px; height:24px; vertical-align:middle; flex-shrink:0;"><source srcset="files/images/escudos/${safeEqName}.webp?v=20261124_v4" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeEqName}.png?v=20261124_v4" alt="${eq}" onerror="this.style.display='none';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
+                    let eqLogo = `<picture style="display:inline-flex; width:24px; height:24px; vertical-align:middle; flex-shrink:0;"><source srcset="files/images/escudos/${safeEqName}.webp?v=20261124_v5" type="image/webp"><img loading="lazy" src="files/images/escudos/${safeEqName}.png?v=20261124_v5" alt="${eq}" onerror="this.style.display='none';" style="width:100%; height:100%; object-fit:contain;"></picture>`;
 
                     let miCajonHTML = "";
                     if (isClosed) {
